@@ -38,12 +38,12 @@ appInsights.loadAppInsights();
 appInsights.trackEvent({name: "testEvent", properties: {testProperty: "testValue"}});
 
 ```
-## Configuration
+## [Configuration](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOSPluginConfiguration.html)
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| maxTimeout | number[Optional]| 200 | Maximum time to wait for the OS plugin to return the OS information |
-| mergeOsNameVersion | boolean[Optional] | false | Whether to merge the OS name and version into one field change details. |
+| [maxTimeout](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOSPluginConfiguration.html#maxTimeout) | number[Optional]| 200 | Maximum time to wait for the OS plugin to return the OS information |
+| [mergeOsNameVersion](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOSPluginConfiguration.html#mergeOsNameVersion) | boolean[Optional] | false | Whether to merge the OS name and version into one field change details. |
 
 
 ## Run unit tests:

@@ -44,12 +44,12 @@ const appInsights = new ApplicationInsights({ config: configObj });
 appInsights.loadAppInsights();
 ```
 
-## Configuration
+## [Configuration](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/ITeeChannelConfig.html)
 
 | Name                  | Type                               | Default    | Description
 | --------------------- | -----------------------------------| -----------| ----------------------------------------------------------------------------------------------------------------
-| teeChannels           | `IChannelControls`[][]             | undefined  | Defines the Channels specific to the TeeChannel
-| ignoreCoreChannels    | boolean                            | false      |By default the TeeChannel will use the core configuration `channels` (starting at index 1 `channels[1.xxx]`) as separate tee'd channel chains for processing events. This configuration allow you to ignore any additional core channels and only use the `teeChannels`
+| [teeChannels](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/ITeeChannelConfig.html#teeChannels)           | `IChannelControls`[][]             | undefined  | Defines the Channels specific to the TeeChannel
+| [ignoreCoreChannels](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/ITeeChannelConfig.html#ignoreCoreChannels)    | boolean                            | false      |By default the TeeChannel will use the core configuration `channels` (starting at index 1 `channels[1.xxx]`) as separate tee'd channel chains for processing events. This configuration allow you to ignore any additional core channels and only use the `teeChannels`
 
 ## Contributing
 

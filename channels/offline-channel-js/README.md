@@ -12,28 +12,28 @@ The Offline Channel supports the saving of events when your application is offli
 - Request header details will be stored in local/session storage or IndexedDB based on your configuration.
 - If you are using the default endpoint `https://dc.services.visualstudio.com` for Application Insights, partial success is currently considered as success and events not sent in partial success will be dropped.
 
-## Configuration
+## [Configuration](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html)
 
 `IOfflineChannelConfiguration`
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| maxStorageSizeInBytes | [Optional]| 5000000 | The max size in bytes that should be used for storing events in local/session storage. |
-| storageKeyPrefix | [Optional] | AIOffline | The storage key prefix that should be used when storing events in persistent storage. |
-| minPersistenceLevel | [Optional] | `EventPersistence.Normal` or 1 | Identifies the minimum level that will be cached in the offline channel. Valid values of this setting are defined by the `EventPersistence` enum, currently Normal (1) and Critical (2) with the default value being Normal (1), which means all events without a persistence level set or with invalid persistence level will be marked as Normal(1) events.|
-| providers | [Optional] | [`eStorageProviders.LocalStorage, eStorageProviders.IndexedDB`]|  Identifies the StorageProviders that should be used by the system if available, the first available provider will be used. Valid available values are defined by the `eStorageProviders` enum. </br> Note: LocalStorage will be used to save unload events even if it is not in the providers list. |
-| eventsLimitInMem | [Optional] | null | Identifies the maximum number of events to store in memory before sending to persistent storage. |
-| autoClean | [Optional] | false | Identifies if events that have existed in storage longer than the maximum allowed time (configured in inStorageMaxTime) should be cleaned after connection with storage. |
-| inMemoMaxTime | [Optional] | 15000 | Identifies the maximum time in ms that items should be in memory before being saved into storage. |
-| inStorageMaxTime | [Optional] | 10080000 (around 7days) | Identifies the maximum time in ms that items should be in the configured persistent storage. |
-| maxRetry | [Optional] | 1 | Identifies the maximum retry times for an event batch. |
-| primaryOnlineChannelId | [Optional] | `[AppInsightsChannelPlugin, PostChannel]` | Identifies online channel IDs in order. The first available one will be used. |
-| maxBatchsize | [Optional] | 63000 | Identifies the maximum size per batch in bytes that is saved in persistent storage. |
-| senderCfg | [Optional] | `IOfflineSenderConfig` | Identifies offline sender properties. |
-| maxSentBatchInterval | [Optional] | 15000 | Identifies the interval time in ms that previously stored offline event batches should be sent under online status. |
-| EventsToDropPerTime | [Optional] | 10 | Identifies the maximum event batch count when cleaning or releasing space for persistent storage per time. |
-| maxCriticalEvtsDropCnt | [Optional] | 2 | Identifies the maximum critical events count for an event batch to be able to drop when releasing space for persistent storage per time. |
-| overrideInstrumentationKey | [Optional] | null | Identifies overridden for the Instrumentation key when the offline channel calls `processTelemetry`. |
+| [maxStorageSizeInBytes](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#maxStorageSizeInBytes) | [Optional]| 5000000 | The max size in bytes that should be used for storing events in local/session storage. |
+| [storageKeyPrefix](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#storageKeyPrefix) | [Optional] | AIOffline | The storage key prefix that should be used when storing events in persistent storage. |
+| [minPersistenceLevel](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#minPersistenceLevel) | [Optional] | `EventPersistence.Normal` or 1 | Identifies the minimum level that will be cached in the offline channel. Valid values of this setting are defined by the `EventPersistence` enum, currently Normal (1) and Critical (2) with the default value being Normal (1), which means all events without a persistence level set or with invalid persistence level will be marked as Normal(1) events.|
+| [providers](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#providers) | [Optional] | [`eStorageProviders.LocalStorage, eStorageProviders.IndexedDB`]|  Identifies the StorageProviders that should be used by the system if available, the first available provider will be used. Valid available values are defined by the `eStorageProviders` enum. </br> Note: LocalStorage will be used to save unload events even if it is not in the providers list. |
+| [eventsLimitInMem](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#eventsLimitInMem) | [Optional] | null | Identifies the maximum number of events to store in memory before sending to persistent storage. |
+| [autoClean](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#autoClean) | [Optional] | false | Identifies if events that have existed in storage longer than the maximum allowed time (configured in inStorageMaxTime) should be cleaned after connection with storage. |
+| [inMemoMaxTime](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#inMemoMaxTime) | [Optional] | 15000 | Identifies the maximum time in ms that items should be in memory before being saved into storage. |
+| [inStorageMaxTime](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#inStorageMaxTime) | [Optional] | 10080000 (around 7days) | Identifies the maximum time in ms that items should be in the configured persistent storage. |
+| [maxRetry](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#maxRetry) | [Optional] | 1 | Identifies the maximum retry times for an event batch. |
+| [primaryOnlineChannelId](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#primaryOnlineChannelId) | [Optional] | `[AppInsightsChannelPlugin, PostChannel]` | Identifies online channel IDs in order. The first available one will be used. |
+| [maxBatchsize](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#maxBatchsize) | [Optional] | 63000 | Identifies the maximum size per batch in bytes that is saved in persistent storage. |
+| [senderCfg](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#senderCfg) | [Optional] | `IOfflineSenderConfig` | Identifies offline sender properties. |
+| [maxSentBatchInterval](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#maxSentBatchInterval) | [Optional] | 15000 | Identifies the interval time in ms that previously stored offline event batches should be sent under online status. |
+| [EventsToDropPerTime](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#EventsToDropPerTime) | [Optional] | 10 | Identifies the maximum event batch count when cleaning or releasing space for persistent storage per time. |
+| [maxCriticalEvtsDropCnt](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#maxCriticalEvtsDropCnt) | [Optional] | 2 | Identifies the maximum critical events count for an event batch to be able to drop when releasing space for persistent storage per time. |
+| [overrideInstrumentationKey](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IOfflineChannelConfiguration.html#overrideInstrumentationKey) | [Optional] | null | Identifies overridden for the Instrumentation key when the offline channel calls `processTelemetry`. |
 
 `IOfflineSenderConfig`
 
