@@ -5,7 +5,7 @@ import {
     IConfiguration, IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, fieldRedaction, getJSON, hasJSON, isObject,
     objForEachKey, strTrim
 } from "@microsoft/applicationinsights-core-js";
-import { asString, strSubstr, strSubstring } from "@nevware21/ts-utils";
+import { asString, isString, strSubstr, strSubstring } from "@nevware21/ts-utils";
 
 export const enum DataSanitizerValues {
     /**
@@ -100,7 +100,7 @@ export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLen
 }
 
 export function dataSanitizeUrl(logger: IDiagnosticLogger, url: any, config?: IConfiguration) {
-    if (typeof url === "string"){
+    if (isString(url)) {
         url = fieldRedaction(url, config);
     }
     return dataSanitizeInput(logger, url, DataSanitizerValues.MAX_URL_LENGTH, _eInternalMessageId.UrlTooLong);

@@ -264,7 +264,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             _self.trackPageView = (pageView?: IPageViewTelemetry, customProperties?: ICustomProperties) => {
                 try {
                     let inPv = pageView || {};
-                    inPv.uri = fieldRedaction(inPv.uri, _extConfig);
+                    if (_self.core && _self.core.config) {
+                        inPv.uri = fieldRedaction(inPv.uri, _self.core.config);
+                    }
                     _pageViewManager.trackPageView(inPv, {...inPv.properties, ...inPv.measurements, ...customProperties});
         
                     if (_autoTrackPageVisitTime) {
@@ -290,7 +292,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 if (doc) {
                     pageView.refUri = pageView.refUri === undefined ? doc.referrer : pageView.refUri;
                 }
-                pageView.refUri = fieldRedaction(pageView.refUri, _extConfig);
+                if (_self.core && _self.core.config) {
+                    pageView.refUri = fieldRedaction(pageView.refUri, _self.core.config);
+                }
                 if (isNullOrUndefined(pageView.startTime)) {
                     // calculate the start time manually
                     let duration = ((properties || pageView.properties || {}).duration || 0);
@@ -387,7 +391,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         let loc = getLocation();
                         url = loc && loc.href || "";
                     }
-                    url = fieldRedaction(url, _extConfig);
+                    if (_self.core && _self.core.config) {
+                        url = fieldRedaction(url, _self.core.config);
+                    }
                     _pageTracking.stop(name, url, properties, measurement);
         
                     if (_autoTrackPageVisitTime) {
@@ -803,7 +809,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     } else {
                         _currUri = locn && locn.href || "";
                     }
-                    _currUri = fieldRedaction(_currUri, _extConfig);
+                    if (_self.core && _self.core.config) {
+                        _currUri = fieldRedaction(_currUri, _self.core.config);
+                    }
                     if (_enableAutoRouteTracking) {
                         let distributedTraceCtx = _getDistributedTraceCtx();
                         if (distributedTraceCtx) {
@@ -914,7 +922,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
                 let location = getLocation(true);
                 _prevUri = location && location.href || "";
-                _prevUri = fieldRedaction(_prevUri, _extConfig);
+                if (_self.core && _self.core.config) {
+                    _prevUri = fieldRedaction(_prevUri, _self.core.config);
+                }
                 _currUri = null;
                 _evtNamespace = null;
                 _extConfig = null;
