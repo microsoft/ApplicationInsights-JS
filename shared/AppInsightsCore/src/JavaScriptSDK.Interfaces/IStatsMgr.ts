@@ -3,7 +3,7 @@
 
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IConfiguration } from "./IConfiguration";
-import { IStatsBeat, IStatsBeatConfig, IStatsBeatState } from "./IStatsBeat";
+import { ISdkStats, ISdkStatsState, IStatsBeatConfig } from "./ISdkStats";
 import { IUnloadHook } from "./IUnloadHook";
 
 /**
@@ -56,12 +56,12 @@ export interface IStatsMgr {
     init: <CfgType extends IConfiguration = IConfiguration>(core: IAppInsightsCore<CfgType>, cfg: IStatsMgrConfig<CfgType>) => IUnloadHook | null;
     
     /**
-     * Returns a new {@link IStatsBeat} instance for the current state which includes the endpoint.
+     * Returns a new {@link ISdkStats} instance for the current state which includes the endpoint.
      * This method should be called only after the manager has been initialized and the
      * {@link IStatsBeatConfig} has been set, otherwise it will return null.
      * @param state - The current state of the stats beat manager.
      * @returns A new instance of the stats beat or null if the manager or the configuration does not support
-     * the {@link IStatsBeatState}.
+     * the {@link ISdkStatsState}.
      */
-    newInst: (state: IStatsBeatState) => IStatsBeat;
+    newInst: (state: ISdkStatsState) => ISdkStats;
 }

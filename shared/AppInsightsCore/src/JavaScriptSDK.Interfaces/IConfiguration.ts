@@ -8,10 +8,8 @@ import { IExceptionConfig } from "./IExceptionConfig";
 import { IFeatureOptIn } from "./IFeatureOptIn";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManager } from "./IPerfManager";
+import { IStatsBeatConfig } from "./ISdkStats";
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
-
-//import { IStatsBeatConfig } from "./IStatsBeat";
-"use strict";
 
 /**
  * Configuration provided to SDK core
@@ -247,21 +245,21 @@ export interface IConfiguration {
      */
     redactQueryParams?: string[];
 
-    ///**
-    // * [Optional] Internal SDK configuration for developers
-    // * @internal
-    // */
-    //_sdk?: IInternalSdkConfiguration;
+    /**
+    * [Optional] Internal SDK configuration for developers
+    * @internal
+    */
+    _sdk?: IInternalSdkConfiguration;
 }
 
-///**
-// * Internal SDK configuration options
-// * @internal
-// */
-//export interface IInternalSdkConfiguration {
-//    /**
-//     * [Optional] Enable Internal StatsBeat
-//     * @internal
-//     */
-//    stats?: IStatsBeatConfig;
-//}
+/**
+* Internal SDK configuration options
+* @internal
+*/
+export interface IInternalSdkConfiguration {
+   /**
+    * [Optional] Enable Internal StatsBeat
+    * @internal
+    */
+   stats?: IStatsBeatConfig;
+}

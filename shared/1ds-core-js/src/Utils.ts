@@ -14,7 +14,7 @@ import { IEventProperty, IExtendedTelemetryItem } from "./DataModels";
 import { EventLatency, EventLatencyValue, FieldValueSanitizerType, GuidStyle, eEventPropertyType, eValueKind } from "./Enums";
 import { STR_EMPTY } from "./InternalConstants";
 
-export const Version = "#version#";
+export const Version = "4.3.7";
 export const FullVersionString = "1DS-Web-JS-" + Version;
 
 const ObjHasOwnProperty = ObjProto.hasOwnProperty;

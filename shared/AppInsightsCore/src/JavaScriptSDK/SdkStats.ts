@@ -10,7 +10,7 @@ import { eStatsType } from "../JavaScriptSDK.Enums/StatsType";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { INetworkStatsbeat } from "../JavaScriptSDK.Interfaces/INetworkStatsbeat";
-import { IStatsBeat, IStatsBeatConfig, IStatsBeatState, IStatsEndpointConfig } from "../JavaScriptSDK.Interfaces/IStatsBeat";
+import { ISdkStats, ISdkStatsState, IStatsBeatConfig, IStatsEndpointConfig } from "../JavaScriptSDK.Interfaces/ISdkStats";
 import { IStatsMgr, IStatsMgrConfig } from "../JavaScriptSDK.Interfaces/IStatsMgr";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPayloadData } from "../JavaScriptSDK.Interfaces/IXHROverride";
@@ -46,7 +46,7 @@ interface _IMgrCallbacks {
      * @param statsbeatEvent - The statsbeat event to send to the core
      * @param endpoint - The endpoint to send the event to
      */
-    track: (statsBeat: IStatsBeat, statsbeatEvent: ITelemetryItem) => void;
+    track: (statsBeat: ISdkStats, statsbeatEvent: ITelemetryItem) => void;
 }
 
 /**
@@ -102,7 +102,7 @@ function _createNetworkStatsbeat(host: string): INetworkStatsbeat {
  * @param statsBeatStats - The statsbeat state to use for the IStatsBeat instance.
  * @returns A new IStatsBeat instance.
  */
-function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState): IStatsBeat {
+function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: ISdkStatsState): ISdkStats {
     let _networkCounter: INetworkStatsbeat = _createNetworkStatsbeat(statsBeatStats.endpoint);
     let _timeoutHandle: ITimerHandler;      // Handle to the timer for sending telemetry. This way, we would not send telemetry when system sleep.
     let _isEnabled: boolean = true;         // Flag to check if statsbeat is enabled or not
@@ -241,15 +241,15 @@ function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState):
     }
 
     // THE statsbeat instance being created and returned
-    let statsBeat: IStatsBeat = {
+    let statsBeat: ISdkStats = {
         enabled: !!_isEnabled,
         endpoint: STR_EMPTY,
         type: eStatsType.SDK,
         count: (status: number, payloadData: IPayloadData, endpoint: string) => {
             if (_isEnabled && _checkEndpoint(endpoint)) {
-                if (payloadData && (payloadData as any)["statsBeatData"] && (payloadData as any)["statsBeatData"]["startTime"]) {
+                if (payloadData && (payloadData as any)["sdkStatsData"] && (payloadData as any)["sdkStatsData"]["startTime"]) {
                     _networkCounter.totalRequest = (_networkCounter.totalRequest || 0) + 1;
-                    _networkCounter.requestDuration += utcNow() - (payloadData as any)["statsBeatData"]["startTime"];
+                    _networkCounter.requestDuration += utcNow() - (payloadData as any)["sdkStatsData"]["startTime"];
                 }
 
                 let retryArray = [401, 403, 408, 429, 500, 502, 503, 504];
@@ -371,7 +371,7 @@ export function createStatsMgr(): IStatsMgr {
         }
     }
 
-    function _track(statsBeat: IStatsBeat, statsBeatEvent: ITelemetryItem) {
+    function _track(statsBeat: ISdkStats, statsBeatEvent: ITelemetryItem) {
         if (_isMgrEnabled && _statsBeatConfig) {
             let endpoint = statsBeat.endpoint;
             let sendEvt = !!statsBeat.type;
@@ -397,8 +397,8 @@ export function createStatsMgr(): IStatsMgr {
         }
     }
 
-    function _createInstance(state: IStatsBeatState): IStatsBeat {
-        let instance: IStatsBeat = null;
+    function _createInstance(state: ISdkStatsState): ISdkStats {
+        let instance: ISdkStats = null;
 
         if (_isMgrEnabled) {
             let callbacks: _IMgrCallbacks = {
