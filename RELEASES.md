@@ -2,6 +2,13 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## Web Snippet Release 1.2.2
+
+This release adds support for Trusted Types in the Application Insights JavaScript SDK snippet loader. See more details [here](https://github.com/microsoft/ApplicationInsights-JS/blob/main/tools/applicationinsights-web-snippet/trustedTypeSupport.md).
+
+### Changelog
+- #2407 Custom Trusted Type Policy Support for Snippet Script Injection
+
 ## 3.3.8 (May 22nd, 2025)
 
 This release contains an important fix for a change introduced in v3.3.7 that caused a ReferenceError exception to be thrown when running in strict mode. See more details [here](https://github.com/microsoft/ApplicationInsights-JS/issues/2529).
