@@ -176,6 +176,10 @@ The available configuration options are: -
 | onInit | function(aiSdk) { ... } *[optional]* | This callback function which is called after the main SDK script has been successfully loaded and initialized from the CDN (based on the src value), it is passed a reference to the sdk instance that it is being called for and it is also called _before_ the first initial page view. If the SDK has already been loaded and initialized this callback will still be called. NOTE: As this callback is called during the processing of the sdk.queue array you CANNOT add any additional items to the queue as they will be ignored and dropped. (Added as part of snippet version 5 -- the sv:"#" value within the snippet script, the current version is 7)
 | cfg | object **[required]** | The configuration passed to the Application Insights SDK during initialization.
 | sri | boolean *[optional]* | Custom optional value to specify whether to fetch the snippet from an integrity file and perform an integrity check. When this option is used, the integrity file is loaded first, affecting the load order and script execution. Hence the ld option will be ignored. Additionally, if the page navigates away before the integrity file is loaded, some events may be lost.
+| pl | boolean *[optional]* | Custom optional value to specify whether to enable the Trusted Type policy check on the snippet.
+| pn | string *[optional]* | Custom optional value to specify the name of the Trusted Type policy that would be implemented on the snippet, default is 'aiPolicy'.
+| ttp | TrustedTypePolicy *[optional]* | Custom optional value to specify the Trusted Type policy that would be applied on the snippet src.
+| nt | string *[optional]* | Custom optional value to specify the nonce attribute value that will be applied to the script tag when it is added to the page.
 
 #### Example using the snippet onInit callback
 
