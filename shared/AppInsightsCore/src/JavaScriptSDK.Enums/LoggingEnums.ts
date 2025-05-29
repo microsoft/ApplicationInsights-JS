@@ -27,12 +27,12 @@ export const enum eLoggingSeverity {
     DEBUG = 3
 }
 
-export const LoggingSeverity = createEnumStyle<typeof eLoggingSeverity>({
+export const LoggingSeverity = (/* @__PURE__ */createEnumStyle<typeof eLoggingSeverity>({
     DISABLED: eLoggingSeverity.DISABLED,
     CRITICAL: eLoggingSeverity.CRITICAL,
     WARNING: eLoggingSeverity.WARNING,
     DEBUG: eLoggingSeverity.DEBUG
-});
+}));
 export type LoggingSeverity = number | eLoggingSeverity;
 
 export const enum _eInternalMessageId {
@@ -130,6 +130,7 @@ export const enum _eInternalMessageId {
     InitPromiseException = 112,
     StatsBeatManagerException = 113,
     StatsBeatException = 114,
+    VersionMismatch = 115,
 }
 
 export type _InternalMessageId = number | _eInternalMessageId;

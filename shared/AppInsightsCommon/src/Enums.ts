@@ -11,10 +11,10 @@ export const enum eStorageType {
     SessionStorage
 }
 
-export const StorageType = createEnumStyle<typeof eStorageType>({
+export const StorageType = (/* @__PURE__ */createEnumStyle<typeof eStorageType>({
     LocalStorage: eStorageType.LocalStorage,
     SessionStorage: eStorageType.SessionStorage
-});
+}));
 export type StorageType = eStorageType | typeof StorageType;
 
 /**
@@ -41,11 +41,11 @@ export const enum eDistributedTracingModes {
     W3C
 }
 
-export const DistributedTracingModes = createEnumStyle<typeof eDistributedTracingModes>({
+export const DistributedTracingModes = (/* @__PURE__ */createEnumStyle<typeof eDistributedTracingModes>({
     AI: eDistributedTracingModes.AI,
     AI_AND_W3C: eDistributedTracingModes.AI_AND_W3C,
     W3C: eDistributedTracingModes.W3C
-});
+}));
 export type DistributedTracingModes = number | eDistributedTracingModes;
 
 /**
@@ -65,7 +65,7 @@ export const enum EventPersistenceValue {
 /**
  * The EventPersistence contains a set of values that specify the event's persistence.
  */
-export const EventPersistence = createEnumStyle<typeof EventPersistenceValue>({
+export const EventPersistence = (/* @__PURE__ */createEnumStyle<typeof EventPersistenceValue>({
     /**
      * Normal persistence.
      */
@@ -75,5 +75,5 @@ export const EventPersistence = createEnumStyle<typeof EventPersistenceValue>({
      * Critical persistence.
      */
     Critical: EventPersistenceValue.Critical
-});
+}));
 export type EventPersistence = number | EventPersistenceValue;

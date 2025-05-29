@@ -21,10 +21,10 @@ export const enum eActiveStatus {
      PENDING = 3,
 }
 
-export const ActiveStatus = createEnumStyle<typeof eActiveStatus>({
+export const ActiveStatus = (/* @__PURE__ */createEnumStyle<typeof eActiveStatus>({
     NONE: eActiveStatus.NONE,
     PENDING: eActiveStatus.PENDING,
     INACTIVE: eActiveStatus.INACTIVE,
     ACTIVE: eActiveStatus.ACTIVE
-});
+}));
 export type ActiveStatus = number | eActiveStatus;

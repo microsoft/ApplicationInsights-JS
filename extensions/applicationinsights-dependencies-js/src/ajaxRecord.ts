@@ -9,7 +9,7 @@ import {
     IDiagnosticLogger, IDistributedTraceContext, arrForEach, isNullOrUndefined, isNumber, isString, normalizeJsName, objForEachKey, objKeys
 } from "@microsoft/applicationinsights-core-js";
 import { mathRound } from "@nevware21/ts-utils";
-import { STR_DURATION, STR_PROPERTIES } from "./InternalConstants";
+import { STR_DURATION, STR_PROPERTIES, UNDEFINED_VALUE } from "./InternalConstants";
 
 export interface IAjaxRecordResponse {
     statusText: string,
@@ -299,9 +299,10 @@ export class ajaxRecord {
 
         self.traceID = traceId;
         self.spanID = spanId;
-        self.traceFlags = traceCtx?.getTraceFlags();
+        self.traceFlags = UNDEFINED_VALUE;
 
         if (traceCtx) {
+            self.traceFlags = traceCtx.getTraceFlags();
             self.eventTraceCtx = {
                 traceId: traceCtx.getTraceId(),
                 spanId: traceCtx.getSpanId(),

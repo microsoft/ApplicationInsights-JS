@@ -221,7 +221,7 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
     flush(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason, cbTimeout?: number): boolean | void;
 
     /**
-     * Gets the current distributed trace context for this instance if available
+     * Gets the current distributed trace active context for this instance
      * @param createNew - Optional flag to create a new instance if one doesn't currently exist, defaults to true
      */
     getTraceCtx(createNew?: boolean): IDistributedTraceContext | null;

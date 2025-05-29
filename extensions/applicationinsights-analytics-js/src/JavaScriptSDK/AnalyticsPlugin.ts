@@ -8,20 +8,18 @@ import {
     AnalyticsPluginIdentifier, Event as EventTelemetry, Exception, IAppInsights, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
     IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
     IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry, Metric, PageView,
-    PageViewPerformance, PropertiesPluginIdentifier, RemoteDependencyData, Trace, createDistributedTraceContextFromTrace, createDomEvent,
-    createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage,
-    utlSetStoragePrefix
+    PageViewPerformance, RemoteDependencyData, Trace, createDomEvent, createTelemetryItem, dataSanitizeString, eSeverityLevel,
+    isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext,
-    IExceptionConfig, IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
-    ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent,
-    TelemetryInitializerFunction, _eInternalMessageId, arrForEach, cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate,
-    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, findAllScripts, generateW3CId,
-    getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString,
-    isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
+    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IExceptionConfig,
+    IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem,
+    ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent, TelemetryInitializerFunction, _eInternalMessageId, arrForEach,
+    cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate, createDistributedTraceContext, createProcessTelemetryContext,
+    createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, findAllScripts, getDocument, getExceptionName, getHistory,
+    getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange,
+    safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
-import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
 import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
@@ -755,26 +753,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 }));
             }
 
-            function _getDistributedTraceCtx(): IDistributedTraceContext {
-                let distributedTraceCtx: IDistributedTraceContext = null;
-                if (_self.core && _self.core.getTraceCtx) {
-                    distributedTraceCtx = _self.core.getTraceCtx(false);
-                }
-                
-                if (!distributedTraceCtx) {
-                    // Fallback when using an older Core and PropertiesPlugin
-                    let properties = _self.core.getPlugin<PropertiesPlugin>(PropertiesPluginIdentifier);
-                    if (properties) {
-                        let context = properties.plugin.context;
-                        if (context) {
-                            distributedTraceCtx = createDistributedTraceContextFromTrace(context.telemetryTrace);
-                        }
-                    }
-                }
-
-                return distributedTraceCtx;
-            }
-
             /**
              * Create a custom "locationchange" event which is triggered each time the history object is changed
              */
@@ -802,16 +780,15 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     }
 
                     if (_enableAutoRouteTracking) {
-                        let distributedTraceCtx = _getDistributedTraceCtx();
-                        if (distributedTraceCtx) {
-                            distributedTraceCtx.setTraceId(generateW3CId());
-                            let traceLocationName = "_unknown_";
-                            if (locn && locn.pathname) {
-                                traceLocationName = locn.pathname + (locn.hash || "");
-                            }
 
-                            // This populates the ai.operation.name which has a maximum size of 1024 so we need to sanitize it
-                            distributedTraceCtx.setName(dataSanitizeString(_self.diagLog(), traceLocationName));
+                        // TODO (create new "context") / spans for the new page view
+                        // Should "end" any previous span (once we have a new one)
+                        let newContext = createDistributedTraceContext();
+
+                        // This populates the ai.operation.name which has a maximum size of 1024 so we need to sanitize it
+                        newContext.pageName = dataSanitizeString(_self.diagLog(), newContext.pageName || "_unknown_");
+                        if (_self.core && _self.core.getTraceCtx) {
+                            _self.core.setTraceCtx(newContext);
                         }
 
                         scheduleTimeout(((uri: string) => {

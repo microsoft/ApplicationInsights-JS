@@ -6,7 +6,7 @@ import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/Lo
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { createUniqueNamespace } from "../JavaScriptSDK/DataCacheHelper";
-import { STR_NOT_DYNAMIC_ERROR } from "../JavaScriptSDK/InternalConstants";
+import { STR_EMPTY, STR_NOT_DYNAMIC_ERROR } from "../JavaScriptSDK/InternalConstants";
 import { _applyDefaultValue } from "./ConfigDefaults";
 import {
     _eSetDynamicPropertyFlags, _makeDynamicObject, _setDynamicProperty, _setDynamicPropertyState, _throwDynamicError
@@ -36,7 +36,7 @@ function _createAndUseHandler<T>(state: _IDynamicConfigHandlerState<T>, configHa
         }
     };
 
-    objDefine<any>(handler, "toJSON", { v: () => "WatcherHandler" + (handler.fn ? "" : "[X]") });
+    objDefine<any>(handler, "toJSON", { v: () => "WatcherHandler" + (handler.fn ? STR_EMPTY : "[X]") });
 
     state.use(handler, configHandler);
 

@@ -51,7 +51,7 @@ function _checkSize(checkType: string, maxSize: number, size: number, isNightly:
 }    
 
 export class AnalyticsExtensionSizeCheck extends AITestClass {
-    private readonly MAX_DEFLATE_SIZE = 25;
+    private readonly MAX_DEFLATE_SIZE = 26;
     private readonly rawFilePath = "../dist/es5/applicationinsights-analytics-js.min.js";
     private readonly prodFilePaath = "../browser/es5/applicationinsights-analytics-js.min.js"
 
