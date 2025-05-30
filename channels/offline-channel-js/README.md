@@ -35,14 +35,14 @@ The Offline Channel supports the saving of events when your application is offli
 | [maxCriticalEvtsDropCnt](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#maxCriticalEvtsDropCnt) | [Optional] | 2 | Identifies the maximum critical events count for an event batch to be able to drop when releasing space for persistent storage per time. |
 | [overrideInstrumentationKey](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#overrideInstrumentationKey) | [Optional] | null | Identifies overridden for the Instrumentation key when the offline channel calls `processTelemetry`. |
 
-`IOfflineSenderConfig`
+### [IOfflineSenderConfig](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineSenderConfig.html)
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| retryCodes | [Optional] | `[401, 403, 408, 429, 500, 502, 503, 504]` | Identifies status codes for re-sending event batches. |
-| transports | [Optional] | null | Either an array or single value identifying the requested TransportType type(s) that should be used for sending events. If not defined, the same transports will be used in the channel with the `primaryOnlineChannelI`. |
-| httpXHROverride | [Optional] | null | The HTTP override that should be used to send requests, as an `IXHROverride` object. |
-| alwaysUseXhrOverride | [Optional] | false | Identifies if provided httpXhrOverride will always be used. |
+| [retryCodes](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineSenderConfig.html#retryCodes) | [Optional] | `[401, 403, 408, 429, 500, 502, 503, 504]` | Identifies status codes for re-sending event batches. |
+| [transports](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineSenderConfig.html#transports) | [Optional] | null | Either an array or single value identifying the requested TransportType type(s) that should be used for sending events. If not defined, the same transports will be used in the channel with the `primaryOnlineChannelI`. |
+| [httpXHROverride](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineSenderConfig.html#httpXHROverride) | [Optional] | null | The HTTP override that should be used to send requests, as an `IXHROverride` object. |
+| [alwaysUseXhrOverride](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineSenderConfig.html#alwaysUseXhrOverride) | [Optional] | false | Identifies if provided httpXhrOverride will always be used. |
 
 ## Basic Usage
 
