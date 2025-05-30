@@ -537,7 +537,7 @@ const appInsights = new ApplicationInsights({
 
 | Name | Type | Default | Extenstion | Description |
 |------|------|---------|---------|-------------|
-| [ignoreHeaders](https://microsoft.github.io/ApplicationInsights-JS/webSdk/interfaces/IDependenciesPluginConfig.html#ignoreHeaders) | string[] | ["Authorization", "X-API-Key", "WWW-Authenticate"] | DependenciesPlugin | AJAX & Fetch request and response headers to be ignored in log data. To override or discard the default, add an array with all headers to be excluded or an empty array to the configuration. Need to be defined in depenedency plugin extension config, see more [here](./extensions/applicationinsights-dependencies-js/README.md)
+| [ignoreHeaders](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IDependenciesPluginConfig.html#ignoreHeaders) | string[] | ["Authorization", "X-API-Key", "WWW-Authenticate"] | DependenciesPlugin | AJAX & Fetch request and response headers to be ignored in log data. To override or discard the default, add an array with all headers to be excluded or an empty array to the configuration. Need to be defined in depenedency plugin extension config, see more [here](./extensions/applicationinsights-dependencies-js/README.md)
 
 ### [ICookieMgrConfig](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html)
 
