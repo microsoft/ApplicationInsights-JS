@@ -2,6 +2,10 @@
 // Licensed under the MIT License.
 
 import { BehaviorEnumValidator, BehaviorMapValidator, BehaviorValueValidator, ClickAnalyticsPlugin } from "./ClickAnalyticsPlugin";
-import { IClickAnalyticsConfiguration, IValueCallback, ICustomDataTags } from "./Interfaces/Datamodel";
+import { IClickAnalyticsConfiguration, IValueCallback, ICustomDataTags, ICoreData, IPageTags, IPageActionTelemetry, IContent, IOverrideValues, IPageActionOverrideValues } from "./Interfaces/Datamodel";
+import { Behavior } from "./Behaviours";
 
-export { IClickAnalyticsConfiguration, IValueCallback, ICustomDataTags, ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }
+// Re-export ICustomProperties from core
+export { ICustomProperties } from "@microsoft/applicationinsights-core-js";
+
+export { IClickAnalyticsConfiguration, IValueCallback, ICustomDataTags, ICoreData, IPageTags, IPageActionTelemetry, IContent, IOverrideValues, IPageActionOverrideValues, Behavior, ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }
