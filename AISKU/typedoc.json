@@ -1,6 +1,6 @@
 {
     "$schema": "https://typedoc.org/schema.json",
-    "entryPoints": [ "./src/Init.ts", "./src/applicationinsights-web.ts" ],
+    "entryPoints": [ "./src/Init.ts" ],
     "exclude": [ "**/internal/**/*.ts", "node_modules/**" ],
     "externalPattern": [
         "**/node_modules/**",
@@ -18,7 +18,6 @@
     "excludeInternal": true,
     "excludePrivate": true,
     "includeVersion": true,
-    "followSymlinks": true,
     "groupOrder": [
         "Entrypoint",
         "Modules",
