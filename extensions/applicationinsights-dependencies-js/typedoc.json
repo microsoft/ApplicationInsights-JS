@@ -3,8 +3,8 @@
     "entryPoints": [ "./src/applicationinsights-dependencies-js.ts" ],
     "exclude": [ "**/internal/**/*.ts", "node_modules/**" ],
     "externalPattern": [
-        "**/node_modules/**",
-        "node_modules/**"
+        "**/node_modules/(?!@microsoft)/**",
+        "node_modules/(?!@microsoft)/**"
     ],
     "sort": [
         "alphabetical",
