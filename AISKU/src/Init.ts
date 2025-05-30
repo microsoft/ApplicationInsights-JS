@@ -16,6 +16,7 @@ export { IApplicationInsights } from "./IApplicationInsights";
 
 export { Snippet };
 export {
+    IConfiguration,
     LoggingSeverity,
     PerfEvent,
     PerfManager,
