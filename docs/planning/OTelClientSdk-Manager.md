@@ -1,8 +1,8 @@
-# OTelClientSDK Manager Design
+# OTelClientSdk Manager Design
 
 ## Overview
 
-The OTelClientSDK Manager is a core component that enables multiple SDK instances to coexist while efficiently sharing underlying resources. This design allows different teams or components within an application to create isolated SDK instances with their own configurations, instrumentations, and control planes, while minimizing the impact on runtime performance.
+The OTelClientSdk Manager is a core component that enables multiple SDK instances to coexist while efficiently sharing underlying resources. This design allows different teams or components within an application to create isolated SDK instances with their own configurations, instrumentations, and control planes, while minimizing the impact on runtime performance.
 
 ## Goals
 
@@ -21,19 +21,19 @@ The OTelClientSDK Manager is a core component that enables multiple SDK instance
 
 ```typescript
 /**
- * Interface for the SDK Manager
+ * Interface for the OTelClientSdk Manager
  */
-export interface ISDKManager {
+export interface IOTelClientSdkManager {
   /** Get the number of active SDK instances */
   getInstanceCount(): number;
   /** Get the list of active SDK instance names */
   getInstanceNames(): string[];
   /** Get an SDK instance by name */
-  getInstance(name: string): IOTelClientSDK | undefined;
+  getInstance(name: string): IOTelClientSdk | undefined;
   /** Register a new SDK instance */
-  registerInstance(instance: IOTelClientSDK): void;
+  registerInstance(instance: IOTelClientSdk): void;
   /** Unregister an SDK instance */
-  unregisterInstance(instance: IOTelClientSDK): void;
+  unregisterInstance(instance: IOTelClientSdk): void;
   /** Shut down all SDK instances */
   shutdownAll(): Promise<void>;
   /** Unload all SDK instances */
@@ -116,17 +116,17 @@ The SDK Manager coordinates these shared resources:
 /**
  * Get the default SDK Manager instance for the current module
  */
-export function getSDKManager(name?: string): ISDKManager {
+export function getOTelClientSdkManager(name?: string): IOTelClientSdkManager {
   if (!name) {
     if (!_defaultInstance) {
-      _defaultInstance = createSDKManager("default");
+      _defaultInstance = createOTelClientSdkManager("default");
     }
     return _defaultInstance;
   }
   
   // Return existing manager by name or create a new one
   if (!_namedInstances[name]) {
-    _namedInstances[name] = createSDKManager(name);
+    _namedInstances[name] = createOTelClientSdkManager(name);
   }
   return _namedInstances[name];
 }
@@ -135,11 +135,11 @@ export function getSDKManager(name?: string): ISDKManager {
  * Create a new SDK Manager
  * @param managerName - The name of this SDK Manager instance
  */
-export function createSDKManager(managerName: string): ISDKManager {
+export function createOTelClientSdkManager(managerName: string): IOTelClientSdkManager {
   // Private closure variables
   const _managerName = managerName;
-  const _instances: IOTelClientSDK[] = [];
-  const _instanceMap: Record<string, IOTelClientSDK> = {};
+  const _instances: IOTelClientSdk[] = [];
+  const _instanceMap: Record<string, IOTelClientSdk> = {};
   
   // Create shared resources
   const _timerPool = createTimerPool();
@@ -147,7 +147,7 @@ export function createSDKManager(managerName: string): ISDKManager {
   const _connectionManager = createConnectionManager();
   const _resourcePool = createResourcePool();
     // Create the instance with direct method implementations
-  const _self: ISDKManager = {
+  const _self: IOTelClientSdkManager = {
     // Get manager name
     get name() { return _managerName; },
     // Get instance count
@@ -166,7 +166,7 @@ export function createSDKManager(managerName: string): ISDKManager {
     },
     
     // Register instance
-    registerInstance(instance: IOTelClientSDK) {
+    registerInstance(instance: IOTelClientSdk) {
       if (instance.name && !_instanceMap[instance.name]) {
         _instances.push(instance);
         _instanceMap[instance.name] = instance;
@@ -174,7 +174,7 @@ export function createSDKManager(managerName: string): ISDKManager {
     },
     
     // Unregister instance
-    unregisterInstance(instance: IOTelClientSDK) {
+    unregisterInstance(instance: IOTelClientSdk) {
       if (instance.name) {
         const index = _instances.indexOf(instance);
         if (index !== -1) {
@@ -211,7 +211,7 @@ export function createSDKManager(managerName: string): ISDKManager {
 
 ### Modified SDK Creation
 
-The `createOTelClientSDK` function is modified to register with the manager:
+The `createOTelClientSdk` function is modified to register with the manager:
 
 ```typescript
 /**
@@ -219,13 +219,13 @@ The `createOTelClientSDK` function is modified to register with the manager:
  * @param config - Configuration for the SDK
  * @returns An initialized SDK instance
  */
-export function createOTelClientSDK(config: IOTelClientSDKConfig = {}): IOTelClientSDK {
+export function createOTelClientSdk(config: IOTelClientSdkConfig = {}): IOTelClientSdk {
   // Private closure variables
   const _config = config || {};
   const _name = _config.instanceName || generateInstanceName();
   
   // Get the SDK manager - can specify which manager to use
-  const _manager = getSDKManager(_config.managerName);
+  const _manager = getOTelClientSdkManager(_config.managerName);
   const _sharedResources = _manager.getSharedResources();
   
   // Rest of the implementation...
@@ -242,7 +242,7 @@ export function createOTelClientSDK(config: IOTelClientSDKConfig = {}): IOTelCli
 Each SDK instance has a unique name and identifier:
 
 ```typescript
-export interface IOTelClientSDK {
+export interface IOTelClientSdk {
   /** The name of this SDK instance */
   readonly name: string;
   /** The unique identifier for this SDK instance */
@@ -315,17 +315,17 @@ Multiple versions of the SDK can coexist in the same runtime:
 
 ```typescript
 import { 
-  createOTelClientSDK, 
-  getSDKManager 
-} from '@microsoft/applicationinsights-otelclient-js';
+  createOTelClientSdk, 
+  getOTelClientSdkManager 
+} from '@microsoft/applicationinsights-otelclientsdk';
 
 // Create SDK instances for different teams using the default manager
-const teamAInstance = createOTelClientSDK({
+const teamAInstance = createOTelClientSdk({
   instanceName: 'team-a',
   connectionString: 'InstrumentationKey=team-a-key'
 });
 
-const teamBInstance = createOTelClientSDK({
+const teamBInstance = createOTelClientSdk({
   instanceName: 'team-b',
   connectionString: 'InstrumentationKey=team-b-key'
 });
@@ -339,7 +339,7 @@ const teamATracer = teamAInstance.trace.getTracer('team-a-service');
 const teamBTracer = teamBInstance.trace.getTracer('team-b-service');
 
 // Get the SDK Manager to check active instances
-const defaultManager = getSDKManager();
+const defaultManager = getOTelClientSdkManager();
 console.log(`Active instances in default manager: ${defaultManager.getInstanceCount()}`);
 ```
 
@@ -347,18 +347,18 @@ console.log(`Active instances in default manager: ${defaultManager.getInstanceCo
 
 ```typescript
 import { 
-  createOTelClientSDK, 
-  getSDKManager 
-} from '@microsoft/applicationinsights-otelclient-js';
+  createOTelClientSdk,
+  getOTelClientSdkManager 
+} from '@microsoft/applicationinsights-otelclientsdk';
 
 // Create SDK instances for different projects using separate managers
-const teamCInstance = createOTelClientSDK({
+const teamCInstance = createOTelClientSdk({
   instanceName: 'team-c',
   managerName: 'project-alpha',
   connectionString: 'InstrumentationKey=team-c-key'
 });
 
-const teamDInstance = createOTelClientSDK({
+const teamDInstance = createOTelClientSdk({
   instanceName: 'team-d',
   managerName: 'project-beta',
   connectionString: 'InstrumentationKey=team-d-key'
@@ -369,8 +369,8 @@ teamCInstance.initialize();
 teamDInstance.initialize();
 
 // Access each specific manager
-const alphaManager = getSDKManager('project-alpha');
-const betaManager = getSDKManager('project-beta');
+const alphaManager = getOTelClientSdkManager('project-alpha');
+const betaManager = getOTelClientSdkManager('project-beta');
 
 console.log(`Project Alpha instances: ${alphaManager.getInstanceCount()}`);
 console.log(`Project Beta instances: ${betaManager.getInstanceCount()}`);
@@ -383,12 +383,12 @@ alphaManager.getSharedResources().exportQueue.flush();
 
 ```typescript
 import { 
-  createOTelClientSDK, 
-  getSDKManager 
-} from '@microsoft/applicationinsights-otelclient-js';
+  createOTelClientSdk, 
+  getOTelClientSdkManager 
+} from '@microsoft/applicationinsights-otelclientsdk';
 
 // Create SDK instance with resource control
-const instance = createOTelClientSDK({
+const instance = createOTelClientSdk({
   instanceName: 'my-instance',
   resourceControls: {
     maxQueueSize: 1000,
@@ -400,7 +400,7 @@ const instance = createOTelClientSDK({
 instance.initialize();
 
 // Access shared resources
-const manager = getSDKManager();
+const manager = getOTelClientSdkManager();
 const resources = manager.getSharedResources();
 
 // Flush telemetry from all instances immediately
@@ -417,4 +417,4 @@ resources.exportQueue.flush();
 
 ## Conclusion
 
-The OTelClientSDK Manager enables efficient multi-instance support while minimizing the impact on runtime performance. This approach allows different teams or components to use the SDK with their own configurations and control planes, while benefiting from shared underlying resources.
+The OTelClientSdk Manager enables efficient multi-instance support while minimizing the impact on runtime performance. This approach allows different teams or components to use the SDK with their own configurations and control planes, while benefiting from shared underlying resources.
