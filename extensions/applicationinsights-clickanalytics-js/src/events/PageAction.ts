@@ -5,7 +5,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { strNotSpecified } from "@microsoft/applicationinsights-common";
 import {
-    ICustomProperties, IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, _throwInternal, eLoggingSeverity, getPerformance, objExtend,
+    ICustomProperties, IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, _throwInternal, eLoggingSeverity, fieldRedaction, getPerformance, objExtend,
     objForEachKey
 } from "@microsoft/applicationinsights-core-js";
 import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
@@ -126,6 +126,9 @@ export class PageAction extends WebEvent {
                 
                 pageActionEvent.timeToAction = _getTimeToClick();
                 pageActionEvent.refUri = isValueAssigned(overrideValues.refUri) ? overrideValues.refUri : _self._config.coreData.referrerUri;
+                if (_self._clickAnalyticsPlugin.core.config) {
+                    pageActionEvent.refUri = fieldRedaction(pageActionEvent.refUri, _self._clickAnalyticsPlugin.core.config);
+                }
                 if(_isUndefinedEvent(pageActionEvent)) {
                     return;
                 }

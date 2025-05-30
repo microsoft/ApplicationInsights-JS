@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { ITelemetryTrace, ITraceState, dataSanitizeString } from "@microsoft/applicationinsights-common";
-import { IDiagnosticLogger, generateW3CId, getLocation } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, generateW3CId, getLocation, IConfiguration, fieldRedaction } from "@microsoft/applicationinsights-core-js";
 
 export class TelemetryTrace implements ITelemetryTrace {
 
@@ -12,13 +12,16 @@ export class TelemetryTrace implements ITelemetryTrace {
     public traceFlags: number;
     public name: string;
 
-    constructor(id?: string, parentId?: string, name?: string, logger?: IDiagnosticLogger) {
+    constructor(id?: string, parentId?: string, name?: string, logger?: IDiagnosticLogger, config?: IConfiguration) {
         const _self = this;
         _self.traceID = id || generateW3CId();
         _self.parentID = parentId;
         let location = getLocation();
         if (!name && location && location.pathname) {
             name = location.pathname;
+            if (config) {
+                name = fieldRedaction(name, config);
+            }
         }
 
         _self.name = dataSanitizeString(logger, name);
