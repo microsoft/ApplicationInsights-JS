@@ -2,6 +2,6 @@
 // Licensed under the MIT License.
 
 import { BehaviorEnumValidator, BehaviorMapValidator, BehaviorValueValidator, ClickAnalyticsPlugin } from "./ClickAnalyticsPlugin";
-import { IClickAnalyticsConfiguration } from "./Interfaces/Datamodel";
+import { IClickAnalyticsConfiguration, IValueCallback, ICustomDataTags } from "./Interfaces/Datamodel";
 
-export { IClickAnalyticsConfiguration, ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }
+export { IClickAnalyticsConfiguration, IValueCallback, ICustomDataTags, ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }
