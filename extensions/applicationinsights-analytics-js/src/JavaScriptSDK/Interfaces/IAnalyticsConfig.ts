@@ -105,4 +105,9 @@ export interface IAnalyticsConfig {
      * Internal only
      */
     autoExceptionInstrumented?: boolean;
+
+    /**
+     * An optional account id, if your app groups users into accounts. No spaces, commas, semicolons, equals, or vertical bars.
+     */
+    accountId?: string;
 }
