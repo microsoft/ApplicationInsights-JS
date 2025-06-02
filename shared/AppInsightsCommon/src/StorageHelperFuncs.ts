@@ -5,22 +5,24 @@ import {
     IDiagnosticLogger, _eInternalMessageId, _throwInternal, dumpObj, eLoggingSeverity, getExceptionName, getGlobal, getGlobalInst,
     isNullOrUndefined, objForEachKey
 } from "@microsoft/applicationinsights-core-js";
+import { ICachedValue, createCachedValue, objGetOwnPropertyDescriptor } from "@nevware21/ts-utils";
 import { StorageType } from "./Enums";
 
-let _canUseLocalStorage: boolean = undefined;
-let _canUseSessionStorage: boolean = undefined;
 let _storagePrefix: string = "";
+
+// Create cached values for verified storage objects to avoid repeated checks
+let _verifiedLocalStorage: ICachedValue<Storage> = null;
+let _verifiedSessionStorage: ICachedValue<Storage> = null;
 
 /**
  * Gets the localStorage object if available
  * @returns {Storage} - Returns the storage object if available else returns null
  */
 function _getLocalStorageObject(): Storage {
-    if (utlCanUseLocalStorage()) {
-        return _getVerifiedStorageObject(StorageType.LocalStorage);
+    if (!_verifiedLocalStorage) {
+        _verifiedLocalStorage = createCachedValue(_getVerifiedStorageObject(StorageType.LocalStorage));
     }
-
-    return null;
+    return _verifiedLocalStorage.v;
 }
 
 /**
@@ -30,24 +32,94 @@ function _getLocalStorageObject(): Storage {
  * @returns {Storage} Returns storage object verified that it is usable
  */
 function _getVerifiedStorageObject(storageType: StorageType): Storage {
+    let result = null;
+    const storageTypeName = storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage";
+    
     try {
-        if (isNullOrUndefined(getGlobal())) {
-            return null;
+        // Default to false - assume storage is not available
+        let canAccessStorage = false;
+        const gbl = getGlobal();
+        
+        // Only proceed if we have a global object
+        if (!isNullOrUndefined(gbl)) {
+            // Try the safest method first (property descriptor)
+            try {
+                const descriptor = objGetOwnPropertyDescriptor(gbl, storageTypeName);
+                if (descriptor && descriptor.get) {
+                    canAccessStorage = true;
+                }
+            } catch (e) {
+                // If descriptor check fails, try direct access
+                // This will be caught by the outer try-catch if it fails
+                canAccessStorage = !!gbl[storageTypeName];
+            }
         }
-        let uid = (new Date).toString();
-        let storage: Storage = getGlobalInst(storageType === StorageType.LocalStorage ? "localStorage" : "sessionStorage");
-        let name:string = _storagePrefix + uid;
-        storage.setItem(name, uid);
-        let fail = storage.getItem(name) !== uid;
-        storage.removeItem(name);
-        if (!fail) {
-            return storage;
+        
+        // If we determined storage might be accessible, verify it works
+        if (canAccessStorage) {
+            try {
+                const uid = (new Date).toString();
+                const storage: Storage = getGlobalInst(storageTypeName);
+                if (!storage) {
+                    return null;
+                }
+                const name = _storagePrefix + uid;
+                
+                storage.setItem(name, uid);
+                const success = storage.getItem(name) === uid;
+                storage.removeItem(name);
+                
+                if (success) {
+                    // Create a wrapped storage object that protects write operations
+                    const originalStorage = storage;
+                    
+                    // Helper to create storage operation methods with consistent error handling
+                    const _createStorageOperation = function<T>(operationName: string, resetOnError: boolean, defaultValue?: T): Function {
+                        return function(...args: any[]): T {
+                            try {
+                                // Execute the operation but allow exceptions to propagate after handling
+                                return originalStorage[operationName].apply(originalStorage, args);
+                            } catch (e) {
+                                // Log or handle the error as needed
+                                if (resetOnError) {
+                                    // Reset the verified storage on write errors
+                                    if (storageType === StorageType.LocalStorage) {
+                                        _verifiedLocalStorage = null;
+                                    } else {
+                                        _verifiedSessionStorage = null;
+                                    }
+                                }
+                                // Rethrow the exception to the caller
+                                throw e;
+                            }
+                        };
+                    }
+                    
+                    const wrappedStorage = {
+                        // Read operations - don't reset cache on error
+                        getItem: _createStorageOperation<string>("getItem", false, null),
+                        key: _createStorageOperation<string>("key", false, null),
+                        get length(): number { 
+                            return _createStorageOperation<number>("length", false, 0)();
+                        },
+                        
+                        // Write operations - reset cache on error
+                        setItem: _createStorageOperation<void>("setItem", true),
+                        removeItem: _createStorageOperation<void>("removeItem", true),
+                        clear: _createStorageOperation<void>("clear", true)
+                    };
+                    
+                    result = wrappedStorage as Storage;
+                }
+            } catch (e) {
+                // Storage exists but can't be used (quota exceeded, etc.)
+            }
         }
-    } catch (exception) {
-        // eslint-disable-next-line no-empty
+    } catch (e) {
+        // Catch any unexpected errors
     }
-
-    return null;
+    
+    return result;
 }
 
 /**
@@ -55,31 +127,36 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
  * @returns {Storage} - Returns the storage object if available else returns null
  */
 function _getSessionStorageObject(): Storage {
-    if (utlCanUseSessionStorage()) {
-        return _getVerifiedStorageObject(StorageType.SessionStorage);
+    if (!_verifiedSessionStorage) {
+        _verifiedSessionStorage = createCachedValue(_getVerifiedStorageObject(StorageType.SessionStorage));
     }
-
-    return null;
+    return _verifiedSessionStorage.v;
 }
+
+
 
 /**
  * Disables the global SDK usage of local or session storage if available
  */
 export function utlDisableStorage() {
-    _canUseLocalStorage = false;
-    _canUseSessionStorage = false;
+    _verifiedLocalStorage = createCachedValue(null);
+    _verifiedSessionStorage = createCachedValue(null);
 }
 
 export function utlSetStoragePrefix(storagePrefix: string) {
     _storagePrefix = storagePrefix || "";
+    // Reset the cached storage instances since prefix changed
+    _verifiedLocalStorage = null;
+    _verifiedSessionStorage = null;
 }
 
 /**
  * Re-enables the global SDK usage of local or session storage if available
  */
 export function utlEnableStorage() {
-    _canUseLocalStorage = utlCanUseLocalStorage(true);
-    _canUseSessionStorage = utlCanUseSessionStorage(true);
+    // Force recheck of storage availability
+    utlCanUseLocalStorage(true);
+    utlCanUseSessionStorage(true);
 }
 
 /**
@@ -88,27 +165,17 @@ export function utlEnableStorage() {
  * @param reset - Should the usage be reset and determined only based on whether LocalStorage is available
  */
 export function utlCanUseLocalStorage(reset?: boolean): boolean {
-    if (reset || _canUseLocalStorage === undefined) {
-        _canUseLocalStorage = !!_getVerifiedStorageObject(StorageType.LocalStorage);
+    if (reset) {
+        _verifiedLocalStorage = null;
     }
-
-    return _canUseLocalStorage;
+    
+    return !!_getLocalStorageObject();
 }
 
 export function utlGetLocalStorage(logger: IDiagnosticLogger, name: string): string {
     const storage = _getLocalStorageObject();
     if (storage !== null) {
-        try {
-            return storage.getItem(name);
-        } catch (e) {
-            _canUseLocalStorage = false;
-
-            _throwInternal(logger,
-                eLoggingSeverity.WARNING,
-                _eInternalMessageId.BrowserCannotReadLocalStorage,
-                "Browser failed read of local storage. " + getExceptionName(e),
-                { exception: dumpObj(e) });
-        }
+        return storage.getItem(name);
     }
     return null;
 }
@@ -116,18 +183,8 @@ export function utlGetLocalStorage(logger: IDiagnosticLogger, name: string): str
 export function utlSetLocalStorage(logger: IDiagnosticLogger, name: string, data: string): boolean {
     const storage = _getLocalStorageObject();
     if (storage !== null) {
-        try {
-            storage.setItem(name, data);
-            return true;
-        } catch (e) {
-            _canUseLocalStorage = false;
-
-            _throwInternal(logger,
-                eLoggingSeverity.WARNING,
-                _eInternalMessageId.BrowserCannotWriteLocalStorage,
-                "Browser failed write to local storage. " + getExceptionName(e),
-                { exception: dumpObj(e) });
-        }
+        storage.setItem(name, data);
+        return true;
     }
     return false;
 }
@@ -135,37 +192,32 @@ export function utlSetLocalStorage(logger: IDiagnosticLogger, name: string, data
 export function utlRemoveStorage(logger: IDiagnosticLogger, name: string): boolean {
     const storage = _getLocalStorageObject();
     if (storage !== null) {
-        try {
-            storage.removeItem(name);
-            return true;
-        } catch (e) {
-            _canUseLocalStorage = false;
-
-            _throwInternal(logger,
-                eLoggingSeverity.WARNING,
-                _eInternalMessageId.BrowserFailedRemovalFromLocalStorage,
-                "Browser failed removal of local storage item. " + getExceptionName(e),
-                { exception: dumpObj(e) });
-        }
+        storage.removeItem(name);
+        return true;
     }
     return false;
 }
 
 export function utlCanUseSessionStorage(reset?: boolean): boolean {
-    if (reset || _canUseSessionStorage === undefined) {
-        _canUseSessionStorage = !!_getVerifiedStorageObject(StorageType.SessionStorage);
+    if (reset) {
+        _verifiedSessionStorage = null;
     }
-
-    return _canUseSessionStorage;
+    
+    return !!_getSessionStorageObject();
 }
 
 export function utlGetSessionStorageKeys(): string[] {
     const keys: string[] = [];
 
     if (utlCanUseSessionStorage()) {
-        objForEachKey(getGlobalInst<any>("sessionStorage"), (key) => {
-            keys.push(key);
-        });
+        try {
+            objForEachKey(getGlobalInst<any>("sessionStorage"), (key) => {
+                keys.push(key);
+            });
+        } catch (e) {
+            // Invalidate session storage on any error
+            _verifiedSessionStorage = null;
+        }
     }
 
     return keys;
@@ -177,8 +229,6 @@ export function utlGetSessionStorage(logger: IDiagnosticLogger, name: string): s
         try {
             return storage.getItem(name);
         } catch (e) {
-            _canUseSessionStorage = false;
-
             _throwInternal(logger,
                 eLoggingSeverity.WARNING,
                 _eInternalMessageId.BrowserCannotReadSessionStorage,
@@ -196,8 +246,6 @@ export function utlSetSessionStorage(logger: IDiagnosticLogger, name: string, da
             storage.setItem(name, data);
             return true;
         } catch (e) {
-            _canUseSessionStorage = false;
-
             _throwInternal(logger,
                 eLoggingSeverity.WARNING,
                 _eInternalMessageId.BrowserCannotWriteSessionStorage,
@@ -215,8 +263,6 @@ export function utlRemoveSessionStorage(logger: IDiagnosticLogger, name: string)
             storage.removeItem(name);
             return true;
         } catch (e) {
-            _canUseSessionStorage = false;
-
             _throwInternal(logger,
                 eLoggingSeverity.WARNING,
                 _eInternalMessageId.BrowserFailedRemovalFromSessionStorage,
@@ -224,6 +270,5 @@ export function utlRemoveSessionStorage(logger: IDiagnosticLogger, name: string)
                 { exception: dumpObj(e) });
         }
     }
-
     return false;
 }
