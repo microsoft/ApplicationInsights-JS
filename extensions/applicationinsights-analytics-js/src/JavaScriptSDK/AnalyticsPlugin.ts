@@ -23,11 +23,11 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
+import { IAnalyticsConfig } from "./Interfaces/IAnalyticsConfig";
 import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
 import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { Timing } from "./Timing";
-import { IAnalyticsConfig } from "./Interfaces/IAnalyticsConfig";
 
 const strEvent = "event";
 
@@ -53,7 +53,7 @@ function _getReason(error: any) {
 
 const MinMilliSeconds = 60000;
 
-const defaultValues: IConfigDefaults<IAnalyticsConfig> = objDeepFreeze({
+const defaultValues: IConfigDefaults<IConfig&IConfiguration> = objDeepFreeze({
     sessionRenewalMs: cfgDfSet(_chkConfigMilliseconds, 30 * 60 * 1000),
     sessionExpirationMs: cfgDfSet(_chkConfigMilliseconds, 24 * 60 * 60 * 1000),
     disableExceptionTracking: cfgDfBoolean(),
@@ -85,7 +85,7 @@ function _chkSampling(value: number) {
     return !isNaN(value) && value > 0 && value <= 100;
 }
 
-function _updateStorageUsage(extConfig: IAnalyticsConfig) {
+function _updateStorageUsage(extConfig: IConfig) {
     // Not resetting the storage usage as someone may have manually called utlDisableStorage, so this will only
     // reset based if the configuration option is provided
     if (!isUndefined(extConfig.isStorageUseDisabled)) {
@@ -102,7 +102,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     public identifier: string = AnalyticsPluginIdentifier; // do not change name or priority
     public priority: number = 180; // take from reserved priority range 100- 200
-    public readonly config: IAnalyticsConfig;
+    public readonly config: IConfig & IConfiguration;
     public queue: Array<() => void>;
     public autoRoutePVDelay = 500; // ms; Time to wait after a route change before triggering a pageview to allow DOM changes to take place
 

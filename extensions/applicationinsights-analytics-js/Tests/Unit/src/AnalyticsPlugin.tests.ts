@@ -11,7 +11,6 @@ import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsC
 import { Sender } from "@microsoft/applicationinsights-channel-js"
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { AnalyticsPlugin } from "../../../src/JavaScriptSDK/AnalyticsPlugin";
-import { IAnalyticsConfig } from "../../../src/JavaScriptSDK/Interfaces/IAnalyticsConfig";
 
 declare class ExceptionHelper {
     capture: (appInsights:IAppInsights) => void;
@@ -358,7 +357,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 Assert.equal(30 * 60 * 1000, appInsights.config.sessionRenewalMs);
                 Assert.equal(24 * 60 * 60 * 1000, appInsights.config.sessionExpirationMs);
 
-                let extConfig = core.config.extensionConfig![AnalyticsPluginIdentifier] as IAnalyticsConfig;
+                let extConfig = core.config.extensionConfig![AnalyticsPluginIdentifier] as IConfig;
                 Assert.equal('instrumentation_key', core.config.instrumentationKey);
                 Assert.equal(12, extConfig.samplingPercentage);
                 Assert.notEqual('aaa', extConfig.accountId);
