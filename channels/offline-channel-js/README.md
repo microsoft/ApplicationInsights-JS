@@ -14,35 +14,35 @@ The Offline Channel supports the saving of events when your application is offli
 
 ## Configuration
 
-`IOfflineChannelConfiguration`
+[`IOfflineChannelConfiguration`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html)
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| maxStorageSizeInBytes | [Optional]| 5000000 | The max size in bytes that should be used for storing events in local/session storage. |
-| storageKeyPrefix | [Optional] | AIOffline | The storage key prefix that should be used when storing events in persistent storage. |
-| minPersistenceLevel | [Optional] | `EventPersistence.Normal` or 1 | Identifies the minimum level that will be cached in the offline channel. Valid values of this setting are defined by the `EventPersistence` enum, currently Normal (1) and Critical (2) with the default value being Normal (1), which means all events without a persistence level set or with invalid persistence level will be marked as Normal(1) events.|
-| providers | [Optional] | [`eStorageProviders.LocalStorage, eStorageProviders.IndexedDB`]|  Identifies the StorageProviders that should be used by the system if available, the first available provider will be used. Valid available values are defined by the `eStorageProviders` enum. </br> Note: LocalStorage will be used to save unload events even if it is not in the providers list. |
-| eventsLimitInMem | [Optional] | null | Identifies the maximum number of events to store in memory before sending to persistent storage. |
-| autoClean | [Optional] | false | Identifies if events that have existed in storage longer than the maximum allowed time (configured in inStorageMaxTime) should be cleaned after connection with storage. |
-| inMemoMaxTime | [Optional] | 15000 | Identifies the maximum time in ms that items should be in memory before being saved into storage. |
-| inStorageMaxTime | [Optional] | 10080000 (around 7days) | Identifies the maximum time in ms that items should be in the configured persistent storage. |
-| maxRetry | [Optional] | 1 | Identifies the maximum retry times for an event batch. |
-| primaryOnlineChannelId | [Optional] | `[AppInsightsChannelPlugin, PostChannel]` | Identifies online channel IDs in order. The first available one will be used. |
-| maxBatchsize | [Optional] | 63000 | Identifies the maximum size per batch in bytes that is saved in persistent storage. |
-| senderCfg | [Optional] | `IOfflineSenderConfig` | Identifies offline sender properties. |
-| maxSentBatchInterval | [Optional] | 15000 | Identifies the interval time in ms that previously stored offline event batches should be sent under online status. |
-| EventsToDropPerTime | [Optional] | 10 | Identifies the maximum event batch count when cleaning or releasing space for persistent storage per time. |
-| maxCriticalEvtsDropCnt | [Optional] | 2 | Identifies the maximum critical events count for an event batch to be able to drop when releasing space for persistent storage per time. |
-| overrideInstrumentationKey | [Optional] | null | Identifies overridden for the Instrumentation key when the offline channel calls `processTelemetry`. |
+| [maxStorageSizeInBytes](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#maxStorageSizeInBytes) | [Optional]| 5000000 | The max size in bytes that should be used for storing events in local/session storage. |
+| [storageKeyPrefix](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#storageKeyPrefix) | [Optional] | AIOffline | The storage key prefix that should be used when storing events in persistent storage. |
+| [minPersistenceLevel](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#minPersistenceLevel) | [Optional] | `EventPersistence.Normal` or 1 | Identifies the minimum level that will be cached in the offline channel. Valid values of this setting are defined by the `EventPersistence` enum, currently Normal (1) and Critical (2) with the default value being Normal (1), which means all events without a persistence level set or with invalid persistence level will be marked as Normal(1) events.|
+| [providers](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#providers) | [Optional] | [`eStorageProviders.LocalStorage, eStorageProviders.IndexedDB`]|  Identifies the StorageProviders that should be used by the system if available, the first available provider will be used. Valid available values are defined by the `eStorageProviders` enum. </br> Note: LocalStorage will be used to save unload events even if it is not in the providers list. |
+| [eventsLimitInMem](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#eventsLimitInMem) | [Optional] | null | Identifies the maximum number of events to store in memory before sending to persistent storage. |
+| [autoClean](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#autoClean) | [Optional] | false | Identifies if events that have existed in storage longer than the maximum allowed time (configured in inStorageMaxTime) should be cleaned after connection with storage. |
+| [inMemoMaxTime](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#inMemoMaxTime) | [Optional] | 15000 | Identifies the maximum time in ms that items should be in memory before being saved into storage. |
+| [inStorageMaxTime](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#inStorageMaxTime) | [Optional] | 10080000 (around 7days) | Identifies the maximum time in ms that items should be in the configured persistent storage. |
+| [maxRetry](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#maxRetry) | [Optional] | 1 | Identifies the maximum retry times for an event batch. |
+| [primaryOnlineChannelId](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#primaryOnlineChannelId) | [Optional] | `[AppInsightsChannelPlugin, PostChannel]` | Identifies online channel IDs in order. The first available one will be used. |
+| [maxBatchsize](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#maxBatchsize) | [Optional] | 63000 | Identifies the maximum size per batch in bytes that is saved in persistent storage. |
+| [senderCfg](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#senderCfg) | [Optional] | `IOfflineSenderConfig` | Identifies offline sender properties. |
+| [maxSentBatchInterval](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#maxSentBatchInterval) | [Optional] | 15000 | Identifies the interval time in ms that previously stored offline event batches should be sent under online status. |
+| [EventsToDropPerTime](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#EventsToDropPerTime) | [Optional] | 10 | Identifies the maximum event batch count when cleaning or releasing space for persistent storage per time. |
+| [maxCriticalEvtsDropCnt](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#maxCriticalEvtsDropCnt) | [Optional] | 2 | Identifies the maximum critical events count for an event batch to be able to drop when releasing space for persistent storage per time. |
+| [overrideInstrumentationKey](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineChannelConfiguration.html#overrideInstrumentationKey) | [Optional] | null | Identifies overridden for the Instrumentation key when the offline channel calls `processTelemetry`. |
 
-`IOfflineSenderConfig`
+### [IOfflineSenderConfig](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineSenderConfig.html)
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| retryCodes | [Optional] | `[401, 403, 408, 429, 500, 502, 503, 504]` | Identifies status codes for re-sending event batches. |
-| transports | [Optional] | null | Either an array or single value identifying the requested TransportType type(s) that should be used for sending events. If not defined, the same transports will be used in the channel with the `primaryOnlineChannelI`. |
-| httpXHROverride | [Optional] | null | The HTTP override that should be used to send requests, as an `IXHROverride` object. |
-| alwaysUseXhrOverride | [Optional] | false | Identifies if provided httpXhrOverride will always be used. |
+| [retryCodes](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineSenderConfig.html#retryCodes) | [Optional] | `[401, 403, 408, 429, 500, 502, 503, 504]` | Identifies status codes for re-sending event batches. |
+| [transports](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineSenderConfig.html#transports) | [Optional] | null | Either an array or single value identifying the requested TransportType type(s) that should be used for sending events. If not defined, the same transports will be used in the channel with the `primaryOnlineChannelI`. |
+| [httpXHROverride](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineSenderConfig.html#httpXHROverride) | [Optional] | null | The HTTP override that should be used to send requests, as an `IXHROverride` object. |
+| [alwaysUseXhrOverride](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-offlinechannel-js/interfaces/IOfflineSenderConfig.html#alwaysUseXhrOverride) | [Optional] | false | Identifies if provided httpXhrOverride will always be used. |
 
 ## Basic Usage
 

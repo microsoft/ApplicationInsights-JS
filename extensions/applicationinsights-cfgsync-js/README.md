@@ -8,19 +8,19 @@
 Application Insights CfgSync Plugin enables configuration change communication among mutiple instances.
 Refer to [our GitHub page](https://github.com/microsoft/ApplicationInsights-JS) for more details on getting started.
 
-## Configuration
+## [Configuration](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-cfgsync-js/interfaces/ICfgSyncConfig.html)
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| syncMode | ICfgSyncMode<br>[Optional]| Broadcast | Sync mode of current instance. If set to `None`, current instance will NOT receive or broadcast config changes. If set to `Broadcast`, current instance will ONLY broadcast changes. If set to `Receive`, instance will ONLY receive config changes but NOT broadcast config changes. |
-| customEvtName | string<br>[Optional] | ai_cfgsync | Event name for sending or listening to configuration change details. |
-| cfgUrl | string<br>[Optional] | null | CDN endpoint for fetching configuration. If cfgUrl is defined, instance will NOT listen to core configuration changes. Details defined in the CDN endpoint should follow `ICfgSyncCdnConfig` interface. |
-| blkCdnCfg | boolean<br>[Optional] | false | Determines if fetching the CDN endpoint should be blocked or not. |
-| onCfgChangeReceive | function<br>[Optional] | null | Overrides callback function to handle event details when changes are received via event listener. |
-| overrideSyncFn | function<br>[Optional] | null | Overrides sync() function to broadcast changes. |
-| overrideFetchFn | function<br>[Optional] | null | Overrides fetch function to get config from cfgUrl when cfgUrl is defined. |
-| nonOverrideConfigs | NonOverrideCfg<br>[Optional] | {instrumentationKey: true, connectionString: true, endpointUrl: true } | When current instance is set with syncMode: `Receive`, config fields under nonOverrideConfigs will NOT be changed by any confif details sent out from other instances. NOTE: this config will be ONLY applied during initialization, so it won't be changed dynamically. |
-| scheduleFetchTimeout | number<br>[Optional] | 30 mins | Identifies the time interval (in milliseconds) for fetching config details from cfgUrl when cfgUrl is defined. If set to 0, the fetch operation will only be called once during initialization. |
+| [syncMode](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-cfgsync-js/interfaces/ICfgSyncConfig.html#syncMode) | ICfgSyncMode<br>[Optional]| Broadcast | Sync mode of current instance. If set to `None`, current instance will NOT receive or broadcast config changes. If set to `Broadcast`, current instance will ONLY broadcast changes. If set to `Receive`, instance will ONLY receive config changes but NOT broadcast config changes. |
+| [customEvtName](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-cfgsync-js/interfaces/ICfgSyncConfig.html#customEvtName) | string<br>[Optional] | ai_cfgsync | Event name for sending or listening to configuration change details. |
+| [cfgUrl](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-cfgsync-js/interfaces/ICfgSyncConfig.html#cfgUrl) | string<br>[Optional] | null | CDN endpoint for fetching configuration. If cfgUrl is defined, instance will NOT listen to core configuration changes. Details defined in the CDN endpoint should follow `ICfgSyncCdnConfig` interface. |
+| [blkCdnCfg](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-cfgsync-js/interfaces/ICfgSyncConfig.html#blkCdnCfg) | boolean<br>[Optional] | false | Determines if fetching the CDN endpoint should be blocked or not. |
+| [onCfgChangeReceive](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-cfgsync-js/interfaces/ICfgSyncConfig.html#onCfgChangeReceive) | function<br>[Optional] | null | Overrides callback function to handle event details when changes are received via event listener. |
+| [overrideSyncFn](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-cfgsync-js/interfaces/ICfgSyncConfig.html#overrideSyncFn) | function<br>[Optional] | null | Overrides sync() function to broadcast changes. |
+| [overrideFetchFn](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-cfgsync-js/interfaces/ICfgSyncConfig.html#overrideFetchFn) | function<br>[Optional] | null | Overrides fetch function to get config from cfgUrl when cfgUrl is defined. |
+| [nonOverrideConfigs](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-cfgsync-js/interfaces/ICfgSyncConfig.html#nonOverrideConfigs) | NonOverrideCfg<br>[Optional] | {instrumentationKey: true, connectionString: true, endpointUrl: true } | When current instance is set with syncMode: `Receive`, config fields under nonOverrideConfigs will NOT be changed by any confif details sent out from other instances. NOTE: this config will be ONLY applied during initialization, so it won't be changed dynamically. |
+| [scheduleFetchTimeout](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-cfgsync-js/interfaces/ICfgSyncConfig.html#scheduleFetchTimeout) | number<br>[Optional] | 30 mins | Identifies the time interval (in milliseconds) for fetching config details from cfgUrl when cfgUrl is defined. If set to 0, the fetch operation will only be called once during initialization. |
 
 
 ## Contributing
