@@ -11,3 +11,4 @@ export const DisabledPropertyName: string = "Microsoft_ApplicationInsights_Bypas
 // export const DEFAULT_BREEZE_PATH = "/v2/track";
 // export const strNotSpecified = "not_specified";
 // export const strIkey = "iKey";
+
