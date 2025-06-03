@@ -1,6 +1,6 @@
 import { ApplicationInsights, IAnalyticsConfig, IAppInsights, IConfig, ApplicationAnalytics } from "../../../src/applicationinsights-web";
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
-import { AnalyticsPluginIdentifier } from "@microsoft/applicationinsights-common";
+import { AnalyticsPluginIdentifier, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
 import { AppInsightsCore, IConfiguration } from "@microsoft/applicationinsights-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 
@@ -9,11 +9,13 @@ const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
 export class IAnalyticsConfigTests extends AITestClass {
 
     public testInitialize() {
-        // Initialize before each test
+        this._disableDynProtoBaseFuncs();
     }
 
     public testCleanup() {
-        // Cleanup after each test
+        // Clean up session storage
+        utlRemoveSessionStorage(null as any, "AI_sentBuffer");
+        utlRemoveSessionStorage(null as any, "AI_buffer");
     }
 
     public registerTests() {
@@ -84,6 +86,11 @@ export class IAnalyticsConfigTests extends AITestClass {
                         enableUnhandledPromiseRejectionTracking: true
                     }
                 });
+                this.onDone(() => {
+                    if (init && init.unload) {
+                        init.unload(false);
+                    }
+                });
                 init.loadAppInsights();
 
                 // Get the analytics plugin from the loaded app insights
@@ -118,6 +125,11 @@ export class IAnalyticsConfigTests extends AITestClass {
                         }
                     }
                 });
+                this.onDone(() => {
+                    if (init && init.unload) {
+                        init.unload(false);
+                    }
+                });
                 init.loadAppInsights();
 
                 // Test that extension config can be accessed and has correct properties
@@ -142,6 +154,11 @@ export class IAnalyticsConfigTests extends AITestClass {
                 const init = new ApplicationInsights({
                     config: {
                         instrumentationKey: TestInstrumentationKey
+                    }
+                });
+                this.onDone(() => {
+                    if (init && init.unload) {
+                        init.unload(false);
                     }
                 });
                 init.loadAppInsights();
