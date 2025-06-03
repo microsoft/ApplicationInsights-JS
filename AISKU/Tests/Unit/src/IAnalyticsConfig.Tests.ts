@@ -1,6 +1,6 @@
 import { ApplicationInsights, IAnalyticsConfig, IAppInsights, IConfig, ApplicationAnalytics } from "../../../src/applicationinsights-web";
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
-import { AnalyticsPluginIdentifier } from "@microsoft/applicationinsights-analytics-js";
+import { AnalyticsPluginIdentifier } from "@microsoft/applicationinsights-common";
 import { AppInsightsCore, IConfiguration } from "@microsoft/applicationinsights-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 
@@ -22,7 +22,12 @@ export class IAnalyticsConfigTests extends AITestClass {
             name: "IAnalyticsConfig: Interface is properly exported from AISKU",
             test: () => {
                 // Test that IAnalyticsConfig is available as an export
-                Assert.ok(typeof IAnalyticsConfig !== "undefined", "IAnalyticsConfig should be exported");
+                // Since IAnalyticsConfig is a TypeScript interface, we can't check typeof at runtime
+                // Instead, we'll test that we can create objects that satisfy the interface
+                const testConfig: IAnalyticsConfig = {
+                    instrumentationKey: "test-key"
+                };
+                Assert.ok(testConfig.instrumentationKey === "test-key", "IAnalyticsConfig should be usable");
             }
         });
 
@@ -50,17 +55,18 @@ export class IAnalyticsConfigTests extends AITestClass {
                     disableFlushOnUnload: false,
                     autoExceptionInstrumented: false,
                     autoUnhandledPromiseInstrumented: false,
-                    expCfg: { enabled: true }
+                    expCfg: { inclScripts: false, expLog: undefined, maxLogs: 50 }
                 };
 
                 // Test that it can be used as IConfig
                 const asIConfig: IConfig = testConfig;
-                Assert.equal("test-key", asIConfig.instrumentationKey, "Should work as IConfig");
+                Assert.equal("test-account", asIConfig.accountId, "Should work as IConfig");
                 Assert.equal(50, asIConfig.samplingPercentage, "Should access IConfig properties");
 
                 // Test that it can be used as IConfiguration  
                 const asIConfiguration: IConfiguration = testConfig;
                 Assert.equal("test-connection-string", asIConfiguration.connectionString, "Should work as IConfiguration");
+                Assert.equal("test-key", asIConfiguration.instrumentationKey, "Should access IConfiguration properties");
             }
         });
 
