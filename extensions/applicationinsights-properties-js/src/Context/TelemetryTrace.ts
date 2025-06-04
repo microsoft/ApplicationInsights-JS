@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { ITelemetryTrace, ITraceState, dataSanitizeString } from "@microsoft/applicationinsights-common";
-import { IDiagnosticLogger, generateW3CId, getLocation, IConfiguration, fieldRedaction } from "@microsoft/applicationinsights-core-js";
+import { IConfiguration, IDiagnosticLogger, fieldRedaction, generateW3CId, getLocation } from "@microsoft/applicationinsights-core-js";
 
 export class TelemetryTrace implements ITelemetryTrace {
 
