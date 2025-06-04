@@ -477,8 +477,8 @@ function redactQueryParameters(url: string): string {
  * @returns The redacted URL string or the original string if no redaction was needed or possible.
  */
 export function fieldRedaction(input: string, config: IConfiguration): string {
-    if (!input) {
-        return input === UNDEFINED_VALUE ? "" : input;
+    if (!input){
+        return input;
     }
     if (input.indexOf(" ") !== -1) {
         return input; // Checking for URLs with spaces
