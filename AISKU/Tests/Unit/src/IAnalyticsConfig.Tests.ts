@@ -27,9 +27,9 @@ export class IAnalyticsConfigTests extends AITestClass {
                 // Since IAnalyticsConfig is a TypeScript interface, we can't check typeof at runtime
                 // Instead, we'll test that we can create objects that satisfy the interface
                 const testConfig: IAnalyticsConfig = {
-                    instrumentationKey: "test-key"
+                    instrumentationKey: TestInstrumentationKey
                 };
-                Assert.ok(testConfig.instrumentationKey === "test-key", "IAnalyticsConfig should be usable");
+                Assert.ok(testConfig.instrumentationKey === TestInstrumentationKey, "IAnalyticsConfig should be usable");
             }
         });
 
@@ -38,7 +38,7 @@ export class IAnalyticsConfigTests extends AITestClass {
             test: () => {
                 // Create a test config that implements IAnalyticsConfig
                 const testConfig: IAnalyticsConfig = {
-                    instrumentationKey: "test-key",
+                    instrumentationKey: TestInstrumentationKey,
                     connectionString: "test-connection-string",
                     samplingPercentage: 50,
                     accountId: "test-account",
@@ -68,7 +68,7 @@ export class IAnalyticsConfigTests extends AITestClass {
                 // Test that it can be used as IConfiguration  
                 const asIConfiguration: IConfiguration = testConfig;
                 Assert.equal("test-connection-string", asIConfiguration.connectionString, "Should work as IConfiguration");
-                Assert.equal("test-key", asIConfiguration.instrumentationKey, "Should access IConfiguration properties");
+                Assert.equal(TestInstrumentationKey, asIConfiguration.instrumentationKey, "Should access IConfiguration properties");
             }
         });
 

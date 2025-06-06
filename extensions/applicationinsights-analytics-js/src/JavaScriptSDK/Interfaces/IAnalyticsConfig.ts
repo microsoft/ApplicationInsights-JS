@@ -6,9 +6,6 @@ import { IConfig } from "@microsoft/applicationinsights-common";
 
 /**
  * Configuration interface specifically for AnalyticsPlugin
- * This interface extends the capabilities of IConfig and IConfiguration for the Analytics plugin.
+ * This interface combines the capabilities of IConfig and IConfiguration for the Analytics plugin.
  */
-export interface IAnalyticsConfig extends IConfig, IConfiguration {
-    // This interface extends the capabilities of IConfig and IConfiguration
-    // without adding specific properties, following the established pattern
-}
+export type IAnalyticsConfig = IConfig & IConfiguration;
