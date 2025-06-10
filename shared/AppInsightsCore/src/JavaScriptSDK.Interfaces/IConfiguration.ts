@@ -232,11 +232,19 @@ export interface IConfiguration {
      */
     expCfg?: IExceptionConfig;
 
-        /**
+    /**
      * [Optional] A flag to enable or disable the use of the field redaction for urls.
      * @defaultValue true
      */
     redactionEnabled?: boolean;
+
+    /**
+     * [Optional] Additional query parameters to redact beyond the default set.
+     * Use this to specify custom parameters that contain sensitive information.
+     * These will be combined with the default parameters that are redacted.
+     * @example ["auth_token", "api_key", "private_data"]
+     */
+    redactQueryParams?: string[];
 
     ///**
     // * [Optional] Internal SDK configuration for developers

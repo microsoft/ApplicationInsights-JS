@@ -31,14 +31,6 @@ const strReactNative = "ReactNative";
 const strMsie = "msie";
 const strTrident = "trident/";
 const strXMLHttpRequest = "XMLHttpRequest";
-
-const SENSITIVE_QUERY_PARAMS = [
-    "sig",
-    "Signature",
-    "AWSAccessKeyId",
-    "X-Goog-Signature"
-] as const;
-
 const STR_REDACTED = "REDACTED";
 
 let _isTrident: boolean = null;
@@ -408,7 +400,9 @@ function redactUserInfo(url: string): string {
  * @param url - The URL string to redact
  * @returns The URL with sensitive query parameters redacted
  */
-function redactQueryParameters(url: string): string {
+function redactQueryParameters(url: string, config?: IConfiguration): string {
+    const DEFAULT_SENSITIVE_PARAMS = ["sig", "Signature", "AWSAccessKeyId", "X-Goog-Signature"];
+    let sensitiveParams: string[];
     const questionMarkIndex = strIndexOf(url, "?");
     if (questionMarkIndex === -1) {
         return url;
@@ -449,8 +443,13 @@ function redactQueryParameters(url: string): string {
     
     // Check if any parameters need redaction
     let anyParamRedacted = false;
-    for (let i = 0; i < SENSITIVE_QUERY_PARAMS.length; i++) {
-        const sensParam = SENSITIVE_QUERY_PARAMS[i];
+    if (config && config.redactQueryParams) {
+        sensitiveParams = [...DEFAULT_SENSITIVE_PARAMS, ...config.redactQueryParams];
+    } else {
+        sensitiveParams = DEFAULT_SENSITIVE_PARAMS;
+    }
+    for (let i = 0; i < sensitiveParams.length; i++) {
+        const sensParam = sensitiveParams[i];
         if (params[sensParam] !== UNDEFINED_VALUE) {
             params[sensParam] = STR_REDACTED;
             anyParamRedacted = true;
@@ -489,7 +488,7 @@ export function fieldRedaction(input: string, config: IConfiguration): string {
     }
     try {
         let parsedUrl = redactUserInfo(input);
-        parsedUrl = redactQueryParameters(parsedUrl);
+        parsedUrl = redactQueryParameters(parsedUrl, config);
         return parsedUrl;
     } catch (e) {
         return input;
