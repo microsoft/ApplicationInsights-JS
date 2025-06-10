@@ -37,7 +37,7 @@ export {
     objForEachKey, strStartsWith, strEndsWith, strContains, strTrim, isDate, isArray, isError, isString, isNumber, isBoolean,
     toISOString, arrForEach, arrIndexOf, arrMap, arrReduce, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError,
     setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, proxyFunctions, proxyFunctionAs, optimizeObject,
-    addEventHandler, newGuid, perfNow, newId, generateW3CId, safeGetLogger, objFreeze, objSeal,
+    addEventHandler, newGuid, perfNow, newId, generateW3CId, safeGetLogger, objFreeze, objSeal, fieldRedaction,
     // EnvUtils
     getGlobal, getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,

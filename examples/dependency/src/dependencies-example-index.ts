@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach } from "@microsoft/applicationinsights-core-js";
+import { arrForEach, fieldRedaction } from "@microsoft/applicationinsights-core-js";
+import { isString } from "@nevware21/ts-utils";
 import { addDependencyListener, addDependencyInitializer, stopDependencyEvent, changeConfig, initApplicationInsights, getConfig, enableAjaxPerfTrackingConfig } from "./appinsights-init";
 import { addHandlersButtonId, ajaxCallId, buttonSectionId, changeConfigButtonId, clearDetailsButtonId, clearDetailsList, clearEle, configContainerId, configDetails, createButton, createContainers, createDetailList, createFetchRequest, createUnTrackRequest, createXhrRequest, dependencyInitializerDetails, dependencyInitializerDetailsContainerId, dependencyListenerButtonId, dependencyListenerDetails, dependencyListenerDetailsContainerId, fetchCallId, fetchXhrId, removeAllHandlersId, stopDependencyEventButtonId, untrackFetchRequestId } from "./utils";
 
@@ -35,6 +36,12 @@ function addDependencyInitializerOnClick() {
         // Change properties of telemetry event "before" it's been processed
         details.item.name = "dependency-name";
         details.item.properties.url = details.item?.target;
+        if (isString(details.item.properties.url)) {
+            const config = getConfig();
+            if (config) {
+                details.item.properties.url = fieldRedaction(details.item.properties.url, config);
+            }
+        }
         details.context.initializer = "dependency-initializer-context";
 
         createDetailList(dependencyInitializerDetails, details, dependencyInitializerDetailsContainerId, "Initializer");
