@@ -57,7 +57,7 @@ export {
     EventPersistence
 } from "@microsoft/applicationinsights-common";
 export { Sender, ISenderConfig } from "@microsoft/applicationinsights-channel-js";
-export { ApplicationInsights as ApplicationAnalytics, IAppInsightsInternal } from "@microsoft/applicationinsights-analytics-js";
+export { ApplicationInsights as ApplicationAnalytics, IAppInsightsInternal, IAnalyticsConfig } from "@microsoft/applicationinsights-analytics-js";
 export { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 export {
     AjaxPlugin as DependenciesPlugin, IDependenciesPlugin,
