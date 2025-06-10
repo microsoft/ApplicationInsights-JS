@@ -1947,9 +1947,9 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "should preserve query parameters while redacting auth when the query string is not in the set values",
             test: () => {
                 let config = {} as IConfiguration;
-                const url = "AISKU/Tests/UnitTests.html?testId=7cff0834";
+                const url = "AISKU/Tests/UnitTests.html?sig=7cff0834";
                 const redactedLocation = fieldRedaction(url, config);
-                Assert.equal(redactedLocation, "AISKU/Tests/UnitTests.html?testId=7cff0834");
+                Assert.equal(redactedLocation, "AISKU/Tests/UnitTests.html?sig=REDACTED");
             }
         });
 
@@ -2123,7 +2123,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     "URL with improperly formatted credentials should still redact auth");
             }
         });
-        
+
         this.testCase({
             name: "should handle file URLs",
             test: () => {
@@ -2166,6 +2166,77 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 const redactedLocation = fieldRedaction(url, config);
                 Assert.equal(redactedLocation, `https://REDACTED:REDACTED@example.com/path?param=${longParam}`,
                     "Extremely long URLs should be handled correctly");
+            }
+        });
+        
+        this.testCase({
+            name: "should redact custom query parameters defined in redactQueryParams",
+            test: () => {
+                let config = {
+                    redactQueryParams: ["authorize", "api_key", "password"]
+                } as IConfiguration;
+                
+                const url = "https://example.com/path?auth_token=12345&name=test&authorize=secret";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://example.com/path?auth_token=12345&name=test&authorize=REDACTED",
+                    "URL with custom sensitive parameters should have them redacted while preserving other parameters");
+            }
+        });
+        this.testCase({
+            name: "should redact both default and custom query parameters",
+            test: () => {
+                let config = {
+                    redactQueryParams: ["auth_token"]
+                } as IConfiguration;
+                
+                const url = "https://example.com/path?sig=abc123&auth_token=12345&name=test";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://example.com/path?sig=REDACTED&auth_token=REDACTED&name=test",
+                    "URL with both default and custom sensitive parameters should have all redacted");
+            }
+        });
+        this.testCase({
+            name: "should not redact custom parameters when redaction is disabled",
+            test: () => {
+                let config = {
+                    redactionEnabled: false,
+                    redactQueryParams: ["authorize", "api_key"]
+                } as IConfiguration;
+                
+                const url = "https://example.com/path?auth_token=12345&authorize=secret";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://example.com/path?auth_token=12345&authorize=secret",
+                    "URL with custom sensitive parameters should not be redacted when redaction is disabled");
+            }
+        });
+
+        this.testCase({
+            name: "should handle empty redactQueryParams array",
+            test: () => {
+                let config = {
+                    redactQueryParams: []
+                } as IConfiguration;
+                
+                // Should still redact default parameters
+                const url = "https://example.com/path?Signature=secret&custom_param=value";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://example.com/path?Signature=REDACTED&custom_param=value",
+                    "URL with default sensitive parameters should still be redacted with empty custom array");
+            }
+        });
+
+        this.testCase({
+            name: "should handle complex URLs with both credentials and custom query parameters",
+            test: () => {
+                let config = {
+                    redactQueryParams: ["authorize", "session_id"]
+                } as IConfiguration;
+                
+                const url = "https://user:pass@example.com/path?sig=secret&authorize=abc123&visible=true&session_id=xyz789";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, 
+                    "https://REDACTED:REDACTED@example.com/path?sig=REDACTED&authorize=REDACTED&visible=true&session_id=REDACTED",
+                    "Complex URL should have both credentials and all sensitive parameters redacted");
             }
         });
 
