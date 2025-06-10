@@ -60,15 +60,16 @@ export class IAnalyticsConfigTests extends AITestClass {
                     expCfg: { inclScripts: false, expLog: undefined, maxLogs: 50 }
                 };
 
-                // Test that it can be used as IConfig
-                const asIConfig: IConfig = testConfig;
-                Assert.equal("test-account", asIConfig.accountId, "Should work as IConfig");
-                Assert.equal(50, asIConfig.samplingPercentage, "Should access IConfig properties");
-
-                // Test that it can be used as IConfiguration  
-                const asIConfiguration: IConfiguration = testConfig;
-                Assert.equal("test-connection-string", asIConfiguration.connectionString, "Should work as IConfiguration");
-                Assert.equal(TestInstrumentationKey, asIConfiguration.instrumentationKey, "Should access IConfiguration properties");
+                // Test that it can be used as both IConfig and IConfiguration simultaneously
+                const asBothInterfaces: IConfig & IConfiguration = testConfig;
+                
+                // Verify IConfig properties are accessible
+                Assert.equal("test-account", asBothInterfaces.accountId, "Should access IConfig properties");
+                Assert.equal(50, asBothInterfaces.samplingPercentage, "Should access IConfig properties");
+                
+                // Verify IConfiguration properties are accessible  
+                Assert.equal("test-connection-string", asBothInterfaces.connectionString, "Should access IConfiguration properties");
+                Assert.equal(TestInstrumentationKey, asBothInterfaces.instrumentationKey, "Should access IConfiguration properties");
             }
         });
 
