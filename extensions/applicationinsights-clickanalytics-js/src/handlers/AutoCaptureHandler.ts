@@ -7,7 +7,7 @@ import {
     IDiagnosticLogger, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IUnloadHook, createUniqueNamespace, eventOff, eventOn,
     getDocument, getWindow, isNullOrUndefined, mergeEvtNamespace, onConfigChange
 } from "@microsoft/applicationinsights-core-js";
-import { arrMap, strTrim } from "@nevware21/ts-utils";
+import { arrIncludes, arrMap, strTrim } from "@nevware21/ts-utils";
 import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
 import { ActionType } from "../Enums";
 import { IAutoCaptureHandler, IClickAnalyticsConfiguration, IPageActionOverrideValues } from "../Interfaces/Datamodel";
@@ -59,7 +59,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
                     _self._pageAction.capturePageAction(element, overrideValues, customProperties, isRightClick);
                 }
             }
-        
+
             // Process click event
             function _processClick(clickEvent: any) {
                 let win = getWindow();
@@ -68,7 +68,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
                 }
                 if (clickEvent) {
                     let element = clickEvent.srcElement || clickEvent.target;
-        
+
                     // populate overrideValues
                     var overrideValues: IPageActionOverrideValues = {
                         clickCoordinateX: clickEvent.pageX,
@@ -88,15 +88,15 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
                     } else {
                         return;
                     }
-        
+
                     while (element && element.tagName) {
                         // control property will be available for <label> elements with 'for' attribute, only use it when is a
                         // valid JSLL capture element to avoid infinite loops
-                        if (element.control && _clickCaptureElements[element.control.tagName.toUpperCase()]) {
+                        if (element.control && arrIncludes(_clickCaptureElements, element.control.tagName.toUpperCase())) {
                             element = element.control;
                         }
                         const tagNameUpperCased = element.tagName.toUpperCase();
-                        if (!_clickCaptureElements[tagNameUpperCased]) {
+                        if (!arrIncludes(_clickCaptureElements, tagNameUpperCased)) {
                             element = element.parentElement || element.parentNode;
                             continue;
                         } else {
