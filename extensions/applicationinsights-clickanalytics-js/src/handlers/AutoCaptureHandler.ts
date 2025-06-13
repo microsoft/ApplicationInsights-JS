@@ -28,6 +28,8 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
         let _clickCaptureElements: string[];
         let unloadHandler: IUnloadHook = onConfigChange(_config, () => {
             _clickCaptureElements =  arrMap(_config.trackElementTypes.toUpperCase().split(","), tag => strTrim(tag));
+            // this creates an array but it needs to be a lookup since we use the tagName to index.  Maybe something like this:
+            _clickCaptureElements = _clickCaptureElements.reduce((a, x) => ({...a, [x]: true}), {})
         });
         dynamicProto(AutoCaptureHandler, this, (_self) => {
             _self.click = () => {
@@ -92,10 +94,12 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
                     while (element && element.tagName) {
                         // control property will be available for <label> elements with 'for' attribute, only use it when is a
                         // valid JSLL capture element to avoid infinite loops
+                        // see how we're doing a lookup by tag name here
                         if (element.control && _clickCaptureElements[element.control.tagName.toUpperCase()]) {
                             element = element.control;
                         }
                         const tagNameUpperCased = element.tagName.toUpperCase();
+                        // and here..
                         if (!_clickCaptureElements[tagNameUpperCased]) {
                             element = element.parentElement || element.parentNode;
                             continue;
