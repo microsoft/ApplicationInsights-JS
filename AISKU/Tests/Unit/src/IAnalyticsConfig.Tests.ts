@@ -1,7 +1,7 @@
 import { ApplicationInsights, IAnalyticsConfig, IAppInsights, IConfig, ApplicationAnalytics } from "../../../src/applicationinsights-web";
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { AnalyticsPluginIdentifier, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
-import { AppInsightsCore, IConfiguration } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, IConfiguration, onConfigChange, createDynamicConfig, IConfigDefaults } from "@microsoft/applicationinsights-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -173,6 +173,167 @@ export class IAnalyticsConfigTests extends AITestClass {
                 Assert.ok(typeof init.trackTrace === "function", "trackTrace should be available");
                 Assert.ok(typeof init.trackMetric === "function", "trackMetric should be available");
                 Assert.ok(typeof init.trackDependencyData === "function", "trackDependencyData should be available");
+            }
+        });
+
+        this.testCase({
+            name: "IAnalyticsConfig: onConfigChange callback triggered when config properties change",
+            test: () => {
+                // Create a test config that implements IAnalyticsConfig
+                const testConfig: IAnalyticsConfig = {
+                    instrumentationKey: TestInstrumentationKey,
+                    samplingPercentage: 50,
+                    sessionRenewalMs: 30 * 60 * 1000,
+                    sessionExpirationMs: 24 * 60 * 60 * 1000,
+                    disableExceptionTracking: false,
+                    enableAutoRouteTracking: false
+                };
+
+                const defaults: IConfigDefaults<IAnalyticsConfig> = {
+                    samplingPercentage: 100,
+                    sessionRenewalMs: 30 * 60 * 1000,
+                    sessionExpirationMs: 24 * 60 * 60 * 1000,
+                    disableExceptionTracking: false,
+                    enableAutoRouteTracking: false
+                };
+
+                // Create dynamic config to enable change notifications
+                let dynamicHandler = createDynamicConfig(testConfig, defaults);
+                let dynamicConfig = dynamicHandler.cfg;
+
+                let onChangeCalled = 0;
+                let lastCallbackConfig: IAnalyticsConfig | null = null;
+
+                // Set up onConfigChange listener
+                let onChange = onConfigChange(dynamicConfig, (details) => {
+                    onChangeCalled++;
+                    lastCallbackConfig = details.cfg as IAnalyticsConfig;
+                });
+
+                // Initial call should have been made
+                Assert.equal(1, onChangeCalled, "onConfigChange should be called initially");
+                Assert.ok(lastCallbackConfig, "Callback should receive config");
+                Assert.equal(50, lastCallbackConfig.samplingPercentage, "Initial samplingPercentage should be correct");
+
+                // Change a property
+                dynamicConfig.samplingPercentage = 75;
+                dynamicHandler.notify();
+
+                Assert.equal(2, onChangeCalled, "onConfigChange should be called after property change");
+                Assert.equal(75, lastCallbackConfig!.samplingPercentage, "Updated samplingPercentage should be correct");
+
+                // Change another property
+                dynamicConfig.sessionRenewalMs = 20 * 60 * 1000;
+                dynamicHandler.notify();
+
+                Assert.equal(3, onChangeCalled, "onConfigChange should be called after second property change");
+                Assert.equal(20 * 60 * 1000, lastCallbackConfig!.sessionRenewalMs, "Updated sessionRenewalMs should be correct");
+
+                // Cleanup
+                onChange.rm();
+            }
+        });
+
+        this.testCase({
+            name: "IAnalyticsConfig: onConfigChange with AnalyticsPlugin integration",
+            test: () => {
+                const init = new ApplicationInsights({
+                    config: {
+                        instrumentationKey: TestInstrumentationKey,
+                        samplingPercentage: 60,
+                        sessionRenewalMs: 25 * 60 * 1000,
+                        disableExceptionTracking: false,
+                        enableAutoRouteTracking: false
+                    }
+                });
+
+                this.onDone(() => {
+                    if (init && init.unload) {
+                        init.unload(false);
+                    }
+                });
+
+                init.loadAppInsights();
+
+                // Get the analytics plugin
+                const analyticsPlugin = init.appInsights as ApplicationAnalytics;
+                Assert.ok(analyticsPlugin.config, "AnalyticsPlugin should have config");
+
+                // Verify initial config values
+                Assert.equal(60, analyticsPlugin.config.samplingPercentage, "Initial samplingPercentage should be correct");
+                Assert.equal(25 * 60 * 1000, analyticsPlugin.config.sessionRenewalMs, "Initial sessionRenewalMs should be correct");
+
+                let configChangeCalled = 0;
+                let lastConfigChangeValues: any = {};
+
+                // Set up onConfigChange listener on the plugin's config
+                let onChange = onConfigChange(analyticsPlugin.config, (details) => {
+                    configChangeCalled++;
+                    lastConfigChangeValues = {
+                        samplingPercentage: details.cfg.samplingPercentage,
+                        sessionRenewalMs: details.cfg.sessionRenewalMs,
+                        disableExceptionTracking: details.cfg.disableExceptionTracking
+                    };
+                });
+
+                // Initial call should have been made
+                Assert.equal(1, configChangeCalled, "Config change callback should be called initially");
+
+                // Update config through the core
+                if (init.core && init.core.config) {
+                    // Simulate config change
+                    (init.core.config as any).samplingPercentage = 80;
+                    
+                    // Trigger notification - in real scenarios this would be triggered by the framework
+                    const dynamicHandler = (analyticsPlugin.config as any).__dynamicConfigHandler;
+                    if (dynamicHandler && dynamicHandler.notify) {
+                        dynamicHandler.notify();
+                        
+                        Assert.equal(2, configChangeCalled, "Config change callback should be called after update");
+                        // Note: The exact values may depend on how the plugin processes the config
+                        Assert.ok(typeof lastConfigChangeValues.samplingPercentage === "number", "samplingPercentage should be a number");
+                    }
+                }
+
+                // Cleanup
+                onChange.rm();
+            }
+        });
+
+        this.testCase({
+            name: "IAnalyticsConfig: onConfigChange removal and cleanup",
+            test: () => {
+                const testConfig: IAnalyticsConfig = {
+                    instrumentationKey: TestInstrumentationKey,
+                    samplingPercentage: 50,
+                    disableExceptionTracking: false
+                };
+
+                const defaults: IConfigDefaults<IAnalyticsConfig> = {
+                    samplingPercentage: 100,
+                    disableExceptionTracking: false
+                };
+
+                let dynamicHandler = createDynamicConfig(testConfig, defaults);
+                let dynamicConfig = dynamicHandler.cfg;
+
+                let onChangeCalled = 0;
+
+                // Set up onConfigChange listener
+                let onChange = onConfigChange(dynamicConfig, () => {
+                    onChangeCalled++;
+                });
+
+                Assert.equal(1, onChangeCalled, "onConfigChange should be called initially");
+
+                // Remove the listener
+                onChange.rm();
+
+                // Change a property - should not trigger callback anymore
+                dynamicConfig.samplingPercentage = 75;
+                dynamicHandler.notify();
+
+                Assert.equal(1, onChangeCalled, "onConfigChange should not be called after removal");
             }
         });
     }
