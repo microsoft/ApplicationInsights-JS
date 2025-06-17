@@ -102,7 +102,7 @@
         },
         "@microsoft/applicationinsights-web-snippet": {
             "package": "tools/applicationinsights-web-snippet/package.json",
-            "release": "1.2.4"
+            "release": "1.2.2"
         }
     }
 }
