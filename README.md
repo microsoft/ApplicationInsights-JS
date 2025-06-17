@@ -649,7 +649,7 @@ Click here for a [Type Error Fixed Guideline](https://microsoft.github.io/Applic
 
 ### Error Handler
 
-The SDK's error handler will send the complete error stack trace, NOT encrypted. This provides full visibility into errors for diagnostics and troubleshooting, but be aware that sensitive information might be included in error messages or stack traces.
+The SDK's error handler will send the error stack trace **without encryption**. This provides full visibility into errors for diagnostics and troubleshooting, but be aware that sensitive information might be included in error messages or stack traces.
 
 ## Build a new extension for the SDK
 
