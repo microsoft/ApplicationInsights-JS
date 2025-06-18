@@ -217,4 +217,3 @@ export interface IIndexedDbSimpleQuery {
      */
     isMatch?(value: any): boolean;
 }
-
