@@ -105,19 +105,19 @@ Also see the [Example Html Usage](./example/cdn-usage.html)
 
 All of the configuration options are optional
 
-### IPerfMarkMeasureConfiguration
+### [IPerfMarkMeasureConfiguration](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-perfmarkmeasure-js/interfaces/IPerfMarkMeasureConfiguration.html)
 
 | Name | Type | Description
 |------|-----------|--------------------
-| useMarks | boolean | Should the Performance manager create and use window.performance.mark(), defaults to true
-| markPrefix | string | Identifies the prefix for the mark, defaults to "ai.prfmrk.", the event name is appended for the mark
-| uniqueNames | boolean | Make the marks and measures unique by appending a numeric value to the prefix value, defaults to false. Marks and measure for the same perfEvent will be assigned the same unique numeric value
-| markNameMap | { [key: string]: string } | Provides a mapping between the internal perf names and the value used to create the mark, when a map is provided but no mapping is present that event will be ignored.
-| useEndMarks | boolean | Should the Performance manager create a mark when the event is fired, defaults to false
-| markEndPrefix | string | Identifies the prefix for the "end" mark of a perf event, defaults to "ai.prfmrk.end.", the event name is appended for the mark
-| useMeasures | boolean | Should the Performance manager create and use window.performance.measure(), defaults to true
-| measurePrefix | string | Identifies the prefix for the mark, defaults to "ai.prfmsr.", the event name is appended for the measure name
-| measureNameMap | { [key: string]: string } | Provides a mapping between the internal perf names and the value used to create the measure, when no measureNameMap is provided this will default to using the markNameMap and when a map is provided but no mapping is present that event will be ignored.
+| [useMarks](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-perfmarkmeasure-js/interfaces/IPerfMarkMeasureConfiguration.html#useMarks) | boolean | Should the Performance manager create and use window.performance.mark(), defaults to true
+| [markPrefix](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-perfmarkmeasure-js/interfaces/IPerfMarkMeasureConfiguration.html#markPrefix) | string | Identifies the prefix for the mark, defaults to "ai.prfmrk.", the event name is appended for the mark
+| [uniqueNames](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-perfmarkmeasure-js/interfaces/IPerfMarkMeasureConfiguration.html#uniqueNames) | boolean | Make the marks and measures unique by appending a numeric value to the prefix value, defaults to false. Marks and measure for the same perfEvent will be assigned the same unique numeric value
+| [markNameMap](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-perfmarkmeasure-js/interfaces/IPerfMarkMeasureConfiguration.html#markNameMap) | { [key: string]: string } | Provides a mapping between the internal perf names and the value used to create the mark, when a map is provided but no mapping is present that event will be ignored.
+| [useEndMarks](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-perfmarkmeasure-js/interfaces/IPerfMarkMeasureConfiguration.html#useEndMarks) | boolean | Should the Performance manager create a mark when the event is fired, defaults to false
+| [markEndPrefix](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-perfmarkmeasure-js/interfaces/IPerfMarkMeasureConfiguration.html#markEndPrefix) | string | Identifies the prefix for the "end" mark of a perf event, defaults to "ai.prfmrk.end.", the event name is appended for the mark
+| [useMeasures](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-perfmarkmeasure-js/interfaces/IPerfMarkMeasureConfiguration.html#useMeasures) | boolean | Should the Performance manager create and use window.performance.measure(), defaults to true
+| [measurePrefix](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-perfmarkmeasure-js/interfaces/IPerfMarkMeasureConfiguration.html#measurePrefix) | string | Identifies the prefix for the mark, defaults to "ai.prfmsr.", the event name is appended for the measure name
+| [measureNameMap](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-perfmarkmeasure-js/interfaces/IPerfMarkMeasureConfiguration.html#measureNameMap) | { [key: string]: string } | Provides a mapping between the internal perf names and the value used to create the measure, when no measureNameMap is provided this will default to using the markNameMap and when a map is provided but no mapping is present that event will be ignored.
 
 Example with config
 
