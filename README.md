@@ -653,6 +653,12 @@ This version comes with the bare minimum amount of features and functionalities 
 
 Click here for a [Type Error Fixed Guideline](https://microsoft.github.io/ApplicationInsights-JS/ExtensionErrorSteps)
 
+## Notification
+
+### Error Handler
+
+The SDK's error handler will send the error stack trace **without encryption**. This provides full visibility into errors for diagnostics and troubleshooting, but be aware that sensitive information might be included in error messages or stack traces.
+
 ## Build a new extension for the SDK
 
 The SDK supports the ability to include multiple extensions at runtime. In order to create a new extension, please implement the following interface:
