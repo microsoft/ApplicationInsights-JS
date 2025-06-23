@@ -143,9 +143,7 @@ export function sanitizeUrl(config: IClickAnalyticsConfiguration, location: Loca
     if (!!config.urlCollectQuery) { // false by default
         url += (isValueAssigned(location.search)? location.search : "");
     }
-    if (rootConfig) {
-        url = fieldRedaction(url, rootConfig);
-    }
+    url = fieldRedaction(url, rootConfig);
     return url;
 }
 

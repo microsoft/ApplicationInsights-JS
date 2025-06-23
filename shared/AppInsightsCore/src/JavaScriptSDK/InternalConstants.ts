@@ -29,3 +29,6 @@ export const STR_DOMAIN = "domain";
 export const STR_PATH = "path";
 
 export const STR_NOT_DYNAMIC_ERROR = "Not dynamic - ";
+
+export const STR_REDACTED = "REDACTED";
+export const DEFAULT_SENSITIVE_PARAMS = ["sig", "Signature", "AWSAccessKeyId", "X-Goog-Signature"];
