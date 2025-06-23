@@ -242,7 +242,8 @@ export interface IConfiguration {
      * [Optional] Additional query parameters to redact beyond the default set.
      * Use this to specify custom parameters that contain sensitive information.
      * These will be combined with the default parameters that are redacted.
-     * @example ["auth_token", "api_key", "private_data"]
+     * @defaultValue ["sig", "Signature", "AWSAccessKeyId", "X-Goog-Signature"]
+     * @example ["sig", "Signature", "AWSAccessKeyId", "X-Goog-Signature","auth_token", "api_key", "private_data"]
      */
     redactQueryParams?: string[];
 
