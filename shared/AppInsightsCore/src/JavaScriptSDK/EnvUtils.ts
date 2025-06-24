@@ -9,7 +9,7 @@ import {
 } from "@nevware21/ts-utils";
 import { IConfiguration } from "../applicationinsights-core-js";
 import { strContains } from "./HelperFuncs";
-import { STR_EMPTY, UNDEFINED_VALUE } from "./InternalConstants";
+import { DEFAULT_SENSITIVE_PARAMS, STR_EMPTY, UNDEFINED_VALUE } from "./InternalConstants";
 
 // TypeScript removed this interface so we need to declare the global so we can check for it's existence.
 declare var XDomainRequest: any;
@@ -401,7 +401,6 @@ function redactUserInfo(url: string): string {
  * @returns The URL with sensitive query parameters redacted
  */
 function redactQueryParameters(url: string, config?: IConfiguration): string {
-    const DEFAULT_SENSITIVE_PARAMS = ["sig", "Signature", "AWSAccessKeyId", "X-Goog-Signature"];
     let sensitiveParams: string[];
     const questionMarkIndex = strIndexOf(url, "?");
     if (questionMarkIndex === -1) {
