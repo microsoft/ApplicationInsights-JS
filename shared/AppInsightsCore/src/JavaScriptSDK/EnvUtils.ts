@@ -444,7 +444,7 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
     // Check if any parameters need redaction
     let anyParamRedacted = false;
     if (config && config.redactQueryParams) {
-        sensitiveParams = [...DEFAULT_SENSITIVE_PARAMS, ...config.redactQueryParams];
+        sensitiveParams = DEFAULT_SENSITIVE_PARAMS.concat(config.redactQueryParams);
     } else {
         sensitiveParams = DEFAULT_SENSITIVE_PARAMS;
     }
