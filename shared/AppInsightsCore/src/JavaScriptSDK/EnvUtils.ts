@@ -9,7 +9,7 @@ import {
 } from "@nevware21/ts-utils";
 import { IConfiguration } from "../applicationinsights-core-js";
 import { strContains } from "./HelperFuncs";
-import { DEFAULT_SENSITIVE_PARAMS, STR_EMPTY, UNDEFINED_VALUE } from "./InternalConstants";
+import { DEFAULT_SENSITIVE_PARAMS, STR_EMPTY, STR_REDACTED, UNDEFINED_VALUE } from "./InternalConstants";
 
 // TypeScript removed this interface so we need to declare the global so we can check for it's existence.
 declare var XDomainRequest: any;
@@ -31,7 +31,6 @@ const strReactNative = "ReactNative";
 const strMsie = "msie";
 const strTrident = "trident/";
 const strXMLHttpRequest = "XMLHttpRequest";
-const STR_REDACTED = "REDACTED";
 
 let _isTrident: boolean = null;
 let _navUserAgentCheck: string = null;
