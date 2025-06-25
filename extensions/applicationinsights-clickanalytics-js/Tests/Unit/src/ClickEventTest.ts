@@ -4,7 +4,7 @@
 
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { IConfig, utlCanUseLocalStorage } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger, hasDocument, isFunction, IAppInsightsCore, eventOn} from '@microsoft/applicationinsights-core-js';
+import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger, hasDocument, isFunction, IAppInsightsCore } from '@microsoft/applicationinsights-core-js';
 import { ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator } from '../../../src/ClickAnalyticsPlugin';
 import { PageAction } from "../../../src/events/PageAction";
 import { DomContentHandler } from '../../../src/handlers/DomContentHandler';
@@ -251,7 +251,7 @@ export class ClickEventTest extends AITestClass {
                 let elementNotToTrack = document.createElement("button");
                 elementNotToTrack.setAttribute("id", "testAutoCaptureBtn");
                 elementNotToTrack.setAttribute("data-ha-aN", "autoCaptureArea");
-                document.body.appendChild(element);
+                document.body.appendChild(elementNotToTrack);
 
                 let mouseDownEvent = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
                 element.dispatchEvent(mouseDownEvent);
@@ -267,6 +267,7 @@ export class ClickEventTest extends AITestClass {
 
                 // Clean up
                 document.body.removeChild(element);
+                document.body.removeChild(elementNotToTrack);
             }
         });
 
