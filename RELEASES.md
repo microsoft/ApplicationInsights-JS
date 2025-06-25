@@ -2,6 +2,17 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.3.9 (June 25th, 2025)
+
+This release contains an important fix for a change introduced in v3.3.7 that caused the `autoCaptureHandler` to incorrectly evaluate elements within `trackElementsType`, resulting in some click events not being auto-captured. See more details [here](https://github.com/microsoft/ApplicationInsights-JS/issues/2589).
+
+### Changelog
+
+- #2556 Update SDK Loader to rename the snippet postfix file to avoid CodeQL scanning issues
+- #2586 [AI][Task] 33246973: Update Readme on Error Handler
+- #2581 Export ICorrelationConfig interface from dependencies extension
+- #2587 Click Analytics - Fix capturning of HTML events
+
 ## Web Snippet Release 1.2.2 (June 2nd, 2025)
 
 This release adds support for Trusted Types in the Application Insights JavaScript SDK snippet loader. See more details [here](https://github.com/microsoft/ApplicationInsights-JS/blob/main/tools/applicationinsights-web-snippet/trustedTypeSupport.md).
