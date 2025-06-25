@@ -1685,6 +1685,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 () => {
                     this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
                         item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
+                        if (item.baseType === "PageviewPerformanceData") {
+                            // modify your items here
+                        }
                     });
                     this._ai.trackEvent({ name: "Custom event via addTelemetryInitializer" });
                 }

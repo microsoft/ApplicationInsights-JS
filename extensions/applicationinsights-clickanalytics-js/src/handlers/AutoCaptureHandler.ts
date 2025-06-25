@@ -68,6 +68,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
                 }
                 if (clickEvent) {
                     let element = clickEvent.srcElement || clickEvent.target;
+                    console.log(element.tagName)
 
                     // populate overrideValues
                     var overrideValues: IPageActionOverrideValues = {
@@ -75,6 +76,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
                         clickCoordinateY: clickEvent.pageY
                     };
                     var isRightClickObj = isRightClick(clickEvent as MouseEvent);
+                    console.log(isRightClickObj)
                     if (isRightClickObj) {
                         overrideValues.actionType = ActionType.CLICKRIGHT;
                     } else if (isLeftClick(clickEvent as MouseEvent)) {
@@ -86,13 +88,17 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
                     } else if (isMiddleClick(clickEvent as MouseEvent)) {
                         overrideValues.actionType = ActionType.CLICKMIDDLE;
                     } else {
+                        console.log("test123")
                         return;
                     }
+                    console.log("test123456")
 
                     while (element && element.tagName) {
+                        console.log("test")
                         // control property will be available for <label> elements with 'for' attribute, only use it when is a
                         // valid JSLL capture element to avoid infinite loops
                         if (element.control && arrIncludes(_clickCaptureElements, element.control.tagName.toUpperCase())) {
+                            console.log("test123")
                             element = element.control;
                         }
                         const tagNameUpperCased = element.tagName.toUpperCase();

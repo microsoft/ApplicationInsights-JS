@@ -4,11 +4,11 @@
 
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { IConfig, utlCanUseLocalStorage } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger, hasDocument, isFunction, IAppInsightsCore} from '@microsoft/applicationinsights-core-js';
+import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger, hasDocument, isFunction, IAppInsightsCore, eventOn} from '@microsoft/applicationinsights-core-js';
 import { ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator } from '../../../src/ClickAnalyticsPlugin';
 import { PageAction } from "../../../src/events/PageAction";
 import { DomContentHandler } from '../../../src/handlers/DomContentHandler';
-import { IPageActionOverrideValues } from '../../../src/Interfaces/Datamodel';
+import { IClickAnalyticsConfiguration, IPageActionOverrideValues } from '../../../src/Interfaces/Datamodel';
 import { sanitizeUrl } from "../../../src/DataCollector";
 import { DEFAULT_AI_BLOB_ATTRIBUTE_TAG, DEFAULT_DATA_PREFIX, DEFAULT_DONOT_TRACK_TAG } from "../../../src/common/Utils";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
@@ -162,6 +162,111 @@ export class ClickEventTest extends AITestClass {
                 this.clock.tick(1);
                 extConfig = core.config.extensionConfig[id];
                 Assert.deepEqual(extConfig.pageTags, pageTags, "PageTags should be updated");
+            }
+        });
+
+        this.testCase({
+            name: "autoCapture: click events are automatically captured and tracked",
+            useFakeTimers: true,
+            test: () => {
+                const config = {
+                    coreData: {},
+                    autoCapture: true,
+                    dataTags: {
+                        useDefaultContentNameOrId: true,
+                        metaDataPrefix: "ha-",
+                        customDataPrefix: "data-ha-",
+                        aiBlobAttributeTag: "blob"
+                    }
+                } as IClickAnalyticsConfiguration;
+                let clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin();
+                core.initialize({
+                    instrumentationKey: "testIkey",
+                    extensionConfig: {
+                        [clickAnalyticsPlugin.identifier]: config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, "track");
+
+                let element = document.createElement("button");
+                element.setAttribute("id", "testAutoCaptureBtn");
+                element.setAttribute("data-ha-aN", "autoCaptureArea");
+                document.body.appendChild(element);
+
+                const mouseDownEvent = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
+                element.dispatchEvent(mouseDownEvent);
+            
+                this.clock.tick(500);
+
+                Assert.equal(true, spy.called, "track should be called on click event");
+                let calledEvent: ITelemetryItem = spy.getCall(0).args[0];
+                Assert.equal("testAutoCaptureBtn", calledEvent.baseData["name"]);
+
+                // Clean up
+                document.body.removeChild(element);
+            }
+        });
+
+        this.testCase({
+            name: "autoCapture: click events are automatically captured and tracked with customized config",
+            useFakeTimers: true,
+            test: () => {
+                const config = {
+                    coreData: {},
+                    autoCapture: true,
+                    dataTags: {
+                        useDefaultContentNameOrId: true,
+                        metaDataPrefix: "ha-",
+                        customDataPrefix: "data-ha-",
+                        aiBlobAttributeTag: "blob"
+                    },
+                    trackElementTypes: "A"
+                } as IClickAnalyticsConfiguration;
+                let clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin();
+                core.initialize({
+                    instrumentationKey: "testIkey",
+                    extensionConfig: {
+                        [clickAnalyticsPlugin.identifier]: config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, "track");
+
+                let element = document.createElement("a");
+                element.setAttribute("id", "testAutoCaptureA");
+                element.setAttribute("data-ha-aN", "autoCaptureArea");
+                document.body.appendChild(element);
+
+                let elementNotToTrack = document.createElement("button");
+                elementNotToTrack.setAttribute("id", "testAutoCaptureBtn");
+                elementNotToTrack.setAttribute("data-ha-aN", "autoCaptureArea");
+                document.body.appendChild(element);
+
+                let mouseDownEvent = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
+                element.dispatchEvent(mouseDownEvent);
+
+                let mouseDownEventNotToTrack = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
+                elementNotToTrack.dispatchEvent(mouseDownEventNotToTrack);
+            
+                this.clock.tick(500);
+
+                Assert.equal(true, spy.called, "track should be called on click event");
+                let calledEvent: ITelemetryItem = spy.getCall(0).args[0];
+                Assert.equal("testAutoCaptureA", calledEvent.baseData["name"]);
+
+                // Clean up
+                document.body.removeChild(element);
             }
         });
 
