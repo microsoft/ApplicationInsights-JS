@@ -23,6 +23,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
+import { IAnalyticsConfig } from "./Interfaces/IAnalyticsConfig";
 import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
 import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -52,7 +53,7 @@ function _getReason(error: any) {
 
 const MinMilliSeconds = 60000;
 
-const defaultValues: IConfigDefaults<IConfig&IConfiguration> = objDeepFreeze({
+const defaultValues: IConfigDefaults<IAnalyticsConfig> = objDeepFreeze({
     sessionRenewalMs: cfgDfSet(_chkConfigMilliseconds, 30 * 60 * 1000),
     sessionExpirationMs: cfgDfSet(_chkConfigMilliseconds, 24 * 60 * 60 * 1000),
     disableExceptionTracking: cfgDfBoolean(),
@@ -101,7 +102,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     public identifier: string = AnalyticsPluginIdentifier; // do not change name or priority
     public priority: number = 180; // take from reserved priority range 100- 200
-    public readonly config: IConfig & IConfiguration;
+    public readonly config: IAnalyticsConfig;
     public queue: Array<() => void>;
     public autoRoutePVDelay = 500; // ms; Time to wait after a route change before triggering a pageview to allow DOM changes to take place
 
@@ -121,7 +122,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         let _autoExceptionInstrumented: boolean;
         let _enableUnhandledPromiseRejectionTracking: boolean;
         let _autoUnhandledPromiseInstrumented: boolean;
-        let _extConfig: IConfig & IConfiguration;
+        let _extConfig: IAnalyticsConfig;
         let _autoTrackPageVisitTime: boolean;
         let _expCfg: IExceptionConfig;
 
