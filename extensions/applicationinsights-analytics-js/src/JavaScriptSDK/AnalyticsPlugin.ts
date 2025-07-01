@@ -85,7 +85,7 @@ function _chkSampling(value: number) {
     return !isNaN(value) && value > 0 && value <= 100;
 }
 
-function _updateStorageUsage(extConfig: IConfig) {
+function _updateStorageUsage(extConfig: IAnalyticsConfig) {
     // Not resetting the storage usage as someone may have manually called utlDisableStorage, so this will only
     // reset based if the configuration option is provided
     if (!isUndefined(extConfig.isStorageUseDisabled)) {
