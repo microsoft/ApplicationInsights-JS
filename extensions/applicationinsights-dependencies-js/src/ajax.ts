@@ -307,6 +307,11 @@ export interface IDependenciesPlugin extends IDependencyListenerContainer {
      * @param dependencyData - dependency data object
      */
     trackDependencyData(dependency: IDependencyTelemetry): void;
+
+    /**
+     * Resets the ajax attempts counter. This is typically called on page view to allow a fresh set of ajax calls to be tracked.
+     */
+    resetAjaxAttempts?(): void;
 }
 
 export interface IInstrumentationRequirements extends IDependenciesPlugin {
@@ -405,6 +410,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
             _self.trackDependencyData = (dependency: IDependencyTelemetry, properties?: { [key: string]: any }) => {
                 _reportDependencyInternal(_dependencyInitializers, _self.core, null, dependency, properties);
+            }
+
+            _self.resetAjaxAttempts = () => {
+                _trackAjaxAttempts = 0;
             }
 
             _self.includeCorrelationHeaders = (ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any => {
@@ -1353,6 +1362,13 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
      * @param dependencyData - dependency data object
      */
     public trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any }) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Resets the ajax attempts counter. This is typically called on page view to allow a fresh set of ajax calls to be tracked.
+     */
+    public resetAjaxAttempts(): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

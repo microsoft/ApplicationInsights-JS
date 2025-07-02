@@ -21,6 +21,7 @@ import {
     getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString,
     isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
+import { IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
@@ -265,6 +266,12 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     let inPv = pageView || {};
                     _pageViewManager.trackPageView(inPv, {...inPv.properties, ...inPv.measurements, ...customProperties});
         
+                    // Reset ajax attempts counter for the new page view
+                    let ajaxPlugin = _self.core.getPlugin<IDependenciesPlugin>("AjaxDependencyPlugin");
+                    if (ajaxPlugin && ajaxPlugin.resetAjaxAttempts) {
+                        ajaxPlugin.resetAjaxAttempts();
+                    }
+
                     if (_autoTrackPageVisitTime) {
                         _pageVisitTimeManager.trackPreviousPageVisit(inPv.name, inPv.uri);
                     }
