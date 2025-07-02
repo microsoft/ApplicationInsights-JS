@@ -413,7 +413,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             }
 
             _self.resetAjaxAttempts = () => {
-                _trackAjaxAttempts = 0;
+                _resetAjaxAttempts();
             }
 
             _self.includeCorrelationHeaders = (ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any => {
@@ -555,6 +555,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 return _addHandler(_dependencyInitializers, _dependencyHandlerId++, dependencyInitializer);
             };
         
+            function _resetAjaxAttempts() {
+                _trackAjaxAttempts = 0;
+            }
+        
             function _initDefaults() {
                 let location = getLocation();
                 _fetchInitialized = false;      // fetch monitoring initialized
@@ -564,7 +568,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 _extensionConfig = null;
                 _enableRequestHeaderTracking = false;
                 _enableAjaxErrorStatusText = false;
-                _trackAjaxAttempts = 0;
+                _resetAjaxAttempts();
                 _context = null;
                 _isUsingW3CHeaders = false;
                 _isUsingAIHeaders = false;
