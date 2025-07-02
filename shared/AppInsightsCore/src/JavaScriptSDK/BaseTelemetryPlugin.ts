@@ -64,8 +64,9 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
 
     /**
      * Set next extension for telemetry processing
+     * @deprecated - Use processNext() function of the passed IProcessTelemetryContext instead
      */
-    public setNextPlugin: (next: ITelemetryPlugin | ITelemetryPluginChain) => void;
+    public setNextPlugin?: (next: ITelemetryPlugin | ITelemetryPluginChain) => void;
 
     /**
      * Returns the current diagnostic logger that can be used to log issues, if no logger is currently
