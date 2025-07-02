@@ -470,7 +470,7 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
 /**
  * Redacts sensitive information from a URL string, including credentials and specific query parameters.
  * @param input - The URL string to be redacted.
- * @param config - Configuration object that contain redactionEnabled setting.
+ * @param config - Configuration object that contain redactUrls setting.
  * @returns The redacted URL string or the original string if no redaction was needed or possible.
  */
 export function fieldRedaction(input: string, config: IConfiguration): string {
@@ -480,7 +480,7 @@ export function fieldRedaction(input: string, config: IConfiguration): string {
     if (input.indexOf(" ") !== -1) {
         return input; // Checking for URLs with spaces
     }
-    const isRedactionDisabled = config && config.redactionEnabled === false;
+    const isRedactionDisabled = config && config.redactUrls === false;
     if (isRedactionDisabled) {
         return input;
     }

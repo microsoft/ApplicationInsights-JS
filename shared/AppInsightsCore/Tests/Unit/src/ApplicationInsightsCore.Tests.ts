@@ -1914,7 +1914,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 let config = {} as IConfiguration;
 
                 const url = "https://user:password@example.com";
-                if (config.redactionEnabled){
+                if (config.redactUrls){
                     const redactedLocation = fieldRedaction(url, config);
                     Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com");
                 }
@@ -1956,9 +1956,9 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         this.testCase({
             name: "should preserve query parameters while redacting auth - AWSAccessKeyId",
             test: () => {
-                let config = {redactionEnabled: false} as IConfiguration;
+                let config = {redactUrls: false} as IConfiguration;
                 const url = "https://www.example.com/path?color=blue&AWSAccessKeyId=secret";
-                if (config.redactionEnabled){
+                if (config.redactUrls){
                     const redactedLocation = fieldRedaction(url, config);
                     Assert.equal(redactedLocation, "https://www.example.com/path?color=blue&AWSAccessKeyId=REDACTED");
                 }
@@ -2199,7 +2199,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "should not redact custom parameters when redaction is disabled",
             test: () => {
                 let config = {
-                    redactionEnabled: false,
+                    redactUrls: false,
                     redactQueryParams: ["authorize", "api_key"]
                 } as IConfiguration;
                 
