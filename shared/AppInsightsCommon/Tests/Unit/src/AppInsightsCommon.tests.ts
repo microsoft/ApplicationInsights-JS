@@ -310,7 +310,7 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'DataSanitizerTests: dataSanitizeUrl properly redacts credentials in URLs with config disabled',
             test: () => {
                 // URLs with credentials
-                let config = {redactionEnabled: false} as IConfiguration;
+                let config = {redactUrls: false} as IConfiguration;
                 const urlWithCredentials = "https://username:password@example.com/path";
 
                 // Act & Assert
