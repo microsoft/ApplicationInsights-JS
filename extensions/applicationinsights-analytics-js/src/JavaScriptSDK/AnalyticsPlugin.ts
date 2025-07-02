@@ -266,11 +266,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     let inPv = pageView || {};
                     _pageViewManager.trackPageView(inPv, {...inPv.properties, ...inPv.measurements, ...customProperties});
         
-                    // Reset ajax attempts counter for the new page view
-                    let ajaxPlugin = _self.core.getPlugin<IDependenciesPlugin>("AjaxDependencyPlugin");
-                    if (ajaxPlugin && ajaxPlugin.resetAjaxAttempts) {
-                        ajaxPlugin.resetAjaxAttempts();
-                    }
+                    _resetAjaxAttempts();
 
                     if (_autoTrackPageVisitTime) {
                         _pageVisitTimeManager.trackPreviousPageVisit(inPv.name, inPv.uri);
@@ -633,6 +629,14 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             _self["_getDbgPlgTargets"] = () => {
                 return [_errorHookCnt, _autoExceptionInstrumented];
             };
+            
+            function _resetAjaxAttempts() {
+                // Reset ajax attempts counter for the new page view
+                let ajaxPlugin = _self.core.getPlugin<IDependenciesPlugin>("AjaxDependencyPlugin");
+                if (ajaxPlugin && ajaxPlugin.resetAjaxAttempts) {
+                    ajaxPlugin.resetAjaxAttempts();
+                }
+            }
             
             function _populateDefaults(config: IConfiguration) {
                 // it is used for 1DS as well, so config type should be IConfiguration only
