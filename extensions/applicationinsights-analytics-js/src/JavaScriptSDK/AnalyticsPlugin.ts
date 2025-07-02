@@ -126,11 +126,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         let _autoTrackPageVisitTime: boolean;
         let _expCfg: IExceptionConfig;
 
-        // Counts number of trackAjax invocations.
-        // By default we only monitor X ajax call per view to avoid too much load.
-        // Default value is set in config.
-        // This counter keeps increasing even after the limit is reached.
-        let _trackAjaxAttempts: number = 0;
+        // Ajax attempts counter is now managed by the AjaxDependencyPlugin
     
         // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
         let _prevUri: string; // Assigned in the constructor
@@ -306,7 +302,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                 _self.core.track(telemetryItem);
                 // reset ajaxes counter
-                _trackAjaxAttempts = 0;
+                _resetAjaxAttempts();
             };
 
             /**
@@ -632,9 +628,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             
             function _resetAjaxAttempts() {
                 // Reset ajax attempts counter for the new page view
-                let ajaxPlugin = _self.core.getPlugin<IDependenciesPlugin>("AjaxDependencyPlugin");
-                if (ajaxPlugin && ajaxPlugin.resetAjaxAttempts) {
-                    ajaxPlugin.resetAjaxAttempts();
+                if (_self.core) {
+                    let ajaxPlugin = _self.core.getPlugin<IDependenciesPlugin>("AjaxDependencyPlugin");
+                    if (ajaxPlugin && ajaxPlugin.resetAjaxAttempts) {
+                        ajaxPlugin.resetAjaxAttempts();
+                    }
                 }
             }
             
@@ -913,11 +911,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 _autoUnhandledPromiseInstrumented = false;
                 _autoTrackPageVisitTime = false;
 
-                // Counts number of trackAjax invocations.
-                // By default we only monitor X ajax call per view to avoid too much load.
-                // Default value is set in config.
-                // This counter keeps increasing even after the limit is reached.
-                _trackAjaxAttempts = 0;
+                // Reset ajax attempts counter
+                _resetAjaxAttempts();
             
                 // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
                 let location = getLocation(true);
