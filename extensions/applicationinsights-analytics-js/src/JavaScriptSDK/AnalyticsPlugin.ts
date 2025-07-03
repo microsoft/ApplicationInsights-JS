@@ -14,7 +14,7 @@ import {
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext,
-    IExceptionConfig, IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
+    IExceptionConfig, IInstrumentCallDetails, ILoadedPlugin, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
     ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent,
     TelemetryInitializerFunction, _eInternalMessageId, arrForEach, cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate,
     createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, findAllScripts, generateW3CId,
@@ -98,7 +98,7 @@ function _updateStorageUsage(extConfig: IConfig) {
 }
 
 export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
-    public static Version = "#version#"; // Not currently used anywhere
+    public static Version = '3.3.9'; // Not currently used anywhere
 
     public identifier: string = AnalyticsPluginIdentifier; // do not change name or priority
     public priority: number = 180; // take from reserved priority range 100- 200
@@ -625,9 +625,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             function _resetAjaxAttempts() {
                 // Reset ajax attempts counter for the new page view
                 if (_self.core) {
-                    let ajaxPlugin = _self.core.getPlugin<IDependenciesPlugin>("AjaxDependencyPlugin");
-                    if (ajaxPlugin && ajaxPlugin.resetAjaxAttempts) {
-                        ajaxPlugin.resetAjaxAttempts();
+                    let ajaxPlugin = _self.core.getPlugin("AjaxDependencyPlugin") as ILoadedPlugin<IDependenciesPlugin>;
+                    if (ajaxPlugin && ajaxPlugin.plugin && ajaxPlugin.plugin.resetAjaxAttempts) {
+                        ajaxPlugin.plugin.resetAjaxAttempts();
                     }
                 }
             }
