@@ -70,7 +70,7 @@ export class IAnalyticsConfigTests extends AITestClass {
                 let onChangeCalled = 0;
                 let expectedSamplingPercentage = 50;
                 
-                let handler = core.onCfgChange((details) => {
+                let handler = onConfigChange(theConfig, (details) => {
                     onChangeCalled++;
                     Assert.equal(TestInstrumentationKey, details.cfg.instrumentationKey, "Expect the iKey to be set");
                     if (details.cfg.samplingPercentage !== undefined) {
@@ -84,7 +84,7 @@ export class IAnalyticsConfigTests extends AITestClass {
 
                 // Change a config value
                 expectedSamplingPercentage = 75;
-                (core.config as any).samplingPercentage = expectedSamplingPercentage;
+                (theConfig as any).samplingPercentage = expectedSamplingPercentage;
 
                 // Wait for the change to propagate
                 this.clock.tick(1);
@@ -95,7 +95,7 @@ export class IAnalyticsConfigTests extends AITestClass {
                 let callCountBeforeRemoval = onChangeCalled;
                 
                 expectedSamplingPercentage = 25;
-                (core.config as any).samplingPercentage = expectedSamplingPercentage;
+                (theConfig as any).samplingPercentage = expectedSamplingPercentage;
 
                 this.clock.tick(1);
                 Assert.equal(callCountBeforeRemoval, onChangeCalled, "Expected the onChanged was not called after handler removal");
