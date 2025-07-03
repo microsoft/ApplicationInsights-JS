@@ -1145,7 +1145,8 @@ class TestSamplingPlugin implements ITelemetryPlugin {
     public processTelemetry: (env: ITelemetryItem) => void;
     public initialize: (config: IConfiguration) => void;
     public identifier: string = "AzureSamplingPlugin";
-    public setNextPlugin: (next: ITelemetryPlugin) => void;
+    /** @deprecated - Use processNext() function of the passed IProcessTelemetryContext instead */
+    public setNextPlugin?: (next: ITelemetryPlugin) => void;
     public priority: number = 5;
     public version = "1.0.31-Beta";
     public nextPlugin: ITelemetryPlugin;
