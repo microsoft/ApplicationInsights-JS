@@ -102,7 +102,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     public identifier: string = AnalyticsPluginIdentifier; // do not change name or priority
     public priority: number = 180; // take from reserved priority range 100- 200
-    public readonly config: IAnalyticsConfig;
+    public readonly config: IConfig & IConfiguration;
     public queue: Array<() => void>;
     public autoRoutePVDelay = 500; // ms; Time to wait after a route change before triggering a pageview to allow DOM changes to take place
 
