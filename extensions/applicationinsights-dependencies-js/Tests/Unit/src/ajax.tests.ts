@@ -142,9 +142,10 @@ export class AjaxTests extends AITestClass {
                 // Track 3 ajax calls to reach the limit
                 for (let i = 0; i < 3; i++) {
                     var xhr = new XMLHttpRequest();
-                    xhr.open("GET", "example.com/bla");
+                    xhr.open("GET", "http://microsoft.com");
+                    xhr.setRequestHeader("header name", "header value");
                     xhr.send();
-                    (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8"}, "");
+                    (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
                 }
                 
                 Assert.equal(3, trackSpy.callCount, "Track should be called 3 times");
@@ -152,9 +153,10 @@ export class AjaxTests extends AITestClass {
                 
                 // Try one more - should trigger the limit error
                 var xhr = new XMLHttpRequest();
-                xhr.open("GET", "example.com/bla");
+                xhr.open("GET", "http://microsoft.com");
+                xhr.setRequestHeader("header name", "header value");
                 xhr.send();
-                (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8"}, "");
+                (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
                 
                 Assert.equal(3, trackSpy.callCount, "Track should still be 3 after exceeding limit");
                 Assert.equal(true, throwSpy.called, "Should have thrown error for exceeding limit");
@@ -168,9 +170,10 @@ export class AjaxTests extends AITestClass {
                 
                 // Now try again - should work because counter was reset
                 var xhr2 = new XMLHttpRequest();
-                xhr2.open("GET", "example.com/bla2");
+                xhr2.open("GET", "http://microsoft.com");
+                xhr2.setRequestHeader("header name", "header value");
                 xhr2.send();
-                (<any>xhr2).respond(200, {"Content-Type": "application/json; charset=utf-8"}, "");
+                (<any>xhr2).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
                 
                 Assert.equal(4, trackSpy.callCount, "Track should now be called 4 times after reset");
                 Assert.equal(false, throwSpy.called, "Should not throw error after reset");
