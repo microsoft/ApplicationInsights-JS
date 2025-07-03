@@ -4,6 +4,7 @@
 */
 
 import dynamicProto from "@microsoft/dynamicproto-js";
+import { IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import {
     AnalyticsPluginIdentifier, Event as EventTelemetry, Exception, IAppInsights, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
     IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
@@ -624,7 +625,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             function _resetAjaxAttempts() {
                 // Reset ajax attempts counter for the new page view
                 if (_self.core) {
-                    let ajaxPlugin = _self.core.getPlugin("AjaxDependencyPlugin");
+                    let ajaxPlugin = _self.core.getPlugin<IDependenciesPlugin>("AjaxDependencyPlugin");
                     if (ajaxPlugin && ajaxPlugin.plugin && ajaxPlugin.plugin.resetAjaxAttempts) {
                         ajaxPlugin.plugin.resetAjaxAttempts();
                     }

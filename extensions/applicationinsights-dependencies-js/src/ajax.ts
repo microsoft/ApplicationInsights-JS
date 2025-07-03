@@ -301,7 +301,7 @@ const _internalExcludeEndpoints = [
     /https:\/\/[^\/]*(\.pipe\.aria|aria\.pipe|events\.data|collector\.azure)\.[^\/]+\/(OneCollector\/1|Collector\/3)\.0/i
 ];
 
-export interface IDependenciesPlugin extends IDependencyListenerContainer {
+export interface IDependenciesPlugin extends IDependencyListenerContainer, IPlugin {
     /**
      * Logs dependency call
      * @param dependencyData - dependency data object
