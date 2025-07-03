@@ -1,7 +1,7 @@
 import { strRepeat } from "@nevware21/ts-utils";
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import {  DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
-import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, DataSanitizerValues, dataSanitizeString } from "../../../src/Telemetry/Common/DataSanitizer";
+import {  DiagnosticLogger, IConfiguration } from "@microsoft/applicationinsights-core-js";
+import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, DataSanitizerValues, dataSanitizeString, dataSanitizeUrl } from "../../../src/Telemetry/Common/DataSanitizer";
 
 
 export class ApplicationInsightsTests extends AITestClass {
@@ -291,6 +291,117 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(1, loggerStub.callCount);
 
                 loggerStub.restore();
+            }
+        });
+        this.testCase({
+            name: 'DataSanitizerTests: dataSanitizeUrl properly redacts credentials in URLs with config enabled',
+            test: () => {
+                // URLs with credentials
+                let config = {} as IConfiguration;
+                const urlWithCredentials = "https://username:password@example.com/path";
+                const expectedRedactedUrl = "https://REDACTED:REDACTED@example.com/path";
+
+                // Act & Assert
+                const result = dataSanitizeUrl(this.logger, urlWithCredentials, config);
+                Assert.equal(expectedRedactedUrl, result);
+            }
+        });
+        this.testCase({
+            name: 'DataSanitizerTests: dataSanitizeUrl properly redacts credentials in URLs with config disabled',
+            test: () => {
+                // URLs with credentials
+                let config = {redactUrls: false} as IConfiguration;
+                const urlWithCredentials = "https://username:password@example.com/path";
+
+                // Act & Assert
+                const result = dataSanitizeUrl(this.logger, urlWithCredentials, config);
+                Assert.equal(urlWithCredentials, result);
+            }
+        });
+        this.testCase({
+            name: 'DataSanitizerTests: dataSanitizeUrl handles invalid URLs',
+            test: () => {
+                // Invalid URL that will cause URL constructor to throw
+                const invalidUrl = 123545;
+
+                // Act & Assert
+                const result = dataSanitizeUrl(this.logger, invalidUrl);
+                Assert.equal(invalidUrl, result, "Invalid URLs should be returned unchanged");
+            }
+        });
+        this.testCase({
+            name: 'DataSanitizerTests: dataSanitizeUrl still enforces maximum length after redaction',
+            test: () => {
+                // Setup
+                let config = {} as IConfiguration;
+                const loggerStub = this.sandbox.stub(this.logger, "throwInternal");
+                const MAX_URL_LENGTH = DataSanitizerValues.MAX_URL_LENGTH;
+
+                // Create a very long URL with sensitive information
+                const longBaseUrl = "https://username:password@example.com/";
+                const longPathPart = strRepeat("a", MAX_URL_LENGTH);
+                const longUrl = longBaseUrl + longPathPart;
+
+                // Act
+                const result = dataSanitizeUrl(this.logger, longUrl, config);
+
+                // Assert
+                Assert.equal(MAX_URL_LENGTH, result.length, "URL should be truncated to maximum length");
+                Assert.equal(true, result.indexOf("REDACTED") > -1, "Redaction should happen before truncation");
+                Assert.ok(loggerStub.calledOnce, "Logger should be called once for oversized URL");
+
+                loggerStub.restore();
+            }
+        });
+        this.testCase({
+            name: 'DataSanitizerTests: dataSanitizeUrl handles null and undefined inputs',
+            test: () => {
+                // Act & Assert
+                const nullResult = dataSanitizeUrl(this.logger, null);
+                Assert.equal(null, nullResult, "Null input should return null");
+
+                const undefinedResult = dataSanitizeUrl(this.logger, undefined);
+                Assert.equal(undefined, undefinedResult, "Undefined input should return undefined");
+            }
+        });
+        this.testCase({
+            name: 'DataSanitizerTests: dataSanitizeUrl preserves URLs with no sensitive information',
+            test: () => {
+                // URL with no sensitive information
+                let config = {} as IConfiguration;
+                const safeUrl = "https://example.com/api?param1=value1&param2=value2";
+
+                // Act & Assert
+                const result = dataSanitizeUrl(this.logger, safeUrl, config);
+                Assert.equal(safeUrl, result, "URL with no sensitive info should remain unchanged");
+            }
+        });
+        this.testCase({
+            name: 'DataSanitizerTests: dataSanitizeUrl properly redacts sensitive query parameters',
+            test: () => {
+                // URLs with sensitive query parameters
+                let config = {} as IConfiguration;
+                const urlWithSensitiveParams = "https://example.com/api?Signature=secret&normal=value";
+                const expectedRedactedUrl = "https://example.com/api?Signature=REDACTED&normal=value";
+
+                // Act & Assert
+                const result = dataSanitizeUrl(this.logger, urlWithSensitiveParams, config);
+                Assert.equal(expectedRedactedUrl, result);
+            }
+        });
+        this.testCase({
+            name: 'DataSanitizerTests: dataSanitizeUrl properly redacts sensitive query parameters (default + custom)',
+            test: () => {
+                // URLs with sensitive query parameters
+                let config = {
+                    redactQueryParams: ["authorize", "api_key", "password"]
+                } as IConfiguration;
+                const urlWithSensitiveParams = "https://example.com/api?Signature=secret&authorize=value";
+                const expectedRedactedUrl = "https://example.com/api?Signature=REDACTED&authorize=REDACTED";
+
+                // Act & Assert
+                const result = dataSanitizeUrl(this.logger, urlWithSensitiveParams, config);
+                Assert.equal(expectedRedactedUrl, result);
             }
         });
     }
