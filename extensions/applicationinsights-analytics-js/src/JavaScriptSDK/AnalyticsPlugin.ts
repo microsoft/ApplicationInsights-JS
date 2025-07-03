@@ -125,8 +125,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         let _extConfig: IConfig & IConfiguration;
         let _autoTrackPageVisitTime: boolean;
         let _expCfg: IExceptionConfig;
-
-        // Ajax attempts counter is now managed by the AjaxDependencyPlugin
     
         // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
         let _prevUri: string; // Assigned in the constructor
@@ -261,8 +259,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 try {
                     let inPv = pageView || {};
                     _pageViewManager.trackPageView(inPv, {...inPv.properties, ...inPv.measurements, ...customProperties});
-        
-                    _resetAjaxAttempts();
 
                     if (_autoTrackPageVisitTime) {
                         _pageVisitTimeManager.trackPreviousPageVisit(inPv.name, inPv.uri);
