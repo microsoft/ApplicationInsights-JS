@@ -23,6 +23,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
+import { IAnalyticsConfig } from "./Interfaces/IAnalyticsConfig";
 import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
 import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -52,7 +53,7 @@ function _getReason(error: any) {
 
 const MinMilliSeconds = 60000;
 
-const defaultValues: IConfigDefaults<IConfig&IConfiguration> = objDeepFreeze({
+const defaultValues: IConfigDefaults<IAnalyticsConfig> = objDeepFreeze({
     sessionRenewalMs: cfgDfSet(_chkConfigMilliseconds, 30 * 60 * 1000),
     sessionExpirationMs: cfgDfSet(_chkConfigMilliseconds, 24 * 60 * 60 * 1000),
     disableExceptionTracking: cfgDfBoolean(),
@@ -84,7 +85,7 @@ function _chkSampling(value: number) {
     return !isNaN(value) && value > 0 && value <= 100;
 }
 
-function _updateStorageUsage(extConfig: IConfig) {
+function _updateStorageUsage(extConfig: IAnalyticsConfig) {
     // Not resetting the storage usage as someone may have manually called utlDisableStorage, so this will only
     // reset based if the configuration option is provided
     if (!isUndefined(extConfig.isStorageUseDisabled)) {
@@ -121,7 +122,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         let _autoExceptionInstrumented: boolean;
         let _enableUnhandledPromiseRejectionTracking: boolean;
         let _autoUnhandledPromiseInstrumented: boolean;
-        let _extConfig: IConfig & IConfiguration;
+        let _extConfig: IAnalyticsConfig;
         let _autoTrackPageVisitTime: boolean;
         let _expCfg: IExceptionConfig;
 
