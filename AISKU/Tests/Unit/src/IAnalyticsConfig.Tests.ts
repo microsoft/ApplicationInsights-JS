@@ -27,33 +27,33 @@ export class IAnalyticsConfigTests extends AITestClass {
                 // Since IAnalyticsConfig is a TypeScript interface, we can't check typeof at runtime
                 // Instead, we'll test that we can create objects that satisfy the interface
                 const testConfig: IAnalyticsConfig = {
-                    instrumentationKey: TestInstrumentationKey
+                    samplingPercentage: 50,
+                    sessionRenewalMs: 1800000,
+                    disableExceptionTracking: false
                 };
-                Assert.ok(testConfig.instrumentationKey === TestInstrumentationKey, "IAnalyticsConfig should be usable");
+                Assert.ok(testConfig.samplingPercentage === 50, "IAnalyticsConfig should be usable with analytics-specific properties");
             }
         });
 
         this.testCase({
-            name: "IAnalyticsConfig: Interface extends IConfig and IConfiguration",
+            name: "IAnalyticsConfig: Interface contains specific analytics configuration properties",
             test: () => {
-                // Create a test config that implements IAnalyticsConfig
+                // Create a test config that implements IAnalyticsConfig with proper analytics properties
                 const testConfig: IAnalyticsConfig = {
-                    instrumentationKey: TestInstrumentationKey,
-                    connectionString: "test-connection-string",
-                    samplingPercentage: 50,
-                    accountId: "test-account"
+                    sessionRenewalMs: 1800000,
+                    sessionExpirationMs: 86400000,
+                    disableExceptionTracking: false,
+                    samplingPercentage: 75,
+                    enableAutoRouteTracking: true,
+                    isStorageUseDisabled: false,
+                    enableDebug: false
                 };
 
-                // Test that it can be used as both IConfig and IConfiguration simultaneously
-                const asBothInterfaces: IConfig & IConfiguration = testConfig;
-                
-                // Verify IConfig properties are accessible
-                Assert.equal("test-account", asBothInterfaces.accountId, "Should access IConfig properties");
-                Assert.equal(50, asBothInterfaces.samplingPercentage, "Should access IConfig properties");
-                
-                // Verify IConfiguration properties are accessible  
-                Assert.equal("test-connection-string", asBothInterfaces.connectionString, "Should access IConfiguration properties");
-                Assert.equal(TestInstrumentationKey, asBothInterfaces.instrumentationKey, "Should access IConfiguration properties");
+                // Verify analytics-specific properties are accessible
+                Assert.equal(1800000, testConfig.sessionRenewalMs, "Should access sessionRenewalMs property");
+                Assert.equal(75, testConfig.samplingPercentage, "Should access samplingPercentage property");
+                Assert.equal(true, testConfig.enableAutoRouteTracking, "Should access enableAutoRouteTracking property");
+                Assert.equal(false, testConfig.isStorageUseDisabled, "Should access isStorageUseDisabled property");
             }
         });
 
@@ -61,6 +61,7 @@ export class IAnalyticsConfigTests extends AITestClass {
             name: "IAnalyticsConfig: Interface compatibility with existing functionality",
             test: () => {
                 // Test that the interface doesn't break existing functionality
+                // Use root configuration (IConfiguration) for ApplicationInsights initialization
                 const init = new ApplicationInsights({
                     config: {
                         instrumentationKey: TestInstrumentationKey

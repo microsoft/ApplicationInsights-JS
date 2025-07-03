@@ -47,6 +47,8 @@ export interface IAnalyticsConfig {
     /**
      * Internal flag to track if unhandled promise instrumentation is already set up.
      * @default false
+     * @internal Internal use only
+     * @ignore INTERNAL ONLY
      */
     autoUnhandledPromiseInstrumented?: boolean;
 
@@ -103,6 +105,8 @@ export interface IAnalyticsConfig {
     /**
      * Internal flag to track if exception instrumentation is already set up.
      * @default false
+     * @internal Internal use only
+     * @ignore INTERNAL ONLY
      */
     autoExceptionInstrumented?: boolean;
 
