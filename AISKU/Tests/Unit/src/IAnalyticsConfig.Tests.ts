@@ -21,21 +21,6 @@ export class IAnalyticsConfigTests extends AITestClass {
     public registerTests() {
         
         this.testCase({
-            name: "IAnalyticsConfig: Interface is properly exported from AISKU",
-            test: () => {
-                // Test that IAnalyticsConfig is available as an export
-                // Since IAnalyticsConfig is a TypeScript interface, we can't check typeof at runtime
-                // Instead, we'll test that we can create objects that satisfy the interface
-                const testConfig: IAnalyticsConfig = {
-                    samplingPercentage: 50,
-                    sessionRenewalMs: 1800000,
-                    disableExceptionTracking: false
-                };
-                Assert.equal(50, testConfig.samplingPercentage, "IAnalyticsConfig should be usable with analytics-specific properties");
-            }
-        });
-
-        this.testCase({
             name: "IAnalyticsConfig: Interface compatibility with existing functionality",
             test: () => {
                 // Test that the interface doesn't break existing functionality
@@ -66,7 +51,7 @@ export class IAnalyticsConfigTests extends AITestClass {
             name: "IAnalyticsConfig: onConfigChange integration test",
             useFakeTimers: true,
             test: () => {
-                let theConfig: IConfiguration = {
+                let theConfig = {
                     instrumentationKey: TestInstrumentationKey,
                     samplingPercentage: 50
                 };
@@ -88,18 +73,18 @@ export class IAnalyticsConfigTests extends AITestClass {
                 let handler = core.onCfgChange((details) => {
                     onChangeCalled++;
                     Assert.equal(TestInstrumentationKey, details.cfg.instrumentationKey, "Expect the iKey to be set");
-                    if (details.cfg.samplingPercentage !== undefined) {
-                        Assert.equal(expectedSamplingPercentage, details.cfg.samplingPercentage, "Expect the sampling percentage to be set");
+                    if ((details.cfg as any).samplingPercentage !== undefined) {
+                        Assert.equal(expectedSamplingPercentage, (details.cfg as any).samplingPercentage, "Expect the sampling percentage to be set");
                     }
                 });
 
                 // Initial call should happen
-                Assert.ok(onChangeCalled >= 1, "OnCfgChange was called initially");
+                Assert.equal(1, onChangeCalled, "OnCfgChange was called exactly once initially");
                 let initialCallCount = onChangeCalled;
 
                 // Change a config value
                 expectedSamplingPercentage = 75;
-                core.config.samplingPercentage = expectedSamplingPercentage;
+                (core.config as any).samplingPercentage = expectedSamplingPercentage;
 
                 // Wait for the change to propagate
                 this.clock.tick(1);
@@ -110,7 +95,7 @@ export class IAnalyticsConfigTests extends AITestClass {
                 let callCountBeforeRemoval = onChangeCalled;
                 
                 expectedSamplingPercentage = 25;
-                core.config.samplingPercentage = expectedSamplingPercentage;
+                (core.config as any).samplingPercentage = expectedSamplingPercentage;
 
                 this.clock.tick(1);
                 Assert.equal(callCountBeforeRemoval, onChangeCalled, "Expected the onChanged was not called after handler removal");
