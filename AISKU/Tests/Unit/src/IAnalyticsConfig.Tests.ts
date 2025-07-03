@@ -51,7 +51,7 @@ export class IAnalyticsConfigTests extends AITestClass {
             name: "IAnalyticsConfig: onConfigChange integration test",
             useFakeTimers: true,
             test: () => {
-                let theConfig = {
+                let theConfig: IConfiguration & IConfig = {
                     instrumentationKey: TestInstrumentationKey,
                     samplingPercentage: 50
                 };
@@ -73,8 +73,8 @@ export class IAnalyticsConfigTests extends AITestClass {
                 let handler = core.onCfgChange((details) => {
                     onChangeCalled++;
                     Assert.equal(TestInstrumentationKey, details.cfg.instrumentationKey, "Expect the iKey to be set");
-                    if ((details.cfg as any).samplingPercentage !== undefined) {
-                        Assert.equal(expectedSamplingPercentage, (details.cfg as any).samplingPercentage, "Expect the sampling percentage to be set");
+                    if (details.cfg.samplingPercentage !== undefined) {
+                        Assert.equal(expectedSamplingPercentage, details.cfg.samplingPercentage, "Expect the sampling percentage to be set");
                     }
                 });
 
