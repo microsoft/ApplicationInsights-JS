@@ -4,7 +4,7 @@
 */
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
+import { IAjaxMonitorPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import {
     AnalyticsPluginIdentifier, Event as EventTelemetry, Exception, IAppInsights, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
     IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
@@ -98,7 +98,7 @@ function _updateStorageUsage(extConfig: IConfig) {
 }
 
 export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
-    public static Version = '3.3.9'; // Not currently used anywhere
+    public static Version = "#version#"; // Not currently used anywhere
 
     public identifier: string = AnalyticsPluginIdentifier; // do not change name or priority
     public priority: number = 180; // take from reserved priority range 100- 200
@@ -625,7 +625,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             function _resetAjaxAttempts() {
                 // Reset ajax attempts counter for the new page view
                 if (_self.core) {
-                    let ajaxPlugin = _self.core.getPlugin<IDependenciesPlugin>("AjaxDependencyPlugin");
+                    let ajaxPlugin = _self.core.getPlugin<IAjaxMonitorPlugin>("AjaxDependencyPlugin");
                     if (ajaxPlugin && ajaxPlugin.plugin && ajaxPlugin.plugin.resetAjaxAttempts) {
                         ajaxPlugin.plugin.resetAjaxAttempts();
                     }

@@ -301,7 +301,7 @@ const _internalExcludeEndpoints = [
     /https:\/\/[^\/]*(\.pipe\.aria|aria\.pipe|events\.data|collector\.azure)\.[^\/]+\/(OneCollector\/1|Collector\/3)\.0/i
 ];
 
-export interface IDependenciesPlugin extends IDependencyListenerContainer, IPlugin {
+export interface IDependenciesPlugin extends IDependencyListenerContainer {
     /**
      * Logs dependency call
      * @param dependencyData - dependency data object
@@ -316,6 +316,13 @@ export interface IDependenciesPlugin extends IDependencyListenerContainer, IPlug
 
 export interface IInstrumentationRequirements extends IDependenciesPlugin {
     includeCorrelationHeaders: (ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) => any;
+}
+
+/**
+ * Interface for the Ajax Monitor Plugin that extends IPlugin and includes ajax specific functionality.
+ * This interface is used for proper typing when retrieving the plugin via getPlugin().
+ */
+export interface IAjaxMonitorPlugin extends IPlugin, IDependenciesPlugin, IInstrumentationRequirements, IDependencyListenerContainer {
 }
 
 const _defaultConfig: IConfigDefaults<ICorrelationConfig> = objFreeze({
@@ -345,7 +352,7 @@ const _defaultConfig: IConfigDefaults<ICorrelationConfig> = objFreeze({
     addIntEndpoints: true
 });
 
-export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlugin, IInstrumentationRequirements, IDependencyListenerContainer {
+export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlugin {
 
     public static identifier: string = "AjaxDependencyPlugin";
 
