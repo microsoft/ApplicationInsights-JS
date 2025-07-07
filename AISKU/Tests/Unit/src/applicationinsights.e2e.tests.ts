@@ -330,59 +330,61 @@ export class ApplicationInsightsTests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Init: init with cs promise and change with cs string at the same time",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
+                return this._asyncQueue().add(() => {
 
-                // unload previous one first
-                let oriInst = this._ai;
-                if (oriInst && oriInst.unload) {
-                    // force unload
-                    oriInst.unload(false);
-                }
-        
-                if (oriInst && oriInst["dependencies"]) {
-                    oriInst["dependencies"].teardown();
-                }
-        
-                this._config = this._getTestConfig(this._sessionPrefix);
-                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
-                this._config.connectionString = csPromise;
-                this._config.initTimeOut= 80000;
-                this._ctx.csPromise = csPromise;
-
-
-                let init = new ApplicationInsights({
-                    config: this._config
-                });
-                init.loadAppInsights();
-                this._ai = init;
-                let config = this._ai.config;
-                let core = this._ai.core;
-                let status = core.activeStatus && core.activeStatus();
-                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
-                
-                config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
-                this.clock.tick(1);
-                status = core.activeStatus && core.activeStatus();
-                Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
-                // Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
-
-                
-                
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this._ai.core
-                let activeStatus = core.activeStatus && core.activeStatus();
+                    // unload previous one first
+                    let oriInst = this._ai;
+                    if (oriInst && oriInst.unload) {
+                        // force unload
+                        oriInst.unload(false);
+                    }
             
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60) as any)
+                    if (oriInst && oriInst["dependencies"]) {
+                        oriInst["dependencies"].teardown();
+                    }
+            
+                    this._config = this._getTestConfig(this._sessionPrefix);
+                    let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                    this._config.connectionString = csPromise;
+                    this._config.initTimeOut= 80000;
+                    this._ctx.csPromise = csPromise;
+
+
+                    let init = new ApplicationInsights({
+                        config: this._config
+                    });
+                    init.loadAppInsights();
+                    this._ai = init;
+                    let config = this._ai.config;
+                    let core = this._ai.core;
+                    let status = core.activeStatus && core.activeStatus();
+                    Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
+                    
+                    config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
+                    this.clock.tick(1);
+                    status = core.activeStatus && core.activeStatus();
+                    Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
+                    // Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
+
+                    
+                    
+                })
+                .concat(PollingAssert.createPollingAssert(() => {
+                    let core = this._ai.core
+                    let activeStatus = core.activeStatus && core.activeStatus();
+                
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                        Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60) as any);
+            }
         });
 
 

@@ -484,21 +484,23 @@ export class SnippetInitializationTests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException sends to backend',
-            stepDelay: 100,
-            steps: [() => {
-                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                let exception: Error = null;
-                try {
-                    window['a']['b']();
-                    Assert.ok(false, 'trackException test not run');
-                } catch (e) {
-                    exception = e;
-                    theSnippet.trackException({ exception });
-                }
-                Assert.ok(exception);
-            }].concat(this.asserts(1))
+            test: () => {
+                return this._asyncQueue().add(() => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    let exception: Error = null;
+                    try {
+                        window['a']['b']();
+                        Assert.ok(false, 'trackException test not run');
+                    } catch (e) {
+                        exception = e;
+                        theSnippet.trackException({ exception });
+                    }
+                    Assert.ok(exception);
+                })
+                .concat(this.asserts(1));
+            }
         });
 
         this.testCaseAsync({
