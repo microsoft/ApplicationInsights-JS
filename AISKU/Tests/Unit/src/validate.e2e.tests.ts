@@ -112,11 +112,10 @@ export class ValidateE2ETests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Validate that track event takes all type of characters",
-            stepDelay: this.delay,
-            steps: [
-                () => {
+            test: () => {
+                return this._asyncQueue().add(() => {
                     const s1 = "شلاؤيثبلاهتنمةىخحضقسفعشلاؤيصثبل";
                     const s2 = "Ինչու՞ նրանք չեն խոսում Հայերեն";
                     const s3 = "ওরা কন বাংলা বলেত পাের না";
@@ -132,10 +131,10 @@ export class ValidateE2ETests extends AITestClass {
                     this._ai.trackTrace({message: s1}, { p: s2 });
                     this._ai.trackTrace({message: s3}, { p: s4 });
                     this._ai.trackTrace({message: s5}, { p: s6, p2: s7 });
-                }]
+                })
                 .concat(this.waitForResponse())
                 .concat(this.boilerPlateAsserts)
-                .concat(() => {
+                .add(() => {
                     let acceptedItems = 0;
                     this.successSpy.args.forEach(call => {
                         call[0].forEach(item => {
@@ -154,28 +153,29 @@ export class ValidateE2ETests extends AITestClass {
                     if (acceptedItems != 4) {
                         this.dumpPayloadMessages(this.successSpy);
                     }
-                })
+                });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Validate that special characters are handled correctly",
-            stepDelay: this.delay,
-            steps: [
-                () => {
+            test: () => {
+                return this._asyncQueue().add(() => {
                     const s1 = "[]{};,.)(*&^%$#@/\\";
 
                     this._ai.trackTrace({message: s1}, { p: s1 });
                     this._ai.trackTrace({message: "a"}, { "[]{};,.)(*&^%$#@/\\": "b" });
-                }]
+                })
                 .concat(this.waitForResponse())
                 .concat(this.boilerPlateAsserts)
-                .concat(() => {
+                .add(() => {
                     const acceptedItems = this.getPayloadMessages(this.successSpy).length;
                     Assert.equal(2, acceptedItems, "backend should accept the event");
                     if (acceptedItems != 2) {
                         this.dumpPayloadMessages(this.successSpy);
                     }
-                })
+                });
+            }
         });
     }
 
