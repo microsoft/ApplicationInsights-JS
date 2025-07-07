@@ -9,6 +9,7 @@ import { SenderE2ETests } from './sender.e2e.tests';
 import { SnippetInitializationTests } from './SnippetInitialization.Tests';
 import { CdnThrottle} from "./CdnThrottle.tests";
 import { ThrottleSentMessage } from "./ThrottleSentMessage.tests";
+import { IAnalyticsConfigTests } from './IAnalyticsConfig.Tests';
 
 export function runTests() {
     new GlobalTestHooks().registerTests();
@@ -23,4 +24,5 @@ export function runTests() {
     new SnippetInitializationTests(true).registerTests();
     new ThrottleSentMessage().registerTests();
     new CdnThrottle().registerTests();
+    new IAnalyticsConfigTests().registerTests();
 }
