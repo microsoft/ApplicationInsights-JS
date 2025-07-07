@@ -64,38 +64,37 @@ export class ValidateE2ETests extends AITestClass {
     }
 
     private addAsyncTests(): void {
-        this.testCaseAsync({
+        this.testCase({
             name: "Validate track event",
-            stepDelay: this.delay,
-            steps: [
-                () => {
+            test: () => {
+                return this._asyncQueue().add(() => {
                     this._ai.trackTrace({message: "test"});
                     this._ai.trackTrace({message: "test event"}, { p1: "value 1", p2: "value 2", m1: 123, m2: 456.7 });
-                }]
+                })
                 .concat(this.waitForResponse())
                 .concat(this.boilerPlateAsserts)
-                .concat(() => {
+                .add(() => {
                     const acceptedItems = this.getPayloadMessages(this.successSpy).length;
                     Assert.equal(2, acceptedItems, "backend should accept two events");
                     if (acceptedItems != 2) {
                         this.dumpPayloadMessages(this.successSpy);
                     }
-                })
+                });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackEvent sends to backend with NaN value could be handled correctly',
-            stepDelay: this.delay,
-            steps: [
-                () => {
+            test: () => {
+                return this._asyncQueue().add(() => {
                     const customeProperties = {
                         nanValue: NaN,
                     }
                     this._ai.trackEvent({ name: 'event', properties: { "prop1": NaN, "prop2": NaN }}, customeProperties);
-                }]
+                })
                 .concat(this.waitForResponse())
                 .concat(this.boilerPlateAsserts)
-                .concat(() => {
+                .add(() => {
                     const acceptedItems = this.getPayloadMessages(this.successSpy).length;
                     Assert.equal(1, acceptedItems, "backend should accept two events");
                     if (acceptedItems != 1) {
@@ -109,7 +108,8 @@ export class ValidateE2ETests extends AITestClass {
                         Assert.equal(null, data.baseData.measurements["nanValue"]);
                         Assert.equal("NaN", data.baseData.properties["prop1"]);
                     }
-                })
+                });
+            }
         });
 
         this.testCaseAsync({
