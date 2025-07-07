@@ -204,24 +204,24 @@ export class SnippetInitializationTests extends AITestClass {
                 }
             });
 
-            this.testCaseAsync({
+            this.testCase({
                 name: "checkConnectionString",
-                stepDelay: 100,
-                steps: [
-                    () => {
+                test: () => {
+                    return this._asyncQueue().add(() => {
                         let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfigConnectionString(this.sessionPrefix)));
                         theSnippet.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
-                    }
-                ]
-                .concat(this.asserts(1)).concat(() => {
-                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                    if (payloadStr.length > 0) {
-                       const payload = JSON.parse(payloadStr[0]);
-                       const data = payload.data;
-                       Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
-                       Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
-                    }
-                })
+                    })
+                    .concat(this.asserts(1))
+                    .add(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                           const payload = JSON.parse(payloadStr[0]);
+                           const data = payload.data;
+                           Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
+                           Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
+                        }
+                    });
+                }
             });
 
             this.testCase({
@@ -258,80 +258,82 @@ export class SnippetInitializationTests extends AITestClass {
             });
 
 
-            this.testCaseAsync({
+            this.testCase({
                 name: "[" + snippetName + "] : Public Members exist",
-                stepDelay: 100,
-                steps: [() => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix))) as any;
-                    _expectedTrackMethods.forEach(method => {
-                        Assert.ok(theSnippet[method], `${method} exists`);
-                        Assert.equal('function', typeof theSnippet[method], `${method} is a function`);
+                test: () => {
+                    return this._asyncQueue().add(() => {
+                        let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix))) as any;
+                        _expectedTrackMethods.forEach(method => {
+                            Assert.ok(theSnippet[method], `${method} exists`);
+                            Assert.equal('function', typeof theSnippet[method], `${method} is a function`);
 
-                        let funcSpy;
-                        if (method === "trackDependencyData" || method === "flush") {
-                            // we don't have any available reference to the underlying call, so while we want to check
-                            // that this functions exists we can't validate that it is called
-                        } else if (method === "setAuthenticatedUserContext" || method === "clearAuthenticatedUserContext") {
-                            funcSpy = this.sandbox.spy(theSnippet.context.user, method);
-                        } else if (method === "addTelemetryInitializer") {
-                            funcSpy = this.sandbox.spy(theSnippet.core, method);
-                        } else {
-                            funcSpy = this.sandbox.spy(theSnippet.appInsights, method);
-                        }
+                            let funcSpy;
+                            if (method === "trackDependencyData" || method === "flush") {
+                                // we don't have any available reference to the underlying call, so while we want to check
+                                // that this functions exists we can't validate that it is called
+                            } else if (method === "setAuthenticatedUserContext" || method === "clearAuthenticatedUserContext") {
+                                funcSpy = this.sandbox.spy(theSnippet.context.user, method);
+                            } else if (method === "addTelemetryInitializer") {
+                                funcSpy = this.sandbox.spy(theSnippet.core, method);
+                            } else {
+                                funcSpy = this.sandbox.spy(theSnippet.appInsights, method);
+                            }
 
+                            try {
+                                theSnippet[method]();
+                            } catch(e) {
+                                // Do nothing
+                            }
+        
+                            if (funcSpy) {
+                                Assert.ok(funcSpy.called, "Function [" + method + "] of the appInsights should have been called")
+                            }
+                        });
+
+                        _expectedMethodsAfterInitialization.forEach(method => {
+                            Assert.ok(theSnippet[method], `${method} exists`);
+                            Assert.equal('function', typeof theSnippet[method], `${method} is a function`);
+
+                            let funcSpy = this.sandbox.spy(theSnippet.appInsights, method);
+
+                            try {
+                                theSnippet[method]();
+                            } catch(e) {
+                                // Do nothing
+                            }
+        
+                            if (funcSpy) {
+                                Assert.ok(funcSpy.called, "Function [" + method + "] of the appInsights should have been called")
+                            }
+                        });
+                    })
+                    .concat(PollingAssert.createPollingAssert(() => {
                         try {
-                            theSnippet[method]();
-                        } catch(e) {
-                            // Do nothing
-                        }
-    
-                        if (funcSpy) {
-                            Assert.ok(funcSpy.called, "Function [" + method + "] of the appInsights should have been called")
-                        }
-                    });
-
-                    _expectedMethodsAfterInitialization.forEach(method => {
-                        Assert.ok(theSnippet[method], `${method} exists`);
-                        Assert.equal('function', typeof theSnippet[method], `${method} is a function`);
-
-                        let funcSpy = this.sandbox.spy(theSnippet.appInsights, method);
-
-                        try {
-                            theSnippet[method]();
-                        } catch(e) {
-                            // Do nothing
-                        }
-    
-                        if (funcSpy) {
-                            Assert.ok(funcSpy.called, "Function [" + method + "] of the appInsights should have been called")
-                        }
-                    });
-                }, PollingAssert.createPollingAssert(() => {
-                    try {
-                        Assert.ok(true, "* waiting for scheduled actions to send events " + new Date().toISOString());
-            
-                        if(this.successSpy.called) {
-                            let currentCount: number = 0;
-                            this.successSpy.args.forEach(call => {
-                                call[0].forEach(item => {
-                                    let message = item;
-                                    if (typeof item !== "string") {
-                                        message = item.item;
-                                    }
-                                    // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
-                                    if (!message || message.indexOf("AI (Internal): 72 ") == -1) {
-                                        currentCount ++;
-                                    }
+                            Assert.ok(true, "* waiting for scheduled actions to send events " + new Date().toISOString());
+                
+                            if(this.successSpy.called) {
+                                let currentCount: number = 0;
+                                this.successSpy.args.forEach(call => {
+                                    call[0].forEach(item => {
+                                        let message = item;
+                                        if (typeof item !== "string") {
+                                            message = item.item;
+                                        }
+                                        // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                                        if (!message || message.indexOf("AI (Internal): 72 ") == -1) {
+                                            currentCount ++;
+                                        }
+                                    });
                                 });
-                            });
-                            return currentCount > 0;
+                                return currentCount > 0;
+                            }
+                
+                            return false;
+                        } catch (e) {
+                            Assert.ok(false, "Exception:" + e);
                         }
-            
-                        return false;
-                    } catch (e) {
-                        Assert.ok(false, "Exception:" + e);
-                    }
-                }, "waiting for sender success", 30, 1000) as any]
+                    }, "waiting for sender success", 30, 1000) as any);
+                }
             });
 
             this.testCase({
@@ -441,39 +443,45 @@ export class SnippetInitializationTests extends AITestClass {
     }
 
     public addAsyncTests(snippetName: string, snippetCreator: (config:any) => Snippet): void {
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackEvent sends to backend',
-            stepDelay: 100,
-            steps: [() => {
-                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                theSnippet.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
-            }].concat(this.asserts(1)).concat(() => {
+            test: () => {
+                return this._asyncQueue().add(() => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    theSnippet.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
+                })
+                .concat(this.asserts(1))
+                .add(() => {
 
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
-                    Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
-                }
-            })
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        const data = payload.data;
+                        Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
+                        Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
+                    }
+                });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackTrace sends to backend',
-            stepDelay: 100,
-            steps: [() => {
-                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                theSnippet.trackTrace({ message: 'trace', properties: { "foo": "bar", "prop2": "value2" } });
-            }].concat(this.asserts(1)).concat(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                const payload = JSON.parse(payloadStr[0]);
-                const data = payload.data;
-                Assert.ok(data && data.baseData &&
-                    data.baseData.properties["foo"] && data.baseData.properties["prop2"]);
-                Assert.equal("bar", data.baseData.properties["foo"]);
-                Assert.equal("value2", data.baseData.properties["prop2"]);
-            })
+            test: () => {
+                return this._asyncQueue().add(() => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    theSnippet.trackTrace({ message: 'trace', properties: { "foo": "bar", "prop2": "value2" } });
+                })
+                .concat(this.asserts(1))
+                .add(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    const payload = JSON.parse(payloadStr[0]);
+                    const data = payload.data;
+                    Assert.ok(data && data.baseData &&
+                        data.baseData.properties["foo"] && data.baseData.properties["prop2"]);
+                    Assert.equal("bar", data.baseData.properties["foo"]);
+                    Assert.equal("value2", data.baseData.properties["prop2"]);
+                });
+            }
         });
 
         this.testCaseAsync({
