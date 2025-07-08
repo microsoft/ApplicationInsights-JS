@@ -9,7 +9,7 @@ This is the **Microsoft Application Insights JavaScript SDK** - a browser-based 
 - **AISKU/**: Main Application Insights SDK package
 - **AISKULight/**: Lightweight version of the SDK
 - **shared/**: Core shared libraries (AppInsightsCore, AppInsightsCommon, 1ds-core-js)
-- **extensions/**: Plugin-based extensions (analytics, dependencies, React, Angular, etc.)
+- **extensions/**: Plugin-based extensions (analytics, dependencies, etc.)
 - **channels/**: Data transmission channels (online, offline, tee)
 - **tools/**: Build and development tools
 - **examples/**: Sample implementations
@@ -24,9 +24,9 @@ This is the **Microsoft Application Insights JavaScript SDK** - a browser-based 
 ## Code Style & Patterns
 
 ### TypeScript/JavaScript Conventions
-- Use **ES5-compatible** syntax for browser support
+- Use **ES5-compatible** syntax for browser support and target ES5 for modern browsers
 - Prefer `function` declarations over arrow functions for better IE compatibility
-- Use `var` instead of `let/const` in some contexts for ES5 compatibility
+- Use `var` instead of `let/const` in JavaScript files for ES5 compatibility (use `let/const` in TypeScript files)
 - Always use semicolons
 - Use 4-space indentation
 - Maximum line length: 140 characters
@@ -37,22 +37,44 @@ This is the **Microsoft Application Insights JavaScript SDK** - a browser-based 
 - **Methods/Functions**: camelCase (e.g., `trackPageView`, `sendTelemetry`)
 - **Constants**: UPPER_SNAKE_CASE (e.g., `MAX_DURATION_ALLOWED`)
 - **Private variables**: underscore prefix (e.g., `_logger`, `_hasInitialized`)
+- **Enums**: PascalCase with `e` prefix (e.g., `eLoggingSeverity`, `eInternalMessageId`)
+  - Must be const enums with integer values (not strings)
+  - Use `createEnumStyle` helper for exported enums
+  - All usage should reference the const enum directly
 
 ### Dynamic Proto Pattern
-This project uses a unique `dynamicProto` pattern for performance optimization:
+This project uses a unique `dynamicProto` pattern for performance optimization. This pattern should be used for all classes:
 
 ```typescript
 export class MyClass {
     constructor() {
         dynamicProto(MyClass, this, (_self, _base) => {
-            // Instance methods and properties defined here
+            // Private variables should be included inside the constructor closure
+            // They are not publicly visible on the class
+            let _logger = _self._logger;
+            let _hasInitialized = false;
+            
+            // Public methods need @DynamicProtoStub comment for TypeScript definitions
             _self.myMethod = () => {
                 // Method implementation
             };
         });
     }
+    
+    /**
+     * @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+     */
+    public myMethod(): void {
+        // This stub will be replaced by the dynamicProto implementation
+    }
 }
 ```
+
+Key requirements:
+- Use this pattern for all classes
+- Private variables must be inside the constructor closure
+- Public functions need `@DynamicProtoStub` comment for TypeScript definition generation
+- Never add implementation code to the stub methods
 
 ### Error Handling
 - Use `_throwInternal` for logging diagnostic errors
@@ -73,19 +95,32 @@ _throwInternal(_logger,
 - Avoid synchronous operations that could block the browser
 - Implement lazy initialization where possible
 - Use object pooling for frequently created objects
+- Minimize the size of generated JavaScript by avoiding certain TypeScript features:
+  - Do not use the spread `...` operator
+  - Do not use optional chaining `?.` operator
+  - Do not use the nullish coalescing `??` operator - use `||` instead
+  - These restrictions will be removed once ES5 support is discontinued
 
 ## Browser Compatibility
 
 ### Target Support
-- **Modern browsers**: Chrome, Firefox, Safari, Edge
+- **Modern browsers**: Chrome, Firefox, Safari, Edge (targeting ES5 for modern browsers)
 - **Legacy support**: Internet Explorer 8+ (ES5 compatibility required)
 - **Mobile browsers**: iOS Safari, Android Chrome
+- **Non-browser runtimes**: Node.js and other browser-like environments (for worker contexts and server-side rendering)
 
 ### Compatibility Patterns
 - Feature detection over browser detection
 - Graceful degradation for missing APIs
-- Polyfills for missing functionality (when necessary)
+- Use existing polyfills rather than creating new ones
 - Safe API usage with null checks
+
+### Async Operations Support
+Support async operations using ts-async helpers instead of native async/await:
+- Use `doAwait` for `await` operations
+- Use `doAwaitResponse` to handle catch operations for asynchronous operations
+- Use `createPromise`, `createSyncPromise`, `createIdlePromise` instead of declaring functions as `async`
+- Return type should use `IPromise` instead of `Promise` for IE support
 
 ```typescript
 const perf = getPerformance();
@@ -138,7 +173,6 @@ export class MyPlugin extends BaseTelemetryPlugin {
 - **Telemetry Initializers**: Modify telemetry before sending
 - **Dependency Listeners**: Track AJAX/fetch calls
 - **Channels**: Custom data transmission
-- **Samplers**: Control telemetry volume
 
 ## Testing Patterns
 
@@ -167,6 +201,7 @@ export class MyPlugin extends BaseTelemetryPlugin {
 - Provide sensible defaults
 - Allow runtime configuration changes
 - Validate configuration parameters
+- Configuration names should be descriptive but mindful of browser bundle size by keeping names concise and readable
 
 ```typescript
 const config: IConfiguration = {
@@ -203,6 +238,14 @@ const config: IConfiguration = {
 - Use weak references where appropriate
 - Implement proper disposal patterns
 
+### Code Organization & Tree-Shaking
+- Each package should be side-effect free to enable proper tree-shaking
+- All code should be tree-shakable - avoid global side effects
+- Use lazy initialization for any globals via `ILazyValue` interface or similar patterns
+- Distinguish between "value not yet checked/assigned" vs "resulting value is null/undefined"
+- Export functions and classes individually rather than as default exports
+- Avoid executing code at module load time
+
 ## Common Patterns & Anti-Patterns
 
 ### ✅ Good Practices
@@ -224,14 +267,15 @@ const config: IConfiguration = {
 ## Documentation Standards
 
 ### Code Comments
-- Use JSDoc format for public APIs
+- Use TypeDoc format for public APIs
 - Document complex algorithms and business logic
 - Include examples for public methods
 - Explain browser compatibility considerations
 
 ### Interface Documentation
-- Document all public interfaces thoroughly
+- Document all public interfaces thoroughly using TypeDoc comments
 - Include parameter validation requirements
+- Include defaults and any relevant examples
 - Specify return value contracts
 - Note any side effects or state changes
 
