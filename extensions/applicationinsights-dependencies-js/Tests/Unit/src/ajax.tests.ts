@@ -1338,55 +1338,55 @@ export class AjaxTests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Fetch: Respond with status 0 and no status text",
-            stepDelay: 10,
-            autoComplete: false,
             timeOut: 10000,
-            steps: [ (testContext) => {
-                hookFetch((resolve) => {
-                    AITestClass.orgSetTimeout(function() {
-                        resolve({
-                            headers: new Headers(),
-                            ok: true,
-                            body: null,
-                            bodyUsed: false,
-                            redirected: false,
-                            status: 0,
-                            statusText: "Blocked",
-                            trailer: null,
-                            type: "basic",
-                            url: "https://httpbin.org/status/200"
+            test: () => {
+                return this._asyncQueue()
+                    .add(() => {
+                        hookFetch((resolve) => {
+                            AITestClass.orgSetTimeout(function() {
+                                resolve({
+                                    headers: new Headers(),
+                                    ok: true,
+                                    body: null,
+                                    bodyUsed: false,
+                                    redirected: false,
+                                    status: 0,
+                                    statusText: "Blocked",
+                                    trailer: null,
+                                    type: "basic",
+                                    url: "https://httpbin.org/status/200"
+                                });
+                            }, 0);
                         });
-                    }, 0);
-                });
 
-                this._ajax = new AjaxMonitor();
-                let dependencyFields = hookTrackDependencyInternal(this._ajax);
-                let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
-                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
-                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                        this._ajax = new AjaxMonitor();
+                        let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                        let appInsightsCore = new AppInsightsCore();
+                        let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                        appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                        let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                        let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
 
-                // Act
-                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
-                fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
-                    // Assert
-                    Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
-                    let data = fetchSpy.args[0][0].baseData;
-                    Assert.equal("Fetch", data.type, "request is Fetch type");
-                    Assert.ok(throwSpy.notCalled, "Make sure we didn't fail internally");
-                    Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
-                    Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
-                    Assert.equal(0, dependencyFields[0].dependency.responseCode, "Check the response code");
-                    Assert.equal(undefined, dependencyFields[0].dependency.properties.responseText);
-                    testContext.testDone();
-                }, () => {
-                    Assert.ok(false, "fetch failed!");
-                    testContext.testDone();
-                });
-            }]
+                        // Act
+                        Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                        return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                            // Assert
+                            Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
+                            let data = fetchSpy.args[0][0].baseData;
+                            Assert.equal("Fetch", data.type, "request is Fetch type");
+                            Assert.ok(throwSpy.notCalled, "Make sure we didn't fail internally");
+                            Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+                            Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
+                            Assert.equal(0, dependencyFields[0].dependency.responseCode, "Check the response code");
+                            Assert.equal(undefined, dependencyFields[0].dependency.properties.responseText);
+                        }, () => {
+                            Assert.ok(false, "fetch failed!");
+                        });
+                    })
+                    .waitComplete();
+            }
         });
 
         this.testCase({
@@ -1440,68 +1440,68 @@ export class AjaxTests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Fetch: fetch addDependencyInitializer adding context",
-            stepDelay: 10,
-            autoComplete: false,
             timeOut: 10000,
-            steps: [ (testContext) => {
-                hookFetch((resolve) => {
-                    AITestClass.orgSetTimeout(function() {
-                        resolve({
-                            headers: new Headers(),
-                            ok: true,
-                            body: null,
-                            bodyUsed: false,
-                            redirected: false,
-                            status: 200,
-                            statusText: "Hello",
-                            trailer: null,
-                            type: "basic",
-                            url: "https://httpbin.org/status/200"
+            test: () => {
+                return this._asyncQueue()
+                    .add(() => {
+                        hookFetch((resolve) => {
+                            AITestClass.orgSetTimeout(function() {
+                                resolve({
+                                    headers: new Headers(),
+                                    ok: true,
+                                    body: null,
+                                    bodyUsed: false,
+                                    redirected: false,
+                                    status: 200,
+                                    statusText: "Hello",
+                                    trailer: null,
+                                    type: "basic",
+                                    url: "https://httpbin.org/status/200"
+                                });
+                            }, 0);
                         });
-                    }, 0);
-                });
 
-                let initializerCalled = false;
-                this._ajax = new AjaxMonitor();
-                this._ajax.addDependencyInitializer((details) => {
-                    let props = details.item.properties = details.item.properties || {};
-                    props.initializer = { called: true };
-                    initializerCalled = true;
-                });
+                        let initializerCalled = false;
+                        this._ajax = new AjaxMonitor();
+                        this._ajax.addDependencyInitializer((details) => {
+                            let props = details.item.properties = details.item.properties || {};
+                            props.initializer = { called: true };
+                            initializerCalled = true;
+                        });
 
-                let dependencyFields = hookTrackDependencyInternal(this._ajax);
-                let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
-                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
-                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                        let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                        let appInsightsCore = new AppInsightsCore();
+                        let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                        appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                        let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                        let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
 
-                // Act
-                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
-                fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
-                    // Assert
-                    Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
-                    let data = fetchSpy.args[0][0].baseData;
-                    Assert.equal("Fetch", data.type, "request is Fetch type");
-                    Assert.ok(throwSpy.notCalled, "Make sure we didn't fail internally");
-                    Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
-                    Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
-                    Assert.ok(initializerCalled, "Initializer was called");
-                    Assert.equal(true, data.properties.initializer.called, "The value set in the initializer was added");
-                    testContext.testDone();
-                }, () => {
-                    Assert.ok(false, "fetch failed!");
-                    testContext.testDone();
-                });
-            }]
+                        // Act
+                        Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                        return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                            // Assert
+                            Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
+                            let data = fetchSpy.args[0][0].baseData;
+                            Assert.equal("Fetch", data.type, "request is Fetch type");
+                            Assert.ok(throwSpy.notCalled, "Make sure we didn't fail internally");
+                            Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+                            Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
+                            Assert.ok(initializerCalled, "Initializer was called");
+                            Assert.equal(true, data.properties.initializer.called, "The value set in the initializer was added");
+                        }, () => {
+                            Assert.ok(false, "fetch failed!");
+                        });
+                    })
+                    .waitComplete();
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Fetch: fetch addDependencyInitializer drops the event",
-            stepDelay: 10,
-            autoComplete: false,
+            
+            
             timeOut: 10000,
             steps: [ (testContext) => {
                 hookFetch((resolve) => {
@@ -1541,18 +1541,18 @@ export class AjaxTests extends AITestClass {
                     // Assert
                     Assert.ok(initializerCalled, "Initializer was not called");
                     Assert.ok(fetchSpy.notCalled, "track was not called");
-                    testContext.testDone();
+                    
                 }, () => {
                     Assert.ok(false, "fetch failed!");
-                    testContext.testDone();
+                    
                 });
             }]
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Fetch: instrumentation handles invalid / missing request or url",
-            stepDelay: 10,
-            autoComplete: false,
+            
+            
             timeOut: 10000,
             steps: [ (testContext) => {
                 hookFetch((resolve) => {
@@ -1599,22 +1599,22 @@ export class AjaxTests extends AITestClass {
                         Assert.equal(2, dependencyFields.length, "trackDependencyDataInternal was called");
                         Assert.ok(dependencyFields[1].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
                         Assert.equal(undefined, dependencyFields[1].sysProperties, "no system properties");
-                        testContext.testDone();
+                        
                     }, () => {
                         Assert.ok(false, "fetch failed!");
-                        testContext.testDone();
+                        
                     });
                 }, () => {
                     Assert.ok(false, "fetch failed!");
-                    testContext.testDone();
+                    
                 });
             }]
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Fetch: instrumentation handles invalid / missing request or url with traceId",
-            stepDelay: 10,
-            autoComplete: false,
+            
+            
             timeOut: 10000,
             steps: [ (testContext) => {
                 hookFetch((resolve) => {
@@ -1668,22 +1668,22 @@ export class AjaxTests extends AITestClass {
                         Assert.ok(dependencyFields[1].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
                         Assert.equal(expectedTraceId, dependencyFields[1].sysProperties!.trace.traceID, "system properties traceId");
                         Assert.equal(expectedSpanId, dependencyFields[1].sysProperties!.trace.parentID, "system properties spanId");
-                        testContext.testDone();
+                        
                     }, () => {
                         Assert.ok(false, "fetch failed!");
-                        testContext.testDone();
+                        
                     });
                 }, () => {
                     Assert.ok(false, "fetch failed!");
-                    testContext.testDone();
+                    
                 });
             }]
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Fetch: instrumentation handles empty string",
-            stepDelay: 10,
-            autoComplete: false,
+            
+            
             timeOut: 10000,
             steps: [ (testContext) => {
                 let fetchCalls = hookFetch((resolve) => {
@@ -1729,18 +1729,18 @@ export class AjaxTests extends AITestClass {
                     Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
                     Assert.equal("post", fetchCalls[0].init?.method, "Has post method");
 
-                    testContext.testDone();
+                    
                 }, () => {
                     Assert.ok(false, "fetch failed!");
-                    testContext.testDone();
+                    
                 });
             }]
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Fetch: instrumentation handles empty string with traceId",
-            stepDelay: 10,
-            autoComplete: false,
+            
+            
             timeOut: 10000,
             steps: [ (testContext) => {
                 let fetchCalls = hookFetch((resolve) => {
@@ -1796,10 +1796,10 @@ export class AjaxTests extends AITestClass {
                     Assert.equal(true, headers.has(RequestHeaders.requestIdHeader), "AI header should be present"); // AI
                     Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
 
-                    testContext.testDone();
+                    
                 }, () => {
                     Assert.ok(false, "fetch failed!");
-                    testContext.testDone();
+                    
                 });
             }]
         });
@@ -1938,87 +1938,89 @@ export class AjaxTests extends AITestClass {
             }
         })
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Fetch: should create and pass a traceparent header if ai and w3c is enabled with no init param",
-            stepDelay: 10,
             timeOut: 10000,
-            steps: [ (testContext) => {
-                let fetchCalls = hookFetch((resolve) => {
-                    AITestClass.orgSetTimeout(function() {
-                        resolve({
-                            headers: new Headers(),
-                            ok: true,
-                            body: null,
-                            bodyUsed: false,
-                            redirected: false,
-                            status: 200,
-                            statusText: "Hello",
-                            trailer: null,
-                            type: "basic",
-                            url: "https://httpbin.org/status/200"
+            test: () => {
+                return this._asyncQueue()
+                    .add(() => {
+                        let fetchCalls = hookFetch((resolve) => {
+                            AITestClass.orgSetTimeout(function() {
+                                resolve({
+                                    headers: new Headers(),
+                                    ok: true,
+                                    body: null,
+                                    bodyUsed: false,
+                                    redirected: false,
+                                    status: 200,
+                                    statusText: "Hello",
+                                    trailer: null,
+                                    type: "basic",
+                                    url: "https://httpbin.org/status/200"
+                                });
+                            }, 0);
                         });
-                    }, 0);
-                });
 
-                this._ajax = new AjaxMonitor();
-                let appInsightsCore = new AppInsightsCore();
-                let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
-                    disableFetchTracking: false,
-                    disableAjaxTracking: false,
-                    extensionConfig: {
-                        "AjaxDependencyPlugin": {
-                            appId: "appId",
-                            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+                        this._ajax = new AjaxMonitor();
+                        let appInsightsCore = new AppInsightsCore();
+                        let coreConfig = {
+                            instrumentationKey: "instrumentationKey",
+                            disableFetchTracking: false,
+                            disableAjaxTracking: false,
+                            extensionConfig: {
+                                "AjaxDependencyPlugin": {
+                                    appId: "appId",
+                                    distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+                                }
+                            }
+                        };
+                        appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                        let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                        this._context["trackStub"] = trackSpy;
+
+                        // Use test hook to simulate the correct url location
+                        this._ajax["_currentWindowHost"] = "httpbin.org";
+
+                        // Setup
+                        const url = 'https://httpbin.org/status/200';
+
+                        // Act
+                        Assert.ok(trackSpy.notCalled, "No fetch called yet");
+                        return fetch(url).then(() => {
+                            // Assert
+                            Assert.ok(trackSpy.called, "The request was not tracked");
+                            // Assert that both headers are sent
+                            Assert.equal(1, fetchCalls.length);
+                            Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
+                            let headers:Headers = fetchCalls[0].init.headers as Headers;
+                            Assert.notEqual(undefined, headers, "has headers");
+                            Assert.equal(true, headers.has(RequestHeaders.requestIdHeader), "AI header shoud be present"); // AI
+                            Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
+                        }, () => {
+                            Assert.ok(false, "fetch failed!");
+                        });
+                    })
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
+                        let trackStub = this._context["trackStub"] as SinonStub;
+                        if (trackStub.called) {
+                            Assert.ok(trackStub.calledOnce, "track is called");
+                            let data = trackStub.args[0][0].baseData;
+                            Assert.equal("Fetch", data.type, "request is Fatch type");
+                            var id = data.id;
+                            Assert.equal("|", id[0]);
+                            Assert.equal(".", id[id.length - 1]);
+                            return true;
                         }
-                    }
-                };
-                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
-                this._context["trackStub"] = trackSpy;
 
-                // Use test hook to simulate the correct url location
-                this._ajax["_currentWindowHost"] = "httpbin.org";
-
-                // Setup
-                const url = 'https://httpbin.org/status/200';
-
-                // Act
-                Assert.ok(trackSpy.notCalled, "No fetch called yet");
-                fetch(url).then(() => {
-                    // Assert
-                    Assert.ok(trackSpy.called, "The request was not tracked");
-                    // Assert that both headers are sent
-                    Assert.equal(1, fetchCalls.length);
-                    Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
-                    let headers:Headers = fetchCalls[0].init.headers as Headers;
-                    Assert.notEqual(undefined, headers, "has headers");
-                    Assert.equal(true, headers.has(RequestHeaders.requestIdHeader), "AI header shoud be present"); // AI
-                    Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
-                }, () => {
-                    Assert.ok(false, "fetch failed!");
-                    testContext.testDone();
-                });
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
-                let trackStub = this._context["trackStub"] as SinonStub;
-                if (trackStub.called) {
-                    Assert.ok(trackStub.calledOnce, "track is called");
-                    let data = trackStub.args[0][0].baseData;
-                    Assert.equal("Fetch", data.type, "request is Fatch type");
-                    var id = data.id;
-                    Assert.equal("|", id[0]);
-                    Assert.equal(".", id[id.length - 1]);
-                    return true;
-                }
-
-                return false;
-            }, 'response received', 60, 1000) as any)
+                        return false;
+                    }, 'response received', 60, 1000))
+                    .waitComplete();
+            }
         })
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Fetch: should create and pass a traceparent header if w3c only is enabled with custom headers",
-            stepDelay: 10,
+            
             timeOut: 10000,
             steps: [ (testContext) => {
                 let fetchCalls = hookFetch((resolve) => {
@@ -2082,7 +2084,7 @@ export class AjaxTests extends AITestClass {
                     Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
                 }, () => {
                     Assert.ok(false, "fetch failed!");
-                    testContext.testDone();
+                    
                 });
             }]
             .concat(PollingAssert.createPollingAssert(() => {
@@ -2101,9 +2103,9 @@ export class AjaxTests extends AITestClass {
             }, 'response received', 60, 1000) as any)
         })
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Fetch: should create and pass a traceparent header if w3c only is enabled with no init param",
-            stepDelay: 10,
+            
             timeOut: 10000,
             steps: [ (testContext) => {
                 let fetchCalls = hookFetch((resolve) => {
@@ -2160,7 +2162,7 @@ export class AjaxTests extends AITestClass {
                     Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
                 }, () => {
                     Assert.ok(false, "fetch failed!");
-                    testContext.testDone();
+                    
                 });
             }]
             .concat(PollingAssert.createPollingAssert(() => {
@@ -2179,9 +2181,9 @@ export class AjaxTests extends AITestClass {
             }, 'response received', 60, 1000) as any)
         })
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Fetch: should create and pass a request header if AI only is enabled with custom headers",
-            stepDelay: 10,
+            
             timeOut: 10000,
             steps: [ (testContext) => {
                 let fetchCalls = hookFetch((resolve) => {
@@ -2245,7 +2247,7 @@ export class AjaxTests extends AITestClass {
                     Assert.equal(false, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
                 }, () => {
                     Assert.ok(false, "fetch failed!");
-                    testContext.testDone();
+                    
                 });
             }]
             .concat(PollingAssert.createPollingAssert(() => {
@@ -2263,9 +2265,9 @@ export class AjaxTests extends AITestClass {
             }, 'response received', 60, 1000) as any)
         })
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Fetch: should create and pass a request header if AI only is enabled with no init param",
-            stepDelay: 10,
+            
             timeOut: 10000,
             steps: [ (testContext) => {
                 let fetchCalls = hookFetch((resolve) => {
@@ -2322,7 +2324,7 @@ export class AjaxTests extends AITestClass {
                     Assert.equal(false, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
                 }, () => {
                     Assert.ok(false, "fetch failed!");
-                    testContext.testDone();
+                    
                 });
             }]
             .concat(PollingAssert.createPollingAssert(() => {
@@ -2340,9 +2342,9 @@ export class AjaxTests extends AITestClass {
             }, 'response received', 60, 1000) as any)
         })
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Fetch: should add request headers to all valid argument variants",
-            stepDelay: 10,
+            
             timeOut: 10000,
             useFakeTimers: true,
             steps: [ (testContext) => {
@@ -3205,9 +3207,9 @@ export class AjaxPerfTrackTests extends AITestClass {
 
     public registerTests() {
 
-        this.testCaseAsync({
+        this.testCase({
             name: "AjaxPerf: check that performance tracking is disabled for xhr requests by default",
-            stepDelay: 10,
+            
             steps: [ () => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
@@ -3252,9 +3254,9 @@ export class AjaxPerfTrackTests extends AITestClass {
             }, 'response received', 600, 1000) as any)
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "AjaxPerf: check that performance tracking is included when enabled for xhr requests",
-            stepDelay: 10,
+            
             steps: [ (testContext) => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
@@ -3310,9 +3312,9 @@ export class AjaxPerfTrackTests extends AITestClass {
             }, 'response received', 600, 1000) as any)
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "AjaxPerf: check that performance tracking is included when enabled for xhr requests with server timing",
-            stepDelay: 10,
+            
             steps: [ (testContext) => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
@@ -3378,9 +3380,9 @@ export class AjaxPerfTrackTests extends AITestClass {
             }, 'response received', 600, 1000) as any)
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "AjaxPerf: check perf mark prefix is correctly set for multiple xhr requests",
-            stepDelay: 10,
+            
             steps: [ (testContext) => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
@@ -3424,9 +3426,9 @@ export class AjaxPerfTrackTests extends AITestClass {
            }]
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "AjaxPerf: check that performance tracking is reported, even if the entry is missing when enabled for xhr requests",
-            stepDelay: 10,
+            
             steps: [ (testContext) => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
@@ -3475,9 +3477,9 @@ export class AjaxPerfTrackTests extends AITestClass {
             }, 'response received', 60, 1000) as any)
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "AjaxPerf: check that performance tracking is disabled for fetch requests by default",
-            stepDelay: 10,
+            
             steps: [ (testContext) => {
 
                 hookFetch((resolve) => {
@@ -3529,9 +3531,9 @@ export class AjaxPerfTrackTests extends AITestClass {
             }, 'response received', 60, 1000) as any)
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "AjaxPerf: check that performance tracking is included for fetch requests when enabled",
-            stepDelay: 10,
+            
             steps: [ (testContext) => {
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
@@ -3601,9 +3603,9 @@ export class AjaxPerfTrackTests extends AITestClass {
             }, 'response received', 30, 1000) as any)
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "AjaxPerf: check that performance tracking is included for fetch requests when enabled when the fetch has a delayed promise",
-            stepDelay: 10,
+            
             steps: [ (testContext) => {
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
@@ -3674,9 +3676,9 @@ export class AjaxPerfTrackTests extends AITestClass {
             }, 'response received', 600, 1000) as any)
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Fetch: should not create and pass correlation header if correlationHeaderExcludePatterns set to exclude all.",
-            stepDelay: 10,
+            
             timeOut: 10000,
             steps: [ (testContext) => {
                 let fetchCalls = hookFetch((resolve) => {
@@ -3739,7 +3741,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                     Assert.equal(false, headers.has(RequestHeaders.traceParentHeader), "Correlation header - W3c header should be excluded"); // W3C
                 }, () => {
                     Assert.ok(false, "fetch failed!");
-                    testContext.testDone();
+                    
                 });
             }]
             .concat(PollingAssert.createPollingAssert(() => {
@@ -3801,9 +3803,9 @@ export class AjaxFrozenTests extends AITestClass {
 
     public registerTests() {
 
-        this.testCaseAsync({
+        this.testCase({
             name: "AjaxFrozenTests: check for prevent extensions",
-            stepDelay: 10,
+            
             steps: [ () => {
                 Object.preventExtensions(XMLHttpRequest);
                 Object.freeze(XMLHttpRequest);
@@ -3859,9 +3861,9 @@ export class AjaxFrozenTests extends AITestClass {
         });
         
         // This is currently a manual test as we don't have hooks / mocks defined to automated this today
-        // this.testCaseAsync({
+        // this.testCase({
         //     name: "AjaxFrozenTests: check frozen prototype",
-        //     stepDelay: 10,
+        //     
         //     steps: [ () => {
         //         Object.preventExtensions(XMLHttpRequest.prototype);
         //         Object.freeze(XMLHttpRequest.prototype);
