@@ -1909,16 +1909,20 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "FieldRedaction: should redact basic auth credentials from URL",
+            name: "FieldRedaction: should redact basic auth credentials from URL when config is enabled and should leave the URL unchanged when config is disabled",
             test: () => {
-                let config = {redactUrls: false} as IConfiguration;
-
+                // Config is disabled
+                let config = { redactUrls: false } as IConfiguration;
                 const url = "https://user:password@example.com";
-                if (config.redactUrls === true){
-                    const redactedLocation = fieldRedaction(url, config);
-                    Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com");
-                }
-                Assert.notEqual(url, "https://REDACTED:REDACTED@example.com");
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, url,
+                    "URL should remain unchanged when redaction is disabled");
+                
+                // Config is enabled
+                let configEnabled = {} as IConfiguration;
+                const redactedLocationEnabled = fieldRedaction(url, configEnabled);
+                Assert.equal(redactedLocationEnabled, "https://REDACTED:REDACTED@example.com",
+                    "URL with credentials should be redacted when redaction is enabled");
 
             }
         });
