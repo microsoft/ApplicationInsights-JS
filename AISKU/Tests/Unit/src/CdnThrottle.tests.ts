@@ -174,28 +174,27 @@ export class CdnThrottle extends AITestClass {
             name: "CfgSyncPlugin: customer enable ikey messsage change, new config fetch from config url overwrite throttle setting and send message",
             useFakeTimers: true,
             test: () => {
-                return this._asyncQueue().add(() => {
-                    let doc = getGlobal();
-                    hookFetch((resolve) => { // global instance cannot access test private instance
-                        AITestClass.orgSetTimeout(function() {
-                            resolve( doc["res"]);
-                        }, 0);
-                    });
-                    this.fetchStub = this.sandbox.spy((doc as any), "fetch");
-                    this.init = new ApplicationInsights({
-                        config:   {
-                            instrumentationKey: TestInstrumentationKey,
-                            featureOptIn : {["iKeyUsage"]: {mode: FeatureOptInMode.disable}},
-                            extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
-                                syncMode: ICfgSyncMode.Receive,
-                                cfgUrl: "testurl"
-                            }}
-                        }
-                    });
-                    this.init.loadAppInsights();
-                    this._ai = this.init;
-                })
-                .concat(PollingAssert.createPollingAssert(() => {
+                let doc = getGlobal();
+                hookFetch((resolve) => { // global instance cannot access test private instance
+                    AITestClass.orgSetTimeout(function() {
+                        resolve( doc["res"]);
+                    }, 0);
+                });
+                this.fetchStub = this.sandbox.spy((doc as any), "fetch");
+                this.init = new ApplicationInsights({
+                    config:   {
+                        instrumentationKey: TestInstrumentationKey,
+                        featureOptIn : {["iKeyUsage"]: {mode: FeatureOptInMode.disable}},
+                        extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
+                            syncMode: ICfgSyncMode.Receive,
+                            cfgUrl: "testurl"
+                        }}
+                    }
+                });
+                this.init.loadAppInsights();
+                this._ai = this.init;
+                
+                return this._asyncQueue().concat(PollingAssert.createPollingAssert(() => {
                     if (this.fetchStub.called){
                         let core = this._ai['core'];
                         let _logger = core.logger;
@@ -220,22 +219,21 @@ export class CdnThrottle extends AITestClass {
             name: "CfgSyncPlugin: customer didn't set throttle config, successfully fetch from config url",
             useFakeTimers: true,
             test: () => {
-                return this._asyncQueue().add(() => {
-                    let doc = getGlobal();
-                    hookFetch((resolve) => { // global instance cannot access test private instance
-                        AITestClass.orgSetTimeout(function() {
-                            resolve( doc["res"]);
-                        }, 0);
-                    });
+                let doc = getGlobal();
+                hookFetch((resolve) => { // global instance cannot access test private instance
+                    AITestClass.orgSetTimeout(function() {
+                        resolve( doc["res"]);
+                    }, 0);
+                });
 
-                    this.fetchStub = this.sandbox.spy((doc as any), "fetch");
-                    this.init = new ApplicationInsights({
-                        config: this._config,
-                    });
-                    this.init.loadAppInsights();
-                    this._ai = this.init;
-                })
-                .concat(PollingAssert.createPollingAssert(() => {
+                this.fetchStub = this.sandbox.spy((doc as any), "fetch");
+                this.init = new ApplicationInsights({
+                    config: this._config,
+                });
+                this.init.loadAppInsights();
+                this._ai = this.init;
+                
+                return this._asyncQueue().concat(PollingAssert.createPollingAssert(() => {
        
                     if (this.fetchStub.called){
                         let plugin = this._ai.appInsights['core'].getPlugin<CfgSyncPlugin>(this.identifier).plugin;
@@ -256,30 +254,29 @@ export class CdnThrottle extends AITestClass {
             name: "CfgSyncPlugin: customer didn't set feature opt in, successfully get aisku default and fetch from config url, get disable zip config to be true",
             useFakeTimers: true,
             test: () => {
-                return this._asyncQueue().add(() => {
-                    let doc = getGlobal();
-                    hookFetch((resolve) => { // global instance cannot access test private instance
-                        AITestClass.orgSetTimeout(function() {
-                            resolve( doc["res2"]);
-                        }, 0);
-                    });
+                let doc = getGlobal();
+                hookFetch((resolve) => { // global instance cannot access test private instance
+                    AITestClass.orgSetTimeout(function() {
+                        resolve( doc["res2"]);
+                    }, 0);
+                });
 
-                    let noSetconfig = {
-                        instrumentationKey: TestInstrumentationKey,
-                        extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
-                            syncMode: ICfgSyncMode.Receive,
-                            cfgUrl: "testurl"
-                        }}
-                    };
+                let noSetconfig = {
+                    instrumentationKey: TestInstrumentationKey,
+                    extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
+                        syncMode: ICfgSyncMode.Receive,
+                        cfgUrl: "testurl"
+                    }}
+                };
 
-                    this.fetchStub = this.sandbox.spy((doc as any), "fetch");
-                    this.init = new ApplicationInsights({
-                        config: noSetconfig,
-                    });
-                    this.init.loadAppInsights();
-                    this._ai = this.init;
-                })
-                .concat(PollingAssert.createPollingAssert(() => {
+                this.fetchStub = this.sandbox.spy((doc as any), "fetch");
+                this.init = new ApplicationInsights({
+                    config: noSetconfig,
+                });
+                this.init.loadAppInsights();
+                this._ai = this.init;
+                
+                return this._asyncQueue().concat(PollingAssert.createPollingAssert(() => {
                     if (this.fetchStub.called){
                         let newCfg = this._ai.config;
                         Assert.equal(newCfg.featureOptIn["zipPayload"]["mode"], FeatureOptInMode.enable); // aisku default is none, overwrite to true by cdn config
@@ -294,44 +291,43 @@ export class CdnThrottle extends AITestClass {
             name: "CfgSyncPlugin: customer set throttle config, new config fetch from config url could overwrite original one",
             useFakeTimers: true,
             test: () => {
-                return this._asyncQueue().add(() => {
-                    let doc = getGlobal();
-                    hookFetch((resolve) => { // global instance cannot access test private instance
-                        AITestClass.orgSetTimeout(function() {
-                            resolve( doc["res"]);
-                        }, 0);
-                    });
+                let doc = getGlobal();
+                hookFetch((resolve) => { // global instance cannot access test private instance
+                    AITestClass.orgSetTimeout(function() {
+                        resolve( doc["res"]);
+                    }, 0);
+                });
 
-                    this.fetchStub = this.sandbox.spy((doc as any), "fetch");
-                    let config =  {
-                        instrumentationKey: TestInstrumentationKey,
-                        featureOptIn : {["iKeyUsage"]: {mode: FeatureOptInMode.enable}},
-                        throttleMgrCfg: {
-                            109: { 
-                                disabled: false,
-                                limit: { 
-                                    samplingRate: 50,
-                                    maxSendNumber: 1
-                                },
-                                interval: {
-                                    daysOfMonth:[1],
-                                    monthInterval: 1
-                                }
+                this.fetchStub = this.sandbox.spy((doc as any), "fetch");
+                let config =  {
+                    instrumentationKey: TestInstrumentationKey,
+                    featureOptIn : {["iKeyUsage"]: {mode: FeatureOptInMode.enable}},
+                    throttleMgrCfg: {
+                        109: { 
+                            disabled: false,
+                            limit: { 
+                                samplingRate: 50,
+                                maxSendNumber: 1
+                            },
+                            interval: {
+                                daysOfMonth:[1],
+                                monthInterval: 1
                             }
-                        },
-                        extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
-                            syncMode: ICfgSyncMode.Receive,
-                            cfgUrl: "testurl"
-                        }}
-                    };
-                    
-                    this.init = new ApplicationInsights({
-                        config: config,
-                    });
-                    this.init.loadAppInsights();
-                    this._ai = this.init;
-                })
-                .concat(PollingAssert.createPollingAssert(() => {
+                        }
+                    },
+                    extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
+                        syncMode: ICfgSyncMode.Receive,
+                        cfgUrl: "testurl"
+                    }}
+                };
+                
+                this.init = new ApplicationInsights({
+                    config: config,
+                });
+                this.init.loadAppInsights();
+                this._ai = this.init;
+                
+                return this._asyncQueue().concat(PollingAssert.createPollingAssert(() => {
        
                     if (this.fetchStub.called){
                         let plugin = this._ai.appInsights['core'].getPlugin<CfgSyncPlugin>(this.identifier).plugin;
@@ -353,29 +349,28 @@ export class CdnThrottle extends AITestClass {
             name: "CfgSyncPlugin: customer enable feature opt in, then the config in cdn feature opt in is applied",
             useFakeTimers: true,
             test: () => {
-                return this._asyncQueue().add(() => {
-                    let doc = getGlobal();
-                    hookFetch((resolve) => { // global instance cannot access test private instance
-                        AITestClass.orgSetTimeout(function() {
-                            resolve( doc["res2"]);
-                        }, 0);
-                    });
-                    this.fetchStub = this.sandbox.spy((doc as any), "fetch");
-                    this.init = new ApplicationInsights({
-                        config:   {
-                            instrumentationKey: TestInstrumentationKey,
-                            extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
-                                syncMode: ICfgSyncMode.Receive,
-                                cfgUrl: "testurl"
-                            }},
-                            featureOptIn : {["iKeyUsage"]: {mode: FeatureOptInMode.enable}, 
-                            ["enableWParamFeature"]: {mode: FeatureOptInMode.enable}}
-                        }
-                    });
-                    this.init.loadAppInsights();
-                    this._ai = this.init;
-                })
-                .concat(PollingAssert.createPollingAssert(() => {
+                let doc = getGlobal();
+                hookFetch((resolve) => { // global instance cannot access test private instance
+                    AITestClass.orgSetTimeout(function() {
+                        resolve( doc["res2"]);
+                    }, 0);
+                });
+                this.fetchStub = this.sandbox.spy((doc as any), "fetch");
+                this.init = new ApplicationInsights({
+                    config:   {
+                        instrumentationKey: TestInstrumentationKey,
+                        extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
+                            syncMode: ICfgSyncMode.Receive,
+                            cfgUrl: "testurl"
+                        }},
+                        featureOptIn : {["iKeyUsage"]: {mode: FeatureOptInMode.enable}, 
+                        ["enableWParamFeature"]: {mode: FeatureOptInMode.enable}}
+                    }
+                });
+                this.init.loadAppInsights();
+                this._ai = this.init;
+                
+                return this._asyncQueue().concat(PollingAssert.createPollingAssert(() => {
        
                     if (this.fetchStub.called){
                         Assert.equal(this.init.config.throttleMgrCfg[_eInternalMessageId.InstrumentationKeyDeprecation].disabled, false);
@@ -392,29 +387,28 @@ export class CdnThrottle extends AITestClass {
             name: "CfgSyncPlugin: customer disable feature opt in, the origin config on cdn will apply",
             useFakeTimers: true,
             test: () => {
-                return this._asyncQueue().add(() => {
-                    let doc = getGlobal();
-                    hookFetch((resolve) => { // global instance cannot access test private instance
-                        AITestClass.orgSetTimeout(function() {
-                            resolve( doc["res2"]);
-                        }, 0);
-                    });
-                    this.fetchStub = this.sandbox.spy((doc as any), "fetch");
-                    this.init = new ApplicationInsights({
-                        config:   {
-                            instrumentationKey: TestInstrumentationKey,
-                            extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
-                                syncMode: ICfgSyncMode.Receive,
-                                cfgUrl: "testurl"
-                            }},
-                            featureOptIn : {
-                            ["enableWParamFeature"]: {mode: FeatureOptInMode.enable}}
-                        }
-                    });
-                    this.init.loadAppInsights();
-                    this._ai = this.init;
-                })
-                .concat(PollingAssert.createPollingAssert(() => {
+                let doc = getGlobal();
+                hookFetch((resolve) => { // global instance cannot access test private instance
+                    AITestClass.orgSetTimeout(function() {
+                        resolve( doc["res2"]);
+                    }, 0);
+                });
+                this.fetchStub = this.sandbox.spy((doc as any), "fetch");
+                this.init = new ApplicationInsights({
+                    config:   {
+                        instrumentationKey: TestInstrumentationKey,
+                        extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
+                            syncMode: ICfgSyncMode.Receive,
+                            cfgUrl: "testurl"
+                        }},
+                        featureOptIn : {
+                        ["enableWParamFeature"]: {mode: FeatureOptInMode.enable}}
+                    }
+                });
+                this.init.loadAppInsights();
+                this._ai = this.init;
+                
+                return this._asyncQueue().concat(PollingAssert.createPollingAssert(() => {
                     if (this.fetchStub.called){
                         Assert.equal(this.init.config.throttleMgrCfg[_eInternalMessageId.InstrumentationKeyDeprecation].disabled, true);
                         Assert.equal(this.init.config.throttleMgrCfg[_eInternalMessageId.CdnDeprecation].disabled, true);
