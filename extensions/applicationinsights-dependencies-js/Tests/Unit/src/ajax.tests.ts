@@ -214,7 +214,7 @@ export class AjaxTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 return this._asyncQueue()
-                    .add(() => {
+                            .add(() => {
                         this._ajax = new AjaxMonitor();
                         let csPromise = createAsyncResolvedPromise("testIkey");
                         let appInsightsCore = new AppInsightsCore();
@@ -241,8 +241,8 @@ export class AjaxTests extends AITestClass {
                         // Emulate response
                         (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
                         Assert.ok((<any>xhr)[AJAX_DATA_CONTAINER], "should have xhr hooks");
-                    })
-                    .add(PollingAssert.asyncTaskPollingAssert(() => {
+                    }
+                            .add(PollingAssert.asyncTaskPollingAssert(() => {
                         let core = this._context.core
                         let activeStatus = core.activeStatus && core.activeStatus();
                         let trackStub =  this._context.trackStub;
@@ -259,7 +259,6 @@ export class AjaxTests extends AITestClass {
                         }
                         return false;
                     }, "Wait for promise response" + new Date().toISOString(), 60, 1000))
-                    .waitComplete();
             }
         });
 
@@ -990,7 +989,7 @@ export class AjaxTests extends AITestClass {
             timeOut: 10000,
             test: () => {
                 return this._asyncQueue()
-                    .add(() => {
+                            .add(() => {
                         hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1022,8 +1021,7 @@ export class AjaxTests extends AITestClass {
                         }, () => {
                             Assert.ok(false, "fetch failed!");
                         });
-                    })
-                    .waitComplete();
+                    }
             }
         });
 
@@ -1047,7 +1045,7 @@ export class AjaxTests extends AITestClass {
                 timeOut: 10000,
                 test: () => {
                     return this._asyncQueue()
-                        .add(() => {
+                                .add(() => {
                             hookFetch((resolve) => {
                                 AITestClass.orgSetTimeout(function() {
                                     resolve({
@@ -1079,8 +1077,7 @@ export class AjaxTests extends AITestClass {
                             }, () => {
                                 Assert.ok(false, "fetch failed!");
                             });
-                        })
-                        .waitComplete();
+                        }
                 }
             });
     
@@ -1089,7 +1086,7 @@ export class AjaxTests extends AITestClass {
                 timeOut: 10000,
                 test: () => {
                     return this._asyncQueue()
-                        .add(() => {
+                                .add(() => {
                             hookFetch((resolve) => {
                                 AITestClass.orgSetTimeout(function() {
                                     resolve({
@@ -1125,8 +1122,7 @@ export class AjaxTests extends AITestClass {
                             }, () => {
                                 Assert.ok(false, "fetch failed!");
                             });
-                        })
-                        .waitComplete();
+                        }
                 }
             });
         });
@@ -1136,7 +1132,7 @@ export class AjaxTests extends AITestClass {
             timeOut: 10000,
             test: () => {
                 return this._asyncQueue()
-                    .add(() => {
+                            .add(() => {
                         hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1175,8 +1171,7 @@ export class AjaxTests extends AITestClass {
                         }, () => {
                             Assert.ok(false, "fetch failed!");
                         });
-                    })
-                    .waitComplete();
+                    }
             }
         });
 
@@ -1185,7 +1180,7 @@ export class AjaxTests extends AITestClass {
             timeOut: 10000,
             test: () => {
                 return this._asyncQueue()
-                    .add(() => {
+                            .add(() => {
                         hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1225,8 +1220,7 @@ export class AjaxTests extends AITestClass {
                         }, () => {
                             Assert.ok(false, "fetch failed!");
                         });
-                    })
-                    .waitComplete();
+                    }
             }
         });
 
@@ -1235,7 +1229,7 @@ export class AjaxTests extends AITestClass {
             timeOut: 10000,
             test: () => {
                 return this._asyncQueue()
-                    .add(() => {
+                            .add(() => {
                         hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1284,8 +1278,7 @@ export class AjaxTests extends AITestClass {
                         }, () => {
                             Assert.ok(false, "fetch failed!");
                         });
-                    })
-                    .waitComplete();
+                    }
             }
         });
 
@@ -1294,7 +1287,7 @@ export class AjaxTests extends AITestClass {
             timeOut: 10000,
             test: () => {
                 return this._asyncQueue()
-                    .add(() => {
+                            .add(() => {
                         hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1333,8 +1326,7 @@ export class AjaxTests extends AITestClass {
                         }, () => {
                             Assert.ok(false, "fetch failed!");
                         });
-                    })
-                    .waitComplete();
+                    }
             }
         });
 
@@ -1343,7 +1335,7 @@ export class AjaxTests extends AITestClass {
             timeOut: 10000,
             test: () => {
                 return this._asyncQueue()
-                    .add(() => {
+                            .add(() => {
                         hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1384,8 +1376,7 @@ export class AjaxTests extends AITestClass {
                         }, () => {
                             Assert.ok(false, "fetch failed!");
                         });
-                    })
-                    .waitComplete();
+                    }
             }
         });
 
@@ -1394,7 +1385,7 @@ export class AjaxTests extends AITestClass {
             timeOut: 10000,
             test: () => {
                 return this._asyncQueue()
-                    .add(() => {
+                            .add(() => {
                         hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1435,8 +1426,7 @@ export class AjaxTests extends AITestClass {
                         }, () => {
                             Assert.ok(false, "fetch failed!");
                         });
-                    })
-                    .waitComplete();
+                    }
             }
         });
 
@@ -1445,7 +1435,7 @@ export class AjaxTests extends AITestClass {
             timeOut: 10000,
             test: () => {
                 return this._asyncQueue()
-                    .add(() => {
+                            .add(() => {
                         hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1493,8 +1483,7 @@ export class AjaxTests extends AITestClass {
                         }, () => {
                             Assert.ok(false, "fetch failed!");
                         });
-                    })
-                    .waitComplete();
+                    }
             }
         });
 
@@ -1503,7 +1492,9 @@ export class AjaxTests extends AITestClass {
             
             
             timeOut: 10000,
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -1546,7 +1537,8 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-            }]
+                    }
+            }
         });
 
         this.testCase({
@@ -1554,7 +1546,9 @@ export class AjaxTests extends AITestClass {
             
             
             timeOut: 10000,
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -1608,7 +1602,8 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-            }]
+                    }
+            }
         });
 
         this.testCase({
@@ -1616,7 +1611,9 @@ export class AjaxTests extends AITestClass {
             
             
             timeOut: 10000,
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -1677,7 +1674,8 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-            }]
+                    }
+            }
         });
 
         this.testCase({
@@ -1685,7 +1683,9 @@ export class AjaxTests extends AITestClass {
             
             
             timeOut: 10000,
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -1734,7 +1734,8 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-            }]
+                    }
+            }
         });
 
         this.testCase({
@@ -1742,7 +1743,9 @@ export class AjaxTests extends AITestClass {
             
             
             timeOut: 10000,
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -1801,7 +1804,8 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-            }]
+                    }
+            }
         });
 
 
@@ -1856,7 +1860,7 @@ export class AjaxTests extends AITestClass {
             timeOut: 10000,
             test: () => {
                 return this._asyncQueue()
-                    .add(() => {
+                            .add(() => {
                         let fetchCalls = hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1919,8 +1923,8 @@ export class AjaxTests extends AITestClass {
                         }, () => {
                             Assert.ok(false, "fetch failed!");
                         });
-                    })
-                    .add(PollingAssert.asyncTaskPollingAssert(() => {
+                    }
+                            .add(PollingAssert.asyncTaskPollingAssert(() => {
                         let trackStub = this._context["trackStub"] as SinonStub;
                         if (trackStub.called) {
                             Assert.ok(trackStub.calledOnce, "track is called");
@@ -1934,7 +1938,6 @@ export class AjaxTests extends AITestClass {
 
                         return false;
                     }, 'response received', 60, 1000))
-                    .waitComplete();
             }
         })
 
@@ -1943,7 +1946,7 @@ export class AjaxTests extends AITestClass {
             timeOut: 10000,
             test: () => {
                 return this._asyncQueue()
-                    .add(() => {
+                            .add(() => {
                         let fetchCalls = hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1999,8 +2002,8 @@ export class AjaxTests extends AITestClass {
                         }, () => {
                             Assert.ok(false, "fetch failed!");
                         });
-                    })
-                    .add(PollingAssert.asyncTaskPollingAssert(() => {
+                    }
+                            .add(PollingAssert.asyncTaskPollingAssert(() => {
                         let trackStub = this._context["trackStub"] as SinonStub;
                         if (trackStub.called) {
                             Assert.ok(trackStub.calledOnce, "track is called");
@@ -2014,7 +2017,6 @@ export class AjaxTests extends AITestClass {
 
                         return false;
                     }, 'response received', 60, 1000))
-                    .waitComplete();
             }
         })
 
@@ -2022,7 +2024,9 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: should create and pass a traceparent header if w3c only is enabled with custom headers",
             
             timeOut: 10000,
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -2086,8 +2090,9 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
+                    }
+            }
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
                     Assert.ok(trackStub.calledOnce, "track is called");
@@ -2100,14 +2105,18 @@ export class AjaxTests extends AITestClass {
                 }
 
                 return false;
-            }, 'response received', 60, 1000) as any)
+            }, 'response received', 60, 1000))
+                    .waitComplete();
+            }
         })
 
         this.testCase({
             name: "Fetch: should create and pass a traceparent header if w3c only is enabled with no init param",
             
             timeOut: 10000,
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -2164,8 +2173,9 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
+                    }
+            }
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
                     Assert.ok(trackStub.calledOnce, "track is called");
@@ -2178,14 +2188,18 @@ export class AjaxTests extends AITestClass {
                 }
 
                 return false;
-            }, 'response received', 60, 1000) as any)
+            }, 'response received', 60, 1000))
+                    .waitComplete();
+            }
         })
 
         this.testCase({
             name: "Fetch: should create and pass a request header if AI only is enabled with custom headers",
             
             timeOut: 10000,
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -2249,8 +2263,9 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
+                    }
+            }
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
                     Assert.ok(trackStub.calledOnce, "track is called");
@@ -2262,14 +2277,18 @@ export class AjaxTests extends AITestClass {
                 }
 
                 return false;
-            }, 'response received', 60, 1000) as any)
+            }, 'response received', 60, 1000))
+                    .waitComplete();
+            }
         })
 
         this.testCase({
             name: "Fetch: should create and pass a request header if AI only is enabled with no init param",
             
             timeOut: 10000,
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -2326,8 +2345,9 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
+                    }
+            }
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
                     Assert.ok(trackStub.calledOnce, "track is called");
@@ -2339,7 +2359,9 @@ export class AjaxTests extends AITestClass {
                 }
 
                 return false;
-            }, 'response received', 60, 1000) as any)
+            }, 'response received', 60, 1000))
+                    .waitComplete();
+            }
         })
 
         this.testCase({
@@ -2347,7 +2369,9 @@ export class AjaxTests extends AITestClass {
             
             timeOut: 10000,
             useFakeTimers: true,
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 this._context["fetchCalls"] = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -2409,8 +2433,9 @@ export class AjaxTests extends AITestClass {
                 fetch(new Request(url, { headers: new Headers() }));
                 fetch(new Request(url, { headers }));
                 fetch(new Request(url, init));
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
+                    }
+            }
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 let fetchCalls = this._context["fetchCalls"] as IFetchArgs[];
                 Assert.ok(true, "Track: " + trackStub.args.length + " Fetch Calls: " + fetchCalls.length);
@@ -2453,7 +2478,9 @@ export class AjaxTests extends AITestClass {
 
                 this.clock.tick(1000);
                 return false;
-            }, 'response received', 60, 1000) as any)
+            }, 'response received', 60, 1000))
+                    .waitComplete();
+            }
         })
 
         this.testCase({
@@ -3238,8 +3265,9 @@ export class AjaxPerfTrackTests extends AITestClass {
                 xhr.open("GET", "https://httpbin.org/status/200");
                 xhr.send();
                 Assert.equal(false, markSpy.called, "The code should not have called mark()");
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
+                    }
+            }
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
                     Assert.ok(trackStub.calledOnce, "track is called");
@@ -3251,13 +3279,17 @@ export class AjaxPerfTrackTests extends AITestClass {
                 }
 
                 return false;
-            }, 'response received', 600, 1000) as any)
+            }, 'response received', 600, 1000))
+                    .waitComplete();
+            }
         });
 
         this.testCase({
             name: "AjaxPerf: check that performance tracking is included when enabled for xhr requests",
             
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
 
@@ -3292,8 +3324,9 @@ export class AjaxPerfTrackTests extends AITestClass {
                     startTime: getPerformance().now(),
                     duration: 10
                 });
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
+                    }
+            }
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
                     Assert.ok(trackStub.calledOnce, "track is called");
@@ -3309,13 +3342,17 @@ export class AjaxPerfTrackTests extends AITestClass {
                 }
 
                 return false;
-            }, 'response received', 600, 1000) as any)
+            }, 'response received', 600, 1000))
+                    .waitComplete();
+            }
         });
 
         this.testCase({
             name: "AjaxPerf: check that performance tracking is included when enabled for xhr requests with server timing",
             
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
 
@@ -3357,8 +3394,9 @@ export class AjaxPerfTrackTests extends AITestClass {
                         { name: "dup", description: "dup2"},
                     ]
                 });
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
+                    }
+            }
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
                     Assert.ok(trackStub.calledOnce, "track is called");
@@ -3377,13 +3415,17 @@ export class AjaxPerfTrackTests extends AITestClass {
                 }
 
                 return false;
-            }, 'response received', 600, 1000) as any)
+            }, 'response received', 600, 1000))
+                    .waitComplete();
+            }
         });
 
         this.testCase({
             name: "AjaxPerf: check perf mark prefix is correctly set for multiple xhr requests",
             
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
 
@@ -3429,7 +3471,9 @@ export class AjaxPerfTrackTests extends AITestClass {
         this.testCase({
             name: "AjaxPerf: check that performance tracking is reported, even if the entry is missing when enabled for xhr requests",
             
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
 
@@ -3457,8 +3501,9 @@ export class AjaxPerfTrackTests extends AITestClass {
                 xhr.open("GET", "https://httpbin.org/status/200");
                 xhr.send();
                 Assert.equal(true, markSpy.called, "The code should have called been mark()");
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
+                    }
+            }
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
                     Assert.ok(trackStub.calledOnce, "track is called");
@@ -3474,13 +3519,17 @@ export class AjaxPerfTrackTests extends AITestClass {
                 }
 
                 return false;
-            }, 'response received', 60, 1000) as any)
+            }, 'response received', 60, 1000))
+                    .waitComplete();
+            }
         });
 
         this.testCase({
             name: "AjaxPerf: check that performance tracking is disabled for fetch requests by default",
             
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
 
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
@@ -3514,8 +3563,9 @@ export class AjaxPerfTrackTests extends AITestClass {
                     return value;
                 });
                 Assert.equal(false, markSpy.called, "The code should not have called been mark()");
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
+                    }
+            }
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (this._context["fetchComplete"]) {
                     Assert.ok(trackStub.calledOnce, "track is called");
@@ -3528,13 +3578,17 @@ export class AjaxPerfTrackTests extends AITestClass {
                 }
 
                 return false;
-            }, 'response received', 60, 1000) as any)
+            }, 'response received', 60, 1000))
+                    .waitComplete();
+            }
         });
 
         this.testCase({
             name: "AjaxPerf: check that performance tracking is included for fetch requests when enabled",
             
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -3577,8 +3631,9 @@ export class AjaxPerfTrackTests extends AITestClass {
                 Assert.ok(trackSpy.notCalled, "No fetch called yet");
                 fetch("https://httpbin.org/status/200", {method: "post" });
                 Assert.equal(true, markSpy.called, "The code should have called been mark()");
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
+                    }
+            }
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
                     window.console && window.console.warn("Performance Entries: " + window.performance.getEntries().length);
@@ -3600,13 +3655,17 @@ export class AjaxPerfTrackTests extends AITestClass {
                 }
 
                 return false;
-            }, 'response received', 30, 1000) as any)
+            }, 'response received', 30, 1000))
+                    .waitComplete();
+            }
         });
 
         this.testCase({
             name: "AjaxPerf: check that performance tracking is included for fetch requests when enabled when the fetch has a delayed promise",
             
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -3649,8 +3708,9 @@ export class AjaxPerfTrackTests extends AITestClass {
                 Assert.ok(trackSpy.notCalled, "No fetch called yet");
                 fetch("https://httpbin.org/status/200", { method: "post" });
                 Assert.equal(true, markSpy.called, "The code should have called been mark()");
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
+                    }
+            }
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
                     window.console && window.console.warn("Performance Entries: " + window.performance.getEntries().length);
@@ -3673,14 +3733,18 @@ export class AjaxPerfTrackTests extends AITestClass {
                 }
 
                 return false;
-            }, 'response received', 600, 1000) as any)
+            }, 'response received', 600, 1000))
+                    .waitComplete();
+            }
         });
 
         this.testCase({
             name: "Fetch: should not create and pass correlation header if correlationHeaderExcludePatterns set to exclude all.",
             
             timeOut: 10000,
-            steps: [ (testContext) => {
+            test: () => {
+                return this._asyncQueue()
+                            .add(() => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -3743,8 +3807,9 @@ export class AjaxPerfTrackTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
+                    }
+            }
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
                     Assert.ok(trackStub.calledOnce, "track is called");
@@ -3757,7 +3822,9 @@ export class AjaxPerfTrackTests extends AITestClass {
                 }
 
                 return false;
-            }, 'response received', 60, 1000) as any)
+            }, 'response received', 60, 1000))
+                    .waitComplete();
+            }
         })
     }
 }
@@ -3844,8 +3911,9 @@ export class AjaxFrozenTests extends AITestClass {
                 // trigger the request that should cause a track event once the xhr request is complete
                 xhr.open("GET", "https://httpbin.org/status/200");
                 xhr.send();
-            }]
-            .concat(PollingAssert.createPollingAssert(() => {
+                    }
+            }
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let throwSpy = this._context["throwSpy"] as SinonStub;
                 if (throwSpy.called) {
                     Assert.ok(throwSpy.calledOnce, "track is called");
@@ -3857,7 +3925,9 @@ export class AjaxFrozenTests extends AITestClass {
                 }
 
                 return false;
-            }, 'response received', 60, 1000) as any)
+            }, 'response received', 60, 1000))
+                    .waitComplete();
+            }
         });
         
         // This is currently a manual test as we don't have hooks / mocks defined to automated this today
@@ -3911,7 +3981,7 @@ export class AjaxFrozenTests extends AITestClass {
         //             name: "Hello World!"
         //         });
         //     }]
-        //     .concat(PollingAssert.createPollingAssert(() => {
+        //     .add(PollingAssert.asyncTaskPollingAssert(() => {
         //         let trackStub = this._context["trackStub"] as SinonStub;
         //         if (trackStub.called) {
         //             Assert.ok(trackStub.calledOnce, "track is called");
@@ -3923,7 +3993,9 @@ export class AjaxFrozenTests extends AITestClass {
         //         }
 
         //         return false;
-        //     }, 'response received', 600, 1000) as any)
+        //     }, 'response received', 600, 1000))
+                    .waitComplete();
+            }
         // });
 
     }
