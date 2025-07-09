@@ -1911,7 +1911,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         this.testCase({
             name: "FieldRedaction: should redact basic auth credentials from URL",
             test: () => {
-                let config = {} as IConfiguration;
+                let config = {redactUrls: false} as IConfiguration;
 
                 const url = "https://user:password@example.com";
                 if (config.redactUrls === true){
