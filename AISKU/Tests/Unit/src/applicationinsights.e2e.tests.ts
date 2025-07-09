@@ -266,67 +266,65 @@ export class ApplicationInsightsTests extends AITestClass {
             name: "Init: init with cs promise, when it is resolved and then change with cs string",
             useFakeTimers: true,
             test: () => {
-                return this._asyncQueue().add(() => {
-                    // unload previous one first
-                    let oriInst = this._ai;
-                    if (oriInst && oriInst.unload) {
-                        // force unload
-                        oriInst.unload(false);
-                    }
-            
-                    if (oriInst && oriInst["dependencies"]) {
-                        oriInst["dependencies"].teardown();
-                    }
-            
-                    this._config = this._getTestConfig(this._sessionPrefix);
-                    let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
-                    this._config.connectionString = csPromise;
-                    this._config.initTimeOut= 80000;
-                    this._ctx.csPromise = csPromise;
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                if (oriInst && oriInst["dependencies"]) {
+                    oriInst["dependencies"].teardown();
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                this._config.connectionString = csPromise;
+                this._config.initTimeOut= 80000;
+                this._ctx.csPromise = csPromise;
 
 
-                    let init = new ApplicationInsights({
-                        config: this._config
-                    });
-                    init.loadAppInsights();
-                    this._ai = init;
-                    let config = this._ai.config;
-                    let core = this._ai.core;
-                    let status = core.activeStatus && core.activeStatus();
-                    Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
-                    
-                    
-                })
-                .concat(PollingAssert.createPollingAssert(() => {
-                    let core = this._ai.core
-                    let activeStatus = core.activeStatus && core.activeStatus();
-                    let csPromise = this._ctx.csPromise;
-                    let config = this._ai.config;
+                let init = new ApplicationInsights({
+                    config: this._config
+                });
+                init.loadAppInsights();
+                this._ai = init;
+                let config = this._ai.config;
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
                 
-                    if (csPromise.state === "resolved" && activeStatus === ActiveStatus.ACTIVE) {
-                        Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                        Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                return this._asyncQueue()
+                    .concat(PollingAssert.createPollingAssert(() => {
+                        let core = this._ai.core
+                        let activeStatus = core.activeStatus && core.activeStatus();
+                        let csPromise = this._ctx.csPromise;
+                        let config = this._ai.config;
+                    
+                        if (csPromise.state === "resolved" && activeStatus === ActiveStatus.ACTIVE) {
+                            Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                            Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
 
-                        config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
-                        this.clock.tick(1);
-                        let status = core.activeStatus && core.activeStatus();
-                        // promise is not resolved, no new changes applied
-                        Assert.equal(status, ActiveStatus.ACTIVE, "status should be set to active test1");
-                        return true;
-                    }
-                    return false;
-                }, "Wait for promise response" + new Date().toISOString(), 60) as any)
-                .concat(PollingAssert.createPollingAssert(() => {
-                    let core = this._ai.core
-                    let activeStatus = core.activeStatus && core.activeStatus();
-                
-                    if (activeStatus === ActiveStatus.ACTIVE) {
-                        Assert.equal("testIkey1", core.config.instrumentationKey, "ikey should be set test1");
-                        Assert.equal("testUrl1/v2/track", core.config.endpointUrl ,"endpoint shoule be set test1");
-                        return true;
-                    }
-                    return false;
-                }, "Wait for new string response" + new Date().toISOString(), 60) as any);
+                            config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
+                            this.clock.tick(1);
+                            let status = core.activeStatus && core.activeStatus();
+                            // promise is not resolved, no new changes applied
+                            Assert.equal(status, ActiveStatus.ACTIVE, "status should be set to active test1");
+                            return true;
+                        }
+                        return false;
+                    }, "Wait for promise response" + new Date().toISOString(), 60) as any)
+                    .concat(PollingAssert.createPollingAssert(() => {
+                        let core = this._ai.core
+                        let activeStatus = core.activeStatus && core.activeStatus();
+                    
+                        if (activeStatus === ActiveStatus.ACTIVE) {
+                            Assert.equal("testIkey1", core.config.instrumentationKey, "ikey should be set test1");
+                            Assert.equal("testUrl1/v2/track", core.config.endpointUrl ,"endpoint shoule be set test1");
+                            return true;
+                        }
+                        return false;
+                    }, "Wait for new string response" + new Date().toISOString(), 60) as any);
             }
         });
 
@@ -334,56 +332,52 @@ export class ApplicationInsightsTests extends AITestClass {
             name: "Init: init with cs promise and change with cs string at the same time",
             useFakeTimers: true,
             test: () => {
-                return this._asyncQueue().add(() => {
-
-                    // unload previous one first
-                    let oriInst = this._ai;
-                    if (oriInst && oriInst.unload) {
-                        // force unload
-                        oriInst.unload(false);
-                    }
-            
-                    if (oriInst && oriInst["dependencies"]) {
-                        oriInst["dependencies"].teardown();
-                    }
-            
-                    this._config = this._getTestConfig(this._sessionPrefix);
-                    let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
-                    this._config.connectionString = csPromise;
-                    this._config.initTimeOut= 80000;
-                    this._ctx.csPromise = csPromise;
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                if (oriInst && oriInst["dependencies"]) {
+                    oriInst["dependencies"].teardown();
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                this._config.connectionString = csPromise;
+                this._config.initTimeOut= 80000;
+                this._ctx.csPromise = csPromise;
 
 
-                    let init = new ApplicationInsights({
-                        config: this._config
-                    });
-                    init.loadAppInsights();
-                    this._ai = init;
-                    let config = this._ai.config;
-                    let core = this._ai.core;
-                    let status = core.activeStatus && core.activeStatus();
-                    Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
-                    
-                    config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
-                    this.clock.tick(1);
-                    status = core.activeStatus && core.activeStatus();
-                    Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
-                    // Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
-
-                    
-                    
-                })
-                .concat(PollingAssert.createPollingAssert(() => {
-                    let core = this._ai.core
-                    let activeStatus = core.activeStatus && core.activeStatus();
+                let init = new ApplicationInsights({
+                    config: this._config
+                });
+                init.loadAppInsights();
+                this._ai = init;
+                let config = this._ai.config;
+                let core = this._ai.core;
+                let status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
                 
-                    if (activeStatus === ActiveStatus.ACTIVE) {
-                        Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                        Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
-                        return true;
-                    }
-                    return false;
-                }, "Wait for promise response" + new Date().toISOString(), 60) as any);
+                config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
+                this.clock.tick(1);
+                status = core.activeStatus && core.activeStatus();
+                Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
+                // Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
+
+                return this._asyncQueue()
+                    .concat(PollingAssert.createPollingAssert(() => {
+                        let core = this._ai.core
+                        let activeStatus = core.activeStatus && core.activeStatus();
+                    
+                        if (activeStatus === ActiveStatus.ACTIVE) {
+                            Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                            Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                            return true;
+                        }
+                        return false;
+                    }, "Wait for promise response" + new Date().toISOString(), 60) as any);
             }
         });
 
@@ -929,86 +923,86 @@ export class ApplicationInsightsTests extends AITestClass {
         this.testCase({
             name: 'E2E.GenericTests: trackEvent sends to backend',
             test: () => {
-                return this._asyncQueue().add(() => {
-                    this._ai.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
-                })
-                .concat(this.asserts(1))
-                .add(() => {
-                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                    if (payloadStr.length > 0) {
-                        const payload = JSON.parse(payloadStr[0]);
-                        const data = payload.data;
-                        Assert.ok( payload && payload.iKey);
-                        Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
-                        Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
-                        Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
-                    }
-                });
+                this._ai.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
+                
+                return this._asyncQueue()
+                    .concat(this.asserts(1))
+                    .add(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                            const payload = JSON.parse(payloadStr[0]);
+                            const data = payload.data;
+                            Assert.ok( payload && payload.iKey);
+                            Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
+                            Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
+                            Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
+                        }
+                    });
             }
         });
 
         this.testCase({
             name: 'E2E.GenericTests: trackTrace sends to backend',
             test: () => {
-                return this._asyncQueue().add(() => {
-                    this._ai.trackTrace({ message: 'trace', properties: { "foo": "bar", "prop2": "value2" } });
-                })
-                .concat(this.asserts(1))
-                .add(() => {
-                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data && data.baseData &&
-                        data.baseData.properties["foo"] && data.baseData.properties["prop2"]);
-                    Assert.equal("bar", data.baseData.properties["foo"]);
-                    Assert.equal("value2", data.baseData.properties["prop2"]);
-                });
+                this._ai.trackTrace({ message: 'trace', properties: { "foo": "bar", "prop2": "value2" } });
+                
+                return this._asyncQueue()
+                    .concat(this.asserts(1))
+                    .add(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        const payload = JSON.parse(payloadStr[0]);
+                        const data = payload.data;
+                        Assert.ok(data && data.baseData &&
+                            data.baseData.properties["foo"] && data.baseData.properties["prop2"]);
+                        Assert.equal("bar", data.baseData.properties["foo"]);
+                        Assert.equal("value2", data.baseData.properties["prop2"]);
+                    });
             }
         });
 
         this.testCase({
             name: 'E2E.GenericTests: legacy trackException sends to backend',
             test: () => {
-                return this._asyncQueue().add(() => {
-                    let exception: Error = null;
-                    try {
-                        window['a']['b']();
-                        Assert.ok(false, 'trackException test not run');
-                    } catch (e) {
-                        exception = e;
-                        this._ai.trackException({ error: exception } as any);
-                    }
-                    Assert.ok(exception);
-                })
-                .concat(this.asserts(1));
+                let exception: Error = null;
+                try {
+                    window['a']['b']();
+                    Assert.ok(false, 'trackException test not run');
+                } catch (e) {
+                    exception = e;
+                    this._ai.trackException({ error: exception } as any);
+                }
+                Assert.ok(exception);
+                
+                return this._asyncQueue()
+                    .concat(this.asserts(1));
             }
         });
 
         this.testCase({
             name: 'E2E.GenericTests: trackException with auto telemetry sends to backend',
             test: () => {
-                return this._asyncQueue().add(() => {
-                    let exception: Error = null;
-                    try {
-                        window['a']['b']();
-                        Assert.ok(false, 'trackException test not run');
-                    } catch (e) {
-                        // Simulating window.onerror option
-                        let autoTelemetry = {
-                            message: e.message,
-                            url: "https://dummy.auto.example.com",
-                            lineNumber: 42,
-                            columnNumber: 53,
-                            error: e,
-                            evt: null
-                        } as IAutoExceptionTelemetry;
-        
-                        exception = e;
-                        this._ai.trackException({ exception: autoTelemetry });
-                    }
-                    Assert.ok(exception);
-                })
-                .concat(this.asserts(1));
+                let exception: Error = null;
+                try {
+                    window['a']['b']();
+                    Assert.ok(false, 'trackException test not run');
+                } catch (e) {
+                    // Simulating window.onerror option
+                    let autoTelemetry = {
+                        message: e.message,
+                        url: "https://dummy.auto.example.com",
+                        lineNumber: 42,
+                        columnNumber: 53,
+                        error: e,
+                        evt: null
+                    } as IAutoExceptionTelemetry;
+    
+                    exception = e;
+                    this._ai.trackException({ exception: autoTelemetry });
+                }
+                Assert.ok(exception);
+                
+                return this._asyncQueue()
+                    .concat(this.asserts(1));
             }
         });
 
