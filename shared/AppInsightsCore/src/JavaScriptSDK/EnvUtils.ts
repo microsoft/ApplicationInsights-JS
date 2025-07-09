@@ -4,12 +4,11 @@
 
 import { getGlobal, strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
 import {
-    getDocument, getInst, getNavigator, getPerformance, hasNavigator, isFunction, isString, isUndefined, mathMax, objForEachKey, strIndexOf,
-    strSubstring
+    getDocument, getInst, getNavigator, getPerformance, hasNavigator, isFunction, isString, isUndefined, mathMax, strIndexOf, strSubstring
 } from "@nevware21/ts-utils";
 import { IConfiguration } from "../applicationinsights-core-js";
 import { strContains } from "./HelperFuncs";
-import { DEFAULT_SENSITIVE_PARAMS, STR_EMPTY, STR_REDACTED, UNDEFINED_VALUE } from "./InternalConstants";
+import { DEFAULT_SENSITIVE_PARAMS, STR_EMPTY, STR_REDACTED } from "./InternalConstants";
 
 // TypeScript removed this interface so we need to declare the global so we can check for it's existence.
 declare var XDomainRequest: any;
@@ -363,35 +362,7 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
  * @returns The URL with user information redacted
  */
 function redactUserInfo(url: string): string {
-    const schemeEndIndex = url.indexOf(":");
-    if (schemeEndIndex === -1) {
-        // not a valid url
-        return url;
-    }
-    const len = url.length;
-    if (len <= schemeEndIndex + 2
-        || url.charAt(schemeEndIndex + 1) !== "/"
-        || url.charAt(schemeEndIndex + 2) !== "/") {
-        return url;
-    }
-    
-    let index: number;
-    let atIndex = -1;
-    for (index = schemeEndIndex + 3; index < len; index++) {
-        const c = url.charAt(index);
-
-        if (c === "@") {
-            atIndex = index;
-        }
-
-        if (c === "/" || c === "?" || c === "#") {
-            break;
-        }
-    }
-    if (atIndex === -1 || atIndex === len - 1) {
-        return url;
-    }
-    return url.substring(0, schemeEndIndex + 3) + "REDACTED:REDACTED" + url.substring(atIndex);
+    return url.replace(/^([a-zA-Z][a-zA-Z0-9+.-]*:\/\/)([^:@]{1,200}):([^@]{1,200})@(.*)$/, "$1REDACTED:REDACTED@$4"); //(/^([a-zA-Z][a-zA-Z0-9+.-]{0,50}:\/\/)([^:@]{0,200})(?::([^@]{0,200}))?@(.*)$/, "$1REDACTED:REDACTED@$4");
 }
 
 /**
@@ -405,12 +376,16 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
     if (questionMarkIndex === -1) {
         return url;
     }
-    // To build a parameter name until we reach the '=' character
-    // If the parameter name is a one to redact, we will redact the value
+
+    if (config && config.redactQueryParams) {
+        sensitiveParams = DEFAULT_SENSITIVE_PARAMS.concat(config.redactQueryParams);
+    } else {
+        sensitiveParams = DEFAULT_SENSITIVE_PARAMS;
+    }
+
     const baseUrl = strSubstring(url, 0, questionMarkIndex + 1);
     let queryString = strSubstring(url, questionMarkIndex + 1);
 
-    // Extract fragment if present
     let fragment = STR_EMPTY;
     const hashIndex = strIndexOf(queryString, "#");
     if (hashIndex !== -1) {
@@ -418,8 +393,22 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
         queryString = strSubstring(queryString, 0, hashIndex);
     }
 
-    // Extract parameters
-    const params: { [key: string]: string } = {};
+    let hasPotentialSensitiveParam = false;
+    for (let i = 0; i < sensitiveParams.length; i++) {
+        const paramCheck = sensitiveParams[i] + "=";
+        if (strIndexOf(queryString, paramCheck) !== -1) {
+            hasPotentialSensitiveParam = true;
+            break;
+        }
+    }
+
+    if (!hasPotentialSensitiveParam) {
+        return url;
+    }
+
+    const resultParts: string[] = [];
+    let anyParamRedacted = false;
+
     if (queryString && queryString.length) {
         const pairs = queryString.split("&");
         for (let i = 0; i < pairs.length; i++) {
@@ -430,27 +419,30 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
             
             const equalsIndex = strIndexOf(pair, "=");
             if (equalsIndex === -1) {
-                params[pair] = null;
+                // Parameter without value
+                resultParts.push(pair);
             } else {
                 const paramName = pair.substring(0, equalsIndex);
                 const paramValue = pair.substring(equalsIndex + 1);
-                params[paramName] = paramValue;
+                if (paramValue === STR_EMPTY) {
+                    resultParts.push(pair);
+                } else {
+                    let shouldRedact = false;
+                    for (let j = 0; j < sensitiveParams.length; j++) {
+                        if (paramName === sensitiveParams[j]) {
+                            shouldRedact = true;
+                            anyParamRedacted = true;
+                            break;
+                        }
+                    }
+                    
+                    if (shouldRedact) {
+                        resultParts.push(paramName + "=" + STR_REDACTED);
+                    } else {
+                        resultParts.push(pair);
+                    }
+                }
             }
-        }
-    }
-    
-    // Check if any parameters need redaction
-    let anyParamRedacted = false;
-    if (config && config.redactQueryParams) {
-        sensitiveParams = DEFAULT_SENSITIVE_PARAMS.concat(config.redactQueryParams);
-    } else {
-        sensitiveParams = DEFAULT_SENSITIVE_PARAMS;
-    }
-    for (let i = 0; i < sensitiveParams.length; i++) {
-        const sensParam = sensitiveParams[i];
-        if (params[sensParam] !== UNDEFINED_VALUE) {
-            params[sensParam] = STR_REDACTED;
-            anyParamRedacted = true;
         }
     }
     
@@ -459,12 +451,7 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
         return url;
     }
 
-    const parts: string[] = [];
-    objForEachKey(params, (key, value) => {
-        parts.push(value === null ? key : key + "=" + value);
-    });
-
-    return baseUrl + parts.join("&") + fragment;
+    return baseUrl + resultParts.join("&") + fragment;
 }
 
 /**
@@ -474,20 +461,29 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
  * @returns The redacted URL string or the original string if no redaction was needed or possible.
  */
 export function fieldRedaction(input: string, config: IConfiguration): string {
-    if (!input){
+    if (!input ||input.indexOf(" ") !== -1) {
         return input;
-    }
-    if (input.indexOf(" ") !== -1) {
-        return input; // Checking for URLs with spaces
     }
     const isRedactionDisabled = config && config.redactUrls === false;
     if (isRedactionDisabled) {
         return input;
     }
+    const hasCredentials = strIndexOf(input, "@") !== -1;
+    const hasQueryParams = strIndexOf(input, "?") !== -1;
+    
+    // If no credentials and no query params, return original
+    if (!hasCredentials && !hasQueryParams) {
+        return input;
+    }
     try {
-        let parsedUrl = redactUserInfo(input);
-        parsedUrl = redactQueryParameters(parsedUrl, config);
-        return parsedUrl;
+        let result = input;
+        if (hasCredentials) {
+            result = redactUserInfo(input);
+        }
+        if (hasQueryParams) {
+            result = redactQueryParameters(result, config);
+        }
+        return result;
     } catch (e) {
         return input;
     }

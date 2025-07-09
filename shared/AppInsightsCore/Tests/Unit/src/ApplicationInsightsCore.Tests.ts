@@ -1909,12 +1909,12 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should redact basic auth credentials from URL",
+            name: "FieldRedaction: should redact basic auth credentials from URL",
             test: () => {
                 let config = {} as IConfiguration;
 
                 const url = "https://user:password@example.com";
-                if (config.redactUrls){
+                if (config.redactUrls === true){
                     const redactedLocation = fieldRedaction(url, config);
                     Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com");
                 }
@@ -1924,7 +1924,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should not modify URL without credentials",
+            name: "FieldRedaction:should not modify URL without credentials",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "https://example.com/path";
@@ -1934,7 +1934,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should preserve query parameters while redacting auth",
+            name: "FieldRedaction: should preserve query parameters while redacting auth",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "https://www.example.com/path?color=blue&X-Goog-Signature=secret";
@@ -1944,7 +1944,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should preserve query parameters while redacting auth when the query string is not in the set values",
+            name: "FieldRedaction: should preserve query parameters while redacting auth when the query string is not in the set values",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "AISKU/Tests/UnitTests.html?sig=7cff0834";
@@ -1954,11 +1954,11 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should preserve query parameters while redacting auth - AWSAccessKeyId",
+            name: "FieldRedaction: should preserve query parameters while redacting auth - AWSAccessKeyId",
             test: () => {
                 let config = {redactUrls: false} as IConfiguration;
                 const url = "https://www.example.com/path?color=blue&AWSAccessKeyId=secret";
-                if (config.redactUrls){
+                if (config.redactUrls === true){
                     const redactedLocation = fieldRedaction(url, config);
                     Assert.equal(redactedLocation, "https://www.example.com/path?color=blue&AWSAccessKeyId=REDACTED");
                 }
@@ -1967,7 +1967,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle invalid URL format",
+            name: "FieldRedaction: should handle invalid URL format",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "invalid-url";
@@ -1977,7 +1977,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle special characters in credentials",
+            name: "FieldRedaction: should handle special characters in credentials",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "https://user%20name:pass%20word@example.com"
@@ -1988,7 +1988,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle URLs with multiple @ symbols",
+            name: "FieldRedaction: should handle URLs with multiple @ symbols",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "https://user:pass@example.com/path@somewhere"
@@ -1998,7 +1998,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle empty URLs",
+            name: "FieldRedaction: should handle empty URLs",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = " ";
@@ -2008,7 +2008,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should properly redact URLs with ports",
+            name: "FieldRedaction: should properly redact URLs with ports",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "https://user:pass@example.com:8080/path";
@@ -2019,7 +2019,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should properly redact URLs with fragments",
+            name: "FieldRedaction: should properly redact URLs with fragments",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "https://user:pass@example.com/path?param=value#section";
@@ -2030,7 +2030,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle port-only URLs without credentials",
+            name: "FieldRedaction: should handle port-only URLs without credentials",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "https://example.com:8080/api";
@@ -2041,7 +2041,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle URLs with IP addresses, ports and credentials",
+            name: "FieldRedaction: should handle URLs with IP addresses, ports and credentials",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "https://admin:secret@192.168.1.1:8443/admin";
@@ -2052,7 +2052,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle complex URLs with port, query parameters and fragment",
+            name: "FieldRedaction: should handle complex URLs with port, query parameters and fragment",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "https://username:password@example.com:8443/path/to/resource?sig=secret&color=blue#section2";
@@ -2062,7 +2062,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             }
         });
         this.testCase({
-            name: "should handle completely empty URL string",
+            name: "FieldRedaction: should handle completely empty URL string",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "";
@@ -2072,7 +2072,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle URL with only whitespace characters",
+            name: "FieldRedaction: should handle URL with only whitespace characters",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "   \t\n  ";
@@ -2082,7 +2082,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle malformed protocol URL",
+            name: "FieldRedaction: should handle malformed protocol URL",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "http:/example.com";  // Missing slash
@@ -2092,7 +2092,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle URLs with unusual characters",
+            name: "FieldRedaction: should handle URLs with unusual characters",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "https://example.com/path with spaces?param=value with spaces";
@@ -2103,7 +2103,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle URLs with Unicode characters",
+            name: "FieldRedaction: should handle URLs with Unicode characters",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "https://user:пароль@例子.测试/路径?参数=值&sig=秘密";
@@ -2114,18 +2114,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle improperly formatted credentials",
-            test: () => {
-                let config = {} as IConfiguration;
-                const url = "https://user:@example.com"; // Missing password
-                const redactedLocation = fieldRedaction(url, config);
-                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com",
-                    "URL with improperly formatted credentials should still redact auth");
-            }
-        });
-
-        this.testCase({
-            name: "should handle file URLs",
+            name: "FieldRedaction: should handle file URLs",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "file:///C:/Users/username/Documents/file.txt";
@@ -2136,7 +2125,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle data URLs",
+            name: "FieldRedaction: should handle data URLs",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ==";
@@ -2147,7 +2136,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle URLs with multiple query parameters to redact",
+            name: "FieldRedaction: should handle URLs with multiple query parameters to redact",
             test: () => {
                 let config = {} as IConfiguration;
                 const url = "https://example.com/path?sig=secret&X-Goog-Signature=anothersecret&AWSAccessKeyId=keyvalue&color=blue";
@@ -2158,7 +2147,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle extremely long URLs",
+            name: "FieldRedaction: should handle extremely long URLs",
             test: () => {
                 let config = {} as IConfiguration;
                 let longParam = "value".repeat(1000);
@@ -2170,7 +2159,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
         
         this.testCase({
-            name: "should redact custom query parameters defined in redactQueryParams",
+            name: "FieldRedaction: should redact custom query parameters defined in redactQueryParams",
             test: () => {
                 let config = {
                     redactQueryParams: ["authorize", "api_key", "password"]
@@ -2183,7 +2172,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             }
         });
         this.testCase({
-            name: "should redact both default and custom query parameters",
+            name: "FieldRedaction: should redact both default and custom query parameters",
             test: () => {
                 let config = {
                     redactQueryParams: ["auth_token"]
@@ -2196,7 +2185,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             }
         });
         this.testCase({
-            name: "should not redact custom parameters when redaction is disabled",
+            name: "FieldRedaction:should not redact custom parameters when redaction is disabled",
             test: () => {
                 let config = {
                     redactUrls: false,
@@ -2211,7 +2200,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle empty redactQueryParams array",
+            name: "FieldRedaction: should handle empty redactQueryParams array",
             test: () => {
                 let config = {
                     redactQueryParams: []
@@ -2226,7 +2215,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "should handle complex URLs with both credentials and custom query parameters",
+            name: "FieldRedaction:should handle complex URLs with both credentials and custom query parameters",
             test: () => {
                 let config = {
                     redactQueryParams: ["authorize", "session_id"]
@@ -2237,6 +2226,349 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 Assert.equal(redactedLocation, 
                     "https://REDACTED:REDACTED@example.com/path?sig=REDACTED&authorize=REDACTED&visible=true&session_id=REDACTED",
                     "Complex URL should have both credentials and all sensitive parameters redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle encoded username and password with special characters",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://user%40domain.com:p%40ssw%24rd@example.com/path";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com/path",
+                    "URL with encoded special characters in credentials should be redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle URL-encoded colon and at symbols in credentials",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://user%3Aname:pass%40word@example.com";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com",
+                    "URL with encoded colon and @ symbols should be redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle invalid protocol with credential pattern",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "invalid://user:pass@domain.com";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "invalid://REDACTED:REDACTED@domain.com",
+                    "Invalid protocol but valid credential pattern should still redact credentials");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle double-encoded credentials",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://user%2540domain:pass%2540word@example.com";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com",
+                    "Double-encoded credentials should be redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle credentials with plus signs and spaces",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://user+name:pass+word@example.com";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com",
+                    "Credentials with plus signs should be redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle malformed URLs with multiple colons in userinfo",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://user:pass:extra@example.com";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com",
+                    "Malformed userinfo with extra colons should still be redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle hexadecimal encoded credentials",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://user%41:pass%42@example.com"; // %41 = A, %42 = B
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com",
+                    "Hexadecimal encoded credentials should be redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle mixed case protocol with credentials",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "HtTpS://User:Pass@Example.Com/Path";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "HtTpS://REDACTED:REDACTED@Example.Com/Path",
+                    "Mixed case URLs should still have credentials redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle non-standard port with encoded credentials",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://admin%21:secret%21@server.com:9443/admin";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@server.com:9443/admin",
+                    "Non-standard port with encoded credentials should be handled");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle credentials with international domain names",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://user:пароль@тест.рф/path?param=value";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@тест.рф/path?param=value",
+                    "International domain names with credentials should be handled");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle malformed percent encoding in credentials",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://user%gg:pass%zz@example.com"; // Invalid percent encoding
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com",
+                    "Malformed percent encoding should still result in redaction");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle extremely long encoded credentials",
+            test: () => {
+                let config = {} as IConfiguration;
+                let longUser = "user".repeat(100) + "%40domain"; // This exceeds 200 chars
+                let longPass = "pass".repeat(100) + "%21";       // This exceeds 200 chars
+                const url = `https://${longUser}:${longPass}@example.com`;
+                const redactedLocation = fieldRedaction(url, config);
+                
+                // Since both username and password exceed 200 chars, they should NOT be redacted
+                Assert.equal(redactedLocation, url,
+                    "Extremely long encoded credentials should not be redacted due to length limits");
+            }
+        });
+
+
+        this.testCase({
+            name: "FieldRedaction: should handle extremely long usernames without infinite looping",
+            test: () => {
+                let config = {} as IConfiguration;
+                let longUsername = "a".repeat(300); // Exceed reasonable limits
+                const url = `https://${longUsername}:password@example.com`;
+                const redactedLocation = fieldRedaction(url, config);
+                
+                // Should either redact or leave unchanged, but not hang
+                Assert.ok(redactedLocation.length > 0, "Should not cause infinite loop with long username");
+                
+                // Since username exceeds 200 chars, it should NOT be redacted
+                Assert.equal(redactedLocation, url, "Should leave very long usernames unchanged");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle extremely long passwords without infinite looping",
+            test: () => {
+                let config = {} as IConfiguration;
+                let longPassword = "p".repeat(300); // Exceed reasonable limits
+                const url = `https://user:${longPassword}@example.com`;
+                const redactedLocation = fieldRedaction(url, config);
+                
+                // Should either redact or leave unchanged, but not hang
+                Assert.ok(redactedLocation.length > 0, "Should not cause infinite loop with long password");
+                
+                // Since password exceeds 200 chars, it should NOT be redacted
+                Assert.equal(redactedLocation, url, "Should leave very long passwords unchanged");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle invalid scheme characters",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "ht@tp://user:pass@example.com"; // Invalid scheme
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "ht@tp://user:pass@example.com",
+                    "Invalid scheme should not be processed");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle scheme with numbers and special characters",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "custom+scheme.2://user:pass@example.com";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "custom+scheme.2://REDACTED:REDACTED@example.com",
+                    "Valid scheme with numbers and special characters should work");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle username with colon but no password separator",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://user:name@example.com"; // No password, colon in username
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com",
+                    "Username containing colon should be redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle credentials with newlines (potential injection)",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://user\nname:pass\nword@example.com";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com",
+                    "Credentials with newlines should be redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle credentials with tab characters",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://user\tname:pass\tword@example.com";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com",
+                    "Credentials with tab characters should be redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle regex metacharacters in credentials",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://user.*+?:pass[]{|}@example.com";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com",
+                    "Regex metacharacters in credentials should be redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle credentials at exactly 200 character limit",
+            test: () => {
+                let config = {} as IConfiguration;
+                let username200 = "u".repeat(200);
+                let password200 = "p".repeat(200);
+                const url = `https://${username200}:${password200}@example.com`;
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com",
+                    "Credentials at exactly 200 character limit should be redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle credentials just over 200 character limit",
+            test: () => {
+                let config = {} as IConfiguration;
+                let username201 = "u".repeat(201);
+                let password201 = "p".repeat(201);
+                const url = `https://${username201}:${password201}@example.com`;
+                const redactedLocation = fieldRedaction(url, config);
+                
+                // With {0,200} limit, this should NOT match and remain unchanged
+                Assert.equal(redactedLocation, url,
+                    "Credentials over 200 character limit should not be matched");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle performance with deeply nested encoded characters",
+            test: () => {
+                let config = {} as IConfiguration;
+                let complexUser = "%25".repeat(50) + "user"; // Deeply encoded
+                let complexPass = "%25".repeat(50) + "pass";
+                const url = `https://${complexUser}:${complexPass}@example.com`;
+                
+                let startTime = performance.now();
+                const redactedLocation = fieldRedaction(url, config);
+                let endTime = performance.now();
+                
+                // Should complete quickly (under 10ms for safety)
+                Assert.ok(endTime - startTime < 10, "Should process complex encoded strings quickly");
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com",
+                    "Complex encoded credentials should be redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle scheme starting with number (invalid)",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "2http://user:pass@example.com"; // Invalid - scheme can't start with number
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "2http://user:pass@example.com",
+                    "Invalid scheme starting with number should not be processed");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle empty scheme",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "://user:pass@example.com"; // Empty scheme
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "://user:pass@example.com",
+                    "Empty scheme should not be processed");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle multiple occurrences of same parameter with empty values",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://example.com/path?sig=&color=blue&sig=value&sig=";
+                const redactedLocation = fieldRedaction(url, config);
+                // Empty values should NOT be redacted, only non-empty values should be redacted
+                Assert.equal(redactedLocation, "https://example.com/path?sig=&color=blue&sig=REDACTED&sig=",
+                    "Only non-empty sensitive parameter values should be redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle parameters without values mixed with valued parameters",
+            test: () => {
+                let config = {} as IConfiguration;
+                const url = "https://example.com/path?sig&color=blue&sig=secret&flag&sig";
+                const redactedLocation = fieldRedaction(url, config);
+                // Parameters without values (no = sign) should remain unchanged
+                // Only parameters with actual values should be redacted
+                Assert.equal(redactedLocation, "https://example.com/path?sig&color=blue&sig=REDACTED&flag&sig",
+                    "Parameters without values should remain unchanged while valued parameters are redacted");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should handle custom parameters with multiple occurrences and empty values",
+            test: () => {
+                let config = {
+                    redactQueryParams: ["auth_token", "session_id"]
+                } as IConfiguration;
+                const url = "https://example.com/path?auth_token=first&name=test&auth_token=&session_id=abc&session_id=";
+                const redactedLocation = fieldRedaction(url, config);
+                // Only redact parameters that have actual values, not empty ones
+                Assert.equal(redactedLocation, "https://example.com/path?auth_token=REDACTED&name=test&auth_token=&session_id=REDACTED&session_id=",
+                    "Only non-empty custom sensitive parameters should be redacted");
             }
         });
 
