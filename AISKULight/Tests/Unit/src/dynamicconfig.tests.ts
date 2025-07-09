@@ -94,12 +94,10 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
         });
         
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Init: init with cs promise",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
-
+            test: () => {
                 // unload previous one first
                 let oriInst = this._ai;
                 if (oriInst && oriInst.unload) {
@@ -113,94 +111,95 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                 this._config.initTimeOut= 80000;
                 this._ctx.csPromise = csPromise;
 
-
                 let init = new ApplicationInsights(this._config);
                 this._ai = init;
                 let config = this._ai.config;
                 
-                
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let csPromise = this._ctx.csPromise;
-                let config = this._ai.config;
-                let ikey = config.instrumentationKey;
-            
-                if (csPromise.state === "resolved" && isString(ikey)) {
-                    Assert.equal("testIkey", config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl/v2/track", config.endpointUrl ,"endpoint shoule be set");
-                    let sender = this._ai.getPlugin("AppInsightsChannelPlugin").plugin;
-                    let senderConfig = sender["_senderConfig"] as ISenderConfig; 
-                    let senderIkey = senderConfig.instrumentationKey;
-                    Assert.equal("testIkey", senderIkey, "sender ikey is set from connection string");
-                    let senderUrl = senderConfig.endpointUrl;
-                    Assert.equal("testUrl/v2/track", senderUrl, "sender endpoint url is set from connection string");
+                return this._asyncQueue()
+                    .concat(PollingAssert.asyncTaskPollingAssert(() => {
+                        let csPromise = this._ctx.csPromise;
+                        let config = this._ai.config;
+                        let ikey = config.instrumentationKey;
                     
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                        if (csPromise.state === "resolved" && isString(ikey)) {
+                            Assert.equal("testIkey", config.instrumentationKey, "ikey should be set");
+                            Assert.equal("testUrl/v2/track", config.endpointUrl ,"endpoint shoule be set");
+                            let sender = this._ai.getPlugin("AppInsightsChannelPlugin").plugin;
+                            let senderConfig = sender["_senderConfig"] as ISenderConfig; 
+                            let senderIkey = senderConfig.instrumentationKey;
+                            Assert.equal("testIkey", senderIkey, "sender ikey is set from connection string");
+                            let senderUrl = senderConfig.endpointUrl;
+                            Assert.equal("testUrl/v2/track", senderUrl, "sender endpoint url is set from connection string");
+                            
+                            return true;
+                        }
+                        return false;
+                    }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "zip test: gzip encode is working and content-encode header is set (feature opt-in)",
-            stepDelay: 10,
             useFakeTimers: true,
             useFakeServer: true,
-            steps: [
-                () => {
-                    this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
-                    this._ai.config.featureOptIn["zipPayload"] = { mode: 3 };
-                    this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
-                        httpXHROverride: this.xhrOverride,
-                                alwaysUseXhrOverride: true
-                    }
-                    this.clock.tick(10);
-                    const telemetryItem: ITelemetryItem = {
-                        name: 'fake item with some really long name to take up space quickly',
-                        iKey: 'iKey',
-                        baseType: 'some type',
-                        baseData: {}
-                    };
+            test: () => {
+                this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                this._ai.config.featureOptIn["zipPayload"] = { mode: 3 };
+                this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
+                    httpXHROverride: this.xhrOverride,
+                            alwaysUseXhrOverride: true
+                }
+                this.clock.tick(10);
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item with some really long name to take up space quickly',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
 
-                    this._ai.track(telemetryItem);
-                    this._ai.flush();
-                    this.clock.tick(10);
-                }].concat(PollingAssert.createPollingAssert(() => {
-                    if (this.genericSpy.called){
-                        let request = this.genericSpy.getCall(0).args[0];
-                        let gzipData = request.data;
-                        QUnit.assert.ok(gzipData, "data should be set");
-                        QUnit.assert.equal(true, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should be gzip encoded");
-                        QUnit.assert.equal(request.headers["Content-Encoding"], "gzip", "telemetry should be gzip encoded");
-                        return true;
-                    }
-                    return false;
-                }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
-            });
-
-            this.testCaseAsync({
-                name: "zip test: gzip encode will not working (feature opt-in is not set)",
-                stepDelay: 10,
-                useFakeTimers: true,
-                useFakeServer: true,
-                steps: [
-                    () => {
-                        this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
-                        this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
-                            httpXHROverride: this.xhrOverride,
-                                    alwaysUseXhrOverride: true
+                this._ai.track(telemetryItem);
+                this._ai.flush();
+                this.clock.tick(10);
+                
+                return this._asyncQueue()
+                    .concat(PollingAssert.asyncTaskPollingAssert(() => {
+                        if (this.genericSpy.called){
+                            let request = this.genericSpy.getCall(0).args[0];
+                            let gzipData = request.data;
+                            QUnit.assert.ok(gzipData, "data should be set");
+                            QUnit.assert.equal(true, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should be gzip encoded");
+                            QUnit.assert.equal(request.headers["Content-Encoding"], "gzip", "telemetry should be gzip encoded");
+                            return true;
                         }
-                        this.clock.tick(10);
-                        const telemetryItem: ITelemetryItem = {
-                            name: 'fake item with some really long name to take up space quickly',
-                            iKey: 'iKey',
-                            baseType: 'some type',
-                            baseData: {}
-                        };
-    
-                        this._ai.track(telemetryItem);
-                        this._ai.flush();
-                        this.clock.tick(10);
-                    }].concat(PollingAssert.createPollingAssert(() => {
+                        return false;
+                    }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
+        });
+
+        this.testCase({
+            name: "zip test: gzip encode will not working (feature opt-in is not set)",
+            useFakeTimers: true,
+            useFakeServer: true,
+            test: () => {
+                this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
+                    httpXHROverride: this.xhrOverride,
+                            alwaysUseXhrOverride: true
+                }
+                this.clock.tick(10);
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item with some really long name to take up space quickly',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                this._ai.track(telemetryItem);
+                this._ai.flush();
+                this.clock.tick(10);
+                
+                return this._asyncQueue()
+                    .concat(PollingAssert.asyncTaskPollingAssert(() => {
                         if (this.genericSpy.called){
                             let request = this.genericSpy.getCall(0).args[0];
                             let gzipData = request.data;
@@ -210,8 +209,9 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                             return true;
                         }
                         return false;
-                    }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
-                });
+                    }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
+        });
 
     }
 
