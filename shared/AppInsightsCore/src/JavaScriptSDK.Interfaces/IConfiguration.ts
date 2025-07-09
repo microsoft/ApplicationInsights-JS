@@ -166,7 +166,7 @@ export interface IConfiguration {
      * }
      * ```
      * 
-     * For more details, see the [Page Unload Events documentation](https://microsoft.github.io/ApplicationInsights-JS/docs/PageUnloadEvents.html).
+     * For more details, see the [Page Unload Events documentation](https://microsoft.github.io/ApplicationInsights-JS/PageUnloadEvents.html).
      */
     disablePageUnloadEvents?: string[];
 
@@ -182,7 +182,7 @@ export interface IConfiguration {
      * }
      * ```
      * 
-     * For more details, see the [Page Unload Events documentation](https://microsoft.github.io/ApplicationInsights-JS/docs/PageUnloadEvents.html).
+     * For more details, see the [Page Unload Events documentation](https://microsoft.github.io/ApplicationInsights-JS/PageUnloadEvents.html).
      */
     disablePageShowEvents?: string[];
 

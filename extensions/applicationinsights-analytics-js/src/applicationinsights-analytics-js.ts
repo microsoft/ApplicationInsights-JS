@@ -3,3 +3,4 @@
 
 export { AnalyticsPlugin, AnalyticsPlugin as ApplicationInsights } from "./JavaScriptSDK/AnalyticsPlugin";
 export { IAppInsightsInternal } from "./JavaScriptSDK/Telemetry/PageViewManager";
+export { IAnalyticsConfig } from "./JavaScriptSDK/Interfaces/IAnalyticsConfig";

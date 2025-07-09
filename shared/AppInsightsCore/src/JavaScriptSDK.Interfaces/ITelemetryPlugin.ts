@@ -36,9 +36,10 @@ export interface ITelemetryProcessor {
  */
 export interface ITelemetryPlugin extends ITelemetryProcessor, IPlugin {
     /**
-     * Set next extension for telemetry processing, this is not optional as plugins should use the
+     * Set next extension for telemetry processing, this is now optional as plugins should use the
      * processNext() function of the passed IProcessTelemetryContext instead. It is being kept for
      * now for backward compatibility only.
+     * @deprecated - Use processNext() function of the passed IProcessTelemetryContext instead
      */
     setNextPlugin?: (next: ITelemetryPlugin | ITelemetryPluginChain) => void;
 
