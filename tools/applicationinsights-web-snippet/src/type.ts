@@ -50,7 +50,7 @@ export interface ISnippetConfig {
     */
     ttp?: TrustedTypePolicy;
     /**
-     * Custom optional value to specify the nounce tag value that would be applied on the script when we drop it on the page
+     * Custom optional value to specify the nonce tag value that would be applied on the script when we drop it on the page
      */
     nt?: string;
 }

@@ -157,7 +157,7 @@ export interface IConfiguration {
      * [Optional] An array of the page unload events that you would like to be ignored, special note there must be at least one valid unload
      * event hooked, if you list all or the runtime environment only supports a listed "disabled" event it will still be hooked, if required by the SDK.
      * Unload events include "beforeunload", "unload", "visibilitychange" (with 'hidden' state) and "pagehide".
-     * 
+     *
      * This can be used to avoid jQuery 3.7.1+ deprecation warnings and Chrome warnings about the unload event:
      * @example
      * ```javascript
@@ -165,8 +165,8 @@ export interface IConfiguration {
      *   disablePageUnloadEvents: ["unload"]
      * }
      * ```
-     * 
-     * For more details, see the [Page Unload Events documentation](https://microsoft.github.io/ApplicationInsights-JS/docs/PageUnloadEvents.html).
+     *
+     * For more details, see the [Page Unload Events documentation](https://microsoft.github.io/ApplicationInsights-JS/PageUnloadEvents.html).
      */
     disablePageUnloadEvents?: string[];
 
@@ -174,15 +174,15 @@ export interface IConfiguration {
      * [Optional] An array of page show events that you would like to be ignored, special note there must be at lease one valid show event
      * hooked, if you list all or the runtime environment only supports a listed (disabled) event it will STILL be hooked, if required by the SDK.
      * Page Show events include "pageshow" and "visibilitychange" (with 'visible' state).
-     * 
+     *
      * @example
      * ```javascript
      * {
      *   disablePageShowEvents: ["pageshow"]
      * }
      * ```
-     * 
-     * For more details, see the [Page Unload Events documentation](https://microsoft.github.io/ApplicationInsights-JS/docs/PageUnloadEvents.html).
+     *
+     * For more details, see the [Page Unload Events documentation](https://microsoft.github.io/ApplicationInsights-JS/PageUnloadEvents.html).
      */
     disablePageShowEvents?: string[];
 

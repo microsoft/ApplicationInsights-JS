@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-web",
     "description": "Microsoft Application Insights JavaScript SDK",
-    "version": "3.3.8",
+    "version": "3.3.9",
     "keywords": [
         "browser performance monitoring",
         "script errors",
@@ -63,7 +63,6 @@
         "eslint-plugin-node": "^11.1.0",
         "eslint-plugin-promise": "^5.1.0",
         "eslint-plugin-security": "^1.4.0",
-        "eventemitter2": "6.4.9",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
         "grunt-contrib-connect": "^3.0.0",
