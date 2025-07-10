@@ -1234,8 +1234,25 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: add context into custom dimension with call back configuration on AI initialization.",
             timeOut: 10000,
             test: () => {
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { 
+                    instrumentationKey: "", 
+                    disableFetchTracking: false,
+                    addRequestContext: (requestContext: IRequestContext) => {
+                        return {
+                            test: "Fetch context",
+                            fetchRequestUrl: requestContext.request,
+                            fetchResponseType: (requestContext.response as Response).type
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+
                 return this._asyncQueue()
-                            .add(() => {
+                    .add(() => {
                         hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1252,23 +1269,6 @@ export class AjaxTests extends AITestClass {
                                 });
                             }, 0);
                         });
-
-                        this._ajax = new AjaxMonitor();
-                        let dependencyFields = hookTrackDependencyInternal(this._ajax);
-                        let appInsightsCore = new AppInsightsCore();
-                        let coreConfig = { 
-                            instrumentationKey: "", 
-                            disableFetchTracking: false,
-                            addRequestContext: (requestContext: IRequestContext) => {
-                                return {
-                                    test: "Fetch context",
-                                    fetchRequestUrl: requestContext.request,
-                                    fetchResponseType: (requestContext.response as Response).type
-                                }
-                            }
-                        };
-                        appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                        let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
 
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
@@ -1293,8 +1293,16 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: fetch gets instrumented",
             timeOut: 10000,
             test: () => {
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
                 return this._asyncQueue()
-                            .add(() => {
+                    .add(() => {
                         hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1311,14 +1319,6 @@ export class AjaxTests extends AITestClass {
                                 });
                             }, 0);
                         });
-
-                        this._ajax = new AjaxMonitor();
-                        let dependencyFields = hookTrackDependencyInternal(this._ajax);
-                        let appInsightsCore = new AppInsightsCore();
-                        let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
-                        appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                        let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
-                        let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
 
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
@@ -3302,8 +3302,6 @@ export class AjaxPerfTrackTests extends AITestClass {
             name: "AjaxPerf: check that performance tracking is included when enabled for xhr requests",
             
             test: () => {
-                return this._asyncQueue()
-                            .add(() => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
 
@@ -3324,21 +3322,23 @@ export class AjaxPerfTrackTests extends AITestClass {
                 // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
                 this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
 
-                // Act
-                var xhr = new XMLHttpRequest();
+                return this._asyncQueue()
+                    .add(() => {
+                        // Act
+                        var xhr = new XMLHttpRequest();
 
-                // trigger the request that should cause a track event once the xhr request is complete
-                xhr.open("GET", "https://httpbin.org/status/200");
-                xhr.send();
-                Assert.equal(true, markSpy.called, "The code should have called been mark()");
-                this.addPerfEntry({
-                    entryType: "resource",
-                    initiatorType: "xmlhttprequest",
-                    name: "https://httpbin.org/status/200",
-                    startTime: getPerformance().now(),
-                    duration: 10
-                });
-                    }
+                        // trigger the request that should cause a track event once the xhr request is complete
+                        xhr.open("GET", "https://httpbin.org/status/200");
+                        xhr.send();
+                        Assert.equal(true, markSpy.called, "The code should have called been mark()");
+                        this.addPerfEntry({
+                            entryType: "resource",
+                            initiatorType: "xmlhttprequest",
+                            name: "https://httpbin.org/status/200",
+                            startTime: getPerformance().now(),
+                            duration: 10
+                        });
+                    })
             }
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
