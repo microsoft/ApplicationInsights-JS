@@ -241,8 +241,8 @@ export class AjaxTests extends AITestClass {
                         // Emulate response
                         (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
                         Assert.ok((<any>xhr)[AJAX_DATA_CONTAINER], "should have xhr hooks");
-                    }
-                            .add(PollingAssert.asyncTaskPollingAssert(() => {
+                    })
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                         let core = this._context.core
                         let activeStatus = core.activeStatus && core.activeStatus();
                         let trackStub =  this._context.trackStub;
@@ -259,6 +259,7 @@ export class AjaxTests extends AITestClass {
                         }
                         return false;
                     }, "Wait for promise response" + new Date().toISOString(), 60, 1000))
+                    .waitComplete();
             }
         });
 
@@ -1021,7 +1022,8 @@ export class AjaxTests extends AITestClass {
                         }, () => {
                             Assert.ok(false, "fetch failed!");
                         });
-                    }
+                    })
+                    .waitComplete();
             }
         });
 
@@ -1077,7 +1079,8 @@ export class AjaxTests extends AITestClass {
                             }, () => {
                                 Assert.ok(false, "fetch failed!");
                             });
-                        }
+                        })
+                        .waitComplete();
                 }
             });
     
@@ -1122,7 +1125,8 @@ export class AjaxTests extends AITestClass {
                             }, () => {
                                 Assert.ok(false, "fetch failed!");
                             });
-                        }
+                        })
+                        .waitComplete();
                 }
             });
         });
