@@ -213,27 +213,27 @@ export class AjaxTests extends AITestClass {
             name: "Dependencies Configuration: init with cs promise ikey promise and default enableAjaxPerfTracking",
             useFakeTimers: true,
             test: () => {
+                this._ajax = new AjaxMonitor();
+                let csPromise = createAsyncResolvedPromise("testIkey");
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: csPromise,
+                    initTimeOut: 80000
+                    
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+          
+                let trackStub = this.sandbox.stub(appInsightsCore, "track");
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                Assert.equal(false, trackStub.called, "Track should not be called");
+                Assert.equal(false, throwSpy.called, "We should not have thrown an internal error");
+
+                this._context.core = appInsightsCore;
+                this._context.trackStub = trackStub;
+                this._context.throwSpy  = throwSpy;
+
                 return this._asyncQueue()
-                            .add(() => {
-                        this._ajax = new AjaxMonitor();
-                        let csPromise = createAsyncResolvedPromise("testIkey");
-                        let appInsightsCore = new AppInsightsCore();
-                        let coreConfig = {
-                            instrumentationKey: csPromise,
-                            initTimeOut: 80000
-                            
-                        };
-                        appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                  
-                        let trackStub = this.sandbox.stub(appInsightsCore, "track");
-                        let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
-                        Assert.equal(false, trackStub.called, "Track should not be called");
-                        Assert.equal(false, throwSpy.called, "We should not have thrown an internal error");
-
-                        this._context.core = appInsightsCore;
-                        this._context.trackStub = trackStub;
-                        this._context.throwSpy  = throwSpy;
-
+                    .add(() => {
                         let xhr = new XMLHttpRequest();
                         xhr.open("GET", "http://microsoft.com");
                         xhr.setRequestHeader("Content-type", "application/json");
@@ -989,8 +989,14 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: fetch with disabled flag isn't tracked",
             timeOut: 10000,
             test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+
                 return this._asyncQueue()
-                            .add(() => {
+                    .add(() => {
                         hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1007,12 +1013,6 @@ export class AjaxTests extends AITestClass {
                                 });
                             }, 0);
                         });
-
-                        this._ajax = new AjaxMonitor();
-                        let appInsightsCore = new AppInsightsCore();
-                        let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
-                        appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                        let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
 
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
@@ -1046,8 +1046,14 @@ export class AjaxTests extends AITestClass {
                 name: "Fetch: internal url fetch isn't tracked [" + endpointUrl + "]",
                 timeOut: 10000,
                 test: () => {
+                    this._ajax = new AjaxMonitor();
+                    let appInsightsCore = new AppInsightsCore();
+                    let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                    appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                    let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+
                     return this._asyncQueue()
-                                .add(() => {
+                        .add(() => {
                             hookFetch((resolve) => {
                                 AITestClass.orgSetTimeout(function() {
                                     resolve({
@@ -1064,12 +1070,6 @@ export class AjaxTests extends AITestClass {
                                     });
                                 }, 0);
                             });
-            
-                            this._ajax = new AjaxMonitor();
-                            let appInsightsCore = new AppInsightsCore();
-                            let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
-                            appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                            let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
             
                             // Act
                             Assert.ok(fetchSpy.notCalled, "No fetch called yet");
@@ -1088,8 +1088,18 @@ export class AjaxTests extends AITestClass {
                 name: "Fetch: internal url using fetch is tracked [" + endpointUrl + "]",
                 timeOut: 10000,
                 test: () => {
+                    this._ajax = new AjaxMonitor();
+                    let appInsightsCore = new AppInsightsCore();
+                    let coreConfig = {
+                        instrumentationKey: "",
+                        disableFetchTracking: false,
+                        addIntEndpoints: false
+                    };
+                    appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                    let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+
                     return this._asyncQueue()
-                                .add(() => {
+                        .add(() => {
                             hookFetch((resolve) => {
                                 AITestClass.orgSetTimeout(function() {
                                     resolve({
@@ -1106,16 +1116,6 @@ export class AjaxTests extends AITestClass {
                                     });
                                 }, 0);
                             });
-            
-                            this._ajax = new AjaxMonitor();
-                            let appInsightsCore = new AppInsightsCore();
-                            let coreConfig = {
-                                instrumentationKey: "",
-                                disableFetchTracking: false,
-                                addIntEndpoints: false
-                            };
-                            appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                            let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
             
                             // Act
                             Assert.ok(fetchSpy.notCalled, "No fetch called yet");
@@ -1135,8 +1135,14 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: fetch with disabled flag isn't tracked and any followup request to the same URL event without the disabled flag are also not tracked",
             timeOut: 10000,
             test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+
                 return this._asyncQueue()
-                            .add(() => {
+                    .add(() => {
                         hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1153,12 +1159,6 @@ export class AjaxTests extends AITestClass {
                                 });
                             }, 0);
                         });
-
-                        this._ajax = new AjaxMonitor();
-                        let appInsightsCore = new AppInsightsCore();
-                        let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
-                        appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                        let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
 
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
@@ -1184,8 +1184,15 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: fetch with disabled flag false and with exclude request regex pattern isn't tracked and any followup request to the same URL event without the disabled flag are also not tracked",
             timeOut: 10000,
             test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                const ExcludeRequestRegex = ["bin"];
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false, excludeRequestFromAutoTrackingPatterns: ExcludeRequestRegex };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+
                 return this._asyncQueue()
-                            .add(() => {
+                    .add(() => {
                         hookFetch((resolve) => {
                             AITestClass.orgSetTimeout(function() {
                                 resolve({
@@ -1203,13 +1210,6 @@ export class AjaxTests extends AITestClass {
                             }, 0);
                         });
 
-                        this._ajax = new AjaxMonitor();
-                        let appInsightsCore = new AppInsightsCore();
-                        const ExcludeRequestRegex = ["bin"];
-                        let coreConfig = { instrumentationKey: "", disableFetchTracking: false, excludeRequestFromAutoTrackingPatterns: ExcludeRequestRegex };
-                        appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                        let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
-
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                         return fetch("https://httpbin.org/status/200", {method: "post"}).then(() => {
@@ -1225,7 +1225,8 @@ export class AjaxTests extends AITestClass {
                         }, () => {
                             Assert.ok(false, "fetch failed!");
                         });
-                    }
+                    })
+                    .waitComplete();
             }
         });
 
