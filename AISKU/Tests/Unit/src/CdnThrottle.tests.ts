@@ -215,7 +215,7 @@ export class CdnThrottle extends AITestClass {
                 }, "response received", 60, 1000) as any);
             }
         });
-         this.testCase({
+        this.testCase({
             name: "CfgSyncPlugin: customer didn't set throttle config, successfully fetch from config url",
             useFakeTimers: true,
             test: () => {
