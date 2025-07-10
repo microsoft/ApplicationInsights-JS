@@ -3438,8 +3438,6 @@ export class AjaxPerfTrackTests extends AITestClass {
             name: "AjaxPerf: check perf mark prefix is correctly set for multiple xhr requests",
             
             test: () => {
-                return this._asyncQueue()
-                            .add(() => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
 
@@ -3458,36 +3456,38 @@ export class AjaxPerfTrackTests extends AITestClass {
                 this._ajax["_currentWindowHost"] = "httpbin.org";
                 // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
                 this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
-                // Act
-                var xhr = new XMLHttpRequest();
 
-                // trigger the request that should cause a track event once the xhr request is complete
-                xhr.open("GET", "https://httpbin.org/status/200");
-                xhr.send();
+                return this._asyncQueue()
+                    .add(() => {
+                        // Act
+                        var xhr = new XMLHttpRequest();
 
-                var xhr2 = new XMLHttpRequest();
-                xhr2.open("GET", "https://httpbin.org/anything");
-                xhr2.send();
+                        // trigger the request that should cause a track event once the xhr request is complete
+                        xhr.open("GET", "https://httpbin.org/status/200");
+                        xhr.send();
 
-                Assert.equal(true, markSpy.called, "The code should have called been mark()");
-                let spyDetails = markSpy.args;
-                let prefix1 = spyDetails[0][0];
-                let prefix2 = spyDetails[1][0];
-                Assert.equal(prefix1.indexOf("ajaxData"), 0, "Prefix1 should start with 'ajaxData'");
-                Assert.equal(prefix2.indexOf("ajaxData"), 0, "Prefix2 should start with 'ajaxData'");
+                        var xhr2 = new XMLHttpRequest();
+                        xhr2.open("GET", "https://httpbin.org/anything");
+                        xhr2.send();
 
-                let ajaxCountOne = parseInt(prefix1.substring(prefix1.indexOf('#') + 1), 10);
-                let ajaxCountTwo = parseInt(prefix2.substring(prefix1.indexOf('#') + 1), 10);
-                Assert.equal(1, ajaxCountTwo-ajaxCountOne, "the count should increase by 1");
-           }]
+                        Assert.equal(true, markSpy.called, "The code should have called been mark()");
+                        let spyDetails = markSpy.args;
+                        let prefix1 = spyDetails[0][0];
+                        let prefix2 = spyDetails[1][0];
+                        Assert.equal(prefix1.indexOf("ajaxData"), 0, "Prefix1 should start with 'ajaxData'");
+                        Assert.equal(prefix2.indexOf("ajaxData"), 0, "Prefix2 should start with 'ajaxData'");
+
+                        let ajaxCountOne = parseInt(prefix1.substring(prefix1.indexOf('#') + 1), 10);
+                        let ajaxCountTwo = parseInt(prefix2.substring(prefix1.indexOf('#') + 1), 10);
+                        Assert.equal(1, ajaxCountTwo-ajaxCountOne, "the count should increase by 1");
+                    })
+                    .waitComplete();
         });
 
         this.testCase({
             name: "AjaxPerf: check that performance tracking is reported, even if the entry is missing when enabled for xhr requests",
             
             test: () => {
-                return this._asyncQueue()
-                            .add(() => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
 
@@ -3508,14 +3508,16 @@ export class AjaxPerfTrackTests extends AITestClass {
                 // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
                 this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
 
-                // Act
-                var xhr = new XMLHttpRequest();
+                return this._asyncQueue()
+                    .add(() => {
+                        // Act
+                        var xhr = new XMLHttpRequest();
 
-                // trigger the request that should cause a track event once the xhr request is complete
-                xhr.open("GET", "https://httpbin.org/status/200");
-                xhr.send();
-                Assert.equal(true, markSpy.called, "The code should have called been mark()");
-                    }
+                        // trigger the request that should cause a track event once the xhr request is complete
+                        xhr.open("GET", "https://httpbin.org/status/200");
+                        xhr.send();
+                        Assert.equal(true, markSpy.called, "The code should have called been mark()");
+                    })
             }
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
