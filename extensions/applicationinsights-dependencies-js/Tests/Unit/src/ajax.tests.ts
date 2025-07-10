@@ -1613,7 +1613,8 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-                    }
+                    })
+                    .waitComplete();
             }
         });
 
@@ -1745,7 +1746,8 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-                    }
+                    })
+                    .waitComplete();
             }
         });
 
