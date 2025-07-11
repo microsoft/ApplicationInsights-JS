@@ -194,7 +194,7 @@ export class CdnThrottle extends AITestClass {
                 this.init.loadAppInsights();
                 this._ai = this.init;
                 
-                return this._asyncQueue().concat(PollingAssert.createPollingAssert(() => {
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
                     if (this.fetchStub.called){
                         let core = this._ai['core'];
                         let _logger = core.logger;
@@ -233,7 +233,7 @@ export class CdnThrottle extends AITestClass {
                 this.init.loadAppInsights();
                 this._ai = this.init;
                 
-                return this._asyncQueue().concat(PollingAssert.createPollingAssert(() => {
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
        
                     if (this.fetchStub.called){
                         let plugin = this._ai.appInsights['core'].getPlugin<CfgSyncPlugin>(this.identifier).plugin;
@@ -276,7 +276,7 @@ export class CdnThrottle extends AITestClass {
                 this.init.loadAppInsights();
                 this._ai = this.init;
                 
-                return this._asyncQueue().concat(PollingAssert.createPollingAssert(() => {
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
                     if (this.fetchStub.called){
                         let newCfg = this._ai.config;
                         Assert.equal(newCfg.featureOptIn["zipPayload"]["mode"], FeatureOptInMode.enable); // aisku default is none, overwrite to true by cdn config
@@ -327,7 +327,7 @@ export class CdnThrottle extends AITestClass {
                 this.init.loadAppInsights();
                 this._ai = this.init;
                 
-                return this._asyncQueue().concat(PollingAssert.createPollingAssert(() => {
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
        
                     if (this.fetchStub.called){
                         let plugin = this._ai.appInsights['core'].getPlugin<CfgSyncPlugin>(this.identifier).plugin;
@@ -370,7 +370,7 @@ export class CdnThrottle extends AITestClass {
                 this.init.loadAppInsights();
                 this._ai = this.init;
                 
-                return this._asyncQueue().concat(PollingAssert.createPollingAssert(() => {
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
        
                     if (this.fetchStub.called){
                         Assert.equal(this.init.config.throttleMgrCfg[_eInternalMessageId.InstrumentationKeyDeprecation].disabled, false);
@@ -408,7 +408,7 @@ export class CdnThrottle extends AITestClass {
                 this.init.loadAppInsights();
                 this._ai = this.init;
                 
-                return this._asyncQueue().concat(PollingAssert.createPollingAssert(() => {
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
                     if (this.fetchStub.called){
                         Assert.equal(this.init.config.throttleMgrCfg[_eInternalMessageId.InstrumentationKeyDeprecation].disabled, true);
                         Assert.equal(this.init.config.throttleMgrCfg[_eInternalMessageId.CdnDeprecation].disabled, true);

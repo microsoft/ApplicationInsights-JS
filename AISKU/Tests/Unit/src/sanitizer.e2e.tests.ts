@@ -68,21 +68,21 @@ export class SanitizerE2ETests extends AITestClass {
         this.testCase({
             name: "SanitizerE2ETests: RDD Telemetry sanitizes long names",
             test: () => {
-                return this._asyncQueue().concat(() => {
+                return this._asyncQueue().add(() => {
                     this._ai.trackDependencyData({
                         id: newId(),
                         name: new Array(1234).join("a"), // exceeds max of 1024
                         responseCode: 200
                     });
                 })
-                .concat(PollingAssert.createPollingAssert(() => {
+                .add(PollingAssert.createPollingAssert(() => {
                     Assert.ok(true, "waiting for response " + new Date().toISOString());
                     return (this.successSpy.called || this.errorSpy.called);
                 }, "Wait for response") as any)
-                .concat(() => {
+                .add(() => {
                     boilerPlateAsserts();
                 })
-                .concat(() => {
+                .add(() => {
                     Assert.ok(this.loggingSpy.called);
                     Assert.equal(LoggingSeverity.WARNING, this.loggingSpy.args[0][0]);
                     Assert.equal(_eInternalMessageId.StringValueTooLong, this.loggingSpy.args[0][1]);
@@ -93,7 +93,7 @@ export class SanitizerE2ETests extends AITestClass {
         this.testCase({
             name: "Sanitizer2ETests: Data platform accepts sanitized names",
             test: () => {
-                return this._asyncQueue().concat(() => {
+                return this._asyncQueue().add(() => {
 
                     const properties = {
                         "property1%^~`": "hello",
@@ -106,11 +106,11 @@ export class SanitizerE2ETests extends AITestClass {
 
                     this._ai.trackMetric({name: "test", average: 5});
                 })
-                .concat(PollingAssert.createPollingAssert(() => {
+                .add(PollingAssert.createPollingAssert(() => {
                     Assert.ok(true, "waiting for response " + new Date().toISOString());
                     return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
                 }, "Wait for response") as any)
-                .concat(() => {
+                .add(() => {
                     boilerPlateAsserts();
                 });
             }
@@ -119,7 +119,7 @@ export class SanitizerE2ETests extends AITestClass {
         this.testCase({
             name: "Sanitizer2ETests: Data platform accepts legal charater set names",
             test: () => {
-                return this._asyncQueue().concat(() => {
+                return this._asyncQueue().add(() => {
                     const properties = {
                         "abcdefghijklmnopqrstuvwxyz": "hello",
                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ": "world"
@@ -131,11 +131,11 @@ export class SanitizerE2ETests extends AITestClass {
 
                     this._ai.trackMetric({name: "test", average: 5});
                 })
-                .concat(PollingAssert.createPollingAssert(() => {
+                .add(PollingAssert.createPollingAssert(() => {
                     Assert.ok(true, "waiting for response " + new Date().toISOString());
                     return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
                 }, "Wait for response") as any)
-                .concat(() => {
+                .add(() => {
                     boilerPlateAsserts();
                 });
             }
@@ -144,17 +144,17 @@ export class SanitizerE2ETests extends AITestClass {
         this.testCase({
             name: "Sanitizer2ETests: Data platform accepts up to 150 charaters for names",
             test: () => {
-                return this._asyncQueue().concat(() => {
+                return this._asyncQueue().add(() => {
                     const len = 150;
                     const name = new Array(len + 1).join('a');
 
                     this._ai.trackMetric({name, average: 5});
                 })
-                .concat(PollingAssert.createPollingAssert(() => {
+                .add(PollingAssert.createPollingAssert(() => {
                     Assert.ok(true, "waiting for response " + new Date().toISOString());
                     return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
                 }, "Wait for response") as any)
-                .concat(() => {
+                .add(() => {
                     boilerPlateAsserts();
                 });
             }
@@ -163,7 +163,7 @@ export class SanitizerE2ETests extends AITestClass {
         this.testCase({
             name: "Sanitizer2ETests: Data platform accepts up to 1024 charaters for values",
             test: () => {
-                return this._asyncQueue().concat(() => {
+                return this._asyncQueue().add(() => {
                     const len = 1024;
                     const value = new Array(len + 1).join('a');
 
@@ -173,11 +173,11 @@ export class SanitizerE2ETests extends AITestClass {
 
                     this._ai.trackMetric({name: "test", average: 5});
                 })
-                .concat(PollingAssert.createPollingAssert(() => {
+                .add(PollingAssert.createPollingAssert(() => {
                     Assert.ok(true, "waiting for response " + new Date().toISOString());
                     return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
                 }, "Wait for response") as any)
-                .concat(() => {
+                .add(() => {
                     boilerPlateAsserts();
                 });
             }
@@ -186,18 +186,18 @@ export class SanitizerE2ETests extends AITestClass {
         this.testCase({
             name: "Sanitizer2ETests: Data platform accepts up to 2048 characters for url",
             test: () => {
-                return this._asyncQueue().concat(() => {
+                return this._asyncQueue().add(() => {
                     const len = 2048;
                     let url = "http://hello.com/";
                     url = url + new Array(len - url.length + 1).join('a');
 
                     this._ai.trackPageView({name: "test", uri: url});
                 })
-                .concat(PollingAssert.createPollingAssert(() => {
+                .add(PollingAssert.createPollingAssert(() => {
                     Assert.ok(true, "waiting for response " + new Date().toISOString());
                     return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
                 }, "Wait for response") as any)
-                .concat(() => {
+                .add(() => {
                     boilerPlateAsserts();
                 });
             }
@@ -206,17 +206,17 @@ export class SanitizerE2ETests extends AITestClass {
         this.testCase({
             name: "Sanitizer2ETests: Data platform accepts up to 32768 characters for messages",
             test: () => {
-                return this._asyncQueue().concat(() => {
+                return this._asyncQueue().add(() => {
                     const len = 32768;
                     const message = new Array(len + 1).join('a');
 
                     this._ai.trackTrace({message, severityLevel: 0});
                 })
-                .concat(PollingAssert.createPollingAssert(() => {
+                .add(PollingAssert.createPollingAssert(() => {
                     Assert.ok(true, "waiting for response " + new Date().toISOString());
                     return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
                 }, "Wait for response") as any)
-                .concat(() => {
+                .add(() => {
                     boilerPlateAsserts();
                 });
             }

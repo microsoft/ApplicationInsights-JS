@@ -67,13 +67,13 @@ export class ValidateE2ETests extends AITestClass {
         this.testCase({
             name: "Validate track event",
             test: () => {
-                return this._asyncQueue().concat(() => {
+                return this._asyncQueue().add(() => {
                     this._ai.trackTrace({message: "test"});
                     this._ai.trackTrace({message: "test event"}, { p1: "value 1", p2: "value 2", m1: 123, m2: 456.7 });
                 })
-                .concat(this.waitForResponse())
-                .concat(this.boilerPlateAsserts)
-                .concat(() => {
+                .add(this.waitForResponse())
+                .add(this.boilerPlateAsserts)
+                .add(() => {
                     const acceptedItems = this.getPayloadMessages(this.successSpy).length;
                     Assert.equal(2, acceptedItems, "backend should accept two events");
                     if (acceptedItems != 2) {
@@ -86,15 +86,15 @@ export class ValidateE2ETests extends AITestClass {
         this.testCase({
             name: 'E2E.GenericTests: trackEvent sends to backend with NaN value could be handled correctly',
             test: () => {
-                return this._asyncQueue().concat(() => {
+                return this._asyncQueue().add(() => {
                     const customeProperties = {
                         nanValue: NaN,
                     }
                     this._ai.trackEvent({ name: 'event', properties: { "prop1": NaN, "prop2": NaN }}, customeProperties);
                 })
-                .concat(this.waitForResponse())
-                .concat(this.boilerPlateAsserts)
-                .concat(() => {
+                .add(this.waitForResponse())
+                .add(this.boilerPlateAsserts)
+                .add(() => {
                     const acceptedItems = this.getPayloadMessages(this.successSpy).length;
                     Assert.equal(1, acceptedItems, "backend should accept two events");
                     if (acceptedItems != 1) {
@@ -115,7 +115,7 @@ export class ValidateE2ETests extends AITestClass {
         this.testCase({
             name: "Validate that track event takes all type of characters",
             test: () => {
-                return this._asyncQueue().concat(() => {
+                return this._asyncQueue().add(() => {
                     const s1 = "شلاؤيثبلاهتنمةىخحضقسفعشلاؤيصثبل";
                     const s2 = "Ինչու՞ նրանք չեն խոսում Հայերեն";
                     const s3 = "ওরা কন বাংলা বলেত পাের না";
@@ -132,9 +132,9 @@ export class ValidateE2ETests extends AITestClass {
                     this._ai.trackTrace({message: s3}, { p: s4 });
                     this._ai.trackTrace({message: s5}, { p: s6, p2: s7 });
                 })
-                .concat(this.waitForResponse())
-                .concat(this.boilerPlateAsserts)
-                .concat(() => {
+                .add(this.waitForResponse())
+                .add(this.boilerPlateAsserts)
+                .add(() => {
                     let acceptedItems = 0;
                     this.successSpy.args.forEach(call => {
                         call[0].forEach(item => {
@@ -160,15 +160,15 @@ export class ValidateE2ETests extends AITestClass {
         this.testCase({
             name: "Validate that special characters are handled correctly",
             test: () => {
-                return this._asyncQueue().concat(() => {
+                return this._asyncQueue().add(() => {
                     const s1 = "[]{};,.)(*&^%$#@/\\";
 
                     this._ai.trackTrace({message: s1}, { p: s1 });
                     this._ai.trackTrace({message: "a"}, { "[]{};,.)(*&^%$#@/\\": "b" });
                 })
-                .concat(this.waitForResponse())
-                .concat(this.boilerPlateAsserts)
-                .concat(() => {
+                .add(this.waitForResponse())
+                .add(this.boilerPlateAsserts)
+                .add(() => {
                     const acceptedItems = this.getPayloadMessages(this.successSpy).length;
                     Assert.equal(2, acceptedItems, "backend should accept the event");
                     if (acceptedItems != 2) {
