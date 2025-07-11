@@ -106,7 +106,8 @@ export class CfgSyncHelperTests extends AITestClass {
                     //        endCfg: []
                     //    }
                     //},
-                    enableDebug: false,
+                    traceHdrMode: 3,
+                    enableDebug: false
                 }
                
                 let core = new AppInsightsCore();

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IAppInsightsCore } from "@microsoft/applicationinsights-core-js";
+import { IAppInsightsCore, IW3cTraceState } from "@microsoft/applicationinsights-core-js";
 
 export interface IDependencyListenerDetails {
     /**
@@ -46,6 +46,13 @@ export interface IDependencyListenerDetails {
      * https://www.w3.org/TR/trace-context/#trace-flags
      */
     traceFlags?: number;
+
+    /**
+     * The W3C TraceState object that contains the trace state information, this is mutable and changes made to this
+     * instance will be reflected in the distributed trace context. You cannot overwrite the traceState, but you can
+     * modify the values within the traceState.
+     */
+    readonly traceState?: IW3cTraceState;
 
     /**
      * [Optional] Context that the application can assign that will also be passed to any dependency initializer

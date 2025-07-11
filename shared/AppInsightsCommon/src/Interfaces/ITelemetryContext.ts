@@ -35,6 +35,8 @@ export interface ITelemetryContext {
 
     /**
      * The object describing a operation tracked by this object.
+     * @deprecated Use the core getTraceCtx method instead to get / set the current trace context, this is required to
+     * support distributed tracing and allows the core to manage the trace context.
      */
     readonly telemetryTrace: ITelemetryTrace;
 

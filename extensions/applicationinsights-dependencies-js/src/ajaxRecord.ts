@@ -8,7 +8,7 @@ import {
 import {
     IDiagnosticLogger, IDistributedTraceContext, arrForEach, isNullOrUndefined, isNumber, isString, normalizeJsName, objForEachKey, objKeys
 } from "@microsoft/applicationinsights-core-js";
-import { mathRound } from "@nevware21/ts-utils";
+import { mathRound, objDefineProps } from "@nevware21/ts-utils";
 import { STR_DURATION, STR_PROPERTIES } from "./InternalConstants";
 
 export interface IAjaxRecordResponse {
@@ -245,31 +245,17 @@ export class ajaxRecord {
     public clientFailure: number;
 
     /**
-     * The traceId to use for the dependency call
+     * The distributed trace context that is used for the ajax request, this is used to pass the trace context to the dependency initializer
+     * and to the dependency telemetry item. This is a mutable object, so any changes made
      */
-    public traceID: string;
-
-    /**
-     * The spanId to use for the dependency call
-     */
-    public spanID: string;
-
-    /**
-     * The traceFlags to use for the dependency call
-     */
-    public traceFlags?: number;
-
-    /**
-     * The trace context to use for reporting the remote dependency call
-     */
-    public eventTraceCtx: ITraceCtx;
+    public traceCtx: IDistributedTraceContext;
 
     /**
      * The listener assigned context values that will be passed to any dependency initializer
      */
     public context?: { [key: string]: any };
 
-    constructor(traceId: string, spanId: string, logger: IDiagnosticLogger, traceCtx?: IDistributedTraceContext) {
+    constructor(traceCtx: IDistributedTraceContext, logger: IDiagnosticLogger) {
         let self = this;
         let _logger: IDiagnosticLogger = logger;
         let strResponseText = "responseText";
@@ -297,19 +283,11 @@ export class ajaxRecord {
         self.xhrMonitoringState = new XHRMonitoringState();
         self.clientFailure = 0;
 
-        self.traceID = traceId;
-        self.spanID = spanId;
-        self.traceFlags = traceCtx?.getTraceFlags();
-
-        if (traceCtx) {
-            self.eventTraceCtx = {
-                traceId: traceCtx.getTraceId(),
-                spanId: traceCtx.getSpanId(),
-                traceFlags: traceCtx.getTraceFlags()
-            };
-        } else {
-            self.eventTraceCtx = null;
-        }
+        objDefineProps(self, {
+            "traceCtx": {
+                g: () => traceCtx
+            }
+        });
 
         dynamicProto(ajaxRecord, self, (self) => {
             self.getAbsoluteUrl= () => {
@@ -328,7 +306,11 @@ export class ajaxRecord {
                 }
         
                 let dependency = {
-                    id: "|" + self.traceID + "." + self.spanID,
+                    // Always use the traceId and spanId from the traceCtx, this is the same as the
+                    // traceId and spanId used to create the ajaxRecord, this is to ensure that
+                    // the traceId and spanId are always the same for the ajaxRecord and the dependency
+                    // This is important for the distributed tracing to work correctly
+                    id: "|" + traceCtx.traceId + "." + traceCtx.spanId,
                     target: self.getAbsoluteUrl(),
                     name: self.getPathName(),
                     type: ajaxType,
@@ -397,16 +379,16 @@ export class ajaxRecord {
             self.getPartAProps = () => {
                 let partA: { [key: string]: any } = null;
 
-                let traceCtx = self.eventTraceCtx;
-                if (traceCtx && (traceCtx.traceId || traceCtx.spanId)) {
+                let parentCtx = self.traceCtx.parentCtx;
+                if (parentCtx && (parentCtx.traceId || parentCtx.spanId)) {
                     partA = {};
                     let traceExt = partA[Extensions.TraceExt] = {
-                        traceID: traceCtx.traceId,
-                        parentID: traceCtx.spanId
+                        traceID: parentCtx.traceId,
+                        parentID: parentCtx.spanId
                     } as  { [key: string]: any };
 
-                    if (!isNullOrUndefined(traceCtx.traceFlags)) {
-                        traceExt.traceFlags = traceCtx.traceFlags;
+                    if (!isNullOrUndefined(parentCtx.traceFlags)) {
+                        traceExt.traceFlags = parentCtx.traceFlags;
                     }
                 }
 

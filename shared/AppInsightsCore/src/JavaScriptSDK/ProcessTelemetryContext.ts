@@ -23,7 +23,7 @@ import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnl
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { _throwInternal, safeGetLogger } from "./DiagnosticLogger";
 import { proxyFunctions } from "./HelperFuncs";
-import { STR_CORE, STR_DISABLED, STR_EMPTY, STR_EXTENSION_CONFIG } from "./InternalConstants";
+import { STR_CORE, STR_DISABLED, STR_EMPTY } from "./InternalConstants";
 import { doPerf } from "./PerfManager";
 import { _getPluginState } from "./TelemetryHelpers";
 
@@ -32,6 +32,13 @@ const strHasRunFlags = "_hasRun";
 const strGetTelCtx = "_getTelCtx";
 
 let _chainId = 0;
+
+/**
+ * Identifies the type for the `extensionConfig` property
+ * This is a key/value pair where the key is the name of the extension and the value is the configuration
+ * for that extension.
+ */
+type ExtensionConfig = { [key: string]: any };
 
 interface OnCompleteCallback {
     func: () => void;
@@ -155,37 +162,35 @@ function _createInternalContext<T extends IBaseProcessingContext>(telemetryChain
 
     function _getExtCfg<T>(identifier: string, createIfMissing: boolean) {
         let idCfg: T = null;
-        let cfg = dynamicHandler.cfg;
-        if (cfg && identifier) {
-            let extCfg = cfg.extensionConfig;
-            if (!extCfg && createIfMissing) {
-                extCfg = {};
-            }
+        let extCfg: ExtensionConfig = _getCfg(dynamicHandler.cfg, "extensionConfig", createIfMissing);
 
-            // Always set the value so that the property always exists
-            cfg[STR_EXTENSION_CONFIG] = extCfg;     // Note: it is valid for the "value" to be undefined
-
-            // Calling `ref()` has a side effect of causing the referenced property to become dynamic  (if not already)
-            extCfg = dynamicHandler.ref(cfg, STR_EXTENSION_CONFIG);
-            if (extCfg) {
-                idCfg = extCfg[identifier];
-                if (!idCfg && createIfMissing) {
-                    idCfg = {} as T;
-                }
-
-                // Always set the value so that the property always exists
-                extCfg[identifier] = idCfg;         // Note: it is valid for the "value" to be undefined
-
-                // Calling `ref()` has a side effect of causing the referenced property to become dynamic  (if not already)
-                idCfg = dynamicHandler.ref(extCfg, identifier);
-            }
+        if (extCfg) {
+            idCfg = _getCfg<typeof extCfg, T>(extCfg, identifier, createIfMissing);
         }
 
         return idCfg;
     }
 
-    function _resolveExtCfg<T>(identifier: string, defaultValues: IConfigDefaults<T>): T {
-        let newConfig: T = _getExtCfg(identifier, true);
+    function _getCfg<Cfg extends { [key: string]: any } = typeof dynamicHandler.cfg, T = Cfg[keyof Cfg]>(cfg: Cfg, identifier: string, createIfMissing: boolean) {
+        let idCfg: T = null;
+        if (cfg && identifier) {
+            idCfg = cfg[identifier] as T;
+            if (!idCfg && createIfMissing) {
+                idCfg = {} as T;
+            }
+
+            // Always set the value so that the property always exists
+            (cfg as any)[identifier] = idCfg;         // Note: it is valid for the "value" to be undefined
+
+            // Calling `ref()` has a side effect of causing the referenced property to become dynamic  (if not already)
+            idCfg = dynamicHandler.ref(cfg, identifier);
+        }
+
+        return idCfg;
+    }
+
+    function _resolveExtCfg<T>(identifier: string, defaultValues: IConfigDefaults<T>, rootOnly?: boolean): T {
+        let newConfig: T = rootOnly ? _getCfg(dynamicHandler.cfg, identifier, true) : _getExtCfg(identifier, true);
 
         if (defaultValues) {
             // Enumerate over the defaultValues and if not already populated attempt to
