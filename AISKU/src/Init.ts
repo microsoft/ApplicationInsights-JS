@@ -50,6 +50,70 @@ export {
 // End of Exports available from the Cdn bundles
 // ----------------------------------------------------------------------------------------------------
 
+// ----------------------------------------------------------------------------------------------------
+// Additional exports available from applicationinsights-web.ts (interfaces and enums for typedoc)
+// ----------------------------------------------------------------------------------------------------
+export {
+    IConfiguration,
+    IAppInsightsCore,
+    eLoggingSeverity,
+    ITelemetryItem,
+    ITelemetryPlugin,
+    IPerfEvent,
+    IPerfManager,
+    IPerfManagerProvider,
+    INotificationListener,
+    IPlugin,
+    IDiagnosticLogger,
+    ITelemetryPluginChain,
+    ICustomProperties,
+    INotificationManager,
+    IProcessTelemetryContext,
+    ILoadedPlugin
+} from "@microsoft/applicationinsights-core-js";
+
+export {
+    IConfig,
+    IDependencyTelemetry,
+    IPageViewPerformanceTelemetry,
+    IPageViewTelemetry,
+    IExceptionTelemetry,
+    IAutoExceptionTelemetry,
+    ITraceTelemetry,
+    IMetricTelemetry,
+    IEventTelemetry,
+    IAppInsights,
+    eSeverityLevel,
+    IRequestHeaders,
+    EventPersistence
+} from "@microsoft/applicationinsights-common";
+
+export { ISenderConfig } from "@microsoft/applicationinsights-channel-js";
+
+export { IAppInsightsInternal } from "@microsoft/applicationinsights-analytics-js";
+
+export {
+    IDependenciesPlugin,
+    DependencyListenerFunction,
+    DependencyInitializerFunction,
+    IDependencyInitializerHandler,
+    IDependencyListenerHandler
+} from "@microsoft/applicationinsights-dependencies-js";
+
+export {
+    ICfgSyncPlugin,
+    ICfgSyncConfig,
+    ICfgSyncEvent,
+    ICfgSyncMode,
+    NonOverrideCfg,
+    OnCompleteCallback,
+    SendGetFunction
+} from "@microsoft/applicationinsights-cfgsync-js";
+
+// ----------------------------------------------------------------------------------------------------
+// End of Additional exports
+// ----------------------------------------------------------------------------------------------------
+
 
 function _logWarn(aiName:string, message:string) {
     // TODO: Find better place to warn to console when SDK initialization fails

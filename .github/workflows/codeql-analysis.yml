@@ -18,7 +18,7 @@ on:
     # The branches below must be a subset of the branches above
     branches: [ "main", "master", "beta", "Release*", "release*", "*-legacy", "legacy-v1" ]
   schedule:
-    - cron: '15 */2 * * *'  # run every 2 hours at 15 minutes past the hour
+    - cron: '15 17 * * 2'  # Every Tuesday at 17:15 UTC
 
 jobs:
   analyze:

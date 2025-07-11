@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 import {
-    IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, getJSON, hasJSON, isObject, objForEachKey, strTrim
+    IConfiguration, IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, fieldRedaction, getJSON, hasJSON, isObject,
+    objForEachKey, strTrim
 } from "@microsoft/applicationinsights-core-js";
-import { asString, strSubstr, strSubstring } from "@nevware21/ts-utils";
+import { asString, isString, strSubstr, strSubstring } from "@nevware21/ts-utils";
 
 export const enum DataSanitizerValues {
     /**
@@ -98,7 +99,10 @@ export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLen
     return valueTrunc || value;
 }
 
-export function dataSanitizeUrl(logger: IDiagnosticLogger, url: any) {
+export function dataSanitizeUrl(logger: IDiagnosticLogger, url: any, config?: IConfiguration) {
+    if (isString(url)) {
+        url = fieldRedaction(url, config);
+    }
     return dataSanitizeInput(logger, url, DataSanitizerValues.MAX_URL_LENGTH, _eInternalMessageId.UrlTooLong);
 }
 
