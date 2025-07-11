@@ -36,7 +36,7 @@ export const enum eEventsDiscardedReason {
 /**
  * The EventsDiscardedReason enumeration contains a set of values that specify the reason for discarding an event.
  */
-export const EventsDiscardedReason = createEnumStyle<typeof eEventsDiscardedReason>({
+export const EventsDiscardedReason = (/* @__PURE__ */createEnumStyle<typeof eEventsDiscardedReason>({
     /**
      * Unknown.
      */
@@ -66,7 +66,7 @@ export const EventsDiscardedReason = createEnumStyle<typeof eEventsDiscardedReas
      * The event queue is full.
      */
     QueueFull: eEventsDiscardedReason.QueueFull
-});
+}));
 
 export type EventsDiscardedReason = number | eEventsDiscardedReason;
 
@@ -99,7 +99,7 @@ export const enum eBatchDiscardedReason {
 /**
  *  The eBatchDiscardedReason enumeration contains a set of values that specify the reason for discarding offline batches.
  */
-export const BatchDiscardedReason = createEnumStyle<typeof eBatchDiscardedReason>({
+export const BatchDiscardedReason = (/* @__PURE__ */createEnumStyle<typeof eBatchDiscardedReason>({
     /**
      * Unknown.
      */
@@ -120,6 +120,6 @@ export const BatchDiscardedReason = createEnumStyle<typeof eBatchDiscardedReason
      */
     MaxInStorageTimeExceeded: eBatchDiscardedReason.MaxInStorageTimeExceeded
     
-});
+}));
 
 export type BatchDiscardedReason = number | eBatchDiscardedReason;
