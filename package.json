@@ -17,6 +17,7 @@
         "test": "node common/scripts/install-run-rush.js test --verbose",
         "mintest": "node common/scripts/install-run-rush.js mintest --verbose",
         "lint": "node common/scripts/install-run-rush.js lint --verbose",
+        "lint-fix": "npm run ai-restore && grunt lint-fix",
         "perftest": "node common/scripts/install-run-rush.js perftest --verbose",
         "rollupes5": "grunt rollupes5",
         "rupdate": "node common/scripts/install-run-rush.js update --recheck --purge --full",
