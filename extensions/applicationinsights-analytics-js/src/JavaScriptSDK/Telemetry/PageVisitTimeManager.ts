@@ -42,10 +42,10 @@ export class PageVisitTimeManager {
             /**
              * Stops timing of current page (if exists) and starts timing for duration of visit to pageName
              * @param pageName - Name of page to begin timing visit duration
-             * @returns {PageVisitData} Page visit data (including duration) of pageName from last call to start or restart, if exists. Null if not.
+             * @returns {IPageVisitData} Page visit data (including duration) of pageName from last call to start or restart, if exists. Null if not.
              */
             function restartPageVisitTimer(pageName: string, pageUrl: string) {
-                let prevPageVisitData: PageVisitData = null;
+                let prevPageVisitData: IPageVisitData = null;
                 try {
                     prevPageVisitData = stopPageVisitTimer();
                     if (utlCanUseSessionStorage()) {
@@ -53,7 +53,7 @@ export class PageVisitTimeManager {
                             throwError("Cannot call startPageVisit consecutively without first calling stopPageVisit");
                         }
         
-                        const currPageVisitDataStr = getJSON().stringify(new PageVisitData(pageName, pageUrl));
+                        const currPageVisitDataStr = getJSON().stringify(createPageVisitData(pageName, pageUrl));
                         utlSetSessionStorage(logger, prevPageVisitDataKeyName, currPageVisitDataStr);
                     }
             
@@ -67,10 +67,10 @@ export class PageVisitTimeManager {
 
             /**
              * Stops timing of current page, if exists.
-             * @returns {PageVisitData} Page visit data (including duration) of pageName from call to start, if exists. Null if not.
+             * @returns {IPageVisitData} Page visit data (including duration) of pageName from call to start, if exists. Null if not.
              */
             function stopPageVisitTimer() {
-                let prevPageVisitData: PageVisitData = null;
+                let prevPageVisitData: IPageVisitData = null;
                 try {
                     if (utlCanUseSessionStorage()) {
         
@@ -113,16 +113,24 @@ export class PageVisitTimeManager {
     }
 }
 
-export class PageVisitData {
+export interface IPageVisitData {
+    pageName: string;
+    pageUrl: string;
+    pageVisitStartTime: number;
+    pageVisitTime: number;
+}
 
-    public pageName: string;
-    public pageUrl: string;
-    public pageVisitStartTime: number;
-    public pageVisitTime: number;
-
-    constructor(pageName: string, pageUrl: string) {
-        this.pageVisitStartTime = dateNow();
-        this.pageName = pageName;
-        this.pageUrl = pageUrl;
-    }
+/**
+ * Factory function to create a page visit data object
+ * @param pageName - Name of the page
+ * @param pageUrl - URL of the page
+ * @returns IPageVisitData instance
+ */
+export function createPageVisitData(pageName: string, pageUrl: string): IPageVisitData {
+    return {
+        pageVisitStartTime: dateNow(),
+        pageName: pageName,
+        pageUrl: pageUrl,
+        pageVisitTime: 0
+    };
 }

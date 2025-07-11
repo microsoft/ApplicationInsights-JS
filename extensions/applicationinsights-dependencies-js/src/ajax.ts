@@ -11,16 +11,17 @@ import {
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICustomProperties, IDistributedTraceContext,
     IInstrumentCallDetails, IInstrumentHooksCallbacks, IPlugin, IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain,
-    InstrumentFunc, InstrumentProto, _eInternalMessageId, _throwInternal, arrForEach, createProcessTelemetryContext, createUniqueNamespace,
-    dumpObj, eLoggingSeverity, eventOn, fieldRedaction, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation,
-    getPerformance, isFunction, isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, onConfigChange, strPrototype, strTrim
+    InstrumentFunc, InstrumentProto, _eInternalMessageId, _throwInternal, arrForEach, createDistributedTraceContext,
+    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eW3CTraceFlags, eventOn, fieldRedaction, generateW3CId,
+    getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction, isNullOrUndefined, isString, isXhrSupported,
+    mergeEvtNamespace, onConfigChange, strPrototype, strTrim
 } from "@microsoft/applicationinsights-core-js";
-import { isWebWorker, objFreeze, scheduleTimeout, strIndexOf, strSplit, strSubstr } from "@nevware21/ts-utils";
+import { isWebWorker, objDefineProps, objFreeze, scheduleTimeout, strIndexOf, strSplit, strSubstr } from "@nevware21/ts-utils";
 import { DependencyInitializerFunction, IDependencyInitializerDetails, IDependencyInitializerHandler } from "./DependencyInitializer";
 import {
     DependencyListenerFunction, IDependencyHandler, IDependencyListenerContainer, IDependencyListenerDetails, IDependencyListenerHandler
 } from "./DependencyListener";
-import { IAjaxRecordResponse, ajaxRecord } from "./ajaxRecord";
+import { IAjaxRecordResponse, IXHRMonitoringState, createAjaxRecord } from "./ajaxRecord";
 
 // const AJAX_MONITOR_PREFIX = "ai.ajxmn.";
 const strDiagLog = "diagLog";
@@ -84,11 +85,11 @@ function _supportsAjaxMonitoring(ajaxMonitorInstance: AjaxMonitor, ajaxDataId: s
             let xhrData: XMLHttpRequestData = {
                 xh: [],
                 i: {
-                    [ajaxDataId]: {} as ajaxRecord
+                    [ajaxDataId]: {} as IAjaxRecordInternal
                 }
             };
 
-            xhr[AJAX_DATA_CONTAINER] = xhrData;
+            (xhr as any)[AJAX_DATA_CONTAINER] = xhrData;
 
             // Check that we can update the prototype
             let theOpen = XMLHttpRequest[strPrototype].open;
@@ -114,7 +115,7 @@ function _supportsAjaxMonitoring(ajaxMonitorInstance: AjaxMonitor, ajaxDataId: s
  * @param ajaxDataId
  * @returns
  */
-const _getAjaxData = (xhr: XMLHttpRequestInstrumented, ajaxDataId: string): ajaxRecord => {
+const _getAjaxData = (xhr: XMLHttpRequestInstrumented, ajaxDataId: string): IAjaxRecordInternal => {
     if (xhr && ajaxDataId && xhr[AJAX_DATA_CONTAINER]) {
         return (xhr[AJAX_DATA_CONTAINER].i || { })[ajaxDataId];
     }
@@ -244,28 +245,50 @@ function _processDependencyContainer<F extends Function, D>(core: IAppInsightsCo
     return result;
 }
 
-function _processDependencyListeners(listeners: _IInternalDependencyHandler<DependencyListenerFunction>[], core: IAppInsightsCore, ajaxData: ajaxRecord, xhr: XMLHttpRequest, input?: Request | string, init?: RequestInit): boolean {
+function _processDependencyListeners(listeners: _IInternalDependencyHandler<DependencyListenerFunction>[], core: IAppInsightsCore, ajaxData: IAjaxRecordInternal, xhr: XMLHttpRequest, input?: Request | string, init?: RequestInit): boolean {
     var initializersCount = listeners.length;
     let result = true;
     if (initializersCount > 0) {
+        let traceCtx = ajaxData.traceCtx;
         let details: IDependencyListenerDetails = {
             core: core,
             xhr: xhr,
             input: input,
             init: init,
-            traceId: ajaxData.traceID,
-            spanId: ajaxData.spanID,
-            traceFlags: ajaxData.traceFlags,
-            context: ajaxData.context || {},
             aborted: !!ajaxData.aborted
         };
+
+        objDefineProps(details, {
+            "traceId": {
+                g: () => traceCtx.traceId,
+                s: (value) => {
+                    traceCtx.traceId = value;
+                }
+            },
+            "spanId": {
+                g: () => traceCtx.spanId,
+                s: (value) => {
+                    traceCtx.spanId = value;
+                }
+            },
+            "traceFlags": {
+                g: () => traceCtx.traceFlags,
+                s: (value) => {
+                    traceCtx.traceFlags = value;
+                }
+            },
+            "traceState": {
+                g: () => traceCtx.traceState
+            },
+            "context": {
+                g: () => ajaxData.context || {},
+                s: (value) => {
+                    ajaxData.context = value;
+                }
+            }
+        });
     
         result = _processDependencyContainer(core, listeners, details, "listener");
-
-        ajaxData.traceID = details.traceId;
-        ajaxData.spanID = details.spanId;
-        ajaxData.traceFlags = details.traceFlags;
-        ajaxData.context = details.context;
     }
     
     return result;
@@ -280,7 +303,7 @@ export interface XMLHttpRequestData {
     /**
      * The individual tracking data for each AI instance
      */
-    i: { [key: string]: ajaxRecord };
+    i: { [key: string]: IAjaxRecordInternal };
 }
 
 export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
@@ -309,8 +332,181 @@ export interface IDependenciesPlugin extends IDependencyListenerContainer {
     trackDependencyData(dependency: IDependencyTelemetry): void;
 }
 
+/**
+ * Interface for ajax data passed to includeCorrelationHeaders function.
+ * Contains the public properties and methods needed for correlation header processing.
+ *
+ * @public
+ */
+export interface IAjaxRecordData {
+    /**
+     * Gets the absolute URL for the request
+     * @returns The absolute URL string or null
+     */
+    getAbsoluteUrl(): string | null;
+    
+    /**
+     * Gets the sanitized path name for the request URL
+     * @returns The sanitized path name string or null
+     */
+    getPathName(): string | null;
+    
+    /**
+     * The distributed trace context for the request containing trace ID, span ID, and trace flags
+     */
+    readonly traceCtx: IDistributedTraceContext;
+    
+    /**
+     * Object containing request headers that have been set for this request
+     */
+    requestHeaders: { [key: string]: string };
+    
+    /**
+     * Indicates whether the request was aborted (0 = not aborted, 1 = aborted)
+     */
+    aborted: number;
+    
+    /**
+     * Optional context object that can be set by dependency listeners
+     */
+    context?: { [key: string]: any };
+}
+
+/**
+ * Internal interface that extends the public IAjaxRecordData with additional properties and methods
+ * used internally by the AJAX monitoring implementation.
+ *
+ * @internal
+ */
+export interface IAjaxRecordInternal extends IAjaxRecordData {
+    /**
+     * Indicates if the ajax call has completed
+     */
+    completed: boolean;
+    
+    /**
+     * Size of the request headers in bytes
+     */
+    requestHeadersSize: number;
+    
+    /**
+     * Duration of receiving the response in milliseconds
+     */
+    responseReceivingDuration: number;
+    
+    /**
+     * Duration of the callback execution in milliseconds
+     */
+    callbackDuration: number;
+    
+    /**
+     * Total duration of the ajax call in milliseconds
+     */
+    ajaxTotalDuration: number;
+    
+    /**
+     * URL of the page that initiated the request
+     */
+    pageUrl: string;
+    
+    /**
+     * The URL of the request
+     */
+    requestUrl: string;
+    
+    /**
+     * Size of the request in bytes
+     */
+    requestSize: number;
+    
+    /**
+     * HTTP method used for the request
+     */
+    method: string;
+    
+    /**
+     * Performance mark associated with this request
+     */
+    perfMark: PerformanceMark;
+    
+    /**
+     * Performance timing data from the Resource Timing API
+     */
+    perfTiming: PerformanceResourceTiming;
+    
+    /**
+     * Number of attempts to find performance data
+     */
+    perfAttempts?: number;
+    
+    /**
+     * Indicates if the request was made asynchronously
+     */
+    async?: boolean;
+    
+    /**
+     * Should the Error Status text be included in the response
+     */
+    errorStatusText?: boolean;
+    
+    /**
+     * HTTP status code of the response
+     */
+    status: string | number;
+    
+    /**
+     * Timestamp when the request was sent
+     */
+    requestSentTime: number;
+    
+    /**
+     * Timestamp when the first byte was received
+     */
+    responseStartedTime: number;
+    
+    /**
+     * Timestamp when the last byte was received
+     */
+    responseFinishedTime: number;
+    
+    /**
+     * Timestamp when the onreadystatechange callback finished
+     */
+    callbackFinishedTime: number;
+    
+    /**
+     * Timestamp when the ajax call ended
+     */
+    endTime: number;
+    
+    /**
+     * State tracking object for XHR monitoring
+     */
+    xhrMonitoringState: IXHRMonitoringState;
+    
+    /**
+     * Indicates if a JavaScript exception occurred in xhr.onreadystatechange code (1 if occurred, 0 otherwise)
+     */
+    clientFailure: number;
+    
+    /**
+     * Creates a telemetry item for tracking this ajax request
+     * @param ajaxType - Type of the ajax request
+     * @param enableRequestHeaderTracking - Whether to include request headers in telemetry
+     * @param getResponse - Function to get response data
+     * @returns Dependency telemetry item or null
+     */
+    CreateTrackItem(ajaxType: string, enableRequestHeaderTracking: boolean, getResponse: () => IAjaxRecordResponse): IDependencyTelemetry;
+    
+    /**
+     * Gets Part A properties for telemetry
+     * @returns Object containing Part A properties or null
+     */
+    getPartAProps(): { [key: string]: any };
+}
+
 export interface IInstrumentationRequirements extends IDependenciesPlugin {
-    includeCorrelationHeaders: (ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) => any;
+    includeCorrelationHeaders: (ajaxData: IAjaxRecordData, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) => any;
 }
 
 const _defaultConfig: IConfigDefaults<ICorrelationConfig> = objFreeze({
@@ -359,6 +555,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let _context: ITelemetryContext;
         let _isUsingW3CHeaders: boolean;
         let _isUsingAIHeaders: boolean;
+        let _isUsingW3CTraceState: boolean;
         let _markPrefix: string;
         let _enableAjaxPerfTracking: boolean;
         let _maxAjaxCallsPerView: number;
@@ -407,9 +604,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 _reportDependencyInternal(_dependencyInitializers, _self.core, null, dependency, properties);
             }
 
-            _self.includeCorrelationHeaders = (ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any => {
+            _self.includeCorrelationHeaders = (ajaxData: IAjaxRecordInternal, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any => {
                 // Test Hook to allow the overriding of the location host
-                let currentWindowHost = _self["_currentWindowHost"] || _currentWindowHost;
+                let currentWindowHost = (_self as any)["_currentWindowHost"] || _currentWindowHost;
                 
                 if (_processDependencyListeners(_dependencyListeners, _self.core, ajaxData, xhr, input, init)) {
                     if (input || input === "") { // Fetch
@@ -418,12 +615,14 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 init = {};
                             }
 
+                            let traceCtx = ajaxData.traceCtx;
+
                             // init headers override original request headers
                             // so, if they exist use only them, otherwise use request's because they should have been applied in the first place
                             // not using original request headers will result in them being lost
                             let headers = new Headers(init.headers || (input instanceof Request ? (input.headers || {}) : {}));
                             if (_isUsingAIHeaders) {
-                                const id = "|" + ajaxData.traceID + "." + ajaxData.spanID;
+                                const id = "|" + traceCtx.traceId + "." + traceCtx.spanId;
                                 headers.set(RequestHeaders[eRequestHeaders.requestIdHeader], id);
                                 if (_enableRequestHeaderTracking) {
                                     ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestIdHeader]] = id;
@@ -437,15 +636,38 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 }
                             }
                             if (_isUsingW3CHeaders) {
-                                let traceFlags = ajaxData.traceFlags;
+                                let traceFlags = traceCtx.traceFlags;
                                 if (isNullOrUndefined(traceFlags)) {
-                                    traceFlags = 0x01;
+                                    traceFlags = eW3CTraceFlags.Sampled; // Default to sampled
                                 }
 
-                                const traceParent = formatTraceParent(createTraceParent(ajaxData.traceID, ajaxData.spanID, traceFlags));
+                                const traceParent = formatTraceParent(createTraceParent(traceCtx.traceId, traceCtx.spanId, traceFlags));
                                 headers.set(RequestHeaders[eRequestHeaders.traceParentHeader], traceParent);
                                 if (_enableRequestHeaderTracking) {
                                     ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.traceParentHeader]] = traceParent;
+                                }
+                            }
+
+                            if (_isUsingW3CTraceState) {
+                                if (traceCtx.traceState && !traceCtx.traceState.isEmpty) {
+                                    const traceStateHeaders = traceCtx.traceState.hdrs();
+                                    if (traceStateHeaders && traceStateHeaders.length > 0) {
+                                        let stateSet = false;
+                                        arrForEach(traceStateHeaders, (stateValue) => {
+                                            if (stateValue) {
+                                                if (!stateSet) {
+                                                    stateSet = true;
+                                                    headers.set(RequestHeaders[eRequestHeaders.traceStateHeader], stateValue);
+                                                } else {
+                                                    headers.append(RequestHeaders[eRequestHeaders.traceStateHeader], stateValue);
+                                                }
+                                            }
+                                        });
+                                    }
+
+                                    if (_enableRequestHeaderTracking) {
+                                        ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.traceStateHeader]] = traceStateHeaders.join(",");
+                                    }
                                 }
                             }
 
@@ -455,9 +677,11 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         return init;
                     } else if (xhr) { // XHR
                         if (correlationIdCanIncludeCorrelationHeader(_extensionConfig, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
+                            let traceCtx = ajaxData.traceCtx;
+
                             if (_isUsingAIHeaders) {
                                 if (!_isHeaderSet(xhr, RequestHeaders[eRequestHeaders.requestIdHeader])) {
-                                    const id = "|" + ajaxData.traceID + "." + ajaxData.spanID;
+                                    const id = "|" + traceCtx.traceId + "." + traceCtx.spanId;
                                     xhr.setRequestHeader(RequestHeaders[eRequestHeaders.requestIdHeader], id);
                                     if (_enableRequestHeaderTracking) {
                                         ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestIdHeader]] = id;
@@ -480,13 +704,13 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 }
                             }
                             if (_isUsingW3CHeaders) {
-                                let traceFlags = ajaxData.traceFlags;
+                                let traceFlags = traceCtx.traceFlags;
                                 if (isNullOrUndefined(traceFlags)) {
-                                    traceFlags = 0x01;
+                                    traceFlags = eW3CTraceFlags.Sampled;
                                 }
 
                                 if (!_isHeaderSet(xhr, RequestHeaders[eRequestHeaders.traceParentHeader])) {
-                                    const traceParent = formatTraceParent(createTraceParent(ajaxData.traceID, ajaxData.spanID, traceFlags));
+                                    const traceParent = formatTraceParent(createTraceParent(traceCtx.traceId, traceCtx.spanId, traceFlags));
                                     xhr.setRequestHeader(RequestHeaders[eRequestHeaders.traceParentHeader], traceParent);
                                     if (_enableRequestHeaderTracking) {
                                         ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.traceParentHeader]] = traceParent;
@@ -494,6 +718,23 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 } else {
                                     _throwInternalWarning(_self, _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
                                         "Unable to set [" + RequestHeaders[eRequestHeaders.traceParentHeader] + "] as it has already been set by another instance");
+                                }
+                            }
+
+                            if (_isUsingW3CTraceState) {
+                                if (traceCtx.traceState && !traceCtx.traceState.isEmpty) {
+                                    const traceStateHeaders = traceCtx.traceState.hdrs();
+                                    if (traceStateHeaders && traceStateHeaders.length > 0) {
+                                        arrForEach(traceStateHeaders, (stateValue) => {
+                                            if (stateValue) {
+                                                xhr.setRequestHeader(RequestHeaders[eRequestHeaders.traceStateHeader], stateValue);
+                                            }
+                                        });
+                                    }
+
+                                    if (_enableRequestHeaderTracking) {
+                                        ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.traceStateHeader]] = traceStateHeaders.join(",");
+                                    }
                                 }
                             }
                         }
@@ -558,6 +799,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 _trackAjaxAttempts = 0;
                 _context = null;
                 _isUsingW3CHeaders = false;
+                _isUsingW3CTraceState = false;
                 _isUsingAIHeaders = false;
                 _markPrefix = null;
                 _enableAjaxPerfTracking = false;
@@ -596,8 +838,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _excludeRequestFromAutoTrackingPatterns = [].concat(_extensionConfig.excludeRequestFromAutoTrackingPatterns || [], _extensionConfig.addIntEndpoints !== false ? _internalExcludeEndpoints : []);
                     _addRequestContext = _extensionConfig.addRequestContext;
 
-                    _isUsingAIHeaders = _distributedTracingMode === eDistributedTracingModes.AI || _distributedTracingMode === eDistributedTracingModes.AI_AND_W3C;
-                    _isUsingW3CHeaders = _distributedTracingMode === eDistributedTracingModes.AI_AND_W3C || _distributedTracingMode === eDistributedTracingModes.W3C;
+                    let baseDistributedTracingMode = _distributedTracingMode & eDistributedTracingModes._BaseMask;
+                    _isUsingAIHeaders = baseDistributedTracingMode === eDistributedTracingModes.AI || baseDistributedTracingMode === eDistributedTracingModes.AI_AND_W3C;
+                    _isUsingW3CHeaders = baseDistributedTracingMode === eDistributedTracingModes.AI_AND_W3C || baseDistributedTracingMode === eDistributedTracingModes.W3C;
+                    _isUsingW3CTraceState = !!(_distributedTracingMode & eDistributedTracingModes._W3CTraceState);
 
                     if (_enableAjaxPerfTracking) {
                         _markPrefix = _ajaxDataId;
@@ -650,7 +894,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             ns: _evtNamespace,
                             // Add request hook
                             req: (callDetails: IInstrumentCallDetails, input, init) => {
-                                let fetchData: ajaxRecord;
+                                let fetchData: IAjaxRecordInternal;
                                 if (!_disableFetchTracking && _fetchInitialized &&
                                         !_isDisabledRequest(null, input, init) &&
                                         // If we have a polyfil and XHR instrumented then let XHR report otherwise we get duplicates
@@ -678,7 +922,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                                 };
         
                                                 if (_enableResponseHeaderTracking && response) {
-                                                    const responseHeaderMap = {};
+                                                    const responseHeaderMap: any = {};
                                                     response.headers.forEach((value: string, name: string) => {     // @skip-minify
                                                         if (_canIncludeHeaders(name)) {
                                                             responseHeaderMap[name] = value;
@@ -861,11 +1105,11 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
                 if (!isNullOrUndefined(xhr)) {
                     // Look on the XMLHttpRequest of the URL string value
-                    isDisabled = xhr[DisabledPropertyName] === true || theUrl[DisabledPropertyName] === true;
+                    isDisabled = (xhr as any)[DisabledPropertyName] === true || (theUrl as any)[DisabledPropertyName] === true;
                 } else if (!isNullOrUndefined(request)) { // fetch
                     // Look for DisabledPropertyName in either Request or RequestInit
-                    isDisabled = (typeof request === "object" ? request[DisabledPropertyName] === true : false) ||
-                            (init ? init[DisabledPropertyName] === true : false);
+                    isDisabled = (typeof request === "object" ? (request as any)[DisabledPropertyName] === true : false) ||
+                            (init ? (init as any)[DisabledPropertyName] === true : false);
                 }
 
                 // Also add extra check just in case the XHR or fetch objects where not decorated with the DisableProperty due to sealing or freezing
@@ -891,7 +1135,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             /// <summary>Verifies that particular instance of XMLHttpRequest needs to be monitored</summary>
             /// <param name="excludeAjaxDataValidation">Optional parameter. True if ajaxData must be excluded from verification</param>
             /// <returns type="bool">True if instance needs to be monitored, otherwise false</returns>
-            function _isMonitoredXhrInstance(xhr: XMLHttpRequestInstrumented, ajaxData: ajaxRecord, excludeAjaxDataValidation?: boolean): boolean {
+            function _isMonitoredXhrInstance(xhr: XMLHttpRequestInstrumented, ajaxData: IAjaxRecordInternal, excludeAjaxDataValidation?: boolean): boolean {
                 let ajaxValidation = true;
                 let initialized = _xhrInitialized;
                 if (!isNullOrUndefined(xhr)) {
@@ -904,31 +1148,56 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     && ajaxValidation;
             }
 
-            function _getDistributedTraceCtx(): IDistributedTraceContext {
+            /**
+             * Using the ajaxRecord (for now) to capture what will be the "span" state for the ajax request.
+             * @returns
+             */
+            function _startSpan(): IAjaxRecordInternal {
                 let distributedTraceCtx: IDistributedTraceContext = null;
                 if (_self.core && _self.core.getTraceCtx) {
-                    distributedTraceCtx = _self.core.getTraceCtx(false);
+                    // Note creating a new distributed trace context
+                    // This is to ensure that we have a original traceId and spanId for each request
+                    distributedTraceCtx = createDistributedTraceContext(_self.core.getTraceCtx());
                 }
 
-                // Fall back
+                // Fall back if running on an older version of the core
                 if (!distributedTraceCtx && _context && _context.telemetryTrace) {
                     distributedTraceCtx = createDistributedTraceContextFromTrace(_context.telemetryTrace);
                 }
 
-                return distributedTraceCtx;
+                // TODO(OTelSpan): change to call traceCtx.startSpan() when available rather than setting
+                // a new spanId and traceId
+                let newCtx = createDistributedTraceContext(distributedTraceCtx);
+                // Always generate a new spanId for each dependency request to ensure proper span isolation
+                newCtx.traceId = newCtx.traceId || generateW3CId();
+                newCtx.spanId = strSubstr(generateW3CId(), 0, 16);
+
+                return createAjaxRecord(newCtx, _self[strDiagLog]());
             }
 
-            function _openHandler(xhr: XMLHttpRequestInstrumented, method: string, url: string, async: boolean): ajaxRecord {
-                let distributedTraceCtx: IDistributedTraceContext = _getDistributedTraceCtx();
+            function _endSpan(
+                ajaxData: IAjaxRecordInternal,
+                dependency: IDependencyTelemetry,
+                properties: { [key: string]: any } | undefined) {
 
-                const traceID = (distributedTraceCtx && distributedTraceCtx.getTraceId()) || generateW3CId();
-                const spanID = strSubstr(generateW3CId(), 0, 16);
+                // TODO(OTelSpan): change to call span.end() when available
 
+                if (dependency) {
+                    if (properties !== undefined) {
+                        dependency.properties = {...dependency.properties, ...properties};
+                    }
+
+                    let sysProperties = ajaxData.getPartAProps();
+                    _reportDependencyInternal(_dependencyInitializers, _self.core, ajaxData, dependency, properties, sysProperties);
+                }
+
+            }
+
+            function _openHandler(xhr: XMLHttpRequestInstrumented, method: string, url: string, async: boolean): IAjaxRecordInternal {
                 let xhrRequestData = xhr[AJAX_DATA_CONTAINER] = (xhr[AJAX_DATA_CONTAINER] || { xh: [], i: {}});
                 let ajaxDataCntr = xhrRequestData.i = (xhrRequestData.i || { });
-                const ajaxData = ajaxDataCntr[_ajaxDataId] = (ajaxDataCntr[_ajaxDataId] || new ajaxRecord(traceID, spanID, _self[strDiagLog](), _self.core?.getTraceCtx()));
+                const ajaxData = ajaxDataCntr[_ajaxDataId] = (ajaxDataCntr[_ajaxDataId] || _startSpan());
 
-                ajaxData.traceFlags = distributedTraceCtx && distributedTraceCtx.getTraceFlags();
                 ajaxData.method = method;
                 ajaxData.requestUrl = url;
                 ajaxData.xhrMonitoringState.openDone = true;
@@ -939,7 +1208,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 return ajaxData;
             }
 
-            function _attachToOnReadyStateChange(xhr: XMLHttpRequestInstrumented, ajaxData: ajaxRecord) {
+            function _attachToOnReadyStateChange(xhr: XMLHttpRequestInstrumented, ajaxData: IAjaxRecordInternal) {
                 ajaxData.xhrMonitoringState.stateChangeAttached = eventOn(xhr, "readystatechange", () => {
                     try {
                         if (xhr && xhr.readyState === 4 && _isMonitoredXhrInstance(xhr, ajaxData)) {
@@ -982,7 +1251,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 ajaxData.status = xhr.status;
 
                 function _reportXhrError(e: any, failedProps?:Object) {
-                    let errorProps = failedProps||{};
+                    let errorProps = failedProps||{} as any;
                     errorProps["ajaxDiagnosticsMessage"] = _getFailedAjaxDiagnosticsMessage(xhr, _ajaxDataId);
                     if (e) {
                         errorProps["exception"]  = dumpObj(e);
@@ -1013,7 +1282,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                     // xhr.getAllResponseHeaders() method returns all the response headers, separated by CRLF, as a string or null
                                     // the regex converts the header string into an array of individual headers
                                     const arr = strTrim(headers).split(/[\r\n]+/);
-                                    const responseHeaderMap = {};
+                                    const responseHeaderMap: any = {};
                                     arrForEach(arr, (line) => {
                                         const parts = line.split(": ");
                                         const header = parts.shift();
@@ -1041,19 +1310,14 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 CUSTOM_REQUEST_CONTEXT_ERROR);
                         }
 
-                        if (dependency) {
-                            if (properties !== undefined) {
-                                dependency.properties = {...dependency.properties, ...properties};
-                            }
-
-                            let sysProperties = ajaxData.getPartAProps();
-                            _reportDependencyInternal(_dependencyInitializers, _self.core, ajaxData, dependency, null, sysProperties);
-                        } else {
+                        if (!dependency) {
                             _reportXhrError(null, {
                                 requestSentTime: ajaxData.requestSentTime,
                                 responseFinishedTime: ajaxData.responseFinishedTime
                             });
                         }
+
+                        _endSpan(ajaxData, dependency, properties);
                     } finally {
                         // cleanup telemetry data
                         try {
@@ -1092,7 +1356,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 }
             }
 
-            function _createMarkId(type:string, ajaxData:ajaxRecord) {
+            function _createMarkId(type:string, ajaxData:IAjaxRecordInternal) {
                 if (ajaxData.requestUrl && _markPrefix && _enableAjaxPerfTracking) {
                     let performance = getPerformance();
                     if (performance && isFunction(performance.mark)) {
@@ -1107,7 +1371,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 }
             }
 
-            function _findPerfResourceEntry(initiatorType:string, ajaxData:ajaxRecord, trackCallback:() => void, reportError:(e:any) => void): void {
+            function _findPerfResourceEntry(initiatorType:string, ajaxData:IAjaxRecordInternal, trackCallback:() => void, reportError:(e:any) => void): void {
                 let perfMark = ajaxData.perfMark;
                 let performance = getPerformance();
                 let maxAttempts = _maxAjaxPerfLookupAttempts;
@@ -1169,14 +1433,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 })();
             }
 
-            function _createFetchRecord(input?: Request | string, init?: RequestInit): ajaxRecord {
-                let distributedTraceCtx: IDistributedTraceContext = _getDistributedTraceCtx();
-
-                const traceID = (distributedTraceCtx && distributedTraceCtx.getTraceId()) || generateW3CId();
-                const spanID = strSubstr(generateW3CId(), 0, 16);
-
-                let ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog](), _self.core?.getTraceCtx());
-                ajaxData.traceFlags = distributedTraceCtx && distributedTraceCtx.getTraceFlags();
+            function _createFetchRecord(input?: Request | string, init?: RequestInit): IAjaxRecordInternal {
+                let ajaxData = _startSpan();
                 ajaxData.requestSentTime = dateTimeUtilsNow();
                 ajaxData.errorStatusText = _enableAjaxErrorStatusText;
 
@@ -1207,7 +1465,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 }
                 ajaxData.method = method;
 
-                let requestHeaders = {};
+                let requestHeaders: any = {};
                 if (_enableRequestHeaderTracking) {
                     let headers = new Headers((init ? init.headers : 0) || (input instanceof Request ? (input.headers || {}) : {}));
                     headers.forEach((value, key) => {       // @skip-minify
@@ -1243,13 +1501,13 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 return result;
             }
 
-            function _reportFetchMetrics(callDetails: IInstrumentCallDetails, status: number, input: Request, response: Response | string, ajaxData: ajaxRecord, getResponse:() => IAjaxRecordResponse, properties?: { [key: string]: any }): void {
+            function _reportFetchMetrics(callDetails: IInstrumentCallDetails, status: number, input: Request, response: Response | string, ajaxData: IAjaxRecordInternal, getResponse:() => IAjaxRecordResponse, properties?: { [key: string]: any }): void {
                 if (!ajaxData) {
                     return;
                 }
 
                 function _reportFetchError(msgId: _eInternalMessageId, e: any, failedProps?:Object) {
-                    let errorProps = failedProps||{};
+                    let errorProps = failedProps||{} as any;
                     errorProps["fetchDiagnosticsMessage"] = _getFailedFetchDiagnosticsMessage(input);
                     if (e) {
                         errorProps["exception"]  = dumpObj(e);
@@ -1278,20 +1536,15 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             CUSTOM_REQUEST_CONTEXT_ERROR);
                     }
                     
-                    if (dependency) {
-                        if (properties !== undefined) {
-                            dependency.properties = {...dependency.properties, ...properties};
-                        }
-
-                        let sysProperties = ajaxData.getPartAProps();
-                        _reportDependencyInternal(_dependencyInitializers, _self.core, ajaxData, dependency, null, sysProperties);
-                    } else {
+                    if (!dependency) {
                         _reportFetchError(_eInternalMessageId.FailedMonitorAjaxDur, null,
                             {
                                 requestSentTime: ajaxData.requestSentTime,
                                 responseFinishedTime: ajaxData.responseFinishedTime
                             });
                     }
+
+                    _endSpan(ajaxData, dependency, properties);
                 }, (e) => {
                     _reportFetchError(_eInternalMessageId.FailedMonitorAjaxGetCorrelationHeader, e, null);
                 });
@@ -1317,7 +1570,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             function _reportDependencyInternal(
                 initializers: _IInternalDependencyHandler<DependencyInitializerFunction>[],
                 core: IAppInsightsCore,
-                ajaxData: ajaxRecord,
+                ajaxData: IAjaxRecordInternal,
                 dependency: IDependencyTelemetry,
                 properties?: { [key: string]: any },
                 systemProperties?: { [key: string]: any }
@@ -1360,7 +1613,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public includeCorrelationHeaders(ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any {
+    public includeCorrelationHeaders(ajaxData: IAjaxRecordData, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

@@ -3,7 +3,6 @@ import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, crea
 import PropertiesPlugin from "../../../src/PropertiesPlugin";
 import { IPropertiesConfig } from "../../../src/Interfaces/IPropertiesConfig";
 import { TelemetryContext } from "../../../src/TelemetryContext";
-import { TelemetryTrace } from "../../../src/Context/TelemetryTrace";
 import { IConfig, utlCanUseLocalStorage, utlGetLocalStorage } from "@microsoft/applicationinsights-common";
 import { TestChannelPlugin } from "./TestChannelPlugin";
 import { SinonStub } from 'sinon';
@@ -65,7 +64,18 @@ export class PropertiesTests extends AITestClass {
         this.testCase({
             name: 'Trace: default operation.name is grabbed from window pathname, if available',
             test: () => {
-                const operation = new TelemetryTrace();
+                this.properties.initialize({
+                    instrumentationKey: 'instrumentation_key',
+                    accountId: 'abc',
+                    samplingPercentage: 15,
+                    sessionExpirationMs: 99999,
+                    extensionConfig: {
+                        [this.properties.identifier]: {
+                            sessionExpirationMs: 88888
+                        }
+                    }
+                }, this.core, []);                
+                const operation = this.properties.context.telemetryTrace;
                 Assert.ok(operation.name);
             }
         });
@@ -73,8 +83,19 @@ export class PropertiesTests extends AITestClass {
         this.testCase({
             name: 'Trace: operation.name is truncated to max size 1024 if too long',
             test: () => {
-                const name = new Array(1234).join("a"); // exceeds max of 1024
-                const operation = new TelemetryTrace(undefined, undefined, name, this.core.logger);
+                this.properties.initialize({
+                    instrumentationKey: 'instrumentation_key',
+                    accountId: 'abc',
+                    samplingPercentage: 15,
+                    sessionExpirationMs: 99999,
+                    extensionConfig: {
+                        [this.properties.identifier]: {
+                            sessionExpirationMs: 88888
+                        }
+                    }
+                }, this.core, []); 
+                const operation = this.properties.context.telemetryTrace;
+                operation.name = new Array(1234).join("a"); // exceeds max of 1024
                 Assert.ok(operation.name);
                 Assert.equal(operation.name.length, 1024);
             }

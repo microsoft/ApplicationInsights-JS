@@ -188,17 +188,120 @@ export class MyPlugin extends BaseTelemetryPlugin {
 - Test both success and failure scenarios
 - Verify telemetry data structure and content
 
+### Testing Framework Requirements
+- **Extend AITestClass**: All test classes must extend `AITestClass` from `@microsoft/ai-test-framework`
+- **Use Framework Tools**: Leverage existing framework helpers like `this.hookFetch()`, `this.useFakeTimers()`, and `this.onDone()`
+- **Proper Registration**: Implement `registerTests()` method and use `this.testCase()` for test registration
+- **Async Tests**: Return `IPromise` from test functions for asynchronous operations (do not use deprecated `testCaseAsync`)
+
+### Critical Cleanup & Resource Management
+- **Mandatory Core Cleanup**: Always call `appInsightsCore.unload(false)` in test cleanup to prevent hook pollution between tests
+- **Extension Teardown**: Only call `teardown()` on extension instances that were NOT added to a core instance; `core.unload()` handles teardown for initialized extensions
+- **Hook Validation**: The framework validates that all hooks are properly removed; tests will fail if cleanup is incomplete
+- **Resource Isolation**: Each test must be completely isolated - no shared state or leftover hooks
+
+### Configuration Testing Requirements
+- **Static Configuration**: Test initial configuration setup and validation
+- **Dynamic Configuration**: **REQUIRED** - All tests that touch configuration must include post-initialization configuration change tests
+- **onConfigChange Testing**: Components using `onConfigChange` callbacks must be tested for runtime configuration updates
+- **Configuration Validation**: Test both valid and invalid configuration scenarios with proper error handling
+
+```typescript
+// Example dynamic configuration test pattern
+public testDynamicConfig() {
+    // Initial setup with one config
+    let initialConfig = { enableFeature: false };
+    core.initialize(initialConfig, channels);
+    
+    // Verify initial behavior
+    Assert.equal(false, component.isFeatureEnabled());
+    
+    // Update configuration dynamically
+    core.config.enableFeature = true;
+    // Note: core.onConfigChange() only registers callbacks, it doesn't trigger changes
+    
+    // To trigger config change detection, use one of these patterns:
+    
+    // Option 1: Using fake timers (synchronous)
+    this.clock.tick(1); // Trigger 1ms timer for config change detection
+    
+    // Option 2: Async test without fake timers
+    // return createPromise((resolve) => {
+    //     setTimeout(() => {
+    //         Assert.equal(true, component.isFeatureEnabled());
+    //         resolve();
+    //     }, 10);
+    // });
+    
+    // Verify behavior changed (when using fake timers)
+    Assert.equal(true, component.isFeatureEnabled());
+}
+```
+
+### Package Organization & Dependencies
+- **Respect Package Boundaries**: Place tests in the package that owns the functionality being tested
+- **Dependency Injection**: Extensions must include dependencies in `config.extensions` array for proper initialization
+- **Cross-Package Coordination**: Understand which package owns which functionality when testing integrated features
+- **Import Resolution**: Use proper module imports and avoid direct file path dependencies
+
+### HTTP API & Network Testing
+- **Use Framework Helpers**: Use `this.hookFetch()` instead of custom fetch mocking implementations
+- **XMLHttpRequest Testing**: Use framework's built-in mechanisms for XHR validation
+- **Header Validation**: Test both presence and absence of headers based on different configuration modes
+- **Network Scenarios**: Test success, failure, timeout, and edge cases consistently
+
+### Async Testing Patterns
+- **IPromise Return**: Use `this.testCase()` and return `IPromise` for asynchronous operations instead of deprecated `testCaseAsync`
+- **Promise Handling**: Handle both resolution and rejection paths in async tests
+- **Timing Control**: Use `this.clock.tick()` when `useFakeTimers: true` for deterministic timing
+- **Cleanup in Async**: Ensure cleanup happens in both success and failure paths of async tests
+
+```typescript
+// Example async test pattern
+this.testCase({
+    name: "Async operation test",
+    test: () => {
+        return createPromise((resolve, reject) => {
+            // Setup async operation
+            someAsyncOperation().then(() => {
+                try {
+                    // Assertions
+                    Assert.ok(true, "Operation succeeded");
+                    resolve();
+                } catch (e) {
+                    reject(e);
+                }
+            }).catch(reject);
+        });
+    }
+});
+```
+
+### Unit Testing Best Practices
+- **Comprehensive Coverage**: Test all major code paths including edge cases and error conditions
+- **Mock Browser APIs**: Mock browser APIs consistently using framework-provided mechanisms
+- **Telemetry Validation**: Verify telemetry data structure, content, and proper formatting
+- **State Testing**: Test both empty/null states and populated states for data structures
+
 ### Browser Testing
-- Cross-browser compatibility testing
-- Performance regression testing
-- Memory leak detection
-- Network failure scenarios
+- **Cross-browser Compatibility**: Test across different browser environments and API availability
+- **Performance Regression**: Monitor test execution time and detect performance regressions
+- **Memory Leak Detection**: Verify proper cleanup and resource management in long-running scenarios
+- **API Graceful Degradation**: Test behavior when browser APIs are unavailable or disabled
 
 ### Test Organization
-- Collocate tests with source code in `Tests/` directories
-- Use descriptive test names
-- Group related tests in test suites
-- Mock external dependencies
+- **Collocate Tests**: Place tests in `Tests/` directories within the same package as source code
+- **Descriptive Naming**: Use clear, descriptive test names that explain the scenario being tested
+- **Logical Grouping**: Group related tests in test suites within the same test class
+- **Documentation**: Include comments explaining complex test scenarios and edge cases
+
+### Common Anti-Patterns to Avoid
+- **Skipping Cleanup**: Not calling `unload()` or `teardown()` methods leads to test interference
+- **Custom Implementations**: Implementing custom mocks/helpers instead of using framework-provided tools
+- **Configuration Gaps**: Testing only static configuration without dynamic configuration change scenarios
+- **Hook Pollution**: Leaving hooks active between tests causing false positives/negatives
+- **Incomplete Coverage**: Missing edge cases, error conditions, or state transitions
+- **Deprecated Async**: Using deprecated `testCaseAsync` instead of `testCase` with `IPromise` return
 
 ## Configuration & Initialization
 

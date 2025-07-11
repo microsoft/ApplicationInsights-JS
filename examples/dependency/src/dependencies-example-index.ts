@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach } from "@microsoft/applicationinsights-core-js";
+import { arrForEach, eW3CTraceFlags } from "@microsoft/applicationinsights-core-js";
 import { addDependencyListener, addDependencyInitializer, stopDependencyEvent, changeConfig, initApplicationInsights, getConfig, enableAjaxPerfTrackingConfig } from "./appinsights-init";
 import { addHandlersButtonId, ajaxCallId, buttonSectionId, changeConfigButtonId, clearDetailsButtonId, clearDetailsList, clearEle, configContainerId, configDetails, createButton, createContainers, createDetailList, createFetchRequest, createUnTrackRequest, createXhrRequest, dependencyInitializerDetails, dependencyInitializerDetailsContainerId, dependencyListenerButtonId, dependencyListenerDetails, dependencyListenerDetailsContainerId, fetchCallId, fetchXhrId, removeAllHandlersId, stopDependencyEventButtonId, untrackFetchRequestId } from "./utils";
 
@@ -16,7 +16,7 @@ function addDependencyListenerOnclick() {
         console.log(details);
         // Add additional context values (any) that can be used by other listeners and is also passed to any dependency initializers
         details.context.listener = "dependency-listener-context";
-        details.traceFlags = 0;
+        details.traceFlags = eW3CTraceFlags.None;
 
         createDetailList(dependencyListenerDetails, details, dependencyListenerDetailsContainerId, "Listener");
     });

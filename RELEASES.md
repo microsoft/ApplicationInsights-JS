@@ -2,6 +2,68 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## 3.4.0-beta (Unreleased)
+
+### Significant Changes
+
+- **W3C Trace State Support**: Added full support for managing W3C Trace State and sending headers in distributed tracing, including new distributed tracing modes `AI_AND_W3C_TRACE` and `W3C_TRACE` that enable the [`tracestate`](https://www.w3.org/TR/trace-context/#tracestate-header) header to be sent with requests when trace state information is available, the existing states will continue to not send the header.
+
+- **New Distributed Tracing Modes**: Added new `eDistributedTracingModes` enum values:
+  - `AI_AND_W3C_TRACE` (17): Sends Application Insights headers + W3C `traceparent` + W3C `tracestate` headers (if state value is present)
+  - `W3C_TRACE` (18): Sends only W3C `traceparent` + W3C `tracestate` headers (if state value is present)
+
+- **Enhanced Distributed Tracing**: Refactored the distributed tracing implementation to provide better support for the W3C Trace Context specification and prepare for future OpenTelemetry Span-style API integration.
+
+- **New W3C TraceState API**: Introduced the `IW3cTraceState` interface that provides a mutable, ordered list of key/value pairs for trace state information with proper parent-child relationships.
+
+- **OpenTelemetry Integration Preparation**: Added foundational OpenTelemetry interfaces (`IOTelSpanContext`, `IOTelTraceState`) to provide OpenTelemetry API compatibility.
+
+- **Additional Configuration**: Added new configuration properties for W3C trace state support:
+  - `traceHdrMode`: Controls if the SDK should look for the `traceparent` and/or `tracestate` values from service timing headers or meta tags from the initial page load (in `IConfiguration`)
+  - Enhanced `distributedTracingMode` property to support the new W3C trace state modes (in `ICorrelationConfig`)
+
+- **Dependencies Extension**: The dependency tracking extension now includes additional logic for W3C trace state handling, which may affect custom dependency listeners or initializers. The following interfaces and functions have been enhanced with W3C trace state support:
+  - `IDependencyListenerDetails` interface now also includes a readonly `traceState` along with the previous `traceId`, `spanId`, `traceFlags` properties
+  - `addDependencyListener()` function now provides access to W3C trace state information through the enhanced details object
+  - `addDependencyInitializer()` function continues to work with existing dependency telemetry processing
+  - Custom dependency listeners can now access and modify W3C trace state information before requests are sent
+
+### Breaking Changes
+
+The following is a list of known breaking changes for anyone attempting to implement the interfaces, for end-users / consumers of the existing interface this is considered to be only a potential breaking change as the existing functions are still provided and provide the same level of functionality. The breaking nature of these changes is for anyone attempting to provide their own implementation of these changes.
+
+#### Interface Changes
+
+- The `IDistributedTraceContext` interface has been significantly expanded to include W3C trace state management capabilities, which may affect custom telemetry processors that interact with distributed tracing context.
+  - Added additional "required" property accessors which update ONLY the current trace context instance and DO NOT update any parent context instances (`pageName`, `traceId`, `spanId` and `traceFlags`).
+    - The previous set functions continue to also update (replace) any parent context values for existing backward compatability, but have been marked as depracted and will be removed in a future release due to their side-effects of overwriting the parent values.
+
+### Potential Breaking Changes
+
+- **Class Removal**: The `TelemetryTrace` class has been removed and is no longer exported as part of the distributed tracing refactoring, with its functionality integrated into the new W3C trace state implementation.
+  - The properties `telemetryTrace` is now a complete adpater to the existing `core.getTraceCtx()` value and as such is now marked as deprecated and will be removed in a future release.
+  - The value of the `appInsights.context.telemetryTrace` is no longer an instance of this removed class.
+
+- **Trace Context Initialization**: Due to the distributed tracing refactoring, the core instance and SDK will now always have a valid `traceId` available through `core.getTraceCtx()`. The `traceId` will be either a newly generated random value or inherited from any detected parent trace context. This ensures consistent trace context availability but may affect applications that previously relied on the absence of a `traceId` to determine if distributed tracing was active.
+
+- **Dependencies Extension - ajaxRecord Class Removal**: The internal `ajaxRecord` class has been removed and is no longer exported from the dependencies extension (`@microsoft/applicationinsights-dependencies-js`). This class was previously used internally for AJAX request tracking and was referenced in the `IInstrumentationRequirements.includeCorrelationHeaders()` function signature. **Important**: The previous exporting of the `ajaxRecord` class was unintentional and was never meant to be part of the public API - it was an internal implementation detail that inadvertently became accessible to external code.
+  - **Previous Signature**: `includeCorrelationHeaders(ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any`
+  - **New Signature**: `includeCorrelationHeaders(ajaxData: IAjaxRecordData, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any`
+  - **New Interface**: The `IAjaxRecordData` interface has been introduced to replace the `ajaxRecord` class in public API signatures and provides access to essential AJAX request properties:
+    - `getAbsoluteUrl(): string | null` - Gets the absolute URL for the request
+    - `getPathName(): string | null` - Gets the sanitized path name for the request URL  
+    - `traceCtx: IDistributedTraceContext` - The distributed trace context for the request
+    - `requestHeaders: { [key: string]: string }` - Object containing request headers
+    - `aborted?: number` - Indicates whether the request was aborted
+    - `context?: { [key: string]: any }` - Optional context object for dependency listeners
+  - **Impact**: This change only affects custom implementations that directly referenced the `ajaxRecord` class or implemented the `IInstrumentationRequirements` interface. Standard SDK usage and most custom dependency listeners/initializers are unaffected.
+  - **Migration**: If your code previously referenced `ajaxRecord` or implemented `IInstrumentationRequirements`, update it to use the new `IAjaxRecordData` interface, which provides the same essential properties with proper TypeScript definitions and comprehensive JSDoc documentation.
+  - **Need Help?**: If you discover that your code depends on other functions or properties from the dependencies extension that are no longer exported and you believe should be part of the public API, please [raise an issue](https://github.com/microsoft/ApplicationInsights-JS/issues) with details about your use case so we can review and potentially provide a proper public API alternative.
+
+### Changelog
+
+- [Beta] Add W3c Trace State support / handling and refactor distributed trace handling to prepare for OptenTelemetry Span style API / management
+
 ## 3.3.9 (June 25th, 2025)
 
 This release contains an important fix for a change introduced in v3.3.7 that caused the `autoCaptureHandler` to incorrectly evaluate elements within `trackElementsType`, resulting in some click events not being auto-captured. See more details [here](https://github.com/microsoft/ApplicationInsights-JS/issues/2589).

@@ -1,4 +1,4 @@
-﻿import { SinonStub } from "sinon";
+import { SinonStub } from "sinon";
 import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
 import { createAsyncResolvedPromise, createSyncPromise } from "@nevware21/ts-async";
 import { AjaxMonitor } from "../../../src/ajax";
@@ -9,8 +9,9 @@ import {
     ActiveStatus
 } from "@microsoft/applicationinsights-core-js";
 import { IDependencyListenerDetails } from "../../../src/DependencyListener";
+import { TestChannelPlugin } from "./TestChannelPlugin";
 import { FakeXMLHttpRequest } from "@microsoft/ai-test-framework";
-import { setBypassLazyCache, strLeft } from "@nevware21/ts-utils";
+import { dumpObj, isNullOrUndefined, setBypassLazyCache, strLeft } from "@nevware21/ts-utils";
 
 const AJAX_DATA_CONTAINER = "_ajaxData";
 
@@ -651,6 +652,8 @@ export class AjaxTests extends AITestClass {
                 let traceCtx = appInsightsCore.getTraceCtx();
                 let expectedTraceId = generateW3CId();
                 let expectedSpanId = generateW3CId().substring(0, 16);
+
+                // Note: Replaces the global current traceId and spanId with new values
                 traceCtx!.setTraceId(expectedTraceId);
                 traceCtx!.setSpanId(expectedSpanId);
 
@@ -663,6 +666,7 @@ export class AjaxTests extends AITestClass {
                 let newExpectedTraceId = generateW3CId();
                 let newExpectedSpanId = generateW3CId().substring(0, 16);
 
+                // Note: Replaces the global current traceId and spanId with new values
                 traceCtx!.setTraceId(newExpectedTraceId);
                 traceCtx!.setSpanId(newExpectedSpanId);
 
@@ -680,10 +684,126 @@ export class AjaxTests extends AITestClass {
                 Assert.equal(2, dependencyFields.length, "trackDependencyDataInternal was called again");
 
                 Assert.equal(expectedTraceId, dependencyFields[0].sysProperties!.trace.traceID, "Check first traceId");
-                Assert.equal(newExpectedTraceId, dependencyFields[1].sysProperties!.trace.traceID, "Check first traceId");
+                Assert.equal(newExpectedTraceId, dependencyFields[1].sysProperties!.trace.traceID, "Check second traceId");
 
                 Assert.equal(expectedSpanId, dependencyFields[0].sysProperties!.trace.parentID, "Check first spanId");
-                Assert.equal(newExpectedSpanId, dependencyFields[1].sysProperties!.trace.parentID, "Check first spanId");
+                Assert.equal(newExpectedSpanId, dependencyFields[1].sysProperties!.trace.parentID, "Check second spanId");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: should create unique spanId for traceparent header without modifying current trace context",
+            useFakeServer: true,
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = { 
+                    instrumentationKey: "instrumentationKey", 
+                    disableAjaxTracking: false,
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+                            enableRequestHeaderTracking: true
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                // Use test hook to simulate the correct url location host to enable correlation headers
+                this._ajax["_currentWindowHost"] = "www.example.com";
+
+                // Set up trace context with known values
+                let traceCtx = appInsightsCore.getTraceCtx();
+                let originalTraceId = generateW3CId();
+                let originalSpanId = generateW3CId().substring(0, 16);
+                traceCtx!.setTraceId(originalTraceId);
+                traceCtx!.setSpanId(originalSpanId);
+
+                // Verify initial state
+                Assert.equal(originalTraceId, traceCtx!.getTraceId(), "Initial traceId should be set");
+                Assert.equal(originalSpanId, traceCtx!.getSpanId(), "Initial spanId should be set");
+
+                // Act - make first AJAX request
+                var xhr1 = new XMLHttpRequest();
+                var spy1 = this.sandbox.spy(xhr1, "setRequestHeader");
+                xhr1.open("GET", "http://www.example.com/api1");
+                xhr1.send();
+
+                // Verify trace context is unchanged after first request
+                Assert.equal(originalTraceId, traceCtx!.getTraceId(), "TraceId should remain unchanged after first request");
+                Assert.equal(originalSpanId, traceCtx!.getSpanId(), "SpanId should remain unchanged after first request");
+
+                // Extract headers from first request
+                let firstRequestHeaders: { [key: string]: string } = {};
+                spy1.getCalls().forEach(call => {
+                    firstRequestHeaders[call.args[0]] = call.args[1];
+                });
+
+                // Act - make second AJAX request
+                var xhr2 = new XMLHttpRequest();
+                var spy2 = this.sandbox.spy(xhr2, "setRequestHeader");
+                xhr2.open("GET", "http://www.example.com/api2");
+                xhr2.send();
+
+                // Verify trace context is still unchanged after second request
+                Assert.equal(originalTraceId, traceCtx!.getTraceId(), "TraceId should remain unchanged after second request");
+                Assert.equal(originalSpanId, traceCtx!.getSpanId(), "SpanId should remain unchanged after second request");
+
+                // Extract headers from second request
+                let secondRequestHeaders: { [key: string]: string } = {};
+                spy2.getCalls().forEach(call => {
+                    secondRequestHeaders[call.args[0]] = call.args[1];
+                });
+
+                // Validate that both requests have traceparent headers
+                Assert.ok(firstRequestHeaders[RequestHeaders.traceParentHeader], "First request should have traceparent header");
+                Assert.ok(secondRequestHeaders[RequestHeaders.traceParentHeader], "Second request should have traceparent header");
+
+                // Parse traceparent headers (format: 00-{traceId}-{spanId}-{flags})
+                let firstTraceParent = firstRequestHeaders[RequestHeaders.traceParentHeader];
+                let secondTraceParent = secondRequestHeaders[RequestHeaders.traceParentHeader];
+                
+                let firstTraceParentParts = firstTraceParent.split('-');
+                let secondTraceParentParts = secondTraceParent.split('-');
+
+                Assert.equal(4, firstTraceParentParts.length, "First traceparent should have 4 parts");
+                Assert.equal(4, secondTraceParentParts.length, "Second traceparent should have 4 parts");
+
+                let firstHeaderTraceId = firstTraceParentParts[1];
+                let firstHeaderSpanId = firstTraceParentParts[2];
+                let secondHeaderTraceId = secondTraceParentParts[1];
+                let secondHeaderSpanId = secondTraceParentParts[2];
+
+                // Validate traceId consistency - all should use the same traceId
+                Assert.equal(originalTraceId, firstHeaderTraceId, "First request traceId in header should match original");
+                Assert.equal(originalTraceId, secondHeaderTraceId, "Second request traceId in header should match original");
+
+                // Validate spanId isolation - each request should have unique spanId, different from current context
+                Assert.notEqual(originalSpanId, firstHeaderSpanId, "First request spanId in header should be different from current context spanId");
+                Assert.notEqual(originalSpanId, secondHeaderSpanId, "Second request spanId in header should be different from current context spanId");
+                Assert.notEqual(firstHeaderSpanId, secondHeaderSpanId, "Each request should have unique spanId");
+
+                // Validate spanId format (should be 16 hex characters)
+                Assert.equal(16, firstHeaderSpanId.length, "First request spanId should be 16 characters");
+                Assert.equal(16, secondHeaderSpanId.length, "Second request spanId should be 16 characters");
+                Assert.ok(/^[0-9a-f]{16}$/.test(firstHeaderSpanId), "First request spanId should be valid hex");
+                Assert.ok(/^[0-9a-f]{16}$/.test(secondHeaderSpanId), "Second request spanId should be valid hex");
+
+                // Validate AI Request-Id header format consistency
+                let firstRequestId = firstRequestHeaders[RequestHeaders.requestIdHeader];
+                let secondRequestId = secondRequestHeaders[RequestHeaders.requestIdHeader];
+                
+                Assert.ok(firstRequestId?.startsWith("|" + originalTraceId + "."), "First AI Request-Id should start with correct traceId");
+                Assert.ok(secondRequestId?.startsWith("|" + originalTraceId + "."), "Second AI Request-Id should start with correct traceId");
+                Assert.notEqual(firstRequestId, secondRequestId, "Each request should have unique AI Request-Id");
+
+                // Clean up responses
+                (<any>xhr1).respond(200, {}, "");
+                (<any>xhr2).respond(200, {}, "");
+
+                // Final verification that trace context is still unchanged
+                Assert.equal(originalTraceId, traceCtx!.getTraceId(), "TraceId should remain unchanged at end");
+                Assert.equal(originalSpanId, traceCtx!.getSpanId(), "SpanId should remain unchanged at end");
             }
         });
 
@@ -1581,6 +1701,18 @@ export class AjaxTests extends AITestClass {
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
                 let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                let traceCtx = appInsightsCore.getTraceCtx();
+
+                let expectedsysProperties = {
+                    trace: {
+                        traceID: traceCtx!.getTraceId(),
+                        parentID: traceCtx!.getSpanId()
+                    } as any
+                };
+
+                if (!isNullOrUndefined(traceCtx!.getTraceFlags())) {
+                    expectedsysProperties.trace.traceFlags = traceCtx!.getTraceFlags();
+                }
 
                 // Act
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
@@ -1592,7 +1724,7 @@ export class AjaxTests extends AITestClass {
                     Assert.equal(false, throwSpy.called, "We should not have failed internally");
                     Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
                     Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
-                    Assert.equal(undefined, dependencyFields[0].sysProperties, "no system properties");
+                    Assert.deepEqual(expectedsysProperties, dependencyFields[0].sysProperties, "system properties - " + dumpObj(expectedsysProperties));
 
                     fetch(undefined, null).then(() => {
                         // Assert
@@ -1600,7 +1732,7 @@ export class AjaxTests extends AITestClass {
                         Assert.equal(false, throwSpy.called, "We should still not have failed internally");
                         Assert.equal(2, dependencyFields.length, "trackDependencyDataInternal was called");
                         Assert.ok(dependencyFields[1].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
-                        Assert.equal(undefined, dependencyFields[1].sysProperties, "no system properties");
+                        Assert.deepEqual(expectedsysProperties, dependencyFields[1].sysProperties, "system properties - " + dumpObj(expectedsysProperties));
                         testContext.testDone();
                     }, () => {
                         Assert.ok(false, "fetch failed!");
@@ -1712,6 +1844,18 @@ export class AjaxTests extends AITestClass {
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
                 let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                let traceCtx = appInsightsCore.getTraceCtx();
+
+                let expectedsysProperties = {
+                    trace: {
+                        traceID: traceCtx.getTraceId(),
+                        parentID: traceCtx.getSpanId()
+                    } as any
+                };
+
+                if (!isNullOrUndefined(traceCtx.getTraceFlags())) {
+                    expectedsysProperties.trace.traceFlags = traceCtx.getTraceFlags();
+                }
 
                 // Act
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
@@ -1723,7 +1867,7 @@ export class AjaxTests extends AITestClass {
                     Assert.equal(false, throwSpy.called, "We should not have failed internally");
                     Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
                     Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
-                    Assert.equal(undefined, dependencyFields[0].sysProperties, "no system properties");
+                    Assert.deepEqual(expectedsysProperties, dependencyFields[0].sysProperties, "system properties - " + dumpObj(dependencyFields[0].sysProperties));
                     Assert.equal(window.location.href.split("#")[0], dependencyFields[0].dependency.target, "Target is captured.");
 
                     // Assert that the HTTP method was preserved
@@ -2439,11 +2583,12 @@ export class AjaxTests extends AITestClass {
                         Assert.equal(true, headers.has(RequestHeaders.requestContextHeader), "requestContext header shoud be present");
                         Assert.equal(true, headers.has(RequestHeaders.requestIdHeader), "AI header shoud be present"); // AI
                         Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
+                        Assert.equal(false, headers.has(RequestHeaders.traceStateHeader), "traceState should not be present in outbound event");
 
                         Assert.notEqual(undefined, trackHeaders[RequestHeaders.requestIdHeader], "RequestId present in outbound event");
                         Assert.notEqual(undefined, trackHeaders[RequestHeaders.requestContextHeader], "RequestContext present in outbound event");
                         Assert.notEqual(undefined, trackHeaders[RequestHeaders.traceParentHeader], "traceParent present in outbound event");
-
+                        Assert.equal(undefined, trackHeaders[RequestHeaders.traceStateHeader], "traceState should not be present in outbound event");
                     }
 
                     return true;
@@ -2452,6 +2597,146 @@ export class AjaxTests extends AITestClass {
                 this.clock.tick(1000);
                 return false;
             }, 'response received', 60, 1000) as any)
+        })
+
+        this.testCase({
+            name: "Fetch: should create unique spanId for traceparent header without modifying current trace context",
+            test: () => {
+                // Setup fetch hook to capture headers
+                let fetchCalls: any[] = [];
+                let hookFetch = (resolve) => {
+                    fetchCalls.push = function() {
+                        let result = Array.prototype.push.apply(this, arguments);
+                        AITestClass.orgSetTimeout(function() {
+                            resolve({
+                                headers: new Headers(),
+                                ok: true,
+                                body: "ab",
+                                bodyUsed: false,
+                                redirected: false,
+                                status: 200,
+                                statusText: "Hello",
+                                trailer: null,
+                                type: "basic",
+                                url: "https://httpbin.org/status/200",
+                                clone: () => null,
+                                arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+                                blob: () => Promise.resolve(new Blob()),
+                                bytes: () => Promise.resolve(new Uint8Array()),
+                                formData: () => Promise.resolve(new FormData()),
+                                json: () => Promise.resolve({}),
+                                text: () => Promise.resolve("ab")
+                            } as unknown as Response);
+                        }, 50);
+                        return result;
+                    };
+                    return fetchCalls;
+                };
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = { 
+                    instrumentationKey: "instrumentationKey", 
+                    disableFetchTracking: false,
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+                            enableRequestHeaderTracking: true
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                // Use test hook to simulate the correct url location host to enable correlation headers
+                this._ajax["_currentWindowHost"] = "httpbin.org";
+
+                // Set up trace context with known values
+                let traceCtx = appInsightsCore.getTraceCtx();
+                let originalTraceId = generateW3CId();
+                let originalSpanId = generateW3CId().substring(0, 16);
+                traceCtx!.setTraceId(originalTraceId);
+                traceCtx!.setSpanId(originalSpanId);
+
+                // Verify initial state
+                Assert.equal(originalTraceId, traceCtx!.getTraceId(), "Initial traceId should be set");
+                Assert.equal(originalSpanId, traceCtx!.getSpanId(), "Initial spanId should be set");
+
+                // Mock fetch function to capture headers
+                let originalFetch = window.fetch;
+                let capturedHeaders: any[] = [];
+                
+                window.fetch = function(input: any, init?: any) {
+                    capturedHeaders.push({
+                        input: input,
+                        init: init,
+                        headers: init ? new Headers(init.headers || {}) : new Headers()
+                    });
+                    return Promise.resolve({
+                        ok: true,
+                        status: 200,
+                        headers: new Headers(),
+                        json: () => Promise.resolve({}),
+                        text: () => Promise.resolve("response")
+                    } as Response);
+                };
+
+                try {
+                    // Act - make first fetch request (this should trigger header addition)
+                    fetch("https://httpbin.org/status/200", {
+                        method: "GET",
+                        headers: { "Custom-Header": "Value1" }
+                    });
+
+                    // Act - make second fetch request  
+                    fetch("https://httpbin.org/api/test", {
+                        method: "POST", 
+                        headers: { "Custom-Header": "Value2" }
+                    });
+
+                    // Verify trace context is unchanged
+                    Assert.equal(originalTraceId, traceCtx!.getTraceId(), "TraceId should remain unchanged");
+                    Assert.equal(originalSpanId, traceCtx!.getSpanId(), "SpanId should remain unchanged");
+
+                    // We should have 2 captured fetch calls
+                    Assert.equal(2, capturedHeaders.length, "Should have captured 2 fetch calls");
+
+                    if (capturedHeaders.length >= 2) {
+                        let firstHeaders = capturedHeaders[0].headers;
+                        let secondHeaders = capturedHeaders[1].headers;
+
+                        // Both should have traceparent headers if correlation is enabled
+                        if (firstHeaders.has(RequestHeaders.traceParentHeader) && secondHeaders.has(RequestHeaders.traceParentHeader)) {
+                            let firstTraceParent = firstHeaders.get(RequestHeaders.traceParentHeader);
+                            let secondTraceParent = secondHeaders.get(RequestHeaders.traceParentHeader);
+                            
+                            let firstParts = firstTraceParent.split('-');
+                            let secondParts = secondTraceParent.split('-');
+
+                            if (firstParts.length === 4 && secondParts.length === 4) {
+                                let firstSpanId = firstParts[2];
+                                let secondSpanId = secondParts[2];
+
+                                // Validate spanId isolation
+                                Assert.notEqual(originalSpanId, firstSpanId, "First fetch spanId should differ from context");
+                                Assert.notEqual(originalSpanId, secondSpanId, "Second fetch spanId should differ from context");
+                                Assert.notEqual(firstSpanId, secondSpanId, "Each fetch should have unique spanId");
+                                
+                                // Validate traceId consistency
+                                Assert.equal(originalTraceId, firstParts[1], "First fetch should use same traceId");
+                                Assert.equal(originalTraceId, secondParts[1], "Second fetch should use same traceId");
+                            }
+                        }
+                    }
+
+                } finally {
+                    // Restore original fetch
+                    window.fetch = originalFetch;
+                }
+
+                // Final verification
+                Assert.equal(originalTraceId, traceCtx!.getTraceId(), "TraceId should remain unchanged at end");
+                Assert.equal(originalSpanId, traceCtx!.getSpanId(), "SpanId should remain unchanged at end");
+            }
         })
 
         this.testCase({
@@ -3074,7 +3359,7 @@ export class AjaxTests extends AITestClass {
 
                 // Assert that the W3C header is included
                 Assert.equal(true, spy.calledWith(RequestHeaders.traceParentHeader, expectedTraceParent)); // W3C
-                Assert.equal(expectedTraceParent, (xhr as FakeXMLHttpRequest).requestHeaders[RequestHeaders.traceParentHeader], "Validate the actual header sent");
+                Assert.equal(expectedTraceParent, (xhr as FakeXMLHttpRequest).requestHeaders[RequestHeaders.traceParentHeader], "Validate the actual header sent - actual: [" + (xhr as FakeXMLHttpRequest).requestHeaders[RequestHeaders.traceParentHeader] + "], expected parent [" + expectedTraceParent + "]");
 
                 // Emulate response
                 (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
@@ -3927,54 +4212,5 @@ export class AjaxFrozenTests extends AITestClass {
     }
 }
 
-class TestChannelPlugin implements IChannelControls {
 
-    public isFlushInvoked = false;
-    public isUnloadInvoked = false;
-    public isTearDownInvoked = false;
-    public isResumeInvoked = false;
-    public isPauseInvoked = false;
 
-    constructor() {
-        this.processTelemetry = this._processTelemetry.bind(this);
-    }
-    public pause(): void {
-        this.isPauseInvoked = true;
-    }
-
-    public resume(): void {
-        this.isResumeInvoked = true;
-    }
-
-    public teardown(): void {
-        this.isTearDownInvoked = true;
-    }
-
-    flush(async?: boolean, callBack?: () => void): void {
-        this.isFlushInvoked = true;
-        if (callBack) {
-            callBack();
-        }
-    }
-
-    public processTelemetry;
-
-    public identifier = "Sender";
-
-    setNextPlugin(next: ITelemetryPlugin) {
-        // no next setup
-    }
-
-    public priority: number = 1001;
-
-    public initialize = (config: IConfiguration) => {
-    }
-
-    private _processTelemetry(env: ITelemetryItem) {
-
-    }
-}
-
-class TestAjaxMonitor extends AjaxMonitor {
-
-}
