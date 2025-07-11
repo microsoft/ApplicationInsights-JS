@@ -16,7 +16,7 @@ on:
     branches: [ "main", "master", "beta", "Release*", "release*", "*-legacy", "legacy-v1" ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "main", "master", "beta", "Release*", "release*", "*-legacy", "legacy-v1" ]
+    branches: [ "main", "master", "beta", "Release*", "release*", "*-legacy", "legacy-v1", "otel-sdk" ]
   schedule:
     - cron: '15 17 * * 2'  # Every Tuesday at 17:15 UTC
 
