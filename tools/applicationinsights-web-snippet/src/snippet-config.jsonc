@@ -7,6 +7,10 @@
     crossOrigin: "anonymous", // When supplied this will add the provided value as the cross origin attribute on the script tag
     // onInit: null, // Once the application insights instance has loaded and initialized this callback function will be called with 1 argument -- the sdk instance (DO NOT ADD anything to the sdk.queue -- As they won't get called)
     // sri: false, // Custom optional value to specify whether fetching the snippet from integrity file and do integrity check 
+    // pl: false, // Custom optional value to specify whether to enable the trusted type policy check on snippet
+    // pn: "aiPolicy", // Custom optional value to specify the name of the trusted type policy that would be implemented on the snippet, default is "aiPolicy"
+    // ttp: null, // Custom optional value to specify the trusted type policy that would be applied on the snippet src
+    // nt: null, // Custom optional value to specify the nounce tag value that would be applied on the script when we drop it on the page
     cfg: { // Application Insights Configuration
         connectionString: "YOUR_CONNECTION_STRING"
     }

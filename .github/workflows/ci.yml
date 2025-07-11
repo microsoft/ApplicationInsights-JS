@@ -5,9 +5,9 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ main, master, beta, Release2.7, release-3.0 ]
+    branches: [ main, master, beta, Release2.7, release-3.0, otel-sdk ]
   pull_request:
-    branches: [ main, master, beta, Release2.7, release-3.0 ]
+    branches: [ main, master, beta, Release2.7, release-3.0, otel-sdk ]
   merge_group:
     branches: [ "main", "master", "beta", "Release*", "release*", "*-legacy", "legacy-v1" ]
 

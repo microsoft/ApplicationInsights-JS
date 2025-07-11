@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-web",
     "description": "Microsoft Application Insights JavaScript SDK",
-    "version": "3.3.8",
+    "version": "3.3.9",
     "keywords": [
         "browser performance monitoring",
         "script errors",
@@ -69,6 +69,7 @@
         "grunt-contrib-connect": "^3.0.0",
         "grunt-contrib-copy": "^1.0.0",
         "grunt-contrib-uglify": "^5.2.1",
+        "eventemitter2": "6.4.9",
         "puppeteer": "^24.8.2",
         "request": "^2.88.2",
         "rollup": "^3.20.0",
