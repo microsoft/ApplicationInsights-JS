@@ -811,6 +811,23 @@ module.exports = function (grunt) {
                 }
             }
         }));
+
+        // Additional setup for lint-fix task
+        function getLintFixTasks() {
+            let packages = [
+                "core", "common", "appinsights", "aisku", "aiskulite", "perfmarkmeasure", "properties",
+                "cfgsync", "deps", "debugplugin", "aichannel", "offlinechannel", "teechannel", 
+                "1dsCore", "1dsPost", "rollupuglify", "rollupes5", "shims", "chrome-debug-extension", 
+                "applicationinsights-web-snippet", "clickanalytics", "osplugin"
+            ];
+            
+            let tasks = [];
+            packages.forEach(function(pkg) {
+                tasks.push("eslint-ts:" + pkg + "-lint-fix");
+            });
+            
+            return tasks;
+        }
     
         grunt.event.on('qunit.testStart', function (name) {
             grunt.log.ok('Running test: ' + name);
@@ -823,8 +840,8 @@ module.exports = function (grunt) {
         grunt.loadNpmTasks('grunt-contrib-copy');
     
         grunt.loadTasks('./tools/grunt-tasks');
-        grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes5", "ts:rollupes5test", "qunit:rollupes5", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
         
+        grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes5", "ts:rollupes5test", "qunit:rollupes5", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
 
         grunt.registerTask("core", tsBuildActions("core", true));
         grunt.registerTask("core-min", minTasks("core"));
@@ -964,6 +981,9 @@ module.exports = function (grunt) {
          grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
          grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
          grunt.registerTask("example-cfgsync", tsBuildActions("example-cfgsync"));
+
+        // Register the lint-fix task to run ESLint fix on all packages
+        grunt.registerTask("lint-fix", getLintFixTasks());
      } catch (e) {
          console.error(e);
          console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
