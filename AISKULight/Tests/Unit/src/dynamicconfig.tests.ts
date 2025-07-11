@@ -164,7 +164,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                     this._ai.flush();
                     this.clock.tick(10);
                 })
-                .concat(this.waitForException(1))
+                .add(this.waitForException(1))
                 .add(() => {
                     let request = this.genericSpy.getCall(0).args[0];
                     let gzipData = request.data;
@@ -198,7 +198,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                     this._ai.flush();
                     this.clock.tick(10);
                 })
-                .concat(this.waitForException(1))
+                .add(this.waitForException(1))
                 .add(() => {
                     let request = this.genericSpy.getCall(0).args[0];
                     let gzipData = request.data;
