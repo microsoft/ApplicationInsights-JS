@@ -61,7 +61,7 @@ export const enum eRequestHeaders {
     requestContextHeaderLowerCase = 8
 }
 
-export const RequestHeaders = (/* @__PURE__ */createValueMap<typeof eRequestHeaders, IRequestHeaders & {
+export const RequestHeaders = /* @__PURE__ */ createValueMap<typeof eRequestHeaders, IRequestHeaders & {
     // Defined the enum lookups
     [eRequestHeaders.requestContextHeader]: "Request-Context",
     [eRequestHeaders.requestContextTargetKey]: "appId",
@@ -92,5 +92,5 @@ export const RequestHeaders = (/* @__PURE__ */createValueMap<typeof eRequestHead
     sdkContextHeader: [ eRequestHeaders.sdkContextHeader, "Sdk-Context"],
     sdkContextHeaderAppIdRequest: [ eRequestHeaders.sdkContextHeaderAppIdRequest, "appId"],
     requestContextHeaderLowerCase: [ eRequestHeaders.requestContextHeaderLowerCase, "request-context"]
-}));
+});
 
