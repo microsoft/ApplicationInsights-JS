@@ -94,37 +94,40 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
         });
         
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Init: init with cs promise",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
-
-                // unload previous one first
-                let oriInst = this._ai;
-                if (oriInst && oriInst.unload) {
-                    // force unload
-                    oriInst.unload(false);
-                }
-        
-                this._config = this._getTestConfig(this._sessionPrefix);
-                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
-                this._config.connectionString = csPromise;
-                this._config.initTimeOut= 80000;
-                this._ctx.csPromise = csPromise;
-
-
-                let init = new ApplicationInsights(this._config);
-                this._ai = init;
-                let config = this._ai.config;
-                
-                
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let csPromise = this._ctx.csPromise;
-                let config = this._ai.config;
-                let ikey = config.instrumentationKey;
+            test: () => {
+                return this._asyncQueue().add(() => {
+                    // unload previous one first
+                    let oriInst = this._ai;
+                    if (oriInst && oriInst.unload) {
+                        // force unload
+                        oriInst.unload(false);
+                    }
             
-                if (csPromise.state === "resolved" && isString(ikey)) {
+                    this._config = this._getTestConfig(this._sessionPrefix);
+                    let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                    this._config.connectionString = csPromise;
+                    this._config.initTimeOut= 80000;
+                    this._ctx.csPromise = csPromise;
+
+                    let init = new ApplicationInsights(this._config);
+                    this._ai = init;
+                    let config = this._ai.config;
+                })
+                .concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    let csPromise = this._ctx.csPromise;
+                    let config = this._ai.config;
+                    let ikey = config.instrumentationKey;
+                
+                    if (csPromise.state === "resolved" && isString(ikey)) {
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000))
+                .add(() => {
+                    let config = this._ai.config;
                     Assert.equal("testIkey", config.instrumentationKey, "ikey should be set");
                     Assert.equal("testUrl/v2/track", config.endpointUrl ,"endpoint shoule be set");
                     let sender = this._ai.getPlugin("AppInsightsChannelPlugin").plugin;
@@ -133,20 +136,16 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                     Assert.equal("testIkey", senderIkey, "sender ikey is set from connection string");
                     let senderUrl = senderConfig.endpointUrl;
                     Assert.equal("testUrl/v2/track", senderUrl, "sender endpoint url is set from connection string");
-                    
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "zip test: gzip encode is working and content-encode header is set (feature opt-in)",
-            stepDelay: 10,
             useFakeTimers: true,
             useFakeServer: true,
-            steps: [
-                () => {
+            test: () => {
+                return this._asyncQueue().add(() => {
                     this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
                     this._ai.config.featureOptIn["zipPayload"] = { mode: 3 };
                     this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
@@ -164,54 +163,51 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                     this._ai.track(telemetryItem);
                     this._ai.flush();
                     this.clock.tick(10);
-                }].concat(PollingAssert.createPollingAssert(() => {
-                    if (this.genericSpy.called){
-                        let request = this.genericSpy.getCall(0).args[0];
-                        let gzipData = request.data;
-                        QUnit.assert.ok(gzipData, "data should be set");
-                        QUnit.assert.equal(true, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should be gzip encoded");
-                        QUnit.assert.equal(request.headers["Content-Encoding"], "gzip", "telemetry should be gzip encoded");
-                        return true;
-                    }
-                    return false;
-                }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
-            });
-
-            this.testCaseAsync({
-                name: "zip test: gzip encode will not working (feature opt-in is not set)",
-                stepDelay: 10,
-                useFakeTimers: true,
-                useFakeServer: true,
-                steps: [
-                    () => {
-                        this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
-                        this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
-                            httpXHROverride: this.xhrOverride,
-                                    alwaysUseXhrOverride: true
-                        }
-                        this.clock.tick(10);
-                        const telemetryItem: ITelemetryItem = {
-                            name: 'fake item with some really long name to take up space quickly',
-                            iKey: 'iKey',
-                            baseType: 'some type',
-                            baseData: {}
-                        };
-    
-                        this._ai.track(telemetryItem);
-                        this._ai.flush();
-                        this.clock.tick(10);
-                    }].concat(PollingAssert.createPollingAssert(() => {
-                        if (this.genericSpy.called){
-                            let request = this.genericSpy.getCall(0).args[0];
-                            let gzipData = request.data;
-                            QUnit.assert.ok(gzipData, "data should be set");
-                            QUnit.assert.equal(false, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should not be gzip encoded");
-                            QUnit.assert.equal(request.headers["Content-Encoding"], undefined, "telemetry should not be gzip encoded");
-                            return true;
-                        }
-                        return false;
-                    }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                })
+                .add(this.waitForException(1))
+                .add(() => {
+                    let request = this.genericSpy.getCall(0).args[0];
+                    let gzipData = request.data;
+                    QUnit.assert.ok(gzipData, "data should be set");
+                    QUnit.assert.equal(true, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should be gzip encoded");
+                    QUnit.assert.equal(request.headers["Content-Encoding"], "gzip", "telemetry should be gzip encoded");
                 });
+            }
+        });
+
+        this.testCase({
+            name: "zip test: gzip encode will not working (feature opt-in is not set)",
+            useFakeTimers: true,
+            useFakeServer: true,
+            test: () => {
+                return this._asyncQueue().add(() => {
+                    this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                    this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
+                        httpXHROverride: this.xhrOverride,
+                                alwaysUseXhrOverride: true
+                    }
+                    this.clock.tick(10);
+                    const telemetryItem: ITelemetryItem = {
+                        name: 'fake item with some really long name to take up space quickly',
+                        iKey: 'iKey',
+                        baseType: 'some type',
+                        baseData: {}
+                    };
+
+                    this._ai.track(telemetryItem);
+                    this._ai.flush();
+                    this.clock.tick(10);
+                })
+                .add(this.waitForException(1))
+                .add(() => {
+                    let request = this.genericSpy.getCall(0).args[0];
+                    let gzipData = request.data;
+                    QUnit.assert.ok(gzipData, "data should be set");
+                    QUnit.assert.equal(false, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should not be gzip encoded");
+                    QUnit.assert.equal(request.headers["Content-Encoding"], undefined, "telemetry should not be gzip encoded");
+                });
+            }
+        });
 
     }
 
@@ -227,6 +223,32 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                 Assert.equal("function", typeof this._ai[flushMethod], `${flushMethod} is a function`);
             }
         });
+    }
+
+    private asserts(expectedCount: number) {
+        return PollingAssert.asyncTaskPollingAssert(() => {
+            if (this.genericSpy && this.genericSpy.called) {
+                let argCount = 0;
+                this.genericSpy.args.forEach(call => {
+                    argCount += call.length;
+                });
+                return argCount >= expectedCount;
+            }
+            return false;
+        }, "Wait for expected calls: " + expectedCount + " " + new Date().toISOString(), 15, 1000);
+    }
+
+    private waitForException(expectedCount: number) {
+        return PollingAssert.asyncTaskPollingAssert(() => {
+            if (this.genericSpy && this.genericSpy.called) {
+                let argCount = 0;
+                this.genericSpy.args.forEach(call => {
+                    argCount += call.length;
+                });
+                return argCount >= expectedCount;
+            }
+            return false;
+        }, "Wait for exception calls: " + expectedCount + " " + new Date().toISOString(), 15, 1000);
     }
 
 }
