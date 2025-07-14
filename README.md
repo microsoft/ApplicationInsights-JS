@@ -523,67 +523,6 @@ const appInsights = new ApplicationInsights({
 ```
 See [feature opt-in status](https://microsoft.github.io/ApplicationInsights-JS/WebConfig) for more details.
 
-### Page Unload and Visibility Event Handling
-
-Application Insights SDK uses page lifecycle events to reliably send telemetry data before your page closes or navigates away. These events are essential for ensuring no telemetry data is lost during navigation, page refreshes, or tab/browser closures.
-
-**What these configurations do:**
-- Control which browser events the SDK uses to detect when the browser is about to unload, navigate away, become unresponsive, or get hibernated (especially on mobile)
-- Ensure all batched events are sent and not lost due to the browser closing or the user navigating away
-- Affect ALL telemetry types (page views, events, dependencies, exceptions, etc.)
-- Allow you to avoid deprecated event warnings (from jQuery 3.7.1+ or Chrome) while maintaining functionality
-
-**About visibility state:**
-When a browser tab becomes hidden (switching to another tab) or visible (returning to the tab), the browser fires "visibilitychange" events with document.visibilityState changing to "hidden" or "visible". The SDK uses these events to optimize telemetry sending.
-
-```js
-const appInsights = new ApplicationInsights({
-  config: {
-    connectionString: 'YOUR_CONNECTION_STRING_GOES_HERE',
-    // Disable the deprecated 'unload' event to avoid jQuery 3.7.1+ deprecation warnings
-    // This also prevents Chrome's warnings about the unload event
-    disablePageUnloadEvents: ["unload"],
-    /* ...Other Configuration Options... */
-  }
-});
-appInsights.loadAppInsights();
-appInsights.trackPageView();
-```
-
-For more detailed information about browser compatibility and configuration options, see the [Page Unload Events documentation](https://microsoft.github.io/ApplicationInsights-JS/docs/PageUnloadEvents.html).
-
-### Feature
-
-You can use the `featureOptIn` configuration to enable or customize specific SDK features.
-
-#### Available Feature Flags
-
-| Name        | Default | Description                                  | Note |
-|-------------|---------|----------------------------------------------|------------|
-| `zipPayload` | `none`*(version 3.3.7)  | Enables compression using the Compression API to zip telemetry payloads. |If this feature is turned on and the CompressionStream API is available, the payload will be compressed using the CompressionStream API. Compression will only occur if the event is asynchronous. For events like unloads, compression will not be applied. Note: if user set payloadPreprocessor, this zip compression will not be applied.|
-
-* A default value of none means the SDK may automatically enable this feature in the future. To explicitly prevent this, set the feature to disable using FeatureOptInMode.disable.
-
-#### How to Enable a Feature
-
-To enable a feature such as `zipPayload`, set the `featureOptIn` property in the SDK configuration as shown below:
-
-```javascript
-const appInsights = new ApplicationInsights({
-    config: {
-        connectionString: "YOUR_CONNECTION_STRING",
-        // Other configuration options...
-        featureOptIn: {
-            zipPayload: {
-                mode: FeatureOptInMode.enable, // Set the opt-in status for the feature
-                blockCdnCfg: false,             // Define whether to block changes from CDN config
-            } as IFeatureOptInDetails
-        }
-    }
-});
-```
-See [feature opt-in status](https://microsoft.github.io/ApplicationInsights-JS/WebConfig) for more details.
-
 
 ### ExtensionConfig
 
