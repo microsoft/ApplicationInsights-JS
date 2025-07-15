@@ -2325,7 +2325,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "FieldRedaction: should handle non-standard port with encoded credentials",
             test: () => {
                 let config = {} as IConfiguration;
-                const url = "https://admin%21:secret%21@server.com:9443/admin";
+                const url = "https://admin%21:secret%21@server.com:9443/admin"; // [SuppressMessage("Microsoft.Security", "CS001:SecretInline", Justification="Test file with mock credentials - not actual secrets")]
                 const redactedLocation = fieldRedaction(url, config);
                 Assert.equal(redactedLocation, "https://REDACTED:REDACTED@server.com:9443/admin",
                     "Non-standard port with encoded credentials should be handled");
