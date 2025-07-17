@@ -103,7 +103,7 @@ export const enum eValueKind {
  * The ValueKind contains a set of values that specify value kind of the property.
  * Either PII (Personal Identifiable Information) or customer content.
  */
-export const ValueKind = createEnumStyle<typeof eValueKind>({
+export const ValueKind = (/* @__PURE__ */ createEnumStyle<typeof eValueKind>({
     NotSet: eValueKind.NotSet,
     Pii_DistinguishedName: eValueKind.Pii_DistinguishedName,
     Pii_GenericData: eValueKind.Pii_GenericData,
@@ -121,7 +121,7 @@ export const ValueKind = createEnumStyle<typeof eValueKind>({
     Pii_IPv6ScrubLastHextets: eValueKind.Pii_IPv6ScrubLastHextets,
     Pii_DropValue: eValueKind.Pii_DropValue,
     CustomerContent_GenericContent: eValueKind.CustomerContent_GenericContent
-});
+}));
 export type ValueKind = number | eValueKind
 
 /**
@@ -151,7 +151,7 @@ export const enum EventLatencyValue {
 /**
  * The EventLatency contains a set of values that specify the latency with which an event is sent.
  */
-export const EventLatency = createEnumStyle<typeof EventLatencyValue>({
+export const EventLatency = (/* @__PURE__ */ createEnumStyle<typeof EventLatencyValue>({
     /**
      * Normal latency.
      */
@@ -170,7 +170,7 @@ export const EventLatency = createEnumStyle<typeof EventLatencyValue>({
      * Added in v3.1.1
      */
     Immediate: EventLatencyValue.Immediate
-});
+}));
 export type EventLatency = number | EventLatencyValue
 
 /**
@@ -192,7 +192,7 @@ export const enum eEventPropertyType {
 /**
  * Enum for property types.
  */
-export const EventPropertyType = createEnumStyle<typeof eEventPropertyType>({
+export const EventPropertyType = (/* @__PURE__ */ createEnumStyle<typeof eEventPropertyType>({
     Unspecified: eEventPropertyType.Unspecified,
     String: eEventPropertyType.String,
     Int32: eEventPropertyType.Int32,
@@ -203,7 +203,7 @@ export const EventPropertyType = createEnumStyle<typeof eEventPropertyType>({
     Bool: eEventPropertyType.Bool,
     Guid: eEventPropertyType.Guid,
     DateTime: eEventPropertyType.DateTime
-});
+}));
 export type EventPropertyType = number | eEventPropertyType
 
 /**
@@ -223,7 +223,7 @@ export const enum EventPersistenceValue {
 /**
  * The EventPersistence contains a set of values that specify the event's persistence.
  */
-export const EventPersistence = createEnumStyle<typeof EventPersistenceValue>({
+export const EventPersistence = (/* @__PURE__ */ createEnumStyle<typeof EventPersistenceValue>({
     /**
      * Normal persistence.
      */
@@ -233,7 +233,7 @@ export const EventPersistence = createEnumStyle<typeof EventPersistenceValue>({
      * Critical persistence.
      */
     Critical: EventPersistenceValue.Critical
-});
+}));
 export type EventPersistence = number | EventPersistenceValue;
 
 /**
@@ -289,12 +289,12 @@ export const enum eTraceLevel {
     INFORMATION = 3
 }
 
-export const TraceLevel = createEnumStyle<typeof eTraceLevel>({
+export const TraceLevel = (/* @__PURE__ */ createEnumStyle<typeof eTraceLevel>({
     NONE: eTraceLevel.NONE,
     ERROR: eTraceLevel.ERROR,
     WARNING: eTraceLevel.WARNING,
     INFORMATION: eTraceLevel.INFORMATION
-});
+}));
 export type TraceLevel = number | eTraceLevel;
 
 export const enum _eExtendedInternalMessageId {

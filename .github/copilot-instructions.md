@@ -23,6 +23,12 @@ This is the **Microsoft Application Insights JavaScript SDK** - a browser-based 
 
 ## Code Style & Patterns
 
+### Required Before Each Commit
+- Do not commit any changes that are only end-of-file whitespace changes
+- Ensure all TypeScript files are formatted and imports are reordered correctly by running `npm run lint-fix` before committing
+  - This will apply ESLint fixes to all TypeScript files
+  - It will also reorder imports to maintain consistent style
+
 ### TypeScript/JavaScript Conventions
 - Use **ES5-compatible** syntax for browser support and target ES5 for modern browsers
 - Prefer `function` declarations over arrow functions for better IE compatibility
