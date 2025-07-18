@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import {
-    IDiagnosticLogger, IDistributedTraceContext, arrForEach, arrIndexOf, dateNow, getPerformance, isNullOrUndefined, isValidSpanId,
-    isValidTraceId
+    IDiagnosticLogger, IDistributedTraceContext, arrForEach, arrIndexOf, createDistributedTraceContext, dateNow, getPerformance,
+    isNullOrUndefined
 } from "@microsoft/applicationinsights-core-js";
 import { strIndexOf } from "@nevware21/ts-utils";
 import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "./Constants";
@@ -180,42 +180,19 @@ export function dateTimeUtilsDuration(start: number, end: number): number {
  * @param telemetryTrace - The telemetryTrace instance that is being wrapped
  * @param parentCtx - An optional parent distributed trace instance, almost always undefined as this scenario is only used in the case of multiple property handlers.
  * @returns A new IDistributedTraceContext instance that is backed by the telemetryTrace or temporary object
+ * @deprecated This function is deprecated and will be removed in a future version. Use the createDistributedTraceContext function instead and set the necessary properties
+ * on the context object directly.
  */
 export function createDistributedTraceContextFromTrace(telemetryTrace?: ITelemetryTrace, parentCtx?: IDistributedTraceContext): IDistributedTraceContext {
     let trace: ITelemetryTrace = telemetryTrace || {};
 
-    return {
-        getName: (): string => {
-            return trace.name;
-        },
-        setName: (newValue: string): void => {
-            parentCtx && parentCtx.setName(newValue);
-            trace.name = newValue;
-        },
-        getTraceId: (): string => {
-            return trace.traceID;
-        },
-        setTraceId: (newValue: string): void => {
-            parentCtx && parentCtx.setTraceId(newValue);
-            if (isValidTraceId(newValue)) {
-                trace.traceID = newValue
-            }
-        },
-        getSpanId: (): string => {
-            return trace.parentID;
-        },
-        setSpanId: (newValue: string): void => {
-            parentCtx && parentCtx.setSpanId(newValue);
-            if (isValidSpanId(newValue)) {
-                trace.parentID = newValue
-            }
-        },
-        getTraceFlags: (): number => {
-            return trace.traceFlags;
-        },
-        setTraceFlags: (newTraceFlags?: number): void => {
-            parentCtx && parentCtx.setTraceFlags(newTraceFlags);
-            trace.traceFlags = newTraceFlags
-        }
-    };
+    let traceCtx: IDistributedTraceContext = createDistributedTraceContext(parentCtx);
+    if (telemetryTrace) {
+        traceCtx.pageName = telemetryTrace.name || traceCtx.pageName || ""; // The name of the page
+        traceCtx.traceId = telemetryTrace.traceID || traceCtx.traceId || ""; // 16 byte hex string
+        traceCtx.spanId = telemetryTrace.parentID || traceCtx.spanId || ""; // 8 byte hex string
+        traceCtx.traceFlags = (!isNullOrUndefined(telemetryTrace.traceFlags) ? telemetryTrace.traceFlags : traceCtx.traceFlags) || 0; // 1 byte hex string
+    }
+
+    return traceCtx
 }

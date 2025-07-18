@@ -1,4 +1,4 @@
-﻿import { SinonStub } from "sinon";
+import { SinonStub } from "sinon";
 import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
 import { createAsyncResolvedPromise, createSyncPromise } from "@nevware21/ts-async";
 import { AjaxMonitor } from "../../../src/ajax";
@@ -9,8 +9,9 @@ import {
     ActiveStatus
 } from "@microsoft/applicationinsights-core-js";
 import { IDependencyListenerDetails } from "../../../src/DependencyListener";
+import { TestChannelPlugin } from "./TestChannelPlugin";
 import { FakeXMLHttpRequest } from "@microsoft/ai-test-framework";
-import { setBypassLazyCache, strLeft } from "@nevware21/ts-utils";
+import { dumpObj, isNullOrUndefined, setBypassLazyCache, strLeft } from "@nevware21/ts-utils";
 
 const AJAX_DATA_CONTAINER = "_ajaxData";
 
@@ -651,6 +652,8 @@ export class AjaxTests extends AITestClass {
                 let traceCtx = appInsightsCore.getTraceCtx();
                 let expectedTraceId = generateW3CId();
                 let expectedSpanId = generateW3CId().substring(0, 16);
+
+                // Note: Replaces the global current traceId and spanId with new values
                 traceCtx!.setTraceId(expectedTraceId);
                 traceCtx!.setSpanId(expectedSpanId);
 
@@ -663,6 +666,7 @@ export class AjaxTests extends AITestClass {
                 let newExpectedTraceId = generateW3CId();
                 let newExpectedSpanId = generateW3CId().substring(0, 16);
 
+                // Note: Replaces the global current traceId and spanId with new values
                 traceCtx!.setTraceId(newExpectedTraceId);
                 traceCtx!.setSpanId(newExpectedSpanId);
 
@@ -680,10 +684,10 @@ export class AjaxTests extends AITestClass {
                 Assert.equal(2, dependencyFields.length, "trackDependencyDataInternal was called again");
 
                 Assert.equal(expectedTraceId, dependencyFields[0].sysProperties!.trace.traceID, "Check first traceId");
-                Assert.equal(newExpectedTraceId, dependencyFields[1].sysProperties!.trace.traceID, "Check first traceId");
+                Assert.equal(newExpectedTraceId, dependencyFields[1].sysProperties!.trace.traceID, "Check second traceId");
 
                 Assert.equal(expectedSpanId, dependencyFields[0].sysProperties!.trace.parentID, "Check first spanId");
-                Assert.equal(newExpectedSpanId, dependencyFields[1].sysProperties!.trace.parentID, "Check first spanId");
+                Assert.equal(newExpectedSpanId, dependencyFields[1].sysProperties!.trace.parentID, "Check second spanId");
             }
         });
 
@@ -1581,6 +1585,18 @@ export class AjaxTests extends AITestClass {
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
                 let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                let traceCtx = appInsightsCore.getTraceCtx();
+
+                let expectedsysProperties = {
+                    trace: {
+                        traceID: traceCtx!.getTraceId(),
+                        parentID: traceCtx!.getSpanId()
+                    } as any
+                };
+
+                if (!isNullOrUndefined(traceCtx!.getTraceFlags())) {
+                    expectedsysProperties.trace.traceFlags = traceCtx!.getTraceFlags();
+                }
 
                 // Act
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
@@ -1592,7 +1608,7 @@ export class AjaxTests extends AITestClass {
                     Assert.equal(false, throwSpy.called, "We should not have failed internally");
                     Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
                     Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
-                    Assert.equal(undefined, dependencyFields[0].sysProperties, "no system properties");
+                    Assert.deepEqual(expectedsysProperties, dependencyFields[0].sysProperties, "system properties - " + dumpObj(expectedsysProperties));
 
                     fetch(undefined, null).then(() => {
                         // Assert
@@ -1600,7 +1616,7 @@ export class AjaxTests extends AITestClass {
                         Assert.equal(false, throwSpy.called, "We should still not have failed internally");
                         Assert.equal(2, dependencyFields.length, "trackDependencyDataInternal was called");
                         Assert.ok(dependencyFields[1].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
-                        Assert.equal(undefined, dependencyFields[1].sysProperties, "no system properties");
+                        Assert.deepEqual(expectedsysProperties, dependencyFields[1].sysProperties, "system properties - " + dumpObj(expectedsysProperties));
                         testContext.testDone();
                     }, () => {
                         Assert.ok(false, "fetch failed!");
@@ -1712,6 +1728,18 @@ export class AjaxTests extends AITestClass {
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
                 let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                let traceCtx = appInsightsCore.getTraceCtx();
+
+                let expectedsysProperties = {
+                    trace: {
+                        traceID: traceCtx.getTraceId(),
+                        parentID: traceCtx.getSpanId()
+                    } as any
+                };
+
+                if (!isNullOrUndefined(traceCtx.getTraceFlags())) {
+                    expectedsysProperties.trace.traceFlags = traceCtx.getTraceFlags();
+                }
 
                 // Act
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
@@ -1723,7 +1751,7 @@ export class AjaxTests extends AITestClass {
                     Assert.equal(false, throwSpy.called, "We should not have failed internally");
                     Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
                     Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
-                    Assert.equal(undefined, dependencyFields[0].sysProperties, "no system properties");
+                    Assert.deepEqual(expectedsysProperties, dependencyFields[0].sysProperties, "system properties - " + dumpObj(dependencyFields[0].sysProperties));
                     Assert.equal(window.location.href.split("#")[0], dependencyFields[0].dependency.target, "Target is captured.");
 
                     // Assert that the HTTP method was preserved
@@ -2439,11 +2467,12 @@ export class AjaxTests extends AITestClass {
                         Assert.equal(true, headers.has(RequestHeaders.requestContextHeader), "requestContext header shoud be present");
                         Assert.equal(true, headers.has(RequestHeaders.requestIdHeader), "AI header shoud be present"); // AI
                         Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
+                        Assert.equal(false, headers.has(RequestHeaders.traceStateHeader), "traceState should not be present in outbound event");
 
                         Assert.notEqual(undefined, trackHeaders[RequestHeaders.requestIdHeader], "RequestId present in outbound event");
                         Assert.notEqual(undefined, trackHeaders[RequestHeaders.requestContextHeader], "RequestContext present in outbound event");
                         Assert.notEqual(undefined, trackHeaders[RequestHeaders.traceParentHeader], "traceParent present in outbound event");
-
+                        Assert.equal(undefined, trackHeaders[RequestHeaders.traceStateHeader], "traceState should not be present in outbound event");
                     }
 
                     return true;
@@ -3074,7 +3103,7 @@ export class AjaxTests extends AITestClass {
 
                 // Assert that the W3C header is included
                 Assert.equal(true, spy.calledWith(RequestHeaders.traceParentHeader, expectedTraceParent)); // W3C
-                Assert.equal(expectedTraceParent, (xhr as FakeXMLHttpRequest).requestHeaders[RequestHeaders.traceParentHeader], "Validate the actual header sent");
+                Assert.equal(expectedTraceParent, (xhr as FakeXMLHttpRequest).requestHeaders[RequestHeaders.traceParentHeader], "Validate the actual header sent - actual: [" + (xhr as FakeXMLHttpRequest).requestHeaders[RequestHeaders.traceParentHeader] + "], expected parent [" + expectedTraceParent + "]");
 
                 // Emulate response
                 (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
@@ -3927,54 +3956,5 @@ export class AjaxFrozenTests extends AITestClass {
     }
 }
 
-class TestChannelPlugin implements IChannelControls {
 
-    public isFlushInvoked = false;
-    public isUnloadInvoked = false;
-    public isTearDownInvoked = false;
-    public isResumeInvoked = false;
-    public isPauseInvoked = false;
 
-    constructor() {
-        this.processTelemetry = this._processTelemetry.bind(this);
-    }
-    public pause(): void {
-        this.isPauseInvoked = true;
-    }
-
-    public resume(): void {
-        this.isResumeInvoked = true;
-    }
-
-    public teardown(): void {
-        this.isTearDownInvoked = true;
-    }
-
-    flush(async?: boolean, callBack?: () => void): void {
-        this.isFlushInvoked = true;
-        if (callBack) {
-            callBack();
-        }
-    }
-
-    public processTelemetry;
-
-    public identifier = "Sender";
-
-    setNextPlugin(next: ITelemetryPlugin) {
-        // no next setup
-    }
-
-    public priority: number = 1001;
-
-    public initialize = (config: IConfiguration) => {
-    }
-
-    private _processTelemetry(env: ITelemetryItem) {
-
-    }
-}
-
-class TestAjaxMonitor extends AjaxMonitor {
-
-}

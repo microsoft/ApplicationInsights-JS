@@ -7,10 +7,73 @@ import { IRequestContext } from "./IRequestContext";
 
 export interface ICorrelationConfig {
     enableCorsCorrelation: boolean;
+
+    /**
+     * [Optional] Domains to be excluded from correlation headers.
+     * To override or discard the default, add an array with all domains to be excluded or
+     * an empty array to the configuration.
+     *
+     * @example
+     * ```ts
+     * import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+     * const appInsights = new ApplicationInsights({
+     *    config: {
+     *       connectionString: 'InstrumentationKey=YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+     *       extensionConfig: {
+     *          AjaxDependencyPlugin: {
+     *              // Both arrays of strings are used to match the request URL against the
+     *              // current host and the request URL to determine if correlation headers
+     *              // The strings are converted to RegExp objects by translating
+     *              // - `.` to `\\.` (to match a literal dot)
+     *              // - `*` to `.*` (to match any character)
+     *              // - `\` to `\\` (to match a literal slash)
+     *              // All other characters are ignored and passed to the RegExp constructor
+     *              correlationHeaderExcludedDomains: ["test", "*.azure.com", "ignore.microsoft.com"],
+     *              correlationHeaderDomains: ["azure.com", "prefix.bing.com", "*.microsoft.com", "example.com"]
+     *          }
+     *       }
+     * });
+     * appInsights.loadAppInsights();
+     * appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
+     * ```
+     */
     correlationHeaderExcludedDomains: string[];
+
+    /**
+     * [Optional] Domains to be included in correlation headers.
+     * To override or discard the default, add an array with all domains to be included or
+     * an empty array to the configuration.
+     *
+     * @example
+     * ```ts
+     * import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+     * const appInsights = new ApplicationInsights({
+     *    config: {
+     *       connectionString: 'InstrumentationKey=YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+     *       extensionConfig: {
+     *          AjaxDependencyPlugin: {
+     *              // Values MUST be RegExp objects
+     *              correlationHeaderExcludePatterns: [/*\.azure.com/, /prefix.bing.com/, /.*\.microsoft.com/, /example.com/]
+     *          }
+     *       }
+     * });
+     * appInsights.loadAppInsights();
+     * appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
+     * ```
+     */
     correlationHeaderExcludePatterns?: RegExp[];
     disableCorrelationHeaders: boolean;
+
+    /**
+     * The distributed tracing mode to use for this configuration.
+     * Defaults to AI_AND_W3C.
+     * This is used to determine which headers are sent with requests and how the
+     * telemetry is correlated across services.
+     * @default AI_AND_W3C
+     * @see {@link DistributedTracingModes}
+     */
     distributedTracingMode: DistributedTracingModes;
+    
     maxAjaxCallsPerView: number;
     disableAjaxTracking: boolean;
     disableFetchTracking: boolean;
@@ -41,6 +104,35 @@ export interface ICorrelationConfig {
      */
     ajaxPerfLookupDelay?: number;
 
+    /**
+     * [Optional] Domains to be excluded from correlation headers.
+     * To override or discard the default, add an array with all domains to be excluded or
+     * an empty array to the configuration.
+     *
+     * @example
+     * ```ts
+     * import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+     * const appInsights = new ApplicationInsights({
+     *    config: {
+     *       connectionString: 'InstrumentationKey=YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+     *       extensionConfig: {
+     *          AjaxDependencyPlugin: {
+     *              // Both arrays of strings are used to match the request URL against the
+     *              // current host and the request URL to determine if correlation headers
+     *              // The strings are converted to RegExp objects by translating
+     *              // - `.` to `\\.` (to match a literal dot)
+     *              // - `*` to `.*` (to match any character)
+     *              // - `\` to `\\` (to match a literal slash)
+     *              // All other characters are ignored and passed to the RegExp constructor
+     *              correlationHeaderExcludedDomains: ["test", "*.azure.com", "ignore.microsoft.com"],
+     *              correlationHeaderDomains: ["azure.com", "prefix.bing.com", "*.microsoft.com", "example.com"]
+     *          }
+     *       }
+     * });
+     * appInsights.loadAppInsights();
+     * appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
+     * ```
+     */
     correlationHeaderDomains?: string[];
 
     /**
@@ -61,7 +153,7 @@ export interface ICorrelationConfig {
      *         connectionString: 'InstrumentationKey=YOUR_INSTRUMENTATION_KEY_GOES_HERE',
      *         extensions: [dependencyPlugin],
      *         extensionConfig: {
-     *             [dependencyPlugin.identifier]: {
+     *             AjaxDependencyPlugin: {
      *                 ignoreHeaders: [
      *                     "Authorization",
      *                     "X-API-Key",

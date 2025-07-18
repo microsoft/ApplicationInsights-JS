@@ -1,18 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach, isFunction } from "@nevware21/ts-utils";
+import { arrForEach, isFunction, objDefineProps } from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
 import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
 import { IUnloadableComponent } from "../JavaScriptSDK.Interfaces/IUnloadableComponent";
+import { IW3cTraceState } from "../JavaScriptSDK.Interfaces/IW3cTraceState";
+import { IOTelSpanContext } from "../OpenTelemetry/interfaces/trace/IOTelSpanContext";
+import { generateW3CId } from "./CoreUtils";
 import { createElmNodeData } from "./DataCacheHelper";
-import { STR_CORE, STR_PRIORITY, STR_PROCESS_TELEMETRY } from "./InternalConstants";
+import { getLocation } from "./EnvUtils";
+import { STR_CORE, STR_EMPTY, STR_PRIORITY, STR_PROCESS_TELEMETRY, UNDEFINED_VALUE } from "./InternalConstants";
 import { isValidSpanId, isValidTraceId } from "./W3cTraceParent";
+import { createW3cTraceState } from "./W3cTraceState";
 
 export interface IPluginState {
     core?: IAppInsightsCore;
@@ -90,7 +94,7 @@ export function initializePlugins(processContext: IProcessTelemetryContext, exte
 
 export function sortPlugins<T = IPlugin>(plugins:T[]) {
     // Sort by priority
-    return plugins.sort((extA, extB) => {
+    return plugins.sort((extA: any, extB: any) => {
         let result = 0;
         if (extB) {
             let bHasProcess = extB[STR_PROCESS_TELEMETRY];
@@ -137,47 +141,191 @@ export function unloadComponents(components: any | IUnloadableComponent[], unloa
     return _doUnload();
 }
 
+function isDistributedTraceContext(obj: any): obj is IDistributedTraceContext {
+    return obj &&
+        isFunction(obj.getName) &&
+        isFunction(obj.getTraceId) &&
+        isFunction(obj.getSpanId) &&
+        isFunction(obj.getTraceFlags) &&
+        isFunction(obj.setName) &&
+        isFunction(obj.setTraceId) &&
+        isFunction(obj.setSpanId) &&
+        isFunction(obj.setTraceFlags);
+}
 
 /**
- * Creates a IDistributedTraceContext which optionally also "sets" the value on a parent
- * @param parentCtx - An optional parent distributed trace instance
- * @returns A new IDistributedTraceContext instance that uses an internal temporary object
+ * Creates an IDistributedTraceContext instance that ensures a valid traceId is always available.
+ * The traceId will be inherited from the parent context if valid, otherwise a new random W3C trace ID is generated.
+ *
+ * @param parent - An optional parent {@link IDistributedTraceContext} or {@link IOTelSpanContext} to inherit
+ * trace context values from. If provided, the traceId and spanId will be copied from the parent if they are valid.
+ * When the parent is an {@link IDistributedTraceContext}, it will be set as the parentCtx property to maintain
+ * hierarchical relationships and enable parent context updates.
+ * When the parent is an {@link IOTelSpanContext}, the parentCtx will be null because OpenTelemetry span contexts
+ * are read-only data sources that don't support the same hierarchical management methods as IDistributedTraceContext.
+ * The core instance will create a wrapped IDistributedTraceContext instance from the IOTelSpanContext data
+ * to enable Application Insights distributed tracing functionality while maintaining OpenTelemetry compatibility.
+ *
+ * @returns A new IDistributedTraceContext instance with the following behavior:
+ * - **traceId**: Always present - either inherited from parent (if valid) or newly generated W3C trace ID
+ * - **spanId**: Inherited from parent if valid, otherwise empty string
+ * - **traceFlags**: Inherited from parent if available, otherwise undefined
+ * - **pageName**: Inherited from parent context or derived from current location, defaults to "_unknown_"
+ * - **traceState**: Lazily created W3C trace state, inheriting from parent if available
+ *
+ * @remarks
+ * This function ensures consistent distributed tracing by guaranteeing that every context has a valid traceId,
+ * which is essential for the refactored W3C trace state implementation. The spanId may be empty until a
+ * specific span is created, which is normal behavior for trace contexts.
+ *
+ * The distinction between IDistributedTraceContext and IOTelSpanContext parents is important:
+ * - IDistributedTraceContext parents enable bidirectional updates and hierarchical management
+ * - IOTelSpanContext parents are used only for initial data extraction and OpenTelemetry compatibility
  */
-export function createDistributedTraceContext(parentCtx?: IDistributedTraceContext): IDistributedTraceContext {
-    let trace: ITraceParent = {} as ITraceParent;
+export function createDistributedTraceContext(parent?: IDistributedTraceContext | IOTelSpanContext): IDistributedTraceContext {
+    let parentCtx: IDistributedTraceContext = null;
+    let spanContext: IOTelSpanContext = null;
+    let traceId = (parent && isValidTraceId(parent.traceId)) ? parent.traceId : generateW3CId();
+    let spanId = (parent && isValidSpanId(parent.spanId)) ? parent.spanId : STR_EMPTY;
+    let traceFlags = parent ? parent.traceFlags : UNDEFINED_VALUE;
+    let isRemote = parent ? parent.isRemote : false;
+    let pageName = STR_EMPTY;
+    let traceState: IW3cTraceState = null;
 
-    return {
-        getName: (): string => {
-            return (trace as any).name;
-        },
-        setName: (newValue: string): void => {
-            parentCtx && parentCtx.setName(newValue);
-            (trace as any).name = newValue;
-        },
-        getTraceId: (): string => {
-            return trace.traceId;
-        },
-        setTraceId: (newValue: string): void => {
-            parentCtx && parentCtx.setTraceId(newValue);
-            if (isValidTraceId(newValue)) {
-                trace.traceId = newValue
-            }
-        },
-        getSpanId: (): string => {
-            return trace.spanId;
-        },
-        setSpanId: (newValue: string): void => {
-            parentCtx && parentCtx.setSpanId(newValue);
-            if (isValidSpanId(newValue)) {
-                trace.spanId = newValue
-            }
-        },
-        getTraceFlags: (): number => {
-            return trace.traceFlags;
-        },
-        setTraceFlags: (newTraceFlags?: number): void => {
-            parentCtx && parentCtx.setTraceFlags(newTraceFlags);
-            trace.traceFlags = newTraceFlags
+    if (parent) {
+        if (isDistributedTraceContext(parent)) {
+            parentCtx = parent;
+            pageName = parentCtx.getName();
+        } else {
+            spanContext = parent;
         }
+    }
+
+    if (!pageName) {
+        pageName = "_unknown_";
+        // If we have a location, use that as the page name
+        let location = getLocation();
+        if (location && location.pathname) {
+            pageName = location.pathname + (location.hash || "");
+        }
+    }
+
+    function _getName(): string {
+        return pageName;
+    }
+
+    function _setPageNameFn(updateParent: boolean) {
+        return function (newValue: string): void {
+            if (updateParent) {
+                parentCtx && parentCtx.setName(newValue);
+            }
+
+            pageName = newValue;
+        };
+    }
+
+    function _getTraceId(): string {
+        return traceId;
+    }
+
+    function _setTraceIdFn(updateParent: boolean) {
+        return function (newValue: string): void {
+            if (updateParent) {
+                parentCtx && parentCtx.setTraceId(newValue);
+            }
+
+            if (isValidTraceId(newValue)) {
+                traceId = newValue
+            }
+        };
+    }
+
+    function _getSpanId(): string {
+        return spanId;
+    }
+
+    function _setSpanIdFn(updateParent: boolean) {
+        return function (newValue: string): void {
+            if (updateParent) {
+                parentCtx && parentCtx.setSpanId(newValue);
+            }
+
+            if (isValidSpanId(newValue)) {
+                spanId = newValue
+            }
+        };
+    }
+
+    function _getTraceFlags(): number {
+        return traceFlags;
+    }
+
+    function _setTraceFlagsFn(updateParent: boolean) {
+        return function (newTraceFlags?: number): void {
+            if (updateParent) {
+                parentCtx && parentCtx.setTraceFlags(newTraceFlags);
+            }
+
+            traceFlags = newTraceFlags;
+        };
+    }
+
+    function _getTraceState(): IW3cTraceState {
+        if (!traceState) {
+            if (spanContext && spanContext.traceState) {
+                traceState = createW3cTraceState(spanContext.traceState.serialize() || STR_EMPTY, parentCtx ? parentCtx.traceState : undefined);
+            } else {
+                traceState = createW3cTraceState(STR_EMPTY, parentCtx ? parentCtx.traceState : undefined);
+            }
+        }
+
+        return traceState;
+    }
+
+    let traceCtx: IDistributedTraceContext = {
+        getName: _getName,
+        setName: _setPageNameFn(true),
+        getTraceId: _getTraceId,
+        setTraceId: _setTraceIdFn(true),
+        getSpanId: _getSpanId,
+        setSpanId: _setSpanIdFn(true),
+        getTraceFlags: _getTraceFlags,
+        setTraceFlags: _setTraceFlagsFn(true),
+        traceId,
+        spanId,
+        traceFlags,
+        traceState,
+        isRemote,
+        pageName
     };
+
+    return objDefineProps<IDistributedTraceContext>(traceCtx, {
+        pageName: {
+            g: _getName,
+            s: _setPageNameFn(false)
+        },
+        traceId: {
+            g: _getTraceId,
+            s: _setTraceIdFn(false)
+        },
+        spanId: {
+            g: _getSpanId,
+            s: _setSpanIdFn(false)
+        },
+        traceFlags: {
+            g: _getTraceFlags,
+            s: _setTraceFlagsFn(false)
+        },
+        isRemote: {
+            v: isRemote,
+            w: false
+
+        },
+        traceState: {
+            g: _getTraceState
+        },
+        parentCtx: {
+            g: () => parentCtx
+        }
+    });
 }

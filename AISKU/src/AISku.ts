@@ -790,7 +790,7 @@ export class AppInsightsSku implements IApplicationInsights {
     /**
      * Manually trigger an immediate send of all telemetry still in the buffer using beacon Sender.
      * Fall back to xhr sender if beacon is not supported.
-     * @param [async=true]
+     * @param async - send data asynchronously when true, default is true
      */
     public onunloadFlush(async: boolean = true) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging

@@ -6,6 +6,7 @@ import { SeverityLevelTests } from "./SeverityLevel.tests";
 import { RequestHeadersTests } from "./RequestHeaders.tests";
 import { ThrottleMgrTest } from "./ThrottleMgr.tests";
 import { GlobalTestHooks } from "./GlobalTestHooks.Test";
+import { W3CTraceStateModesTests } from "./W3CTraceStateModes.tests";
 
 export function runTests() {
     new GlobalTestHooks().registerTests();
@@ -16,4 +17,5 @@ export function runTests() {
     new ConnectionStringParserTests().registerTests();
     new SeverityLevelTests().registerTests();
     new RequestHeadersTests().registerTests();
+    new W3CTraceStateModesTests().registerTests();
 }
