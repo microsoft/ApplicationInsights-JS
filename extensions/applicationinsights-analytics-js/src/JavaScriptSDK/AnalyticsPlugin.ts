@@ -22,10 +22,10 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { IAnalyticsConfig } from "./Interfaces/IAnalyticsConfig";
-import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
-import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
-import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
-import { Timing } from "./Timing";
+import { IAppInsightsInternal, IPageViewManager, createPageViewManager } from "./Telemetry/PageViewManager";
+import { IPageViewPerformanceManager, createPageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
+import { IPageVisitTimeManager, createPageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
+import { ITiming, createTiming } from "./Timing";
 
 const strEvent = "event";
 
@@ -106,11 +106,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     constructor() {
         super();
-        let _eventTracking: Timing;
-        let _pageTracking: Timing;
-        let _pageViewManager: PageViewManager;
-        let _pageViewPerformanceManager: PageViewPerformanceManager;
-        let _pageVisitTimeManager: PageVisitTimeManager;
+        let _eventTracking: ITiming;
+        let _pageTracking: ITiming;
+        let _pageViewManager: IPageViewManager;
+        let _pageViewPerformanceManager: IPageViewPerformanceManager;
+        let _pageVisitTimeManager: IPageVisitTimeManager;
         let _preInitTelemetryInitializers: TelemetryInitializerFunction[];
         let _isBrowserLinkTrackingEnabled: boolean;
         let _browserLinkInitializerAdded: boolean;
@@ -570,11 +570,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                     _populateDefaults(config);
     
-                    _pageViewPerformanceManager = new PageViewPerformanceManager(_self.core);
-                    _pageViewManager = new PageViewManager(_self, _extConfig.overridePageViewDuration, _self.core, _pageViewPerformanceManager);
-                    _pageVisitTimeManager = new PageVisitTimeManager(_self.diagLog(), (pageName, pageUrl, pageVisitTime) => trackPageVisitTime(pageName, pageUrl, pageVisitTime))
+                    _pageViewPerformanceManager = createPageViewPerformanceManager(_self.core);
+                    _pageViewManager = createPageViewManager(_self, _extConfig.overridePageViewDuration, _self.core, _pageViewPerformanceManager);
+                    _pageVisitTimeManager = createPageVisitTimeManager(_self.diagLog(), (pageName, pageUrl, pageVisitTime) => trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
-                    _eventTracking = new Timing(_self.diagLog(), "trackEvent");
+                    _eventTracking = createTiming(_self.diagLog(), "trackEvent");
                     _eventTracking.action =
                         (name?: string, url?: string, duration?: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => {
                             if (!properties) {
@@ -590,7 +590,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         }
     
                     // initialize page view timing
-                    _pageTracking = new Timing(_self.diagLog(), "trackPageView");
+                    _pageTracking = createTiming(_self.diagLog(), "trackPageView");
                     _pageTracking.action = (name, url, duration, properties, measurements) => {
     
                         // duration must be a custom property in order for the collector to extract it
