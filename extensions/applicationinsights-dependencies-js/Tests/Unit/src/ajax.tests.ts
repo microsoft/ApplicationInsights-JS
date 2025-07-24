@@ -1826,6 +1826,25 @@ export class AjaxTests extends AITestClass {
             
             timeOut: 10000,
             test: () => {
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                let traceCtx = appInsightsCore.getTraceCtx();
+                let expectedTraceId = generateW3CId();
+                let expectedSpanId = generateW3CId().substring(0, 16);
+                traceCtx!.setTraceId(expectedTraceId);
+                traceCtx!.setSpanId(expectedSpanId);
+
+                this._context.dependencyFields = dependencyFields;
+                this._context.fetchSpy = fetchSpy;
+                this._context.throwSpy = throwSpy;
+                this._context.expectedTraceId = expectedTraceId;
+                this._context.expectedSpanId = expectedSpanId;
+
                 return this._asyncQueue()
                             .add(() => {
                 let fetchCalls = hookFetch((resolve) => {
@@ -1845,20 +1864,16 @@ export class AjaxTests extends AITestClass {
                     }, 0);
                 });
 
-                this._ajax = new AjaxMonitor();
-                let dependencyFields = hookTrackDependencyInternal(this._ajax);
-                let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
-                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
-                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
-                let traceCtx = appInsightsCore.getTraceCtx();
-                let expectedTraceId = generateW3CId();
-                let expectedSpanId = generateW3CId().substring(0, 16);
-                traceCtx!.setTraceId(expectedTraceId);
-                traceCtx!.setSpanId(expectedSpanId);
+                this._context.fetchCalls = fetchCalls;
 
                 // Act
+                let fetchSpy = this._context.fetchSpy;
+                let throwSpy = this._context.throwSpy;
+                let dependencyFields = this._context.dependencyFields;
+                let expectedTraceId = this._context.expectedTraceId;
+                let expectedSpanId = this._context.expectedSpanId;
+                let fetchCalls = this._context.fetchCalls;
+                
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                 fetch("", {method: "post", [DisabledPropertyName]: false}).then(() => {
                     // Assert
@@ -1941,6 +1956,26 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: should create and pass a traceparent header if ai and w3c is enabled with custom headers",
             timeOut: 10000,
             test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
+                    disableFetchTracking: false,
+                    disableAjaxTracking: false,
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                this._context["trackStub"] = trackSpy;
+
+                // Use test hook to simulate the correct url location
+                this._ajax["_currentWindowHost"] = "httpbin.org";
+
                 return this._asyncQueue()
                             .add(() => {
                         let fetchCalls = hookFetch((resolve) => {
@@ -1960,27 +1995,12 @@ export class AjaxTests extends AITestClass {
                             }, 0);
                         });
 
-                        this._ajax = new AjaxMonitor();
-                        let appInsightsCore = new AppInsightsCore();
-                        let coreConfig = {
-                            instrumentationKey: "instrumentationKey",
-                            disableFetchTracking: false,
-                            disableAjaxTracking: false,
-                            extensionConfig: {
-                                "AjaxDependencyPlugin": {
-                                    appId: "appId",
-                                    distributedTracingMode: DistributedTracingModes.AI_AND_W3C
-                                }
-                            }
-                        };
-                        appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                        let trackSpy = this.sandbox.spy(appInsightsCore, "track")
-                        this._context["trackStub"] = trackSpy;
-
-                        // Use test hook to simulate the correct url location
-                        this._ajax["_currentWindowHost"] = "httpbin.org";
+                        this._context.fetchCalls = fetchCalls;
 
                         // Setup
+                        let trackSpy = this._context["trackStub"];
+                        let fetchCalls = this._context.fetchCalls;
+                        
                         let headers = new Headers();
                         headers.append('My-Header', 'Header field');
                         let init = {
@@ -2027,6 +2047,26 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: should create and pass a traceparent header if ai and w3c is enabled with no init param",
             timeOut: 10000,
             test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
+                    disableFetchTracking: false,
+                    disableAjaxTracking: false,
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                this._context["trackStub"] = trackSpy;
+
+                // Use test hook to simulate the correct url location
+                this._ajax["_currentWindowHost"] = "httpbin.org";
+
                 return this._asyncQueue()
                             .add(() => {
                         let fetchCalls = hookFetch((resolve) => {
@@ -2046,27 +2086,12 @@ export class AjaxTests extends AITestClass {
                             }, 0);
                         });
 
-                        this._ajax = new AjaxMonitor();
-                        let appInsightsCore = new AppInsightsCore();
-                        let coreConfig = {
-                            instrumentationKey: "instrumentationKey",
-                            disableFetchTracking: false,
-                            disableAjaxTracking: false,
-                            extensionConfig: {
-                                "AjaxDependencyPlugin": {
-                                    appId: "appId",
-                                    distributedTracingMode: DistributedTracingModes.AI_AND_W3C
-                                }
-                            }
-                        };
-                        appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                        let trackSpy = this.sandbox.spy(appInsightsCore, "track")
-                        this._context["trackStub"] = trackSpy;
-
-                        // Use test hook to simulate the correct url location
-                        this._ajax["_currentWindowHost"] = "httpbin.org";
+                        this._context.fetchCalls = fetchCalls;
 
                         // Setup
+                        let trackSpy = this._context["trackStub"];
+                        let fetchCalls = this._context.fetchCalls;
+                        
                         const url = 'https://httpbin.org/status/200';
 
                         // Act
