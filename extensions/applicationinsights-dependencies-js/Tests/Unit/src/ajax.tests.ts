@@ -2222,8 +2222,6 @@ export class AjaxTests extends AITestClass {
             
             timeOut: 10000,
             test: () => {
-                return this._asyncQueue()
-                            .add(() => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -2257,10 +2255,13 @@ export class AjaxTests extends AITestClass {
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let trackSpy = this.sandbox.spy(appInsightsCore, "track")
                 this._context["trackStub"] = trackSpy;
+                this._context["fetchCalls"] = fetchCalls;
 
                 // Use test hook to simulate the correct url location
                 this._ajax["_currentWindowHost"] = "httpbin.org";
 
+                return this._asyncQueue()
+                            .add(() => {
                 // Setup
                 const url = 'https://httpbin.org/status/200';
 
@@ -2305,8 +2306,6 @@ export class AjaxTests extends AITestClass {
             
             timeOut: 10000,
             test: () => {
-                return this._asyncQueue()
-                            .add(() => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -2340,10 +2339,13 @@ export class AjaxTests extends AITestClass {
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let trackSpy = this.sandbox.spy(appInsightsCore, "track")
                 this._context["trackStub"] = trackSpy;
+                this._context["fetchCalls"] = fetchCalls;
 
                 // Use test hook to simulate the correct url location
                 this._ajax["_currentWindowHost"] = "httpbin.org";
 
+                return this._asyncQueue()
+                            .add(() => {
                 // Setup
                 let headers = new Headers();
                 headers.append('My-Header', 'Header field');
@@ -2394,8 +2396,6 @@ export class AjaxTests extends AITestClass {
             
             timeOut: 10000,
             test: () => {
-                return this._asyncQueue()
-                            .add(() => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -2429,10 +2429,13 @@ export class AjaxTests extends AITestClass {
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let trackSpy = this.sandbox.spy(appInsightsCore, "track")
                 this._context["trackStub"] = trackSpy;
+                this._context["fetchCalls"] = fetchCalls;
 
                 // Use test hook to simulate the correct url location
                 this._ajax["_currentWindowHost"] = "httpbin.org";
 
+                return this._asyncQueue()
+                            .add(() => {
                 // Setup
                 const url = 'https://httpbin.org/status/200';
 
@@ -2477,8 +2480,6 @@ export class AjaxTests extends AITestClass {
             timeOut: 10000,
             useFakeTimers: true,
             test: () => {
-                return this._asyncQueue()
-                            .add(() => {
                 this._context["fetchCalls"] = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -2517,6 +2518,8 @@ export class AjaxTests extends AITestClass {
                 // Use test hook to simulate the correct url location
                 this._ajax["_currentWindowHost"] = "httpbin.org";
 
+                return this._asyncQueue()
+                            .add(() => {
                 // Setup
                 let headers = new Headers();
                 headers.append('My-Header', 'Header field');
@@ -3458,8 +3461,6 @@ export class AjaxPerfTrackTests extends AITestClass {
             name: "AjaxPerf: check that performance tracking is included when enabled for xhr requests with server timing",
             
             test: () => {
-                return this._asyncQueue()
-                            .add(() => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
 
@@ -3480,6 +3481,8 @@ export class AjaxPerfTrackTests extends AITestClass {
                 // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
                 this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
 
+                return this._asyncQueue()
+                            .add(() => {
                 // Act
                 var xhr = new XMLHttpRequest();
 
@@ -3696,8 +3699,6 @@ export class AjaxPerfTrackTests extends AITestClass {
             name: "AjaxPerf: check that performance tracking is included for fetch requests when enabled",
             
             test: () => {
-                return this._asyncQueue()
-                            .add(() => {
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -3736,6 +3737,8 @@ export class AjaxPerfTrackTests extends AITestClass {
                 let trackSpy = this.sandbox.spy(appInsightsCore, "track")
                 this._context["trackStub"] = trackSpy;
 
+                return this._asyncQueue()
+                            .add(() => {
                 // Send fetch request that should trigger a track event when complete
                 Assert.ok(trackSpy.notCalled, "No fetch called yet");
                 fetch("https://httpbin.org/status/200", {method: "post" });
@@ -3773,8 +3776,6 @@ export class AjaxPerfTrackTests extends AITestClass {
             name: "AjaxPerf: check that performance tracking is included for fetch requests when enabled when the fetch has a delayed promise",
             
             test: () => {
-                return this._asyncQueue()
-                            .add(() => {
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -3813,6 +3814,8 @@ export class AjaxPerfTrackTests extends AITestClass {
                 let trackSpy = this.sandbox.spy(appInsightsCore, "track")
                 this._context["trackStub"] = trackSpy;
 
+                return this._asyncQueue()
+                            .add(() => {
                 // Send fetch request that should trigger a track event when complete
                 Assert.ok(trackSpy.notCalled, "No fetch called yet");
                 fetch("https://httpbin.org/status/200", { method: "post" });
@@ -3852,8 +3855,6 @@ export class AjaxPerfTrackTests extends AITestClass {
             
             timeOut: 10000,
             test: () => {
-                return this._asyncQueue()
-                            .add(() => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -3888,10 +3889,13 @@ export class AjaxPerfTrackTests extends AITestClass {
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let trackSpy = this.sandbox.spy(appInsightsCore, "track")
                 this._context["trackStub"] = trackSpy;
+                this._context["fetchCalls"] = fetchCalls;
 
                 // Use test hook to simulate the correct url location
                 this._ajax["_currentWindowHost"] = "httpbin.org";
 
+                return this._asyncQueue()
+                            .add(() => {
                 // Setup
                 let headers = new Headers();
                 headers.append('My-Header', 'Header field');
