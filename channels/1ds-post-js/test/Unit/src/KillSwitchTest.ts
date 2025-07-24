@@ -1,5 +1,5 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
-import { KillSwitch } from '../../../src/KillSwitch';
+import { IKillSwitch, createKillSwitch } from '../../../src/KillSwitch';
 
 export class KillSwitchTest extends AITestClass {
 
@@ -10,7 +10,7 @@ export class KillSwitchTest extends AITestClass {
         this.testCase({
             name: 'check basic kill switch',
             test: () => {
-                let killSwitch = new KillSwitch();
+                let killSwitch = createKillSwitch();
 
                 QUnit.assert.equal(killSwitch.isTenantKilled("test-tenant"), false, "tenant should not be listed");
 
@@ -33,7 +33,7 @@ export class KillSwitchTest extends AITestClass {
             name: 'check basic kill switch with expiry',
             useFakeTimers: true,
             test: () => {
-                let killSwitch = new KillSwitch();
+                let killSwitch = createKillSwitch();
 
                 let theRequest = killSwitch.setKillSwitchTenants("tenant1", "1");
                 QUnit.assert.equal(theRequest.length, 0);
@@ -60,7 +60,7 @@ export class KillSwitchTest extends AITestClass {
         this.testCase({
             name: 'check kill switch for this request only',
             test: () => {
-                let killSwitch = new KillSwitch();
+                let killSwitch = createKillSwitch();
 
                 QUnit.assert.equal(killSwitch.isTenantKilled("test-tenant"), false, "tenant should not be listed");
 
@@ -76,7 +76,7 @@ export class KillSwitchTest extends AITestClass {
         this.testCase({
             name: 'check multiple tenants kill switch',
             test: () => {
-                let killSwitch = new KillSwitch();
+                let killSwitch = createKillSwitch();
 
                 QUnit.assert.equal(killSwitch.isTenantKilled("test-tenant"), false, "tenant should not be listed");
 
@@ -93,7 +93,7 @@ export class KillSwitchTest extends AITestClass {
             name: 'check multiple tenants kill switch with expiry',
             useFakeTimers: true,
             test: () => {
-                let killSwitch = new KillSwitch();
+                let killSwitch = createKillSwitch();
 
                 let theRequest = killSwitch.setKillSwitchTenants("tenant1,tenant2", "1");
                 QUnit.assert.equal(theRequest.length, 0);
@@ -125,7 +125,7 @@ export class KillSwitchTest extends AITestClass {
         this.testCase({
             name: 'check whitespace kill switch',
             test: () => {
-                let killSwitch = new KillSwitch();
+                let killSwitch = createKillSwitch();
 
                 let tenant1Checks: string[] = [
                     "tenant1",
@@ -156,7 +156,7 @@ export class KillSwitchTest extends AITestClass {
                 ];
 
                 tenant1Checks.forEach((tenant1) => {
-                    let killSwitch = new KillSwitch();
+                    let killSwitch = createKillSwitch();
                     let theRequest = killSwitch.setKillSwitchTenants(tenant1, "1000");
                     QUnit.assert.equal(theRequest.length, 0);
     
@@ -184,7 +184,7 @@ export class KillSwitchTest extends AITestClass {
                 ];
 
                 tenant1Values.forEach((value) => {
-                    let killSwitch = new KillSwitch();
+                    let killSwitch = createKillSwitch();
 
                     let theRequest = killSwitch.setKillSwitchTenants(value, "this-request-only");
                     let found = false;

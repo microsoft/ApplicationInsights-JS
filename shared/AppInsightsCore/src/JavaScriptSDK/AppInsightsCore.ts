@@ -18,6 +18,7 @@ import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/Lo
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
 import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
+import { eTraceHeadersMode } from "../JavaScriptSDK.Enums/TraceHeadersMode";
 import { IAppInsightsCore, ILoadedPlugin } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { IChannelControlsHost } from "../JavaScriptSDK.Interfaces/IChannelControlsHost";
@@ -36,6 +37,9 @@ import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPlu
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
+import { IOTelSpanContext } from "../OpenTelemetry/interfaces/trace/IOTelSpanContext";
+import { createOTelSpanContext } from "../OpenTelemetry/trace/spanContext";
+import { createOTelTraceState } from "../OpenTelemetry/trace/traceState";
 import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
 import { ChannelControllerPriority } from "./Constants";
 import { createCookieMgr } from "./CookieMgr";
@@ -55,6 +59,8 @@ import { _getPluginState, createDistributedTraceContext, initializePlugins, sort
 import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
 import { IUnloadHookContainer, createUnloadHookContainer } from "./UnloadHookContainer";
+import { findW3cTraceParent } from "./W3cTraceParent";
+import { findW3cTraceState } from "./W3cTraceState";
 
 // import { IStatsBeat, IStatsBeatConfig, IStatsBeatState } from "../JavaScriptSDK.Interfaces/IStatsBeat";
 // import { IStatsMgr } from "../JavaScriptSDK.Interfaces/IStatsMgr";
@@ -95,7 +101,8 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     [STR_EXTENSION_CONFIG]: { ref: true, v: {} },
     [STR_CREATE_PERF_MGR]: UNDEFINED_VALUE,
     loggingLevelConsole: eLoggingSeverity.DISABLED,
-    diagnosticLogInterval: UNDEFINED_VALUE
+    diagnosticLogInterval: UNDEFINED_VALUE,
+    traceHdrMode: eTraceHeadersMode.All
     // _sdk: { rdOnly: true, ref: true, v: defaultSdkConfig }
 });
 
@@ -115,7 +122,7 @@ function _validateExtensions(logger: IDiagnosticLogger, channelPriority: number,
 
     // Check if any two extensions have the same priority, then warn to console
     // And extract the local extensions from the
-    let extPriorities = {};
+    let extPriorities: any = {};
 
     // Extension validation
     arrForEach(allExtensions, (ext: ITelemetryPlugin) => {
@@ -260,6 +267,24 @@ function _createUnloadHook(unloadHook: IUnloadHook): IUnloadHook {
     }, "toJSON", { v: () => "aicore::onCfgChange<" + JSON.stringify(unloadHook) + ">" });
 }
 
+function _getParentTraceCtx(mode: eTraceHeadersMode): IOTelSpanContext | null {
+    let spanContext: IOTelSpanContext | null = null;
+    const parentTrace = (mode & eTraceHeadersMode.TraceParent) ? findW3cTraceParent() : null;
+    const parentTraceState = (mode & eTraceHeadersMode.TraceState) ? findW3cTraceState() : null;
+    
+    if (parentTrace || parentTraceState) {
+        spanContext = createOTelSpanContext({
+            traceId: parentTrace ? parentTrace.traceId : null,
+            spanId: parentTrace ? parentTrace.spanId : null,
+            traceFlags: parentTrace ? parentTrace.traceFlags : UNDEFINED_VALUE,
+            isRemote: true,  // Mark as remote since it's from an external source
+            traceState: parentTraceState ? createOTelTraceState(parentTraceState) : null
+        });
+    }
+
+    return spanContext;
+}
+
 /**
  * @group Classes
  * @group Entrypoint
@@ -306,6 +331,8 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _channels: IChannelControls[] | null;
         let _isUnloading: boolean;
         let _telemetryInitializerPlugin: TelemetryInitializerPlugin;
+        let _serverOTelCtx: IOTelSpanContext | null;
+        let _serverTraceHdrMode: eTraceHeadersMode;
         let _internalLogsEventName: string | null;
         let _evtNamespace: string;
         let _unloadHandlers: IUnloadHandlerContainer;
@@ -336,7 +363,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             _initDefaults();
 
             // Special internal method to allow the unit tests and DebugPlugin to hook embedded objects
-            _self["_getDbgPlgTargets"] = () => {
+            (_self as any)["_getDbgPlgTargets"] = () => {
                 return [_extensions, _eventQueue];
             };
 
@@ -382,6 +409,12 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     objForEachKey(extCfg, (key) => {
                         details.ref(extCfg, key);
                     });
+
+                    if (rootCfg.traceHdrMode !== _serverTraceHdrMode) {
+                        // Create a new trace context if it doesn't exist and the mode is not None
+                        _serverOTelCtx = _getParentTraceCtx(rootCfg.traceHdrMode);
+                        _serverTraceHdrMode = rootCfg.traceHdrMode;
+                    }
                 }));
 
                 _notificationManager = notificationManager;
@@ -476,7 +509,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (!_notificationManager) {
                     _notificationManager = new NotificationManager(_configHandler.cfg);
                     // For backward compatibility only
-                    _self[strNotificationManager] = _notificationManager;
+                    (_self as any)[strNotificationManager] = _notificationManager;
                 }
 
                 return _notificationManager;
@@ -959,8 +992,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             _self.flush = _flushChannels;
         
             _self.getTraceCtx = (createNew?: boolean): IDistributedTraceContext | null => {
-                if (!_traceCtx) {
-                    _traceCtx = createDistributedTraceContext();
+
+                if ((!_traceCtx && createNew !== false) || createNew === true) {
+                    _traceCtx = createDistributedTraceContext(_serverOTelCtx);
                 }
 
                 return _traceCtx;
@@ -1084,6 +1118,8 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 arrAppend(cfgExtensions, _extensions);
 
                 _telemetryInitializerPlugin = new TelemetryInitializerPlugin();
+                _serverOTelCtx = null;
+                _serverTraceHdrMode = eTraceHeadersMode.None;
                 _eventQueue = [];
                 runTargetUnload(_notificationManager, false);
                 _notificationManager = null;
@@ -1621,15 +1657,24 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
      * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
      * If the caller doesn't return true the caller should assume that it may never be called.
      * @param sendReason - specify the reason that you are calling "flush" defaults to ManualFlush (1) if not specified
-     * @returns - true if the callback will be return after the flush is complete otherwise the caller should assume that any provided callback will never be called
+     * @returns true if the callback will be return after the flush is complete otherwise the caller should assume that any provided callback will never be called
      */
     public flush(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
         
     /**
-     * Gets the current distributed trace context for this instance if available
-     * @param createNew - Optional flag to create a new instance if one doesn't currently exist, defaults to true
+     * Gets the current distributed trace context for this instance if available, you can optional
+     * create a new instance if one does not currently exist or return null if one does not currently exist.
+     * When a server context is available it will be used as the parent context for the any new instance created
+     * (when createNew is true or no instance currently exists), calling this function will not
+     * change the current distributed trace context, it will only return the current context
+     * or create a new instance if one does not currently exist.
+     * @param createNew - Optional flag to create a new instance if one doesn't currently exist, defaults to
+     * undefined which will only create a new instance if one does not currently exist.
+     * If set to `false` then it will return null if no distributed trace context is available.
+     * If set to `true` then a new instance will be created even if one already exists.
+     * @param createNew - Optional flag to create a new instance if one doesn't currently exist, defaults to
      */
     public getTraceCtx(createNew?: boolean): IDistributedTraceContext | null {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
