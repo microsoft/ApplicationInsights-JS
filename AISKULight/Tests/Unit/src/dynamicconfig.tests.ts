@@ -98,24 +98,24 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
             name: "Init: init with cs promise",
             useFakeTimers: true,
             test: () => {
-                return this._asyncQueue().add(() => {
-                    // unload previous one first
-                    let oriInst = this._ai;
-                    if (oriInst && oriInst.unload) {
-                        // force unload
-                        oriInst.unload(false);
-                    }
-            
-                    this._config = this._getTestConfig(this._sessionPrefix);
-                    let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
-                    this._config.connectionString = csPromise;
-                    this._config.initTimeOut= 80000;
-                    this._ctx.csPromise = csPromise;
+                // unload previous one first
+                let oriInst = this._ai;
+                if (oriInst && oriInst.unload) {
+                    // force unload
+                    oriInst.unload(false);
+                }
+        
+                this._config = this._getTestConfig(this._sessionPrefix);
+                let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
+                this._config.connectionString = csPromise;
+                this._config.initTimeOut= 80000;
+                this._ctx.csPromise = csPromise;
 
-                    let init = new ApplicationInsights(this._config);
-                    this._ai = init;
-                    let config = this._ai.config;
-                })
+                let init = new ApplicationInsights(this._config);
+                this._ai = init;
+                let config = this._ai.config;
+
+                return this._asyncQueue()
                 .concat(PollingAssert.asyncTaskPollingAssert(() => {
                     let csPromise = this._ctx.csPromise;
                     let config = this._ai.config;
@@ -145,21 +145,21 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
             useFakeTimers: true,
             useFakeServer: true,
             test: () => {
-                return this._asyncQueue().add(() => {
-                    this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
-                    this._ai.config.featureOptIn["zipPayload"] = { mode: 3 };
-                    this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
-                        httpXHROverride: this.xhrOverride,
-                                alwaysUseXhrOverride: true
-                    }
-                    this.clock.tick(10);
-                    const telemetryItem: ITelemetryItem = {
-                        name: 'fake item with some really long name to take up space quickly',
-                        iKey: 'iKey',
-                        baseType: 'some type',
-                        baseData: {}
-                    };
+                this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                this._ai.config.featureOptIn["zipPayload"] = { mode: 3 };
+                this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
+                    httpXHROverride: this.xhrOverride,
+                            alwaysUseXhrOverride: true
+                }
+                this.clock.tick(10);
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item with some really long name to take up space quickly',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
 
+                return this._asyncQueue().add(() => {
                     this._ai.track(telemetryItem);
                     this._ai.flush();
                     this.clock.tick(10);
@@ -180,20 +180,20 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
             useFakeTimers: true,
             useFakeServer: true,
             test: () => {
-                return this._asyncQueue().add(() => {
-                    this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
-                    this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
-                        httpXHROverride: this.xhrOverride,
-                                alwaysUseXhrOverride: true
-                    }
-                    this.clock.tick(10);
-                    const telemetryItem: ITelemetryItem = {
-                        name: 'fake item with some really long name to take up space quickly',
-                        iKey: 'iKey',
-                        baseType: 'some type',
-                        baseData: {}
-                    };
+                this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                this._ai.config.extensionConfig["AppInsightsChannelPlugin"] = {
+                    httpXHROverride: this.xhrOverride,
+                            alwaysUseXhrOverride: true
+                }
+                this.clock.tick(10);
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item with some really long name to take up space quickly',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
 
+                return this._asyncQueue().add(() => {
                     this._ai.track(telemetryItem);
                     this._ai.flush();
                     this.clock.tick(10);
