@@ -403,7 +403,7 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
  * @returns The URL with user information redacted
  */
 function redactUserInfo(url: string): string {
-    return url.replace(/^([a-zA-Z][a-zA-Z0-9+.-]*:\/\/)([^:@]{1,200}):([^@]{1,200})@(.*)$/, "$1REDACTED:REDACTED@$4"); //(/^([a-zA-Z][a-zA-Z0-9+.-]{0,50}:\/\/)([^:@]{0,200})(?::([^@]{0,200}))?@(.*)$/, "$1REDACTED:REDACTED@$4");
+    return url.replace(/^([a-zA-Z][a-zA-Z0-9+.-]*:\/\/)([^:@]{1,200}):([^@]{1,200})@(.*)$/, "$1REDACTED:REDACTED@$4");
 }
 
 /**
@@ -502,7 +502,7 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
  * @returns The redacted URL string or the original string if no redaction was needed or possible.
  */
 export function fieldRedaction(input: string, config: IConfiguration): string {
-    if (!input ||input.indexOf(" ") !== -1) {
+    if (!input || input.indexOf(" ") !== -1) {
         return input;
     }
     const isRedactionDisabled = config && config.redactUrls === false;
