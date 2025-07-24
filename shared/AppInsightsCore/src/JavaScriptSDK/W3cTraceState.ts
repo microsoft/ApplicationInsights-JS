@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 import {
-    ICachedValue, WellKnownSymbols, arrForEach, arrIndexOf, createCachedValue, createDeferredCachedValue, getKnownSymbol, isArray,
-    isFunction, isNullOrUndefined, isString, objDefine, objDefineProps, safe, strSplit
+    ICachedValue, arrForEach, arrIndexOf, createCachedValue, createDeferredCachedValue, isArray, isFunction, isNullOrUndefined, isString,
+    objDefineProps, safe, strSplit
 } from "@nevware21/ts-utils";
 import { IW3cTraceState } from "../JavaScriptSDK.Interfaces/IW3cTraceState";
 import { findMetaTags, findNamedServerTimings } from "./EnvUtils";
+import { setObjStringTag } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
 
 const MAX_TRACE_STATE_MEMBERS = 32;
@@ -387,8 +388,7 @@ export function createW3cTraceState(value?: string | null, parent?: IW3cTraceSta
         }
     });
 
-
-    objDefine(traceStateList, getKnownSymbol(WellKnownSymbols.toStringTag), { g: _toString });
+    setObjStringTag(traceStateList, _toString);
 
     return traceStateList;
 }

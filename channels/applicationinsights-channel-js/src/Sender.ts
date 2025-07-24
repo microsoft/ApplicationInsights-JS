@@ -268,7 +268,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 if (_self.isInitialized()) {
                     _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender is already initialized");
                 }
-
              
                 _base.initialize(config, core, extensions, pluginChain);
                 let identifier = _self.identifier;
