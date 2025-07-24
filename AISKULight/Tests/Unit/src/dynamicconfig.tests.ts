@@ -164,7 +164,16 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                     this._ai.flush();
                     this.clock.tick(10);
                 })
-                .add(this.waitForException(1))
+                .concat(PollingAssert.createPollingAssert(() => {
+                    if (this.genericSpy && this.genericSpy.called) {
+                        let argCount = 0;
+                        this.genericSpy.args.forEach(call => {
+                            argCount += call.length;
+                        });
+                        return argCount >= 1;
+                    }
+                    return false;
+                }, "Wait for exception calls: 1 " + new Date().toISOString(), 15, 1000) as any)
                 .add(() => {
                     let request = this.genericSpy.getCall(0).args[0];
                     let gzipData = request.data;
@@ -198,7 +207,16 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                     this._ai.flush();
                     this.clock.tick(10);
                 })
-                .add(this.waitForException(1))
+                .concat(PollingAssert.createPollingAssert(() => {
+                    if (this.genericSpy && this.genericSpy.called) {
+                        let argCount = 0;
+                        this.genericSpy.args.forEach(call => {
+                            argCount += call.length;
+                        });
+                        return argCount >= 1;
+                    }
+                    return false;
+                }, "Wait for exception calls: 1 " + new Date().toISOString(), 15, 1000) as any)
                 .add(() => {
                     let request = this.genericSpy.getCall(0).args[0];
                     let gzipData = request.data;
@@ -224,33 +242,6 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
             }
         });
     }
-
-    private asserts(expectedCount: number) {
-        return PollingAssert.asyncTaskPollingAssert(() => {
-            if (this.genericSpy && this.genericSpy.called) {
-                let argCount = 0;
-                this.genericSpy.args.forEach(call => {
-                    argCount += call.length;
-                });
-                return argCount >= expectedCount;
-            }
-            return false;
-        }, "Wait for expected calls: " + expectedCount + " " + new Date().toISOString(), 15, 1000);
-    }
-
-    private waitForException(expectedCount: number) {
-        return PollingAssert.asyncTaskPollingAssert(() => {
-            if (this.genericSpy && this.genericSpy.called) {
-                let argCount = 0;
-                this.genericSpy.args.forEach(call => {
-                    argCount += call.length;
-                });
-                return argCount >= expectedCount;
-            }
-            return false;
-        }, "Wait for exception calls: " + expectedCount + " " + new Date().toISOString(), 15, 1000);
-    }
-
 }
 
 class AutoCompleteXhrOverride {
