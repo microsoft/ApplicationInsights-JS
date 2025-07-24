@@ -1342,6 +1342,18 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: Respond with status 0 and no status text",
             timeOut: 10000,
             test: () => {
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                this._context.dependencyFields = dependencyFields;
+                this._context.fetchSpy = fetchSpy;
+                this._context.throwSpy = throwSpy;
+
                 return this._asyncQueue()
                             .add(() => {
                         hookFetch((resolve) => {
@@ -1361,15 +1373,11 @@ export class AjaxTests extends AITestClass {
                             }, 0);
                         });
 
-                        this._ajax = new AjaxMonitor();
-                        let dependencyFields = hookTrackDependencyInternal(this._ajax);
-                        let appInsightsCore = new AppInsightsCore();
-                        let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
-                        appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                        let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
-                        let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
-
                         // Act
+                        let fetchSpy = this._context.fetchSpy;
+                        let throwSpy = this._context.throwSpy;
+                        let dependencyFields = this._context.dependencyFields;
+                        
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                         return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
                             // Assert
@@ -1393,6 +1401,18 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: Respond with status 0 and no status text",
             timeOut: 10000,
             test: () => {
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false, enableAjaxErrorStatusText: true };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                this._context.dependencyFields = dependencyFields;
+                this._context.fetchSpy = fetchSpy;
+                this._context.throwSpy = throwSpy;
+
                 return this._asyncQueue()
                             .add(() => {
                         hookFetch((resolve) => {
@@ -1412,15 +1432,11 @@ export class AjaxTests extends AITestClass {
                             }, 0);
                         });
 
-                        this._ajax = new AjaxMonitor();
-                        let dependencyFields = hookTrackDependencyInternal(this._ajax);
-                        let appInsightsCore = new AppInsightsCore();
-                        let coreConfig = { instrumentationKey: "", disableFetchTracking: false, enableAjaxErrorStatusText: true };
-                        appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                        let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
-                        let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
-
                         // Act
+                        let fetchSpy = this._context.fetchSpy;
+                        let throwSpy = this._context.throwSpy;
+                        let dependencyFields = this._context.dependencyFields;
+                        
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                         return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
                             // Assert
@@ -1444,6 +1460,26 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: fetch addDependencyInitializer adding context",
             timeOut: 10000,
             test: () => {
+                let initializerCalled = false;
+                this._ajax = new AjaxMonitor();
+                this._ajax.addDependencyInitializer((details) => {
+                    let props = details.item.properties = details.item.properties || {};
+                    props.initializer = { called: true };
+                    initializerCalled = true;
+                });
+
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                this._context.dependencyFields = dependencyFields;
+                this._context.fetchSpy = fetchSpy;
+                this._context.throwSpy = throwSpy;
+                this._context.initializerCalled = () => initializerCalled;
+
                 return this._asyncQueue()
                             .add(() => {
                         hookFetch((resolve) => {
@@ -1463,22 +1499,12 @@ export class AjaxTests extends AITestClass {
                             }, 0);
                         });
 
-                        let initializerCalled = false;
-                        this._ajax = new AjaxMonitor();
-                        this._ajax.addDependencyInitializer((details) => {
-                            let props = details.item.properties = details.item.properties || {};
-                            props.initializer = { called: true };
-                            initializerCalled = true;
-                        });
-
-                        let dependencyFields = hookTrackDependencyInternal(this._ajax);
-                        let appInsightsCore = new AppInsightsCore();
-                        let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
-                        appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                        let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
-                        let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
-
                         // Act
+                        let fetchSpy = this._context.fetchSpy;
+                        let throwSpy = this._context.throwSpy;
+                        let dependencyFields = this._context.dependencyFields;
+                        let initializerCalled = this._context.initializerCalled();
+                        
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                         return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
                             // Assert
@@ -1504,6 +1530,25 @@ export class AjaxTests extends AITestClass {
             
             timeOut: 10000,
             test: () => {
+                let initializerCalled = false;
+                this._ajax = new AjaxMonitor();
+                this._ajax.addDependencyInitializer((details) => {
+                    initializerCalled = true;
+                    return false;
+                });
+
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                this._context.dependencyFields = dependencyFields;
+                this._context.fetchSpy = fetchSpy;
+                this._context.throwSpy = throwSpy;
+                this._context.initializerCalled = () => initializerCalled;
+
                 return this._asyncQueue()
                             .add(() => {
                 hookFetch((resolve) => {
@@ -1523,21 +1568,12 @@ export class AjaxTests extends AITestClass {
                     }, 0);
                 });
 
-                let initializerCalled = false;
-                this._ajax = new AjaxMonitor();
-                this._ajax.addDependencyInitializer((details) => {
-                    initializerCalled = true;
-                    return false;
-                });
-
-                let dependencyFields = hookTrackDependencyInternal(this._ajax);
-                let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
-                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
-                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
-
                 // Act
+                let fetchSpy = this._context.fetchSpy;
+                let throwSpy = this._context.throwSpy;
+                let dependencyFields = this._context.dependencyFields;
+                let initializerCalled = this._context.initializerCalled();
+                
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                 fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
                     // Assert
@@ -1559,6 +1595,18 @@ export class AjaxTests extends AITestClass {
             
             timeOut: 10000,
             test: () => {
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                this._context.dependencyFields = dependencyFields;
+                this._context.fetchSpy = fetchSpy;
+                this._context.throwSpy = throwSpy;
+
                 return this._asyncQueue()
                             .add(() => {
                 hookFetch((resolve) => {
@@ -1578,15 +1626,11 @@ export class AjaxTests extends AITestClass {
                     }, 0);
                 });
 
-                this._ajax = new AjaxMonitor();
-                let dependencyFields = hookTrackDependencyInternal(this._ajax);
-                let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
-                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
-                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
-
                 // Act
+                let fetchSpy = this._context.fetchSpy;
+                let throwSpy = this._context.throwSpy;
+                let dependencyFields = this._context.dependencyFields;
+                
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                 fetch(null, {method: "post", [DisabledPropertyName]: false}).then(() => {
                     // Assert
@@ -1625,6 +1669,25 @@ export class AjaxTests extends AITestClass {
             
             timeOut: 10000,
             test: () => {
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                let traceCtx = appInsightsCore.getTraceCtx();
+                let expectedTraceId = generateW3CId();
+                let expectedSpanId = generateW3CId().substring(0, 16);
+                traceCtx!.setTraceId(expectedTraceId);
+                traceCtx!.setSpanId(expectedSpanId);
+
+                this._context.dependencyFields = dependencyFields;
+                this._context.fetchSpy = fetchSpy;
+                this._context.throwSpy = throwSpy;
+                this._context.expectedTraceId = expectedTraceId;
+                this._context.expectedSpanId = expectedSpanId;
+
                 return this._asyncQueue()
                             .add(() => {
                 hookFetch((resolve) => {
@@ -1644,20 +1707,13 @@ export class AjaxTests extends AITestClass {
                     }, 0);
                 });
 
-                this._ajax = new AjaxMonitor();
-                let dependencyFields = hookTrackDependencyInternal(this._ajax);
-                let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
-                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
-                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
-                let traceCtx = appInsightsCore.getTraceCtx();
-                let expectedTraceId = generateW3CId();
-                let expectedSpanId = generateW3CId().substring(0, 16);
-                traceCtx!.setTraceId(expectedTraceId);
-                traceCtx!.setSpanId(expectedSpanId);
-
                 // Act
+                let fetchSpy = this._context.fetchSpy;
+                let throwSpy = this._context.throwSpy;
+                let dependencyFields = this._context.dependencyFields;
+                let expectedTraceId = this._context.expectedTraceId;
+                let expectedSpanId = this._context.expectedSpanId;
+                
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                 fetch(null, {method: "post", [DisabledPropertyName]: false}).then(() => {
                     // Assert
@@ -1687,7 +1743,8 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-                    }
+                    })
+                    .waitComplete();
             }
         });
 
@@ -1697,6 +1754,18 @@ export class AjaxTests extends AITestClass {
             
             timeOut: 10000,
             test: () => {
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                this._context.dependencyFields = dependencyFields;
+                this._context.fetchSpy = fetchSpy;
+                this._context.throwSpy = throwSpy;
+
                 return this._asyncQueue()
                             .add(() => {
                 let fetchCalls = hookFetch((resolve) => {
@@ -1716,15 +1785,14 @@ export class AjaxTests extends AITestClass {
                     }, 0);
                 });
 
-                this._ajax = new AjaxMonitor();
-                let dependencyFields = hookTrackDependencyInternal(this._ajax);
-                let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
-                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
-                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                this._context.fetchCalls = fetchCalls;
 
                 // Act
+                let fetchSpy = this._context.fetchSpy;
+                let throwSpy = this._context.throwSpy;
+                let dependencyFields = this._context.dependencyFields;
+                let fetchCalls = this._context.fetchCalls;
+                
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                 fetch("", {method: "post", [DisabledPropertyName]: false}).then(() => {
                     // Assert
