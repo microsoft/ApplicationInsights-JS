@@ -10,6 +10,7 @@ import { SnippetInitializationTests } from './SnippetInitialization.Tests';
 import { CdnThrottle} from "./CdnThrottle.tests";
 import { ThrottleSentMessage } from "./ThrottleSentMessage.tests";
 import { IAnalyticsConfigTests } from './IAnalyticsConfig.Tests';
+import { StartSpanTests } from './StartSpanTests.Tests';
 
 export function runTests() {
     new GlobalTestHooks().registerTests();
@@ -25,4 +26,5 @@ export function runTests() {
     new ThrottleSentMessage().registerTests();
     new CdnThrottle().registerTests();
     new IAnalyticsConfigTests().registerTests();
+    new StartSpanTests().registerTests();
 }

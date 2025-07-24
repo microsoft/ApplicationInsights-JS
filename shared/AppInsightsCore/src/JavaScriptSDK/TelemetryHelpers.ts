@@ -17,6 +17,7 @@ import { getLocation } from "./EnvUtils";
 import { STR_CORE, STR_EMPTY, STR_PRIORITY, STR_PROCESS_TELEMETRY, UNDEFINED_VALUE } from "./InternalConstants";
 import { isValidSpanId, isValidTraceId } from "./W3cTraceParent";
 import { createW3cTraceState } from "./W3cTraceState";
+import { setProtoTypeName } from "./HelperFuncs";
 
 export interface IPluginState {
     core?: IAppInsightsCore;
@@ -282,7 +283,7 @@ export function createDistributedTraceContext(parent?: IDistributedTraceContext 
         return traceState;
     }
 
-    let traceCtx: IDistributedTraceContext = {
+    let traceCtx: IDistributedTraceContext = setProtoTypeName({
         getName: _getName,
         setName: _setPageNameFn(true),
         getTraceId: _getTraceId,
@@ -297,7 +298,7 @@ export function createDistributedTraceContext(parent?: IDistributedTraceContext 
         traceState,
         isRemote,
         pageName
-    };
+    }, "DistributedTraceContext");
 
     return objDefineProps<IDistributedTraceContext>(traceCtx, {
         pageName: {
@@ -326,6 +327,23 @@ export function createDistributedTraceContext(parent?: IDistributedTraceContext 
         },
         parentCtx: {
             g: () => parentCtx
+        },
+        _parent: {
+            g: () => {
+                let result: any;
+                if (parentCtx) {
+                    result = {
+                        t: "traceCtx",
+                        v: parentCtx
+                    };
+                } else if (spanContext) {
+                    result = {
+                        t: "spanCtx",
+                        v: spanContext
+                    }
+                }
+                return result;
+            }
         }
     });
 }

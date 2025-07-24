@@ -36,8 +36,12 @@ import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetr
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
+import { ITraceProvider } from "../JavaScriptSDK.Interfaces/ITraceProvider";
 import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
+import { IOTelTraceCfg } from "../OpenTelemetry/interfaces/config/IOTelTraceCfg";
+import { IOTelSpan } from "../OpenTelemetry/interfaces/trace/IOTelSpan";
 import { IOTelSpanContext } from "../OpenTelemetry/interfaces/trace/IOTelSpanContext";
+import { IOTelSpanOptions } from "../OpenTelemetry/interfaces/trace/IOTelSpanOptions";
 import { createOTelSpanContext } from "../OpenTelemetry/trace/spanContext";
 import { createOTelTraceState } from "../OpenTelemetry/trace/traceState";
 import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
@@ -70,6 +74,7 @@ const strSdkUnloadingError = "SDK is still unloading...";
 const strSdkNotInitialized = "SDK is not initialized";
 const maxInitQueueSize = 100;
 const maxInitTimeout = 50000;
+const maxAttributeCount = 128;
 // const strPluginUnloadFailed = "Failed to unload plugin";
 
 // /**
@@ -102,7 +107,23 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     [STR_CREATE_PERF_MGR]: UNDEFINED_VALUE,
     loggingLevelConsole: eLoggingSeverity.DISABLED,
     diagnosticLogInterval: UNDEFINED_VALUE,
-    traceHdrMode: eTraceHeadersMode.All
+    traceHdrMode: eTraceHeadersMode.All,
+    traceCfg: cfgDfMerge<IOTelTraceCfg>({
+        generalLimits: cfgDfMerge({
+            attributeValueLengthLimit: undefined,
+            attributeCountLimit: maxAttributeCount
+        }),
+        spanLimits: cfgDfMerge({
+            attributeValueLengthLimit: undefined,
+            attributeCountLimit: maxAttributeCount,
+            linkCountLimit: maxAttributeCount,
+            eventCountLimit: maxAttributeCount,
+            attributePerEventCountLimit: maxAttributeCount,
+            attributePerLinkCountLimit: maxAttributeCount
+        }),
+        // idGenerator: null,
+        serviceName: null
+    })
     // _sdk: { rdOnly: true, ref: true, v: defaultSdkConfig }
 });
 
@@ -339,6 +360,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _hookContainer: IUnloadHookContainer;
         let _debugListener: INotificationListener | null;
         let _traceCtx: IDistributedTraceContext | null;
+        let _traceProvider: ITraceProvider | null;
         let _instrumentationKey: string | null;
         let _cfgListeners: { rm: () => void, w: WatcherFunction<CfgType>}[];
         let _extensions: IPlugin[];
@@ -1004,6 +1026,23 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _traceCtx = traceCtx || null;
             };
 
+            _self.startSpan = (name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IOTelSpan | null => {
+                if (!_traceProvider || !_traceProvider.isAvailable()) {
+                    // No trace provider available or provider is not ready
+                    return null;
+                }
+
+                return _traceProvider.createSpan(name, options, parent || _self.getTraceCtx());
+            };
+
+            _self.setTraceProvider = (traceProvider: ITraceProvider): void => {
+                _traceProvider = traceProvider;
+            };
+
+            _self.getTraceProvider = (): ITraceProvider | null => {
+                return _traceProvider;
+            };
+
             _self.addUnloadHook = _addUnloadHook;
 
             // Create the addUnloadCb
@@ -1138,6 +1177,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _evtNamespace = createUniqueNamespace("AIBaseCore", true);
                 _unloadHandlers = createUnloadHandlerContainer();
                 _traceCtx = null;
+                _traceProvider = null;
                 _instrumentationKey = null;
                 _hookContainer = createUnloadHookContainer();
                 _cfgListeners = [];
@@ -1686,6 +1726,44 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
      */
     public setTraceCtx(newTracectx: IDistributedTraceContext): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Start a new span with the given name and optional parent context.
+     * The span will become the active span for its duration unless a different
+     * span is explicitly set as active.
+     *
+     * @param name - The name of the span
+     * @param options - Options for creating the span (kind, attributes, startTime)
+     * @param parent - Optional parent context. If not provided, uses the current active trace context
+     * @returns A new span instance, or null if no trace provider is available
+     * @since 3.4.0
+     */
+    public startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IOTelSpan | null {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Set the trace provider for creating spans.
+     * This allows different SKUs to provide their own span implementations.
+     *
+     * @param provider - The trace provider to use for span creation
+     * @since 3.4.0
+     */
+    public setTraceProvider(provider: ITraceProvider): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Get the current trace provider.
+     *
+     * @returns The current trace provider, or null if none is set
+     * @since 3.4.0
+     */
+    public getTraceProvider(): ITraceProvider | null {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     /**

@@ -19,7 +19,14 @@
                 "TelemetryUnloadReason",
                 "TelemetryUpdateReason",
                 "eTraceHeadersMode",
-                "eW3CTraceFlags"
+                "eW3CTraceFlags",
+                "eAttributeSource",
+                "AddAttributeResult",
+                "eAttributeFilter",
+                "eAttributeChangeOp",
+                "eOTelSamplingDecision",
+                "eOTelSpanKind",
+                "eOTelSpanStatusCode"
             ]
         },
         "@microsoft/applicationinsights-perfmarkmeasure-js": {
@@ -64,7 +71,9 @@
             "constEnums": []
         },
         "@microsoft/applicationinsights-analytics-js": {
-            "constEnums": []
+            "constEnums": [
+                "eRouteTraceStrategy"
+            ]
         },
         "@microsoft/applicationinsights-web": {
             "constEnums": []

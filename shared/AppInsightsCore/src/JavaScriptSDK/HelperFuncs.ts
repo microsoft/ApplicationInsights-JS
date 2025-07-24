@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ObjAssign, ObjClass } from "@microsoft/applicationinsights-shims";
+import { ObjAssign, ObjClass, ObjProto } from "@microsoft/applicationinsights-shims";
 import {
-    arrForEach, asString as asString21, isArray, isBoolean, isError, isFunction, isNullOrUndefined, isNumber, isObject, isPlainObject,
-    isString, isUndefined, objDeepFreeze, objDefine, objForEachKey, objHasOwn, strIndexOf, strTrim
+    ICachedValue, WellKnownSymbols, arrForEach, asString as asString21, createCachedValue, getKnownSymbol, isArray, isBoolean, isError,
+    isFunction, isNullOrUndefined, isNumber, isObject, isPlainObject, isString, isUndefined, newSymbol, objCreate, objDeepFreeze, objDefine,
+    objForEachKey, objGetPrototypeOf, objHasOwn, objSetPrototypeOf, safe, strIndexOf, strTrim
 } from "@nevware21/ts-utils";
 import { FeatureOptInMode } from "../JavaScriptSDK.Enums/FeatureOptInEnums";
 import { TransportType } from "../JavaScriptSDK.Enums/SendRequestReason";
@@ -19,6 +20,8 @@ const strGetPrototypeOf = "getPrototypeOf";
 const rCamelCase = /-([a-z])/g;
 const rNormalizeInvalid = /([^\w\d_$])/g;
 const rLeadingNumeric = /^(\d+[\w\d_$])/;
+
+let _ProtoNameTag: ICachedValue<symbol>;
 
 export let _getObjProto = Object[strGetPrototypeOf];
 
@@ -72,7 +75,7 @@ export function strContains(value: string, search: string): boolean {
  * Convert a date to I.S.O. format in IE8
  */
 export function toISOString(date: Date) {
-    return date && date.toISOString() || "";
+    return date && date.toISOString() || STR_EMPTY;
 }
 
 export const deepFreeze: <T>(obj: T) => T = objDeepFreeze;
@@ -259,6 +262,93 @@ export function createClassFromInterface<T>(defaults?: T) {
 }
 
 /**
+ * Set the type of the object by defining the toStringTag well known symbol, this will impact the
+ * Object.prototype.toString.call() results for the object. And can be used to identify the type
+ * in the debug output and also in the DevTools watchers window when inspecting the object etc.
+ * @param target - The object to set the toStringTag symbol on
+ * @param nameOrFunc - The name or function to use for the toStringTag
+ * @returns The target object
+ */
+export function setObjStringTag<T>(target: T, nameOrFunc: string | (() => string)): T {
+    safe(objDefine, [target, getKnownSymbol(WellKnownSymbols.toStringTag), isFunction(nameOrFunc) ? { g: nameOrFunc, e: false } : { v: nameOrFunc, w: false, e: false }]);
+
+    return target;
+}
+
+/**
+ * Introduce an intermediate prototype to the target object and that sets the toStringTag on that prototype,
+ * this avoids directly modifying the target object and also allows multiple different "types" to be
+ * applied to the same target object if required.
+ * This is done as a best effort approach and may not always succeed due to security / object model restrictions
+ * So if it fails then it will fallback to just defining the toStringTag on the target object, which also may fail
+ * resulting in no change.
+ * @param target - The object to set the toStringTag symbol on
+ * @param name - The name or function to use for the toStringTag
+ * @returns The target object
+ */
+export function setProtoTypeName<T>(target: T, name: string): T {
+    if (target) {
+        let proto = _getObjProto(target);
+        let done = false;
+        if (proto) {
+            // Set the target's prototype to the new intermediate prototype
+            safe(() => {
+                // Create a new intermediate prototype that extends the current prototype
+                let newProto = setObjStringTag(objCreate(proto), name);
+                if (!_ProtoNameTag) {
+                    _ProtoNameTag = createCachedValue(newSymbol("ai$ProtoName"));
+                }
+
+                // Tag this new prototype
+                objDefine(newProto, _ProtoNameTag.v as any, {
+                    v: true,
+                    w: false,
+                    e: false
+                });
+                
+                objSetPrototypeOf(target, newProto);
+                done = true;
+            });
+        }
+
+        if (!done) {
+            // Either no prototype or we failed to set it so just define the toStringTag on the target
+            safe(setObjStringTag, [target, name]);
+        }
+    }
+
+    return target;
+}
+
+/**
+ * Update the introduced intermediate prototype name of the target object.
+ * @param target - The object to look for the prototype name and update
+ * @param name - The updated name to apply
+ * @returns The target Object
+ */
+export function updateProtoTypeName<T>(target: T, name: string): T {
+    if (_ProtoNameTag) {
+        // Find the Parent Proto
+        while (target && target !== ObjProto && !(target as any)[_ProtoNameTag.v]) {
+            let protoTarget = objGetPrototypeOf(target);
+            if (target === protoTarget) {
+                // Break out of any recursive case (happens on some runtimes) where the prototype of an
+                // object is the same prototype
+                break;
+            }
+            target = protoTarget;
+        }
+
+        if ((target as any)[_ProtoNameTag.v]) {
+            // Found it so update
+            safe(setObjStringTag, [target, name]);
+        }
+    }
+
+    return target;
+}
+
+/**
  * A helper function to assist with JIT performance for objects that have properties added / removed dynamically
  * this is primarily for chromium based browsers and has limited effects on Firefox and none of IE. Only call this
  * function after you have finished "updating" the object, calling this within loops reduces or defeats the benefits.
@@ -388,7 +478,7 @@ export function getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
 
 export function formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): string {
     if (xdr) {
-        return "XDomainRequest,Response:" + getResponseText(xdr) || "";
+        return "XDomainRequest,Response:" + getResponseText(xdr) || STR_EMPTY;
     }
 
     return message;
@@ -396,7 +486,7 @@ export function formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): s
 
 export function formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
     if (xhr) {
-        return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + getResponseText(xhr) || xhr.response || "";
+        return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + getResponseText(xhr) || xhr.response || STR_EMPTY;
     }
 
     return message;

@@ -6,7 +6,8 @@ import { AnalyticsPlugin } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { IAppInsights, IPropertiesPlugin, IRequestHeaders } from "@microsoft/applicationinsights-common";
 import {
-    IConfiguration, ILoadedPlugin, IPlugin, ITelemetryPlugin, ITelemetryUnloadState, UnloadHandler
+    IConfiguration, IDistributedTraceContext, ILoadedPlugin, IOTelApi, IOTelSpan, IOTelSpanOptions, IOTelTraceApi, IPlugin, ITelemetryPlugin,
+    ITelemetryUnloadState, UnloadHandler
 } from "@microsoft/applicationinsights-core-js";
 import { IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import { IPromise } from "@nevware21/ts-async";
@@ -15,6 +16,20 @@ export { IRequestHeaders };
 
 export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
     appInsights: AnalyticsPlugin;
+
+    /**
+     * The OpenTelemetry API instance associated with this instance
+     * Unlike OpenTelemetry, this API does not return a No-Op implementation and returns null if the SDK has been torn
+     * down or not yet initialized.
+     */
+    readonly otelApi: IOTelApi | null;
+
+    /**
+     * OpenTelemetry trace API for creating spans.
+     * Unlike OpenTelemetry, this API does not return a No-Op implementation and returns null if the SDK has been torn
+     * down or not yet initialized.
+     */
+    readonly trace: IOTelTraceApi | null;
 
     /**
      * Attempt to flush data immediately; If executing asynchronously (the default) and
@@ -89,4 +104,19 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
      * @param handler - the handler
      */
     addUnloadCb(handler: UnloadHandler): void;
+
+    /**
+     * Start a new span with the given name and optional parent context.
+     *
+     * Note: This method only creates and returns the span. It does not automatically
+     * set the span as the active trace context. Context management should be handled
+     * separately using setTraceCtx() if needed.
+     *
+     * @param name - The name of the span
+     * @param options - Options for creating the span (kind, attributes, startTime)
+     * @param parent - Optional parent context. If not provided, uses the current active trace context
+     * @returns A new span instance, or null if no trace provider is available
+     * @since 3.4.0
+     */
+    startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IOTelSpan | null;
 }

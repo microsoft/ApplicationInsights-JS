@@ -3,7 +3,7 @@
 "use strict"
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IPromise } from "@nevware21/ts-async";
-import { dumpObj, isFunction, isUndefined } from "@nevware21/ts-utils";
+import { dumpObj, isFunction, isUndefined, objDefine } from "@nevware21/ts-utils";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { LoggingSeverity, _InternalMessageId, _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
@@ -101,6 +101,8 @@ export function safeGetLogger(core: IAppInsightsCore, config?: IConfiguration): 
 export class DiagnosticLogger implements IDiagnosticLogger {
     public identifier = "DiagnosticLogger";
     
+    public readonly dbgMode: boolean;
+
     /**
      * The internal logging queue
      */
@@ -192,6 +194,10 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                 _unloadHandler && _unloadHandler.rm();
                 _unloadHandler = null;
             };
+
+            objDefine(_self, "dbgMode", {
+                g: () => _enableDebug
+            });
 
             function _logInternalMessage(severity: LoggingSeverity, message: _InternalLogMessage): void {
                 if (_areInternalMessagesThrottled()) {
