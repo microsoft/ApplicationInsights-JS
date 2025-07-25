@@ -828,13 +828,12 @@ export class ApplicationInsightsTests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "E2E.GenericTests: Fetch Static Web CDN V3",
-            stepDelay: 1,
             useFakeServer: false,
             useFakeFetch: false,
             fakeFetchAutoRespond: false,
-            steps: [() => {
+            test: () => {
                 // Use beta endpoint to pre-test any changes before public V3 cdn
                 let random = utcNow();
                 // Under Cors Mode, Options request will be auto-triggered
@@ -854,62 +853,64 @@ export class ApplicationInsightsTests extends AITestClass {
                 } catch (e) {
                     this._ctx.err = e;
                 }
-            }].add(PollingAssert.createPollingAssert(() => {
 
-                if (this._ctx && this._ctx.err) {
-                    return true;
-                }
-                return false;
-            }, "Wait for response" + new Date().toISOString(), 60) as any)
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
+
+                    if (this._ctx && this._ctx.err) {
+                        return true;
+                    }
+                    return false;
+                }, "Wait for response" + new Date().toISOString(), 60) as any);
+            }
         });
     }
 
     public addAsyncTests(): void {
-        this.testCaseAsync({
+        this.testCase({
             name: "E2E.GenericTests: Send events with offline support",
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let offlineChannel = new OfflineChannel();
                 this._ai.addPlugin(offlineChannel);
                 this._ctx.offlineChannel = offlineChannel;
 
-            }].add(PollingAssert.createPollingAssert(() => {
-                let offlineChannel = this._ctx.offlineChannel;
-                if (offlineChannel && offlineChannel.isInitialized()) {
-                    let urlConfig = offlineChannel["_getDbgPlgTargets"]()[0];
-                    Assert.ok(urlConfig, "offline url config is initialized");
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
+                    let offlineChannel = this._ctx.offlineChannel;
+                    if (offlineChannel && offlineChannel.isInitialized()) {
+                        let urlConfig = offlineChannel["_getDbgPlgTargets"]()[0];
+                        Assert.ok(urlConfig, "offline url config is initialized");
 
-                    let offlineListener = offlineChannel.getOfflineListener() as any;
-                    Assert.ok(offlineListener, "offlineListener should be initialized");
+                        let offlineListener = offlineChannel.getOfflineListener() as any;
+                        Assert.ok(offlineListener, "offlineListener should be initialized");
 
-                    // online
-                    offlineListener.setOnlineState(1);
-                    let inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
-                    Assert.ok(!inMemoTimer, "offline in memo timer should be null");
-                    this._ai.trackEvent({ name: "online event", properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
+                        // online
+                        offlineListener.setOnlineState(1);
+                        let inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
+                        Assert.ok(!inMemoTimer, "offline in memo timer should be null");
+                        this._ai.trackEvent({ name: "online event", properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
 
-                    // set to offline status right way
-                    offlineListener.setOnlineState(2);
-                    this._ai.trackEvent({ name: "offline event", properties: { "prop2": "value2" }, measurements: { "measurement2": 200 } });
-                    inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
-                    Assert.ok(inMemoTimer, "in memo timer should not be null");
-                    let inMemoBatch = offlineChannel["_getDbgPlgTargets"]()[1][EventPersistence.Normal];
-                    Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one event");
+                        // set to offline status right way
+                        offlineListener.setOnlineState(2);
+                        this._ai.trackEvent({ name: "offline event", properties: { "prop2": "value2" }, measurements: { "measurement2": 200 } });
+                        inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
+                        Assert.ok(inMemoTimer, "in memo timer should not be null");
+                        let inMemoBatch = offlineChannel["_getDbgPlgTargets"]()[1][EventPersistence.Normal];
+                        Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one event");
 
-                    return true
-                }
-                return false
-            }, "Wait for init" + new Date().toISOString(), 60) as any).add(this.asserts(1)).add(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok( payload && payload.iKey);
-                    Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
-                    Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
-                    Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
-                }
-            })
+                        return true
+                    }
+                    return false
+                }, "Wait for init" + new Date().toISOString(), 60) as any).add(this.asserts(1)).add(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        const data = payload.data;
+                        Assert.ok( payload && payload.iKey);
+                        Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
+                        Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
+                        Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
+                    }
+                });
+            }
         });
         this.testCase({
             name: 'E2E.GenericTests: trackEvent sends to backend',
@@ -997,10 +998,9 @@ export class ApplicationInsightsTests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with auto telemetry sends to backend with custom properties',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let exception: Error = null;
                 try {
                     window['a']['b']();
@@ -1020,7 +1020,9 @@ export class ApplicationInsightsTests extends AITestClass {
                     this._ai.trackException({ exception: autoTelemetry }, { custom: "custom value" });
                 }
                 Assert.ok(exception);
-            }].add(this.asserts(1))
+
+                return this._asyncQueue().add(this.asserts(1));
+            }
         });
 
         this.testCaseAsync({
