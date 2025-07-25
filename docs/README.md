@@ -48,6 +48,7 @@ ES3 support has been removed from the latest version (v3.x), if required [see fo
 ### FAQ
 
 - [Create an Issue](https://github.com/microsoft/ApplicationInsights-JS/issues/new/choose)
+- [Using Azure API Management as a proxy for Application Insights Telemetry](https://techcommunity.microsoft.com/blog/azureobservabilityblog/using-azure-api-management-as-a-proxy-for-application-insights-telemetry/4422236)
 - [ES3 Support](./es3_Support.md)
 - [Page Unload Event Handling](./PageUnloadEvents.md)
 - [V2 Upgrade Guide](./upgrade/v2_UpgradeGuide.md)
