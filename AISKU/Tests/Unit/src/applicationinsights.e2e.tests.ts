@@ -1025,10 +1025,9 @@ export class ApplicationInsightsTests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with message only sends to backend',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let exception: Error = null;
                 try {
                     window['a']['b']();
@@ -1048,13 +1047,14 @@ export class ApplicationInsightsTests extends AITestClass {
                     this._ai.trackException({ exception: autoTelemetry });
                 }
                 Assert.ok(exception);
-            }].add(this.asserts(1))
+
+                return this._asyncQueue().add(this.asserts(1));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with message holding error sends to backend',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let exception: Error = null;
                 try {
                     window['a']['b']();
@@ -1080,13 +1080,14 @@ export class ApplicationInsightsTests extends AITestClass {
                     }
                 }
                 Assert.ok(exception);
-            }].add(this.asserts(1))
+
+                return this._asyncQueue().add(this.asserts(1));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with message holding error sends to backend with custom properties',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let exception: Error = null;
                 try {
                     window['a']['b']();
@@ -1112,7 +1113,9 @@ export class ApplicationInsightsTests extends AITestClass {
                     }
                 }
                 Assert.ok(exception);
-            }].add(this.asserts(1))
+
+                return this._asyncQueue().add(this.asserts(1));
+            }
         });
 
         this.testCaseAsync({
