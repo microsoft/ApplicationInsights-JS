@@ -164,7 +164,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                     this._ai.flush();
                     this.clock.tick(10);
                 })
-                .concat(PollingAssert.createPollingAssert(() => {
+                .concat(PollingAssert.asyncTaskPollingAssert(() => {
                     if (this.genericSpy && this.genericSpy.called) {
                         let argCount = 0;
                         this.genericSpy.args.forEach(call => {
@@ -173,7 +173,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                         return argCount >= 1;
                     }
                     return false;
-                }, "Wait for exception calls: 1 " + new Date().toISOString(), 15, 1000) as any)
+                }, "Wait for exception calls: 1 " + new Date().toISOString(), 15, 1000))
                 .add(() => {
                     let request = this.genericSpy.getCall(0).args[0];
                     let gzipData = request.data;
@@ -207,7 +207,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                     this._ai.flush();
                     this.clock.tick(10);
                 })
-                .concat(PollingAssert.createPollingAssert(() => {
+                .concat(PollingAssert.asyncTaskPollingAssert(() => {
                     if (this.genericSpy && this.genericSpy.called) {
                         let argCount = 0;
                         this.genericSpy.args.forEach(call => {
@@ -216,7 +216,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                         return argCount >= 1;
                     }
                     return false;
-                }, "Wait for exception calls: 1 " + new Date().toISOString(), 15, 1000) as any)
+                }, "Wait for exception calls: 1 " + new Date().toISOString(), 15, 1000))
                 .add(() => {
                     let request = this.genericSpy.getCall(0).args[0];
                     let gzipData = request.data;
