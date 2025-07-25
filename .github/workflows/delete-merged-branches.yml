@@ -98,6 +98,11 @@ jobs:
             echo "  → Checking PR status for branch: $branch"
 
             # Get PRs for this branch (both merged and closed)
+            # GitHub context variables used here:
+            # - github.repository: owner/repo-name (e.g., microsoft/ApplicationInsights-JS)
+            # - github.repository_owner: repository owner (e.g., microsoft)
+            # - GITHUB_TOKEN: automatically provided GitHub token for API access
+            # See: https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
             repo_api="https://api.github.com/repos/${{ github.repository }}"
             query="?head=${{ github.repository_owner }}:$branch&state=all"
             pr_response=$(curl -s \
