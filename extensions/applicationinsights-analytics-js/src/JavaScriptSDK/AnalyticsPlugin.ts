@@ -626,8 +626,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 // Reset ajax attempts counter for the new page view
                 if (_self.core) {
                     let ajaxPlugin = _self.core.getPlugin<IAjaxMonitorPlugin>("AjaxDependencyPlugin");
-                    if (ajaxPlugin && ajaxPlugin.resetAjaxAttempts) {
-                        ajaxPlugin.resetAjaxAttempts();
+                    if (ajaxPlugin && ajaxPlugin.plugin && ajaxPlugin.plugin.resetAjaxAttempts) {
+                        ajaxPlugin.plugin.resetAjaxAttempts();
                     }
                 }
             }

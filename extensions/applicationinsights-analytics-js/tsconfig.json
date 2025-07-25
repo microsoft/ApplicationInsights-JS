@@ -7,7 +7,6 @@
     "moduleResolution": "Node",
     "target": "es5",
     "alwaysStrict": true,
-    "suppressImplicitAnyIndexErrors": true,
     "allowSyntheticDefaultImports": true,
     "importHelpers": true,
     "noEmitHelpers": true,
