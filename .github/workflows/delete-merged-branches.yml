@@ -7,6 +7,8 @@ name: 'Delete Merged Branches'
 # Protected branches (will NOT be deleted):
 # - main
 # - master
+# - beta
+# - otel-sdk
 # - release* (case-insensitive: release-1.0, release/v2.0, etc.)
 # - Release* (case-insensitive: Release-1.0, Release/v2.0, etc.)
 # - legacy-* (e.g., legacy-v1, legacy-old)
@@ -57,6 +59,8 @@ jobs:
           PROTECTED_PATTERNS=(
             "main"
             "master"
+            "beta"
+            "otel-sdk"
             "release*"
             "Release*"
             "legacy-*"
