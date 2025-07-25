@@ -382,12 +382,10 @@ export class ApplicationInsightsTests extends AITestClass {
         });
 
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Init: init with cs promise and offline channel",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
-
+            test: () => {
                 // unload previous one first
                 let oriInst = this._ai;
                 if (oriInst && oriInst.unload) {
@@ -406,7 +404,6 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._config.channels = [[offlineChannel]];
                 this._config.initTimeOut= 80000;
 
-
                 let init = new ApplicationInsights({
                     config: this._config
                 });
@@ -417,40 +414,38 @@ export class ApplicationInsightsTests extends AITestClass {
                 let status = core.activeStatus && core.activeStatus();
                 Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
 
-                
                 config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1"
                 this.clock.tick(1);
                 status = core.activeStatus && core.activeStatus();
                 Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
                 // Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
                 
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
+                    let core = this._ai.core
+                    let activeStatus = core.activeStatus && core.activeStatus();
                 
-            }].add(PollingAssert.createPollingAssert(() => {
-                let core = this._ai.core
-                let activeStatus = core.activeStatus && core.activeStatus();
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
-                    let sendChannel = this._ai.getPlugin(BreezeChannelIdentifier);
-                    let offlineChannelPlugin = this._ai.getPlugin("OfflineChannel").plugin;
-                    Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
-                    Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
-                    let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
-                    Assert.ok(urlConfig, "offline url config is initialized");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60) as any)
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                        Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                        let sendChannel = this._ai.getPlugin(BreezeChannelIdentifier);
+                        let offlineChannelPlugin = this._ai.getPlugin("OfflineChannel").plugin;
+                        Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
+                        Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                        let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+                        Assert.ok(urlConfig, "offline url config is initialized");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60) as any);
+            }
         });
 
 
         
-        this.testCaseAsync({
+        this.testCase({
             name: "Init: init with cs string, change with cs promise",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 let config = this._ai.config;
                 let expectedIkey = ApplicationInsightsTests._instrumentationKey;
                 let expectedConnectionString = ApplicationInsightsTests._connectionString;
@@ -471,26 +466,24 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
                 //Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
                 
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
+                    let core = this._ai.core
+                    let activeStatus = core.activeStatus && core.activeStatus();
                 
-            }].add(PollingAssert.createPollingAssert(() => {
-                let core = this._ai.core
-                let activeStatus = core.activeStatus && core.activeStatus();
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60) as any)
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                        Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60) as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Init: init with cs null, ikey promise, endpoint promise",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
-
+            test: () => {
                 // unload previous one first
                 let oriInst = this._ai;
                 if (oriInst && oriInst.unload) {
@@ -512,8 +505,6 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._config.endpointUrl = endpointPromise;
                 this._config.initTimeOut= 80000;
 
-
-
                 let init = new ApplicationInsights({
                     config: this._config
                 });
@@ -525,18 +516,18 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
                 Assert.equal(config.connectionString,null, "connection string shoule be null");
                 
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
+                    let core = this._ai.core
+                    let activeStatus = core.activeStatus && core.activeStatus();
                 
-            }].add(PollingAssert.createPollingAssert(() => {
-                let core = this._ai.core
-                let activeStatus = core.activeStatus && core.activeStatus();
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl", core.config.endpointUrl ,"endpoint shoule be set");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60) as any)
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                        Assert.equal("testUrl", core.config.endpointUrl ,"endpoint shoule be set");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60) as any);
+            }
         });
 
 
@@ -726,13 +717,12 @@ export class ApplicationInsightsTests extends AITestClass {
     }
 
     public addCdnMonitorTests(): void {
-        this.testCaseAsync({
+        this.testCase({
             name: "E2E.GenericTests: Fetch Current CDN V3",
-            stepDelay: 1,
             useFakeServer: false,
             useFakeFetch: false,
             fakeFetchAutoRespond: false,
-            steps: [() => {
+            test: () => {
                 // Use beta endpoint to pre-test any changes before public V3 cdn
                 let random = utcNow();
                 // Under Cors Mode, Options request will be auto-triggered
@@ -749,48 +739,48 @@ export class ApplicationInsightsTests extends AITestClass {
                     Assert.ok(false, "Fetch Error: " + e);
                 }
 
-            }].add(PollingAssert.createPollingAssert(() => {
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
 
-                if (this._ctx && this._ctx.res && this._ctx.val) {
-                    let res = this._ctx.res;
-                    let status = res.status;
-                    if (status === 200) {
-                        // for Response headers:
-                        // content-type: text/javascript; charset=utf-8
-                        // x-ms-meta-aijssdksrc: should present
-                        // x-ms-meta-aijssdkver should present
-                        let headers = res.headers;
-                        let headerCnt = 0;
-                        headers.forEach((val, key) => {
-                            if (key === "content-type") {
-                                Assert.deepEqual(val, "text/javascript; charset=utf-8", "should have correct content-type response header");
-                                headerCnt ++;
-                            }
-                            if (key === "x-ms-meta-aijssdksrc") {
-                                Assert.ok(val, "should have sdk src response header");
-                                headerCnt ++;
-                            }
-                            if (key === "x-ms-meta-aijssdkver") {
-                                Assert.ok(val, "should have version number for response header");
-                                headerCnt ++;
-                            }
-                        });
-                        Assert.equal(headerCnt, 3, "all expected headers should be present");
-                        return true;
+                    if (this._ctx && this._ctx.res && this._ctx.val) {
+                        let res = this._ctx.res;
+                        let status = res.status;
+                        if (status === 200) {
+                            // for Response headers:
+                            // content-type: text/javascript; charset=utf-8
+                            // x-ms-meta-aijssdksrc: should present
+                            // x-ms-meta-aijssdkver should present
+                            let headers = res.headers;
+                            let headerCnt = 0;
+                            headers.forEach((val, key) => {
+                                if (key === "content-type") {
+                                    Assert.deepEqual(val, "text/javascript; charset=utf-8", "should have correct content-type response header");
+                                    headerCnt ++;
+                                }
+                                if (key === "x-ms-meta-aijssdksrc") {
+                                    Assert.ok(val, "should have sdk src response header");
+                                    headerCnt ++;
+                                }
+                                if (key === "x-ms-meta-aijssdkver") {
+                                    Assert.ok(val, "should have version number for response header");
+                                    headerCnt ++;
+                                }
+                            });
+                            Assert.equal(headerCnt, 3, "all expected headers should be present");
+                            return true;
+                        }
+                        return false;
                     }
                     return false;
-                }
-                return false;
-            }, "Wait for response" + new Date().toISOString(), 60) as any)
+                }, "Wait for response" + new Date().toISOString(), 60) as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "E2E.GenericTests: Fetch Current CDN V2",
-            stepDelay: 1,
             useFakeServer: false,
             useFakeFetch: false,
             fakeFetchAutoRespond: false,
-            steps: [() => {
+            test: () => {
                 // Use public endpoint for V2
                 let random = utcNow();
                 // Under Cors Mode, Options request will be triggered
@@ -803,38 +793,39 @@ export class ApplicationInsightsTests extends AITestClass {
                     });
                 });
 
-            }].add(PollingAssert.createPollingAssert(() => {
-                if (this._ctx && this._ctx.res && this._ctx.val) {
-                    let res = this._ctx.res;
-                    let status = res.status;
-                    if (status === 200) {
-                        // for Response headers:
-                        // content-type: text/javascript; charset=utf-8
-                        // x-ms-meta-aijssdksrc: should present
-                        // x-ms-meta-aijssdkver should present
-                        let headers = res.headers;
-                        let headerCnt = 0;
-                        headers.forEach((val, key) => {
-                            if (key === "content-type") {
-                                Assert.deepEqual(val, "text/javascript; charset=utf-8", "should have correct content-type response header");
-                                headerCnt ++;
-                            }
-                            if (key === "x-ms-meta-aijssdksrc") {
-                                Assert.ok(val, "should have sdk src response header");
-                                headerCnt ++;
-                            }
-                            if (key === "x-ms-meta-aijssdkver") {
-                                Assert.ok(val, "should have version number for response header");
-                                headerCnt ++;
-                            }
-                        });
-                        Assert.equal(headerCnt, 3, "all expected headers should be present");
-                        return true;
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
+                    if (this._ctx && this._ctx.res && this._ctx.val) {
+                        let res = this._ctx.res;
+                        let status = res.status;
+                        if (status === 200) {
+                            // for Response headers:
+                            // content-type: text/javascript; charset=utf-8
+                            // x-ms-meta-aijssdksrc: should present
+                            // x-ms-meta-aijssdkver should present
+                            let headers = res.headers;
+                            let headerCnt = 0;
+                            headers.forEach((val, key) => {
+                                if (key === "content-type") {
+                                    Assert.deepEqual(val, "text/javascript; charset=utf-8", "should have correct content-type response header");
+                                    headerCnt ++;
+                                }
+                                if (key === "x-ms-meta-aijssdksrc") {
+                                    Assert.ok(val, "should have sdk src response header");
+                                    headerCnt ++;
+                                }
+                                if (key === "x-ms-meta-aijssdkver") {
+                                    Assert.ok(val, "should have version number for response header");
+                                    headerCnt ++;
+                                }
+                            });
+                            Assert.equal(headerCnt, 3, "all expected headers should be present");
+                            return true;
+                        }
+                        return false;
                     }
                     return false;
-                }
-                return false;
-            }, "Wait for response" + new Date().toISOString(), 60) as any)
+                }, "Wait for response" + new Date().toISOString(), 60) as any);
+            }
         });
 
         this.testCaseAsync({
