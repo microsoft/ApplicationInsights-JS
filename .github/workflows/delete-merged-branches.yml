@@ -1,6 +1,22 @@
 ---
 name: 'Delete Merged Branches'
 
+# This workflow automatically deletes branches that are associated with
+# closed or merged pull requests. It runs weekly on Sundays at midnight UTC.
+#
+# Protected branches (will NOT be deleted):
+# - main
+# - master
+# - release* (case-insensitive: release-1.0, release/v2.0, etc.)
+# - Release* (case-insensitive: Release-1.0, Release/v2.0, etc.)
+# - legacy-* (e.g., legacy-v1, legacy-old)
+# - *-legacy (e.g., old-legacy, v1-legacy)
+#
+# The workflow will only delete branches that:
+# 1. Have associated pull requests
+# 2. All PRs for the branch are either merged or closed (no open PRs)
+# 3. Do not match any protected branch pattern
+
 on:
   schedule:
     # Run every Sunday at midnight UTC
@@ -24,6 +40,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Weekly branch cleanup script
+          #
+          # This script safely deletes branches associated with merged PRs
+          # while protecting important branches like main, master, release, etc.
+          #
+          # Logic:
+          # 1. Get all remote branches
+          # 2. Filter out protected branches using pattern matching
+          # 3. For each non-protected branch:
+          #    - Check if it has associated PRs
+          #    - Skip if no PRs found
+          #    - Skip if any PRs are still open
+          #    - Delete if all PRs are closed or merged
           # Protected branch patterns (case-insensitive matching)
           PROTECTED_PATTERNS=(
             "main"
