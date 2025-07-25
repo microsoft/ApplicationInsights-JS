@@ -1716,92 +1716,85 @@ export class ApplicationInsightsTests extends AITestClass {
             }, 'Set custom tags') as any)
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'Custom Tags: allowed to send custom properties via addTelemetryInitializer & shimmed addTelemetryInitializer',
-            stepDelay: 1,
-            steps: [
-                () => {
-                    this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
-                        item.tags.push({[this.tagKeys.cloudName]: "my.shim.cloud.name"});
-                    });
-                    this._ai.trackEvent({ name: "Custom event" });
-                }
-            ]
-            .add(this.asserts(1))
-            .add(PollingAssert.createPollingAssert(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
-                    const payload = JSON.parse(payloadStr[0]);
-                    Assert.ok(payload);
+            test: () => {
+                this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
+                    item.tags.push({[this.tagKeys.cloudName]: "my.shim.cloud.name"});
+                });
+                this._ai.trackEvent({ name: "Custom event" });
+                
+                return this._asyncQueue().add(this.asserts(1))
+                .add(PollingAssert.createPollingAssert(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                        const payload = JSON.parse(payloadStr[0]);
+                        Assert.ok(payload);
 
-                    if (payload && payload.tags) {
-                        const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
-                        const tagExpect: string = 'my.shim.cloud.name';
-                        Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
-                        return true;
+                        if (payload && payload.tags) {
+                            const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                            const tagExpect: string = 'my.shim.cloud.name';
+                            Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
+                            return true;
+                        }
+                        return false;
                     }
-                    return false;
-                }
-            }, 'Set custom tags') as any)
+                }, 'Set custom tags') as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'Custom Tags: allowed to send custom properties via shimmed addTelemetryInitializer',
-            stepDelay: 1,
-            steps: [
-                () => {
-                    this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
-                        item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
-                        item.tags[this.tagKeys.locationCity] = "my.custom.location.city";
-                        item.tags.push({[this.tagKeys.locationCountry]: "my.custom.location.country"});
-                        item.tags.push({[this.tagKeys.operationId]: "my.custom.operation.id"});
-                    });
-                    this._ai.trackEvent({ name: "Custom event via shimmed addTelemetryInitializer" });
-                }
-            ]
-            .add(this.asserts(1))
-            .add(PollingAssert.createPollingAssert(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
-                    if (payloadStr.length > 1) {
-                        this.dumpPayloadMessages(this.successSpy);
-                    }
-                    Assert.ok(payload);
+            test: () => {
+                this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
+                    item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
+                    item.tags[this.tagKeys.locationCity] = "my.custom.location.city";
+                    item.tags.push({[this.tagKeys.locationCountry]: "my.custom.location.country"});
+                    item.tags.push({[this.tagKeys.operationId]: "my.custom.operation.id"});
+                });
+                this._ai.trackEvent({ name: "Custom event via shimmed addTelemetryInitializer" });
+                
+                return this._asyncQueue().add(this.asserts(1))
+                .add(PollingAssert.createPollingAssert(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
+                        if (payloadStr.length > 1) {
+                            this.dumpPayloadMessages(this.successSpy);
+                        }
+                        Assert.ok(payload);
 
-                    if (payload && payload.tags) {
-                        const tagResult1: string = payload.tags && payload.tags[this.tagKeys.cloudName];
-                        const tagExpect1: string = 'my.custom.cloud.name';
-                        Assert.equal(tagResult1, tagExpect1, 'telemetryinitializer tag override successful');
-                        const tagResult2: string = payload.tags && payload.tags[this.tagKeys.locationCity];
-                        const tagExpect2: string = 'my.custom.location.city';
-                        Assert.equal(tagResult2, tagExpect2, 'telemetryinitializer tag override successful');
-                        const tagResult3: string = payload.tags && payload.tags[this.tagKeys.locationCountry];
-                        const tagExpect3: string = 'my.custom.location.country';
-                        Assert.equal(tagResult3, tagExpect3, 'telemetryinitializer tag override successful');
-                        const tagResult4: string = payload.tags && payload.tags[this.tagKeys.operationId];
-                        const tagExpect4: string = 'my.custom.operation.id';
-                        Assert.equal(tagResult4, tagExpect4, 'telemetryinitializer tag override successful');
-                        return true;
+                        if (payload && payload.tags) {
+                            const tagResult1: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                            const tagExpect1: string = 'my.custom.cloud.name';
+                            Assert.equal(tagResult1, tagExpect1, 'telemetryinitializer tag override successful');
+                            const tagResult2: string = payload.tags && payload.tags[this.tagKeys.locationCity];
+                            const tagExpect2: string = 'my.custom.location.city';
+                            Assert.equal(tagResult2, tagExpect2, 'telemetryinitializer tag override successful');
+                            const tagResult3: string = payload.tags && payload.tags[this.tagKeys.locationCountry];
+                            const tagExpect3: string = 'my.custom.location.country';
+                            Assert.equal(tagResult3, tagExpect3, 'telemetryinitializer tag override successful');
+                            const tagResult4: string = payload.tags && payload.tags[this.tagKeys.operationId];
+                            const tagExpect4: string = 'my.custom.operation.id';
+                            Assert.equal(tagResult4, tagExpect4, 'telemetryinitializer tag override successful');
+                            return true;
+                        }
+                        return false;
                     }
-                    return false;
-                }
-            }, 'Set custom tags') as any)
+                }, 'Set custom tags') as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext authId',
-            stepDelay: 1,
-            steps: [
-                () => {
-                    const context = (this._ai.context) as TelemetryContext;
-                    context.user.setAuthenticatedUserContext('10001');
-                    this._ai.trackTrace({ message: 'authUserContext test' });
-                }
-            ]
-                .add(this.asserts(1))
+            test: () => {
+                const context = (this._ai.context) as TelemetryContext;
+                context.user.setAuthenticatedUserContext('10001');
+                this._ai.trackTrace({ message: 'authUserContext test' });
+                
+                return this._asyncQueue().add(this.asserts(1))
                 .add(PollingAssert.createPollingAssert(() => {
                     let payloadStr = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
@@ -1819,20 +1812,18 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
                     }
                     return false;
-                }, 'user.authenticatedId') as any)
+                }, 'user.authenticatedId') as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext authId and accountId',
-            stepDelay: 1,
-            steps: [
-                () => {
-                    const context = (this._ai.context) as TelemetryContext;
-                    context.user.setAuthenticatedUserContext('10001', 'account123');
-                    this._ai.trackTrace({ message: 'authUserContext test' });
-                }
-            ]
-                .add(this.asserts(1))
+            test: () => {
+                const context = (this._ai.context) as TelemetryContext;
+                context.user.setAuthenticatedUserContext('10001', 'account123');
+                this._ai.trackTrace({ message: 'authUserContext test' });
+                
+                return this._asyncQueue().add(this.asserts(1))
                 .add(PollingAssert.createPollingAssert(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
@@ -1849,20 +1840,18 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
                     }
                     return false;
-                }, 'user.authenticatedId') as any)
+                }, 'user.authenticatedId') as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext non-ascii authId and accountId',
-            stepDelay: 1,
-            steps: [
-                () => {
-                    const context = (this._ai.context) as TelemetryContext;
-                    context.user.setAuthenticatedUserContext("\u0428", "\u0429");
-                    this._ai.trackTrace({ message: 'authUserContext test' });
-                }
-            ]
-                .add(this.asserts(1))
+            test: () => {
+                const context = (this._ai.context) as TelemetryContext;
+                context.user.setAuthenticatedUserContext("\u0428", "\u0429");
+                this._ai.trackTrace({ message: 'authUserContext test' });
+                
+                return this._asyncQueue().add(this.asserts(1))
                 .add(PollingAssert.createPollingAssert(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
@@ -1879,21 +1868,19 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
                     }
                     return false;
-                }, 'user.authenticatedId') as any)
+                }, 'user.authenticatedId') as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'AuthenticatedUserContext: clearAuthenticatedUserContext',
-            stepDelay: 1,
-            steps: [
-                () => {
-                    const context = (this._ai.context) as TelemetryContext;
-                    context.user.setAuthenticatedUserContext('10002', 'account567');
-                    context.user.clearAuthenticatedUserContext();
-                    this._ai.trackTrace({ message: 'authUserContext test' });
-                }
-            ]
-                .add(this.asserts(1))
+            test: () => {
+                const context = (this._ai.context) as TelemetryContext;
+                context.user.setAuthenticatedUserContext('10002', 'account567');
+                context.user.clearAuthenticatedUserContext();
+                this._ai.trackTrace({ message: 'authUserContext test' });
+                
+                return this._asyncQueue().add(this.asserts(1))
                 .add(PollingAssert.createPollingAssert(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
@@ -1910,7 +1897,8 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
                     }
                     return false;
-                }, 'user.authenticatedId') as any)
+                }, 'user.authenticatedId') as any);
+            }
         });
 
         // This doesn't need to be e2e
