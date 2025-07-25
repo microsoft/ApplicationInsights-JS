@@ -25,6 +25,11 @@ on:
     - cron: '0 0 * * 0'
   workflow_dispatch:
 
+# Required permissions for this workflow:
+# - contents: write - Required to delete branch references via GitHub API
+# - pull-requests: read - Required to query PR status and metadata
+# See: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#permissions
+# See: https://docs.github.com/en/rest/overview/permissions-required-for-github-apps
 permissions:
   contents: write
   pull-requests: read
