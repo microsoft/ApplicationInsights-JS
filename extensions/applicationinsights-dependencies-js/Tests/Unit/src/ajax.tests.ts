@@ -1822,8 +1822,6 @@ export class AjaxTests extends AITestClass {
 
         this.testCase({
             name: "Fetch: instrumentation handles empty string with traceId",
-            
-            
             timeOut: 10000,
             test: () => {
                 this._ajax = new AjaxMonitor();
@@ -1845,8 +1843,6 @@ export class AjaxTests extends AITestClass {
                 this._context.expectedTraceId = expectedTraceId;
                 this._context.expectedSpanId = expectedSpanId;
 
-                return this._asyncQueue()
-                            .add(() => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -1866,42 +1862,42 @@ export class AjaxTests extends AITestClass {
 
                 this._context.fetchCalls = fetchCalls;
 
-                // Act
-                let fetchSpy = this._context.fetchSpy;
-                let throwSpy = this._context.throwSpy;
-                let dependencyFields = this._context.dependencyFields;
-                let expectedTraceId = this._context.expectedTraceId;
-                let expectedSpanId = this._context.expectedSpanId;
-                let fetchCalls = this._context.fetchCalls;
-                
-                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
-                fetch("", {method: "post", [DisabledPropertyName]: false}).then(() => {
-                    // Assert
-                    Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
-                    let data = fetchSpy.args[0][0].baseData;
-                    Assert.equal("Fetch", data.type, "request is Fetch type");
-                    Assert.equal(false, throwSpy.called, "We should not have failed internally");
-                    Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
-                    Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
-                    Assert.equal(expectedTraceId, dependencyFields[0].sysProperties!.trace.traceID, "system properties traceId");
-                    Assert.equal(expectedSpanId, dependencyFields[0].sysProperties!.trace.parentID, "system properties spanId");
-                    Assert.equal(window.location.href.split("#")[0], dependencyFields[0].dependency.target, "Target is captured.");
+                return this._asyncQueue()
+                    .add(() => {
+                        // Act
+                        let fetchSpy = this._context.fetchSpy;
+                        let throwSpy = this._context.throwSpy;
+                        let dependencyFields = this._context.dependencyFields;
+                        let expectedTraceId = this._context.expectedTraceId;
+                        let expectedSpanId = this._context.expectedSpanId;
+                        let fetchCalls = this._context.fetchCalls;
+                        
+                        Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                        return fetch("", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                            // Assert
+                            Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
+                            let data = fetchSpy.args[0][0].baseData;
+                            Assert.equal("Fetch", data.type, "request is Fetch type");
+                            Assert.equal(false, throwSpy.called, "We should not have failed internally");
+                            Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+                            Assert.ok(dependencyFields[0].dependency.startTime, "startTime was specified before trackDependencyDataInternal was called");
+                            Assert.equal(expectedTraceId, dependencyFields[0].sysProperties!.trace.traceID, "system properties traceId");
+                            Assert.equal(expectedSpanId, dependencyFields[0].sysProperties!.trace.parentID, "system properties spanId");
+                            Assert.equal(window.location.href.split("#")[0], dependencyFields[0].dependency.target, "Target is captured.");
 
-                    // Assert that the HTTP method was preserved
-                    Assert.equal(1, fetchCalls.length);
-                    Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
-                    Assert.equal("post", fetchCalls[0].init?.method, "Has post method");
-                    let headers:Headers = fetchCalls[0].init.headers as Headers;
-                    Assert.notEqual(undefined, headers, "has headers");
-                    Assert.equal(true, headers.has(RequestHeaders.requestIdHeader), "AI header should be present"); // AI
-                    Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
-
-                    
-                }, () => {
-                    Assert.ok(false, "fetch failed!");
-                    
-                });
-                    }
+                            // Assert that the HTTP method was preserved
+                            Assert.equal(1, fetchCalls.length);
+                            Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
+                            Assert.equal("post", fetchCalls[0].init?.method, "Has post method");
+                            let headers:Headers = fetchCalls[0].init.headers as Headers;
+                            Assert.notEqual(undefined, headers, "has headers");
+                            Assert.equal(true, headers.has(RequestHeaders.requestIdHeader), "AI header should be present"); // AI
+                            Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
+                        }, () => {
+                            Assert.ok(false, "fetch failed!");
+                        });
+                    })
+                    .waitComplete();
             }
         });
 
@@ -3985,8 +3981,7 @@ export class AjaxFrozenTests extends AITestClass {
 
         this.testCase({
             name: "AjaxFrozenTests: check for prevent extensions",
-            
-            steps: [ () => {
+            test: () => {
                 Object.preventExtensions(XMLHttpRequest);
                 Object.freeze(XMLHttpRequest);
                 let reflect:any = getGlobalInst("Reflect");
@@ -4024,21 +4019,21 @@ export class AjaxFrozenTests extends AITestClass {
                 // trigger the request that should cause a track event once the xhr request is complete
                 xhr.open("GET", "https://httpbin.org/status/200");
                 xhr.send();
-                    }
-            }
-                    .add(PollingAssert.asyncTaskPollingAssert(() => {
-                let throwSpy = this._context["throwSpy"] as SinonStub;
-                if (throwSpy.called) {
-                    Assert.ok(throwSpy.calledOnce, "track is called");
-                    let message = throwSpy.args[0][2];
-                    Assert.notEqual(-1, message.indexOf("Failed to monitor XMLHttpRequest"));
-                    let data = throwSpy.args[0][3];
-                    Assert.notEqual(-1, data.exception.indexOf("Cannot add property _ajaxData"));
-                    return true;
-                }
 
-                return false;
-            }, 'response received', 60, 1000))
+                return this._asyncQueue()
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
+                        let throwSpy = this._context["throwSpy"] as SinonStub;
+                        if (throwSpy.called) {
+                            Assert.ok(throwSpy.calledOnce, "track is called");
+                            let message = throwSpy.args[0][2];
+                            Assert.notEqual(-1, message.indexOf("Failed to monitor XMLHttpRequest"));
+                            let data = throwSpy.args[0][3];
+                            Assert.notEqual(-1, data.exception.indexOf("Cannot add property _ajaxData"));
+                            return true;
+                        }
+
+                        return false;
+                    }, 'response received', 60, 1000))
                     .waitComplete();
             }
         });
@@ -4107,8 +4102,8 @@ export class AjaxFrozenTests extends AITestClass {
 
         //         return false;
         //     }, 'response received', 600, 1000))
-                    .waitComplete();
-            }
+        //             .waitComplete();
+        //     }
         // });
 
     }
