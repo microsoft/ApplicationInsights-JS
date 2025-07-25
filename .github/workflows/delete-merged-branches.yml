@@ -79,15 +79,16 @@ jobs:
             echo "Checking branch: $branch"
 
             # Check if branch matches any protected pattern
+            # Use [[ ]] pattern matching instead of case statement to properly
+            # support wildcard patterns stored in variables (e.g., "release*", "*-legacy")
+            # See: https://www.gnu.org/software/bash/manual/html_node/Pattern-Matching.html
             protected=false
             for pattern in "${PROTECTED_PATTERNS[@]}"; do
-              case "$branch" in
-                $pattern)
-                  protected=true
-                  echo "  → Protected (matches: $pattern), skipping"
-                  break
-                  ;;
-              esac
+              if [[ "$branch" == $pattern ]]; then
+                protected=true
+                echo "  → Protected (matches: $pattern), skipping"
+                break
+              fi
             done
 
             if [ "$protected" = true ]; then
