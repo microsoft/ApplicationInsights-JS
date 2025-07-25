@@ -1118,10 +1118,9 @@ export class ApplicationInsightsTests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with no Error sends to backend',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let autoTelemetry = {
                     message: "Test Message",
                     url: "https://dummy.no.error.example.com",
@@ -1132,92 +1131,97 @@ export class ApplicationInsightsTests extends AITestClass {
                 } as IAutoExceptionTelemetry;
                 this._ai.trackException({ exception: autoTelemetry });
                 Assert.ok(autoTelemetry);
-            }].add(this.asserts(1))
+
+                return this._asyncQueue().add(this.asserts(1));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with CustomError sends to backend',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 this._ai.trackException({ id: "testID", exception: new CustomTestError("Test Custom Error!") });
-            }].add(this.asserts(1)).add(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data, "Has Data");
-                    if (data) {
-                        Assert.ok(data.baseData, "Has BaseData");
-                        let baseData = data.baseData;
-                        if (baseData) {
-                            const ex = baseData.exceptions[0];
-                            Assert.ok(ex.message.indexOf("Test Custom Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
-                            Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
-                            Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
-                            Assert.ok(ex.stack.length > 0, "Has stack");
-                            Assert.ok(ex.parsedStack, "Stack was parsed");
-                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
-                            Assert.equal(baseData.properties.id, "testID", "Make sure the error message id is present [" + baseData.properties + "]");
+
+                return this._asyncQueue().add(this.asserts(1)).add(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        const data = payload.data;
+                        Assert.ok(data, "Has Data");
+                        if (data) {
+                            Assert.ok(data.baseData, "Has BaseData");
+                            let baseData = data.baseData;
+                            if (baseData) {
+                                const ex = baseData.exceptions[0];
+                                Assert.ok(ex.message.indexOf("Test Custom Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
+                                Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
+                                Assert.ok(ex.stack.length > 0, "Has stack");
+                                Assert.ok(ex.parsedStack, "Stack was parsed");
+                                Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                                Assert.equal(baseData.properties.id, "testID", "Make sure the error message id is present [" + baseData.properties + "]");
+                            }
                         }
                     }
-                }
-            })
+                });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException will keep id from the original exception',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 this._ai.trackException({id:"testId", error: new Error("test local exception"), severityLevel: 3});
-            }].add(this.asserts(1)).add(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data, "Has Data");
-                    if (data) {
-                        Assert.ok(data.baseData, "Has BaseData");
-                        let baseData = data.baseData;
-                        if (baseData) {
-                            const ex = baseData.exceptions[0];
-                            console.log(JSON.stringify(baseData.properties));
-                            Assert.equal(baseData.properties.id, "testId", "Make sure the error message id is present [" + ex.properties + "]");
+
+                return this._asyncQueue().add(this.asserts(1)).add(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        const data = payload.data;
+                        Assert.ok(data, "Has Data");
+                        if (data) {
+                            Assert.ok(data.baseData, "Has BaseData");
+                            let baseData = data.baseData;
+                            if (baseData) {
+                                const ex = baseData.exceptions[0];
+                                console.log(JSON.stringify(baseData.properties));
+                                Assert.equal(baseData.properties.id, "testId", "Make sure the error message id is present [" + ex.properties + "]");
+                            }
                         }
                     }
-                }
-            })
+                });
+            }
         });
 
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with CustomError sends to backend with custom properties',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 this._ai.trackException({ exception: new CustomTestError("Test Custom Error!") }, { custom: "custom value" });
-            }].add(this.asserts(1)).add(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data, "Has Data");
-                    if (data) {
-                        Assert.ok(data.baseData, "Has BaseData");
-                        let baseData = data.baseData;
-                        if (baseData) {
-                            const ex = baseData.exceptions[0];
-                            Assert.ok(ex.message.indexOf("Test Custom Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
-                            Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
-                            Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
-                            Assert.ok(ex.stack.length > 0, "Has stack");
-                            Assert.ok(ex.parsedStack, "Stack was parsed");
-                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
 
-                            Assert.ok(baseData.properties, "Has BaseData properties");
-                            Assert.equal(baseData.properties.custom, "custom value");
+                return this._asyncQueue().add(this.asserts(1)).add(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        const data = payload.data;
+                        Assert.ok(data, "Has Data");
+                        if (data) {
+                            Assert.ok(data.baseData, "Has BaseData");
+                            let baseData = data.baseData;
+                            if (baseData) {
+                                const ex = baseData.exceptions[0];
+                                Assert.ok(ex.message.indexOf("Test Custom Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
+                                Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
+                                Assert.ok(ex.stack.length > 0, "Has stack");
+                                Assert.ok(ex.parsedStack, "Stack was parsed");
+                                Assert.ok(ex.hasFullStack, "Stack has been decoded");
+
+                                Assert.ok(baseData.properties, "Has BaseData properties");
+                                Assert.equal(baseData.properties.custom, "custom value");
+                            }
                         }
                     }
-                }
-            })
+                });
+            }
         });
 
         this.testCaseAsync({
