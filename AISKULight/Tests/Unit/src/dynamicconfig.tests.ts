@@ -164,7 +164,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                     this._ai.flush();
                     this.clock.tick(10);
                 })
-                .concat(PollingAssert.asyncTaskPollingAssert(() => {
+                .add(PollingAssert.asyncTaskPollingAssert(() => {
                     if (this.genericSpy && this.genericSpy.called) {
                         let argCount = 0;
                         this.genericSpy.args.forEach(call => {
