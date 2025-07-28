@@ -177,6 +177,61 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     // Cache for storing cookie values when cookies are disabled
     let _pendingCookies: { [name: string]: { value: string; maxAgeSec?: number; domain?: string; path?: string } } = {};
 
+    // Helper function to flush pending cookies when cookies become enabled
+    function _flushPendingCookies() {
+        if (areCookiesSupported(logger)) {
+            objForEachKey(_pendingCookies, (name, pendingData) => {
+                if (!_isBlockedCookie(cookieMgrConfig, name)) {
+                    // Re-apply the cached cookie manually instead of using cookieMgr.set to avoid circular ref
+                    let values: any = {};
+                    let theValue = strTrim(pendingData.value || STR_EMPTY);
+                    
+                    // Only update domain if not already present and the value is truthy
+                    setValue(values, STR_DOMAIN, pendingData.domain || _domain, isTruthy, isUndefined);
+                    
+                    if (!isNullOrUndefined(pendingData.maxAgeSec)) {
+                        const _isIE = isIE();
+                        if (isUndefined(values[strExpires])) {
+                            const nowMs = utcNow();
+                            let expireMs = nowMs + (pendingData.maxAgeSec * 1000);
+                            
+                            if (expireMs > 0) {
+                                let expiry = new Date();
+                                expiry.setTime(expireMs);
+                                setValue(values, strExpires,
+                                    _formatDate(expiry, !_isIE ? strToUTCString : strToGMTString) || _formatDate(expiry, _isIE ? strToGMTString : strToUTCString) || STR_EMPTY,
+                                    isTruthy);
+                            }
+                        }
+                        
+                        if (!_isIE) {
+                            setValue(values, "max-age", STR_EMPTY + pendingData.maxAgeSec, null, isUndefined);
+                        }
+                    }
+                    
+                    let location = getLocation();
+                    if (location && location.protocol === "https:") {
+                        setValue(values, "secure", null, null, isUndefined);
+                        
+                        if (_allowUaSameSite === null) {
+                            _allowUaSameSite = !uaDisallowsSameSiteNone((getNavigator() || {} as Navigator).userAgent);
+                        }
+                        
+                        if (_allowUaSameSite) {
+                            setValue(values, "SameSite", "None", null, isUndefined);
+                        }
+                    }
+                    
+                    setValue(values, STR_PATH, pendingData.path || _path, null, isUndefined);
+                    
+                    _setCookieFn(name, _formatCookieValue(theValue, values));
+                }
+            });
+            // Clear the cache after flushing
+            _pendingCookies = {};
+        }
+    }
+
     // Make sure the root config is dynamic as it may be the global config
     rootConfig = createDynamicConfig(rootConfig || _globalCookieConfig, null, logger).cfg;
 
@@ -191,12 +246,20 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 
         _path = cookieMgrConfig.path || "/";
         _domain = cookieMgrConfig.domain;
+        
+        // Check if enabled state is changing
+        let wasEnabled = _enabled;
         // Explicitly checking against false, so that setting to undefined will === true
         _enabled = _isCfgEnabled(rootConfig, cookieMgrConfig) !== false;
 
         _getCookieFn = cookieMgrConfig.getCookie || _getCookieValue;
         _setCookieFn = cookieMgrConfig.setCookie || _setCookieValue;
         _delCookieFn = cookieMgrConfig.delCookie || _setCookieValue;
+
+        // If cookies were just enabled via config change and we have pending cookies, flush them
+        if (!wasEnabled && _enabled) {
+            _flushPendingCookies();
+        }
     }, logger);
 
     let cookieMgr: ICookieMgr = {
@@ -220,56 +283,8 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             cookieMgrConfig.enabled = value;
             
             // If cookies were just enabled and we have pending cookies, flush them
-            if (!wasEnabled && _enabled && areCookiesSupported(logger)) {
-                objForEachKey(_pendingCookies, (name, pendingData) => {
-                    if (!_isBlockedCookie(cookieMgrConfig, name)) {
-                        // Re-apply the cached cookie manually instead of using cookieMgr.set to avoid circular ref
-                        let values: any = {};
-                        let theValue = strTrim(pendingData.value || STR_EMPTY);
-                        
-                        // Only update domain if not already present and the value is truthy
-                        setValue(values, STR_DOMAIN, pendingData.domain || _domain, isTruthy, isUndefined);
-                        
-                        if (!isNullOrUndefined(pendingData.maxAgeSec)) {
-                            const _isIE = isIE();
-                            if (isUndefined(values[strExpires])) {
-                                const nowMs = utcNow();
-                                let expireMs = nowMs + (pendingData.maxAgeSec * 1000);
-                                
-                                if (expireMs > 0) {
-                                    let expiry = new Date();
-                                    expiry.setTime(expireMs);
-                                    setValue(values, strExpires,
-                                        _formatDate(expiry, !_isIE ? strToUTCString : strToGMTString) || _formatDate(expiry, _isIE ? strToGMTString : strToUTCString) || STR_EMPTY,
-                                        isTruthy);
-                                }
-                            }
-                            
-                            if (!_isIE) {
-                                setValue(values, "max-age", STR_EMPTY + pendingData.maxAgeSec, null, isUndefined);
-                            }
-                        }
-                        
-                        let location = getLocation();
-                        if (location && location.protocol === "https:") {
-                            setValue(values, "secure", null, null, isUndefined);
-                            
-                            if (_allowUaSameSite === null) {
-                                _allowUaSameSite = !uaDisallowsSameSiteNone((getNavigator() || {} as Navigator).userAgent);
-                            }
-                            
-                            if (_allowUaSameSite) {
-                                setValue(values, "SameSite", "None", null, isUndefined);
-                            }
-                        }
-                        
-                        setValue(values, STR_PATH, pendingData.path || _path, null, isUndefined);
-                        
-                        _setCookieFn(name, _formatCookieValue(theValue, values));
-                    }
-                });
-                // Clear the cache after flushing
-                _pendingCookies = {};
+            if (!wasEnabled && _enabled) {
+                _flushPendingCookies();
             }
         },
         set: (name: string, value: string, maxAgeSec?: number, domain?: string, path?: string) => {

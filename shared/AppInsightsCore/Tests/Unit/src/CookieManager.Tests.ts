@@ -1024,6 +1024,168 @@ export class CookieManagerTests extends AITestClass {
                 Assert.equal("", manager.get(newKey), "Should return empty string after unload");
             }
         });
+
+        this.testCase({
+            name: "CookieManager: Dynamic config change to enable cookies should flush cached values",
+            test: () => {
+                // Create a dynamic config that can be updated
+                let configValues = {
+                    cookieCfg: objExtend({}, this._cookieMgrCfg, {
+                        enabled: false
+                    })
+                };
+                let manager = createCookieMgr(configValues);
+
+                let newKey = "test." + newId();
+                let newValue = newId();
+
+                // Set a cookie while disabled - should be cached
+                let result = manager.set(newKey, newValue);
+                Assert.equal(true, result, "Set should return true even when disabled (cached)");
+                Assert.equal(undefined, this._testCookies[newKey], "Cookie should not be in storage when disabled");
+
+                // Get should return the cached value
+                Assert.equal(newValue, manager.get(newKey), "Should return cached value when disabled");
+
+                // Enable cookies via dynamic config change - should flush cached values
+                configValues.cookieCfg.enabled = true;
+
+                // Verify the cookie was flushed to actual storage
+                Assert.equal(newValue + "; path=/", this._testCookies[newKey], "Cookie should be flushed to actual storage via config change");
+                Assert.equal(newValue, manager.get(newKey), "Should still return the value after enabling");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: Dynamic config change to enable cookies with multiple cached values",
+            test: () => {
+                // Create a dynamic config that can be updated
+                let configValues = {
+                    cookieCfg: objExtend({}, this._cookieMgrCfg, {
+                        enabled: false
+                    })
+                };
+                let manager = createCookieMgr(configValues);
+
+                let cookies = [
+                    { key: "test1." + newId(), value: newId() },
+                    { key: "test2." + newId(), value: newId() },
+                    { key: "test3." + newId(), value: newId() }
+                ];
+
+                // Set multiple cookies while disabled - should be cached
+                cookies.forEach(cookie => {
+                    let result = manager.set(cookie.key, cookie.value);
+                    Assert.equal(true, result, "Set should return true even when disabled (cached)");
+                    Assert.equal(undefined, this._testCookies[cookie.key], "Cookie should not be in storage when disabled");
+                    Assert.equal(cookie.value, manager.get(cookie.key), "Should return cached value");
+                });
+
+                // Enable cookies via dynamic config change - should flush all cached values
+                configValues.cookieCfg.enabled = true;
+
+                cookies.forEach(cookie => {
+                    Assert.equal(cookie.value + "; path=/", this._testCookies[cookie.key], "Cookie should be flushed to actual storage via config change");
+                    Assert.equal(cookie.value, manager.get(cookie.key), "Should still return the value after enabling");
+                });
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: Dynamic config change with maxAge parameter should preserve options",
+            test: () => {
+                // Create a dynamic config that can be updated
+                let configValues = {
+                    cookieCfg: objExtend({}, this._cookieMgrCfg, {
+                        enabled: false
+                    })
+                };
+                let manager = createCookieMgr(configValues);
+
+                let newKey = "test." + newId();
+                let newValue = newId();
+                let maxAge = 3600; // 1 hour
+
+                // Set a cookie with maxAge while disabled - should be cached
+                let result = manager.set(newKey, newValue, maxAge);
+                Assert.equal(true, result, "Set should return true even when disabled (cached)");
+                Assert.equal(undefined, this._testCookies[newKey], "Cookie should not be in storage when disabled");
+                Assert.equal(newValue, manager.get(newKey), "Should return cached value");
+
+                // Enable cookies via dynamic config change - should flush cached value with maxAge
+                configValues.cookieCfg.enabled = true;
+
+                // Cookie should be flushed with the maxAge parameter
+                let expectedValue = this.isEmulatingIe ? 
+                    newValue + "; path=/; expires=" : 
+                    newValue + "; path=/; expires=";
+                Assert.ok(this._testCookies[newKey].indexOf(expectedValue) === 0, "Cookie should be flushed with expires");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: Dynamic config change from legacy disableCookiesUsage should flush cached values",
+            test: () => {
+                // Create a dynamic config that can be updated
+                let configValues = {
+                    disableCookiesUsage: true,
+                    cookieCfg: this._cookieMgrCfg
+                };
+                let manager = createCookieMgr(configValues);
+
+                let newKey = "test." + newId();
+                let newValue = newId();
+
+                // Set a cookie while disabled - should be cached
+                let result = manager.set(newKey, newValue);
+                Assert.equal(true, result, "Set should return true even when disabled (cached)");
+                Assert.equal(undefined, this._testCookies[newKey], "Cookie should not be in storage when disabled");
+
+                // Get should return the cached value
+                Assert.equal(newValue, manager.get(newKey), "Should return cached value when disabled");
+
+                // Enable cookies via dynamic config change - should flush cached values
+                configValues.disableCookiesUsage = false;
+
+                // Verify the cookie was flushed to actual storage
+                Assert.equal(newValue + "; path=/", this._testCookies[newKey], "Cookie should be flushed to actual storage via legacy config change");
+                Assert.equal(newValue, manager.get(newKey), "Should still return the value after enabling");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: Multiple enable/disable cycles via config change work correctly",
+            test: () => {
+                // Create a dynamic config that can be updated
+                let configValues = {
+                    cookieCfg: objExtend({}, this._cookieMgrCfg, {
+                        enabled: false
+                    })
+                };
+                let manager = createCookieMgr(configValues);
+
+                let newKey1 = "test1." + newId();
+                let newValue1 = newId();
+
+                // First cycle: disable -> cache -> enable -> flush
+                manager.set(newKey1, newValue1);
+                Assert.equal(newValue1, manager.get(newKey1), "Should return cached value");
+
+                configValues.cookieCfg.enabled = true;
+                Assert.equal(newValue1 + "; path=/", this._testCookies[newKey1], "First cookie should be flushed");
+
+                // Second cycle: disable -> cache -> enable -> flush
+                configValues.cookieCfg.enabled = false;
+                let newKey2 = "test2." + newId();
+                let newValue2 = newId();
+
+                manager.set(newKey2, newValue2);
+                Assert.equal(newValue2, manager.get(newKey2), "Should return second cached value");
+
+                configValues.cookieCfg.enabled = true;
+                Assert.equal(newValue2 + "; path=/", this._testCookies[newKey2], "Second cookie should be flushed");
+            }
+        });
     }
 }
 
