@@ -173,6 +173,9 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     let _getCookieFn: (name: string) => string;
     let _setCookieFn: (name: string, cookieValue: string) => void;
     let _delCookieFn: (name: string, cookieValue: string) => void;
+    
+    // Cache for storing cookie values when cookies are disabled
+    let _pendingCookies: { [name: string]: { value: string; maxAgeSec?: number; domain?: string; path?: string } } = {};
 
     // Make sure the root config is dynamic as it may be the global config
     rootConfig = createDynamicConfig(rootConfig || _globalCookieConfig, null, logger).cfg;
@@ -212,8 +215,62 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         },
         setEnabled: (value: boolean) => {
             // Explicitly checking against false, so that setting to undefined will === true
+            let wasEnabled = _enabled;
             _enabled = value !== false;
             cookieMgrConfig.enabled = value;
+            
+            // If cookies were just enabled and we have pending cookies, flush them
+            if (!wasEnabled && _enabled && areCookiesSupported(logger)) {
+                objForEachKey(_pendingCookies, (name, pendingData) => {
+                    if (!_isBlockedCookie(cookieMgrConfig, name)) {
+                        // Re-apply the cached cookie manually instead of using cookieMgr.set to avoid circular ref
+                        let values: any = {};
+                        let theValue = strTrim(pendingData.value || STR_EMPTY);
+                        
+                        // Only update domain if not already present and the value is truthy
+                        setValue(values, STR_DOMAIN, pendingData.domain || _domain, isTruthy, isUndefined);
+                        
+                        if (!isNullOrUndefined(pendingData.maxAgeSec)) {
+                            const _isIE = isIE();
+                            if (isUndefined(values[strExpires])) {
+                                const nowMs = utcNow();
+                                let expireMs = nowMs + (pendingData.maxAgeSec * 1000);
+                                
+                                if (expireMs > 0) {
+                                    let expiry = new Date();
+                                    expiry.setTime(expireMs);
+                                    setValue(values, strExpires,
+                                        _formatDate(expiry, !_isIE ? strToUTCString : strToGMTString) || _formatDate(expiry, _isIE ? strToGMTString : strToUTCString) || STR_EMPTY,
+                                        isTruthy);
+                                }
+                            }
+                            
+                            if (!_isIE) {
+                                setValue(values, "max-age", STR_EMPTY + pendingData.maxAgeSec, null, isUndefined);
+                            }
+                        }
+                        
+                        let location = getLocation();
+                        if (location && location.protocol === "https:") {
+                            setValue(values, "secure", null, null, isUndefined);
+                            
+                            if (_allowUaSameSite === null) {
+                                _allowUaSameSite = !uaDisallowsSameSiteNone((getNavigator() || {} as Navigator).userAgent);
+                            }
+                            
+                            if (_allowUaSameSite) {
+                                setValue(values, "SameSite", "None", null, isUndefined);
+                            }
+                        }
+                        
+                        setValue(values, STR_PATH, pendingData.path || _path, null, isUndefined);
+                        
+                        _setCookieFn(name, _formatCookieValue(theValue, values));
+                    }
+                });
+                // Clear the cache after flushing
+                _pendingCookies = {};
+            }
         },
         set: (name: string, value: string, maxAgeSec?: number, domain?: string, path?: string) => {
             let result = false;
@@ -271,6 +328,22 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 //let setCookieFn = cookieMgrConfig.setCookie || _setCookieValue;
                 _setCookieFn(name, _formatCookieValue(theValue, values));
                 result = true;
+            } else if (!_isIgnoredCookie(cookieMgrConfig, name)) {
+                // Cache the cookie value if cookies are disabled but not ignored
+                // Extract just the value part (before any semicolon) for caching
+                let theValue = strTrim(value || STR_EMPTY);
+                let idx = strIndexOf(theValue, ";");
+                if (idx !== -1) {
+                    theValue = strTrim(strLeft(value, idx));
+                }
+                
+                _pendingCookies[name] = {
+                    value: theValue,
+                    maxAgeSec: maxAgeSec,
+                    domain: domain,
+                    path: path
+                };
+                result = true; // Return true to indicate the operation was "successful" (cached)
             }
 
             return result;
@@ -279,6 +352,9 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             let value = STR_EMPTY
             if (_isMgrEnabled(cookieMgr) && !_isIgnoredCookie(cookieMgrConfig, name)) {
                 value = _getCookieFn(name);
+            } else if (!_isIgnoredCookie(cookieMgrConfig, name) && _pendingCookies[name]) {
+                // Return cached value if cookies are disabled but not ignored
+                value = _pendingCookies[name].value;
             }
 
             return value;
@@ -288,6 +364,12 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             if (_isMgrEnabled(cookieMgr)) {
                 // Only remove the cookie if the manager and cookie support has not been disabled
                 result = cookieMgr.purge(name, path);
+            }
+            
+            // Also remove from cache if it exists
+            if (_pendingCookies[name]) {
+                delete _pendingCookies[name];
+                result = true;
             }
 
             return result;
@@ -316,6 +398,8 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         unload: (isAsync?: boolean): void | IPromise<void> => {
             unloadHandler && unloadHandler.rm();
             unloadHandler = null;
+            // Clear any pending cookies on unload
+            _pendingCookies = {};
         }
     };
 

@@ -749,6 +749,281 @@ export class CookieManagerTests extends AITestClass {
                 }, core.config.cookieCfg);
             }
         });
+
+        this.testCase({
+            name: "CookieManager: Write cookies after being enabled - basic functionality",
+            test: () => {
+                let manager = createCookieMgr(this._config);
+
+                // Start with cookies disabled
+                manager.setEnabled(false);
+                Assert.equal(false, manager.isEnabled(), "Cookies should be disabled");
+
+                let newKey = "test." + newId();
+                let newValue = newId();
+                
+                // Set a cookie while disabled - should be cached
+                let result = manager.set(newKey, newValue);
+                Assert.equal(true, result, "Set should return true even when disabled (cached)");
+                
+                // Get should return the cached value
+                Assert.equal(newValue, manager.get(newKey), "Should return cached value when disabled");
+                
+                // Cookie should not be in actual storage
+                Assert.equal(undefined, this._testCookies[newKey], "Cookie should not be in actual storage yet");
+
+                // Enable cookies - should flush cached values
+                manager.setEnabled(true);
+                Assert.equal(true, manager.isEnabled(), "Cookies should be enabled");
+                
+                // Cookie should now be in actual storage
+                Assert.equal(newValue + "; path=/", this._testCookies[newKey], "Cookie should be flushed to actual storage");
+                
+                // Get should still return the value
+                Assert.equal(newValue, manager.get(newKey), "Should return value from actual storage");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: Write cookies after being enabled - multiple cookies",
+            test: () => {
+                let manager = createCookieMgr(this._config);
+
+                // Start with cookies disabled
+                manager.setEnabled(false);
+
+                let cookies = [
+                    { key: "test1." + newId(), value: newId() },
+                    { key: "test2." + newId(), value: newId() },
+                    { key: "test3." + newId(), value: newId() }
+                ];
+                
+                // Set multiple cookies while disabled
+                cookies.forEach(cookie => {
+                    let result = manager.set(cookie.key, cookie.value);
+                    Assert.equal(true, result, "Set should return true even when disabled");
+                    Assert.equal(cookie.value, manager.get(cookie.key), "Should return cached value");
+                    Assert.equal(undefined, this._testCookies[cookie.key], "Cookie should not be in actual storage yet");
+                });
+
+                // Enable cookies - should flush all cached values
+                manager.setEnabled(true);
+                
+                // All cookies should now be in actual storage
+                cookies.forEach(cookie => {
+                    Assert.equal(cookie.value + "; path=/", this._testCookies[cookie.key], "Cookie should be flushed to actual storage");
+                    Assert.equal(cookie.value, manager.get(cookie.key), "Should return value from actual storage");
+                });
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: Write cookies after being enabled - with maxAge and domain",
+            test: () => {
+                this._cookieMgrCfg.domain = "test.com";
+                let manager = createCookieMgr(this._config);
+
+                // Start with cookies disabled
+                manager.setEnabled(false);
+
+                let newKey = "test." + newId();
+                let newValue = newId();
+                let maxAge = 3600; // 1 hour
+                
+                // Set a cookie with maxAge while disabled
+                let result = manager.set(newKey, newValue, maxAge);
+                Assert.equal(true, result, "Set should return true even when disabled");
+                Assert.equal(newValue, manager.get(newKey), "Should return cached value");
+
+                // Enable cookies
+                manager.setEnabled(true);
+                
+                // Cookie should be flushed with the maxAge parameter
+                let actualCookieValue = this._testCookies[newKey];
+                Assert.ok(actualCookieValue, "Cookie should exist in storage");
+                Assert.ok(actualCookieValue.indexOf(newValue) === 0, "Cookie should start with the value");
+                Assert.ok(actualCookieValue.indexOf("domain=test.com") > -1, "Cookie should have domain");
+                Assert.ok(actualCookieValue.indexOf("path=/") > -1, "Cookie should have path");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: Write cookies after being enabled - overwrite cached values",
+            test: () => {
+                let manager = createCookieMgr(this._config);
+
+                // Start with cookies disabled
+                manager.setEnabled(false);
+
+                let newKey = "test." + newId();
+                let newValue1 = newId();
+                let newValue2 = newId();
+                
+                // Set a cookie while disabled
+                manager.set(newKey, newValue1);
+                Assert.equal(newValue1, manager.get(newKey), "Should return first cached value");
+                
+                // Overwrite with new value while still disabled
+                manager.set(newKey, newValue2);
+                Assert.equal(newValue2, manager.get(newKey), "Should return updated cached value");
+
+                // Enable cookies - should flush the latest value
+                manager.setEnabled(true);
+                
+                Assert.equal(newValue2 + "; path=/", this._testCookies[newKey], "Cookie should have the latest value");
+                Assert.equal(newValue2, manager.get(newKey), "Should return latest value from storage");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: Write cookies after being enabled - delete cached cookies",
+            test: () => {
+                let manager = createCookieMgr(this._config);
+
+                // Start with cookies disabled
+                manager.setEnabled(false);
+
+                let newKey = "test." + newId();
+                let newValue = newId();
+                
+                // Set a cookie while disabled
+                manager.set(newKey, newValue);
+                Assert.equal(newValue, manager.get(newKey), "Should return cached value");
+                
+                // Delete the cached cookie
+                let delResult = manager.del(newKey);
+                Assert.equal(true, delResult, "Delete should return true");
+                Assert.equal("", manager.get(newKey), "Should return empty string after delete");
+
+                // Enable cookies - nothing should be flushed
+                manager.setEnabled(true);
+                
+                Assert.equal(undefined, this._testCookies[newKey], "Cookie should not be in storage");
+                Assert.equal("", manager.get(newKey), "Should still return empty string");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: Write cookies after being enabled - ignore blocked cookies",
+            test: () => {
+                let cookieCfg: ICookieMgrConfig = objExtend(true, {}, this._cookieMgrCfg);
+                cookieCfg.blockedCookies = ["blockedCookie"];
+                
+                let manager = createCookieMgr({
+                    cookieCfg: cookieCfg
+                });
+
+                // Start with cookies disabled
+                manager.setEnabled(false);
+
+                let blockedKey = "blockedCookie";
+                let allowedKey = "allowedCookie";
+                let newValue = newId();
+                
+                // Try to set blocked cookie while disabled - should not be cached
+                let blockedResult = manager.set(blockedKey, newValue);
+                Assert.equal(false, blockedResult, "Setting blocked cookie should return false");
+                Assert.equal("", manager.get(blockedKey), "Should not return cached value for blocked cookie");
+                
+                // Set allowed cookie while disabled - should be cached
+                let allowedResult = manager.set(allowedKey, newValue);
+                Assert.equal(true, allowedResult, "Setting allowed cookie should return true");
+                Assert.equal(newValue, manager.get(allowedKey), "Should return cached value for allowed cookie");
+
+                // Enable cookies - only allowed cookie should be flushed
+                manager.setEnabled(true);
+                
+                Assert.equal(undefined, this._testCookies[blockedKey], "Blocked cookie should not be in storage");
+                Assert.equal(newValue + "; path=/", this._testCookies[allowedKey], "Allowed cookie should be in storage");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: Write cookies after being enabled - handle ignored cookies",
+            test: () => {
+                let cookieCfg: ICookieMgrConfig = objExtend(true, {}, this._cookieMgrCfg);
+                cookieCfg.ignoreCookies = ["ignoredCookie"];
+                
+                let manager = createCookieMgr({
+                    cookieCfg: cookieCfg
+                });
+
+                // Start with cookies disabled
+                manager.setEnabled(false);
+
+                let ignoredKey = "ignoredCookie";
+                let allowedKey = "allowedCookie";
+                let newValue = newId();
+                
+                // Try to set ignored cookie while disabled - should not be cached
+                let ignoredResult = manager.set(ignoredKey, newValue);
+                Assert.equal(false, ignoredResult, "Setting ignored cookie should return false");
+                Assert.equal("", manager.get(ignoredKey), "Should not return cached value for ignored cookie");
+                
+                // Set allowed cookie while disabled - should be cached
+                let allowedResult = manager.set(allowedKey, newValue);
+                Assert.equal(true, allowedResult, "Setting allowed cookie should return true");
+                Assert.equal(newValue, manager.get(allowedKey), "Should return cached value for allowed cookie");
+
+                // Enable cookies - only allowed cookie should be flushed
+                manager.setEnabled(true);
+                
+                Assert.equal(undefined, this._testCookies[ignoredKey], "Ignored cookie should not be in storage");
+                Assert.equal(newValue + "; path=/", this._testCookies[allowedKey], "Allowed cookie should be in storage");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: Write cookies after being enabled - multiple enable/disable cycles",
+            test: () => {
+                let manager = createCookieMgr(this._config);
+
+                let newKey1 = "test1." + newId();
+                let newKey2 = "test2." + newId();
+                let newValue1 = newId();
+                let newValue2 = newId();
+
+                // First cycle: disable, set, enable
+                manager.setEnabled(false);
+                manager.set(newKey1, newValue1);
+                Assert.equal(newValue1, manager.get(newKey1), "Should return cached value");
+                
+                manager.setEnabled(true);
+                Assert.equal(newValue1 + "; path=/", this._testCookies[newKey1], "First cookie should be flushed");
+
+                // Second cycle: disable again, set different cookie, enable
+                manager.setEnabled(false);
+                manager.set(newKey2, newValue2);
+                Assert.equal(newValue2, manager.get(newKey2), "Should return second cached value");
+                Assert.equal(newValue1, manager.get(newKey1), "Should still return first value from storage");
+                
+                manager.setEnabled(true);
+                Assert.equal(newValue2 + "; path=/", this._testCookies[newKey2], "Second cookie should be flushed");
+                Assert.equal(newValue1 + "; path=/", this._testCookies[newKey1], "First cookie should still be in storage");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: Write cookies after being enabled - unload clears cache",
+            test: () => {
+                let manager = createCookieMgr(this._config);
+
+                // Start with cookies disabled and set some cached cookies
+                manager.setEnabled(false);
+                let newKey = "test." + newId();
+                let newValue = newId();
+                manager.set(newKey, newValue);
+                Assert.equal(newValue, manager.get(newKey), "Should return cached value");
+
+                // Unload the manager
+                manager.unload && manager.unload();
+
+                // Enable cookies - nothing should be flushed since cache was cleared
+                manager.setEnabled(true);
+                Assert.equal(undefined, this._testCookies[newKey], "Cookie should not be in storage after unload");
+                Assert.equal("", manager.get(newKey), "Should return empty string after unload");
+            }
+        });
     }
 }
 
