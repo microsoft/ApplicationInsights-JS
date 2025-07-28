@@ -895,11 +895,44 @@ export class CookieManagerTests extends AITestClass {
                 Assert.equal(true, delResult, "Delete should return true");
                 Assert.equal("", manager.get(newKey), "Should return empty string after delete");
 
-                // Enable cookies - nothing should be flushed
+                // Enable cookies - nothing should be flushed since the cookie was deleted
                 manager.setEnabled(true);
                 
                 Assert.equal(undefined, this._testCookies[newKey], "Cookie should not be in storage");
                 Assert.equal("", manager.get(newKey), "Should still return empty string");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: Delete operation is cached when cookies disabled and applied when enabled",
+            test: () => {
+                let manager = createCookieMgr(this._config);
+
+                let newKey = "test." + newId();
+                let newValue = newId();
+                
+                // Start with cookies enabled and set a cookie
+                manager.setEnabled(true);
+                manager.set(newKey, newValue);
+                Assert.equal(newValue + "; path=/", this._testCookies[newKey], "Cookie should be in storage");
+                Assert.equal(newValue, manager.get(newKey), "Should return cookie value");
+                
+                // Disable cookies and delete the cookie
+                manager.setEnabled(false);
+                let delResult = manager.del(newKey);
+                Assert.equal(true, delResult, "Delete should return true when cached");
+                
+                // Cookie still exists in storage but deletion is cached
+                Assert.equal(newValue + "; path=/", this._testCookies[newKey], "Cookie should still be in storage while disabled");
+                
+                // Enable cookies - cached deletion should be applied
+                manager.setEnabled(true);
+                
+                // Check that the deletion was applied (cookie should have expiry in the past)
+                let cookieValue = this._testCookies[newKey];
+                Assert.ok(cookieValue, "Delete operation should have been applied");
+                Assert.ok(cookieValue.indexOf("expires=Thu, 01 Jan 1970 00:00:01 GMT") !== -1, "Cookie should have past expiry date");
+                Assert.equal("", manager.get(newKey), "Should return empty string after deletion is applied");
             }
         });
 
@@ -1184,6 +1217,43 @@ export class CookieManagerTests extends AITestClass {
 
                 configValues.cookieCfg.enabled = true;
                 Assert.equal(newValue2 + "; path=/", this._testCookies[newKey2], "Second cookie should be flushed");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: Deletion operation cached and applied via dynamic config change",
+            test: () => {
+                // Create a dynamic config that can be updated
+                let configValues = {
+                    cookieCfg: objExtend({}, this._cookieMgrCfg, {
+                        enabled: true
+                    })
+                };
+                let manager = createCookieMgr(configValues);
+
+                let newKey = "test." + newId();
+                let newValue = newId();
+                
+                // Set a cookie while enabled
+                manager.set(newKey, newValue);
+                Assert.equal(newValue + "; path=/", this._testCookies[newKey], "Cookie should be in storage");
+                
+                // Disable cookies via config and delete the cookie
+                configValues.cookieCfg.enabled = false;
+                let delResult = manager.del(newKey);
+                Assert.equal(true, delResult, "Delete should return true when cached");
+                
+                // Cookie still exists in storage but deletion is cached
+                Assert.equal(newValue + "; path=/", this._testCookies[newKey], "Cookie should still be in storage while disabled");
+                
+                // Enable cookies via dynamic config change - cached deletion should be applied
+                configValues.cookieCfg.enabled = true;
+                
+                // Check that the deletion was applied
+                let cookieValue = this._testCookies[newKey];
+                Assert.ok(cookieValue, "Delete operation should have been applied");
+                Assert.ok(cookieValue.indexOf("expires=Thu, 01 Jan 1970 00:00:01 GMT") !== -1, "Cookie should have past expiry date");
+                Assert.equal("", manager.get(newKey), "Should return empty string after deletion is applied");
             }
         });
     }
