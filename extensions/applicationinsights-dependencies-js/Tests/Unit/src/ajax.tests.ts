@@ -3816,8 +3816,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                 Assert.ok(trackSpy.notCalled, "No fetch called yet");
                 fetch("https://httpbin.org/status/200", { method: "post" });
                 Assert.equal(true, markSpy.called, "The code should have called been mark()");
-                    }
-            }
+                    })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
@@ -3883,7 +3882,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                     }
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track");
                 this._context["trackStub"] = trackSpy;
                 this._context["fetchCalls"] = fetchCalls;
 
