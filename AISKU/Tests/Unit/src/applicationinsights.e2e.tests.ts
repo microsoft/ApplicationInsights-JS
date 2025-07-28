@@ -1522,158 +1522,158 @@ export class ApplicationInsightsTests extends AITestClass {
             ].add(this.asserts(401, false))
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryInitializer: E2E override envelope data",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    // Setup
-                    const telemetryInitializer = {
-                        init: (envelope) => {
-                            envelope.baseData.name = 'other name'
-                            return true;
-                        }
+            test: () => {
+                // Setup
+                const telemetryInitializer = {
+                    init: (envelope) => {
+                        envelope.baseData.name = 'other name'
+                        return true;
                     }
-
-                    // Act
-                    this._ai.addTelemetryInitializer(telemetryInitializer.init);
-                    this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
                 }
-            ]
-                .add(this.asserts(1))
-                .add(() => {
-                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                    if (payloadStr.length > 0) {
-                        let payloadItems = payloadStr.length;
-                        Assert.equal(1, payloadItems, 'Only 1 track item is sent');
-                        const payload = JSON.parse(payloadStr[0]);
-                        Assert.ok(payload);
 
-                        if (payload && payload.baseData) {
-                            const nameResult: string = payload.data.baseData.metrics[0].name;
-                            const nameExpect: string = 'other name';
-                            Assert.equal(nameExpect, nameResult, 'telemetryinitializer override successful');
+                // Act
+                this._ai.addTelemetryInitializer(telemetryInitializer.init);
+                this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1))
+                    .add(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                            let payloadItems = payloadStr.length;
+                            Assert.equal(1, payloadItems, 'Only 1 track item is sent');
+                            const payload = JSON.parse(payloadStr[0]);
+                            Assert.ok(payload);
+
+                            if (payload && payload.baseData) {
+                                const nameResult: string = payload.data.baseData.metrics[0].name;
+                                const nameExpect: string = 'other name';
+                                Assert.equal(nameExpect, nameResult, 'telemetryinitializer override successful');
+                            }
                         }
-                    }
-                })
+                    });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: undefined properties are replaced by customer defined value with config convertUndefined.',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 this._ai.trackPageView({ name: 'pageview', properties: { 'prop1': 'val1' }});
                 this._ai.trackEvent({ name: 'event', properties: { 'prop2': undefined } });
-            }].add(this.asserts(3)).add(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                for (let i = 0; i < payloadStr.length; i++) {
-                    const payload = JSON.parse(payloadStr[i]);const baseType = payload.data.baseType;
-                    // Make the appropriate assersion depending on the baseType
-                    switch (baseType) {
-                        case Event.dataType:
-                            const eventData = payload.data;
-                            Assert.ok(eventData && eventData.baseData && eventData.baseData.properties['prop2']);
-                            Assert.equal(eventData.baseData.properties['prop2'], 'test-value');
-                            break;
-                        case PageView.dataType:
-                            const pageViewData = payload.data;
-                            Assert.ok(pageViewData && pageViewData.baseData && pageViewData.baseData.properties['prop1']);
-                            Assert.equal(pageViewData.baseData.properties['prop1'], 'val1');
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            })
+                
+                return this._asyncQueue()
+                    .add(this.asserts(3))
+                    .add(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        for (let i = 0; i < payloadStr.length; i++) {
+                            const payload = JSON.parse(payloadStr[i]);const baseType = payload.data.baseType;
+                            // Make the appropriate assersion depending on the baseType
+                            switch (baseType) {
+                                case Event.dataType:
+                                    const eventData = payload.data;
+                                    Assert.ok(eventData && eventData.baseData && eventData.baseData.properties['prop2']);
+                                    Assert.equal(eventData.baseData.properties['prop2'], 'test-value');
+                                    break;
+                                case PageView.dataType:
+                                    const pageViewData = payload.data;
+                                    Assert.ok(pageViewData && pageViewData.baseData && pageViewData.baseData.properties['prop1']);
+                                    Assert.equal(pageViewData.baseData.properties['prop1'], 'val1');
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    });
+            }
         });
     }
 
     public addDependencyPluginTests(): void {
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: trackDependencyData",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    const data: IDependencyTelemetry = {
-                        target: 'http://abc',
-                        responseCode: 200,
-                        type: 'GET',
-                        id: 'abc'
-                    }
-                    this._ai.trackDependencyData(data);
+            test: () => {
+                const data: IDependencyTelemetry = {
+                    target: 'http://abc',
+                    responseCode: 200,
+                    type: 'GET',
+                    id: 'abc'
                 }
-            ].add(this.asserts(1))
+                this._ai.trackDependencyData(data);
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: auto collection of ajax requests",
-            stepDelay: 1,
             useFakeServer: true,
             fakeServerAutoRespond: true,
-            steps: [
-                () => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('GET', 'https://httpbin.org/status/200');
-                    xhr.send();
-                    Assert.ok(true);
-                }
-            ].add(this.asserts(1))
+            test: () => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', 'https://httpbin.org/status/200');
+                xhr.send();
+                Assert.ok(true);
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1));
+            }
         });
         let global = getGlobal();
         if (global && global.fetch) {
-            this.testCaseAsync({
+            this.testCase({
                 name: "DependenciesPlugin: auto collection of outgoing fetch requests " + (this.isFetchPolyfill ? " using polyfill " : ""),
-                stepDelay: 5000,
                 useFakeFetch: true,
                 fakeFetchAutoRespond: true,
-                steps: [
-                    () => {
-                        fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
-                        Assert.ok(true, "fetch monitoring is instrumented");
-                    },
-                    () => {
-                        fetch('https://httpbin.org/status/200', { method: 'GET' });
-                        Assert.ok(true, "fetch monitoring is instrumented");
-                    },
-                    () => {
-                        fetch('https://httpbin.org/status/200');
-                        Assert.ok(true, "fetch monitoring is instrumented");
-                    }
-                ].add(this.asserts(3, false, false))
-                    .add(() => {
-                        let args = [];
-                        this.trackSpy.args.forEach(call => {
-                            let message = call[0].baseData.message||"";
-                            // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
-                            if (message.indexOf("AI (Internal): 72 ") == -1) {
-                                args.push(call[0]);
+                test: () => {
+                    fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
+                    Assert.ok(true, "fetch monitoring is instrumented");
+                    
+                    fetch('https://httpbin.org/status/200', { method: 'GET' });
+                    Assert.ok(true, "fetch monitoring is instrumented");
+                    
+                    fetch('https://httpbin.org/status/200');
+                    Assert.ok(true, "fetch monitoring is instrumented");
+                    
+                    return this._asyncQueue()
+                        .add(this.asserts(3, false, false))
+                        .add(() => {
+                            let args = [];
+                            this.trackSpy.args.forEach(call => {
+                                let message = call[0].baseData.message||"";
+                                // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                                if (message.indexOf("AI (Internal): 72 ") == -1) {
+                                    args.push(call[0]);
+                                }
+                            });
+
+                            let type = "Fetch";
+                            if (this.isFetchPolyfill) {
+                                type = "Ajax";
+                                Assert.ok(true, "Using fetch polyfill");
                             }
+
+                            Assert.equal(3, args.length, "track is called 3 times");
+                            let baseData = args[0].baseData;
+                            Assert.equal(type, baseData.type, "request is " + type + " type");
+                            Assert.equal('value', baseData.properties.requestHeaders['header'], "fetch request's user defined request header is stored");
+                            Assert.ok(baseData.properties.responseHeaders, "fetch request's reponse header is stored");
+
+                            baseData = args[1].baseData;
+                            Assert.equal(3, Object.keys(baseData.properties.requestHeaders).length, "two request headers set up when there's no user defined request header");
+                            Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
+                            Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
+                            Assert.ok(baseData.properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparent");
+                            const id: string = baseData.id;
+                            const regex = id.match(/\|.{32}\..{16}\./g);
+                            Assert.ok(id.length > 0);
+                            Assert.equal(1, regex.length)
+                            Assert.equal(id, regex[0]);
                         });
-
-                        let type = "Fetch";
-                        if (this.isFetchPolyfill) {
-                            type = "Ajax";
-                            Assert.ok(true, "Using fetch polyfill");
-                        }
-
-                        Assert.equal(3, args.length, "track is called 3 times");
-                        let baseData = args[0].baseData;
-                        Assert.equal(type, baseData.type, "request is " + type + " type");
-                        Assert.equal('value', baseData.properties.requestHeaders['header'], "fetch request's user defined request header is stored");
-                        Assert.ok(baseData.properties.responseHeaders, "fetch request's reponse header is stored");
-
-                        baseData = args[1].baseData;
-                        Assert.equal(3, Object.keys(baseData.properties.requestHeaders).length, "two request headers set up when there's no user defined request header");
-                        Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
-                        Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
-                        Assert.ok(baseData.properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparent");
-                        const id: string = baseData.id;
-                        const regex = id.match(/\|.{32}\..{16}\./g);
-                        Assert.ok(id.length > 0);
-                        Assert.equal(1, regex.length)
-                        Assert.equal(id, regex[0]);
-                    })
+                }
             });
         } else {
             this.testCase({
@@ -1686,34 +1686,33 @@ export class ApplicationInsightsTests extends AITestClass {
     }
 
     public addPropertiesPluginTests(): void {
-        this.testCaseAsync({
+        this.testCase({
             name: 'Custom Tags: allowed to send custom properties via addTelemetryInitializer',
-            stepDelay: 1,
-            steps: [
-                () => {
-                    this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
-                        item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
-                    });
-                    this._ai.trackEvent({ name: "Custom event via addTelemetryInitializer" });
-                }
-            ]
-            .add(this.asserts(1, false, false))
-            .add(PollingAssert.createPollingAssert(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length) {
-                    const payload = JSON.parse(payloadStr[0]);
-                        Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
-                        Assert.ok(payload);
+            test: () => {
+                this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
+                    item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
+                });
+                this._ai.trackEvent({ name: "Custom event via addTelemetryInitializer" });
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1, false, false))
+                    .add(PollingAssert.createPollingAssert(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length) {
+                            const payload = JSON.parse(payloadStr[0]);
+                                Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
+                                Assert.ok(payload);
 
-                    if (payload && payload.tags) {
-                        const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
-                        const tagExpect: string = 'my.custom.cloud.name';
-                        Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
-                        return true;
-                    }
-                    return false;
-                }
-            }, 'Set custom tags') as any)
+                            if (payload && payload.tags) {
+                                const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                                const tagExpect: string = 'my.custom.cloud.name';
+                                Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
+                                return true;
+                            }
+                            return false;
+                        }
+                    }, 'Set custom tags') as any);
+            }
         });
 
         this.testCase({
