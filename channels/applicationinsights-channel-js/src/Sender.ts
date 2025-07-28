@@ -14,7 +14,7 @@ import {
     isArray, isBeaconsSupported, isFeatureEnabled, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange,
     parseResponse, prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
-import { IPromise, createPromise } from "@nevware21/ts-async";
+import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
     ITimerHandler, getInst, isFunction, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine,
     scheduleTimeout
@@ -218,25 +218,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     try {
                         let result = _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
                         
-                        // If triggerSend returns a promise, return it
-                        if (isPromiseLike(result)) {
+                        // Handles non-promise and always called if the returned promise resolves or rejects
+                        return doAwaitResponse(result, (rsp) => {
+                            if (callBack) {
+                                callBack(!rsp.rejected);
+                                return true;
+                            } else if (isAsync) {
+                                return !rsp.rejected;
+                            }
                             return result;
-                        }
-                        
-                        // If no promise returned but callback provided, call it
-                        if (callBack) {
-                            scheduleTimeout(() => callBack(true), 0);
-                            return true;
-                        }
-                        
-                        // If no promise returned but async=true and no callback, create a promise
-                        if (isAsync) {
-                            return createPromise<boolean>((resolve) => {
-                                scheduleTimeout(() => resolve(true), 0);
-                            });
-                        }
-                        
-                        return result;
+                        });
                     } catch (e) {
                         _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
                             _eInternalMessageId.FlushFailed,
@@ -1030,9 +1021,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         _self._buffer.markAsSent(payload);
                     }
 
+                    let result: void | IPromise<boolean>;
                     _sendPostMgr.preparePayload((processedPayload: IPayloadData) => {
-                        return sendPostFunc(processedPayload, onComplete, !isAsync);
+                        result = sendPostFunc(processedPayload, onComplete, !isAsync);
                     }, _zipPayload, payloadData, !isAsync);
+                    return result;
                 }
                 return null;
             }
