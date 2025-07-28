@@ -383,7 +383,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 }
 
                 // let delCookie = cookieMgrConfig.delCookie || _setCookieValue;
-                _delCookieFn(name, _formatSetCookieValue(STR_EMPTY, values));
+                _delCookieFn(name, _formatCookieValue(STR_EMPTY, values));
                 result = true;
             }
 
