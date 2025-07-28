@@ -116,7 +116,7 @@ export class ApplicationInsightsDynamicConfigTests extends AITestClass {
                 let config = this._ai.config;
 
                 return this._asyncQueue()
-                .concat(PollingAssert.asyncTaskPollingAssert(() => {
+                .add(PollingAssert.asyncTaskPollingAssert(() => {
                     let csPromise = this._ctx.csPromise;
                     let config = this._ai.config;
                     let ikey = config.instrumentationKey;
