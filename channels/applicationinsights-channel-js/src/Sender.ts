@@ -218,7 +218,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     try {
                         if (callBack) {
                             // If callback is provided, call it after send completes
-                            const result = _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
+                            _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
                             
                             // Call the callback asynchronously to ensure consistent behavior
                             scheduleTimeout(() => {
@@ -239,7 +239,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             // If no callback provided and async is true, return a promise
                             return createPromise<boolean>((resolve, reject) => {
                                 try {
-                                    const result = _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
+                                    _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
                                     // For now, resolve immediately since triggerSend doesn't return meaningful promise
                                     // In the future, this could be enhanced to wait for actual send completion
                                     scheduleTimeout(() => {
