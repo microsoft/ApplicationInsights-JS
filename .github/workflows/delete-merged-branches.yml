@@ -134,8 +134,7 @@ jobs:
 
             # All PRs are either merged or closed, safe to delete
             merged_prs=$(echo "$pr_response" | jq '[.[] | select(.merged_at != null)] | length')
-            closed_prs=$(echo "$pr_response" | \
-              jq '[.[] | select(.state == "closed" and .merged_at == null)] | length')
+            closed_prs=$(echo "$pr_response" | jq '[.[] | select(.state == "closed" and .merged_at == null)] | length')
 
             echo "  → Branch has $merged_prs merged and $closed_prs closed PRs"
             echo "  → Deleting branch: $branch"
