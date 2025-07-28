@@ -175,10 +175,10 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     let _delCookieFn: (name: string, cookieValue: string) => void;
     
     // Cache for storing cookie values when cookies are disabled
-    let _pendingCookies: { [name: string]: { operation: 'set' | 'delete'; cookieValue?: string; path?: string } } = {};
+    let _pendingCookies: { [name: string]: { operation: 'set' | 'purge'; cookieValue?: string; path?: string } } = {};
 
     // Helper function to format a cookie value with all attributes
-    function _formatCookieForCaching(value: string, maxAgeSec?: number, domain?: string, path?: string): string {
+    function _formatCookieValue(value: string, maxAgeSec?: number, domain?: string, path?: string): string {
         let values: any = {};
         let theValue = strTrim(value || STR_EMPTY);
         let idx = strIndexOf(theValue, ";");
@@ -240,7 +240,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                     if (pendingData.operation === 'set') {
                         // Apply the cached cookie value directly
                         _setCookieFn(name, pendingData.cookieValue);
-                    } else if (pendingData.operation === 'delete') {
+                    } else if (pendingData.operation === 'purge') {
                         // Apply the cached deletion
                         _delCookieFn(name, pendingData.cookieValue);
                     }
@@ -302,33 +302,40 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         },
         set: (name: string, value: string, maxAgeSec?: number, domain?: string, path?: string) => {
             let result = false;
-            if (_isMgrEnabled(cookieMgr) && !_isBlockedCookie(cookieMgrConfig, name)) {
-                // Use the helper function to format the cookie
-                let cookieValue = _formatCookieForCaching(value, maxAgeSec, domain, path);
-                _setCookieFn(name, cookieValue);
-                result = true;
-            } else if (!_isBlockedCookie(cookieMgrConfig, name)) {
-                // Cache the fully formatted cookie value if cookies are disabled but not blocked
-                let cookieValue = _formatCookieForCaching(value, maxAgeSec, domain, path);
-                _pendingCookies[name] = {
-                    operation: 'set',
-                    cookieValue: cookieValue
-                };
-                result = true; // Return true to indicate the operation was "successful" (cached)
+            let isBlocked = _isBlockedCookie(cookieMgrConfig, name);
+            
+            if (!isBlocked) {
+                let cookieValue = _formatCookieValue(value, maxAgeSec, domain, path);
+                
+                if (_isMgrEnabled(cookieMgr)) {
+                    _setCookieFn(name, cookieValue);
+                    result = true;
+                } else {
+                    // Cache the fully formatted cookie value if cookies are disabled but not blocked
+                    _pendingCookies[name] = {
+                        operation: 'set',
+                        cookieValue: cookieValue
+                    };
+                    result = true; // Return true to indicate the operation was "successful" (cached)
+                }
             }
 
             return result;
         },
         get: (name: string): string => {
-            let value = STR_EMPTY
-            if (_isMgrEnabled(cookieMgr) && !_isIgnoredCookie(cookieMgrConfig, name)) {
-                value = _getCookieFn(name);
-            } else if (!_isIgnoredCookie(cookieMgrConfig, name) && _pendingCookies[name] && _pendingCookies[name].operation === 'set') {
-                // Return cached value if cookies are disabled but not ignored
-                // Extract the value part from the formatted cookie string (before first semicolon)
-                let cookieValue = _pendingCookies[name].cookieValue;
-                let idx = strIndexOf(cookieValue, ";");
-                value = idx !== -1 ? strTrim(strLeft(cookieValue, idx)) : strTrim(cookieValue);
+            let value = STR_EMPTY;
+            let isIgnored = _isIgnoredCookie(cookieMgrConfig, name);
+            
+            if (!isIgnored) {
+                if (_isMgrEnabled(cookieMgr)) {
+                    value = _getCookieFn(name);
+                } else if (_pendingCookies[name] && _pendingCookies[name].operation === 'set') {
+                    // Return cached value if cookies are disabled but not ignored
+                    // Extract the value part from the formatted cookie string (before first semicolon)
+                    let cookieValue = _pendingCookies[name].cookieValue;
+                    let idx = strIndexOf(cookieValue, ";");
+                    value = idx !== -1 ? strTrim(strLeft(cookieValue, idx)) : strTrim(cookieValue);
+                }
             }
 
             return value;
@@ -352,7 +359,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 }
 
                 _pendingCookies[name] = {
-                    operation: 'delete',
+                    operation: 'purge',
                     cookieValue: _formatCookieValue(STR_EMPTY, values),
                     path: path
                 };
