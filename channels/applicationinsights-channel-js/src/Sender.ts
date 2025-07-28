@@ -216,81 +216,33 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     _clearScheduledTimer();
 
                     try {
-                        if (callBack) {
-                            // If callback is provided, call it after send completes
-                            _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
-                            
-                            // Call the callback asynchronously to ensure consistent behavior
-                            scheduleTimeout(() => {
-                                try {
-                                    callBack(true);
-                                } catch (e) {
-                                    // Ignore callback errors to prevent breaking the flush operation
-                                    _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING,
-                                        _eInternalMessageId.FlushFailed,
-                                        "flush callback failed: " + getExceptionName(e),
-                                        { exception: dumpObj(e) });
-                                }
-                            }, 0);
-                            
-                            // Return true to indicate callback will be called
-                            return true;
-                        } else if (isAsync) {
-                            // If no callback provided and async is true, return a promise
-                            return createPromise<boolean>((resolve, reject) => {
-                                try {
-                                    _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
-                                    // For now, resolve immediately since triggerSend doesn't return meaningful promise
-                                    // In the future, this could be enhanced to wait for actual send completion
-                                    scheduleTimeout(() => {
-                                        resolve(true);
-                                    }, 0);
-                                } catch (e) {
-                                    reject(e);
-                                }
-                            });
-                        } else {
-                            // Synchronous mode without callback
-                            return _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
+                        let result = _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
+                        
+                        // If triggerSend returns a promise, return it
+                        if (isPromiseLike(result)) {
+                            return result;
                         }
+                        
+                        // If no promise returned but callback provided, call it
+                        if (callBack) {
+                            scheduleTimeout(() => callBack(true), 0);
+                            return true;
+                        }
+                        
+                        // If no promise returned but async=true and no callback, create a promise
+                        if (isAsync) {
+                            return createPromise<boolean>((resolve) => {
+                                scheduleTimeout(() => resolve(true), 0);
+                            });
+                        }
+                        
+                        return result;
                     } catch (e) {
                         _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
                             _eInternalMessageId.FlushFailed,
                             "flush failed, telemetry will not be collected: " + getExceptionName(e),
                             { exception: dumpObj(e) });
-                            
-                        if (callBack) {
-                            // Call callback with false to indicate failure
-                            try {
-                                callBack(false);
-                            } catch (cbError) {
-                                // Ignore callback errors
-                            }
-                            return true;
-                        } else if (isAsync) {
-                            // Return rejected promise
-                            return createPromise<boolean>((resolve, reject) => {
-                                reject(e);
-                            });
-                        }
                     }
-                }
-                
-                if (callBack) {
-                    // If paused, call callback immediately with false
-                    scheduleTimeout(() => {
-                        try {
-                            callBack(false);
-                        } catch (e) {
-                            // Ignore callback errors
-                        }
-                    }, 0);
-                    return true;
-                } else if (isAsync) {
-                    // Return resolved promise with false since we're paused
-                    return createPromise<boolean>((resolve) => {
-                        resolve(false);
-                    });
                 }
             };
         
@@ -1514,7 +1466,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) will only be returned when no callback is provided
      * and async is true.
      */
-    public flush(async: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean> {
+    public flush(async: boolean = true, callBack?: (flushComplete?: boolean) => void): void | IPromise<boolean> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
