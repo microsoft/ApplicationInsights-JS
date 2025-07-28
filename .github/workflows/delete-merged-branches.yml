@@ -125,8 +125,7 @@ jobs:
             fi
 
             # Check if all PRs for this branch are either merged or closed
-            open_prs=$(echo "$pr_response" | \
-              jq '[.[] | select(.state == "open")] | length')
+            open_prs=$(echo "$pr_response" | jq '[.[] | select(.state == "open")] | length')
 
             if [ "$open_prs" -gt 0 ]; then
               echo "  → Branch has open PR(s), skipping"
@@ -134,11 +133,8 @@ jobs:
             fi
 
             # All PRs are either merged or closed, safe to delete
-            merged_prs=$(echo "$pr_response" | \
-              jq '[.[] | select(.merged_at != null)] | length')
-            closed_prs=$(echo "$pr_response" | \
-              jq '[.[] | select(.state == "closed" and .merged_at == null)] \
-              | length')
+            merged_prs=$(echo "$pr_response" | jq '[.[] | select(.merged_at != null)] | length')
+            closed_prs=$(echo "$pr_response" | jq '[.[] | select(.state == "closed" and .merged_at == null)] | length')
 
             echo "  → Branch has $merged_prs merged and $closed_prs closed PRs"
             echo "  → Deleting branch: $branch"
