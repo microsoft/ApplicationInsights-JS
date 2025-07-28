@@ -175,56 +175,75 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     let _delCookieFn: (name: string, cookieValue: string) => void;
     
     // Cache for storing cookie values when cookies are disabled
-    let _pendingCookies: { [name: string]: { value: string; maxAgeSec?: number; domain?: string; path?: string } } = {};
+    let _pendingCookies: { [name: string]: { operation: 'set' | 'delete'; cookieValue?: string; path?: string } } = {};
+
+    // Helper function to format a cookie value with all attributes
+    function _formatCookieForCaching(value: string, maxAgeSec?: number, domain?: string, path?: string): string {
+        let values: any = {};
+        let theValue = strTrim(value || STR_EMPTY);
+        let idx = strIndexOf(theValue, ";");
+        if (idx !== -1) {
+            theValue = strTrim(strLeft(value, idx));
+            values = _extractParts(strSubstring(value, idx + 1));
+        }
+
+        // Only update domain if not already present (isUndefined) and the value is truthy (not null, undefined or empty string)
+        setValue(values, STR_DOMAIN,  domain || _domain, isTruthy, isUndefined);
+    
+        if (!isNullOrUndefined(maxAgeSec)) {
+            const _isIE = isIE();
+            if (isUndefined(values[strExpires])) {
+                const nowMs = utcNow();
+                // Only add expires if not already present
+                let expireMs = nowMs + (maxAgeSec * 1000);
+    
+                // Sanity check, if zero or -ve then ignore
+                if (expireMs > 0) {
+                    let expiry = new Date();
+                    expiry.setTime(expireMs);
+                    setValue(values, strExpires,
+                        _formatDate(expiry, !_isIE ? strToUTCString : strToGMTString) || _formatDate(expiry, _isIE ? strToGMTString : strToUTCString) || STR_EMPTY,
+                        isTruthy);
+                }
+            }
+    
+            if (!_isIE) {
+                // Only replace if not already present
+                setValue(values, "max-age", STR_EMPTY + maxAgeSec, null, isUndefined);
+            }
+        }
+    
+        let location = getLocation();
+        if (location && location.protocol === "https:") {
+            setValue(values, "secure", null, null, isUndefined);
+
+            // Only set same site if not also secure
+            if (_allowUaSameSite === null) {
+                _allowUaSameSite = !uaDisallowsSameSiteNone((getNavigator() || {} as Navigator).userAgent);
+            }
+
+            if (_allowUaSameSite) {
+                setValue(values, "SameSite", "None", null, isUndefined);
+            }
+        }
+    
+        setValue(values, STR_PATH, path || _path, null, isUndefined);
+        
+        return _formatCookieValue(theValue, values);
+    }
 
     // Helper function to flush pending cookies when cookies become enabled
     function _flushPendingCookies() {
         if (areCookiesSupported(logger)) {
             objForEachKey(_pendingCookies, (name, pendingData) => {
                 if (!_isBlockedCookie(cookieMgrConfig, name)) {
-                    // Re-apply the cached cookie manually instead of using cookieMgr.set to avoid circular ref
-                    let values: any = {};
-                    let theValue = strTrim(pendingData.value || STR_EMPTY);
-                    
-                    // Only update domain if not already present and the value is truthy
-                    setValue(values, STR_DOMAIN, pendingData.domain || _domain, isTruthy, isUndefined);
-                    
-                    if (!isNullOrUndefined(pendingData.maxAgeSec)) {
-                        const _isIE = isIE();
-                        if (isUndefined(values[strExpires])) {
-                            const nowMs = utcNow();
-                            let expireMs = nowMs + (pendingData.maxAgeSec * 1000);
-                            
-                            if (expireMs > 0) {
-                                let expiry = new Date();
-                                expiry.setTime(expireMs);
-                                setValue(values, strExpires,
-                                    _formatDate(expiry, !_isIE ? strToUTCString : strToGMTString) || _formatDate(expiry, _isIE ? strToGMTString : strToUTCString) || STR_EMPTY,
-                                    isTruthy);
-                            }
-                        }
-                        
-                        if (!_isIE) {
-                            setValue(values, "max-age", STR_EMPTY + pendingData.maxAgeSec, null, isUndefined);
-                        }
+                    if (pendingData.operation === 'set') {
+                        // Apply the cached cookie value directly
+                        _setCookieFn(name, pendingData.cookieValue);
+                    } else if (pendingData.operation === 'delete') {
+                        // Apply the cached deletion
+                        _delCookieFn(name, pendingData.cookieValue);
                     }
-                    
-                    let location = getLocation();
-                    if (location && location.protocol === "https:") {
-                        setValue(values, "secure", null, null, isUndefined);
-                        
-                        if (_allowUaSameSite === null) {
-                            _allowUaSameSite = !uaDisallowsSameSiteNone((getNavigator() || {} as Navigator).userAgent);
-                        }
-                        
-                        if (_allowUaSameSite) {
-                            setValue(values, "SameSite", "None", null, isUndefined);
-                        }
-                    }
-                    
-                    setValue(values, STR_PATH, pendingData.path || _path, null, isUndefined);
-                    
-                    _setCookieFn(name, _formatCookieValue(theValue, values));
                 }
             });
             // Clear the cache after flushing
@@ -278,85 +297,22 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         },
         setEnabled: (value: boolean) => {
             // Explicitly checking against false, so that setting to undefined will === true
-            let wasEnabled = _enabled;
             _enabled = value !== false;
             cookieMgrConfig.enabled = value;
-            
-            // If cookies were just enabled and we have pending cookies, flush them
-            if (!wasEnabled && _enabled) {
-                _flushPendingCookies();
-            }
         },
         set: (name: string, value: string, maxAgeSec?: number, domain?: string, path?: string) => {
             let result = false;
             if (_isMgrEnabled(cookieMgr) && !_isBlockedCookie(cookieMgrConfig, name)) {
-                let values: any = {};
-                let theValue = strTrim(value || STR_EMPTY);
-                let idx = strIndexOf(theValue, ";");
-                if (idx !== -1) {
-                    theValue = strTrim(strLeft(value, idx));
-                    values = _extractParts(strSubstring(value, idx + 1));
-                }
-
-                // Only update domain if not already present (isUndefined) and the value is truthy (not null, undefined or empty string)
-                setValue(values, STR_DOMAIN,  domain || _domain, isTruthy, isUndefined);
-            
-                if (!isNullOrUndefined(maxAgeSec)) {
-                    const _isIE = isIE();
-                    if (isUndefined(values[strExpires])) {
-                        const nowMs = utcNow();
-                        // Only add expires if not already present
-                        let expireMs = nowMs + (maxAgeSec * 1000);
-            
-                        // Sanity check, if zero or -ve then ignore
-                        if (expireMs > 0) {
-                            let expiry = new Date();
-                            expiry.setTime(expireMs);
-                            setValue(values, strExpires,
-                                _formatDate(expiry, !_isIE ? strToUTCString : strToGMTString) || _formatDate(expiry, _isIE ? strToGMTString : strToUTCString) || STR_EMPTY,
-                                isTruthy);
-                        }
-                    }
-            
-                    if (!_isIE) {
-                        // Only replace if not already present
-                        setValue(values, "max-age", STR_EMPTY + maxAgeSec, null, isUndefined);
-                    }
-                }
-            
-                let location = getLocation();
-                if (location && location.protocol === "https:") {
-                    setValue(values, "secure", null, null, isUndefined);
-
-                    // Only set same site if not also secure
-                    if (_allowUaSameSite === null) {
-                        _allowUaSameSite = !uaDisallowsSameSiteNone((getNavigator() || {} as Navigator).userAgent);
-                    }
-
-                    if (_allowUaSameSite) {
-                        setValue(values, "SameSite", "None", null, isUndefined);
-                    }
-                }
-            
-                setValue(values, STR_PATH, path || _path, null, isUndefined);
-            
-                //let setCookieFn = cookieMgrConfig.setCookie || _setCookieValue;
-                _setCookieFn(name, _formatCookieValue(theValue, values));
+                // Use the helper function to format the cookie
+                let cookieValue = _formatCookieForCaching(value, maxAgeSec, domain, path);
+                _setCookieFn(name, cookieValue);
                 result = true;
             } else if (!_isBlockedCookie(cookieMgrConfig, name)) {
-                // Cache the cookie value if cookies are disabled but not blocked
-                // Extract just the value part (before any semicolon) for caching
-                let theValue = strTrim(value || STR_EMPTY);
-                let idx = strIndexOf(theValue, ";");
-                if (idx !== -1) {
-                    theValue = strTrim(strLeft(value, idx));
-                }
-                
+                // Cache the fully formatted cookie value if cookies are disabled but not blocked
+                let cookieValue = _formatCookieForCaching(value, maxAgeSec, domain, path);
                 _pendingCookies[name] = {
-                    value: theValue,
-                    maxAgeSec: maxAgeSec,
-                    domain: domain,
-                    path: path
+                    operation: 'set',
+                    cookieValue: cookieValue
                 };
                 result = true; // Return true to indicate the operation was "successful" (cached)
             }
@@ -367,9 +323,12 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             let value = STR_EMPTY
             if (_isMgrEnabled(cookieMgr) && !_isIgnoredCookie(cookieMgrConfig, name)) {
                 value = _getCookieFn(name);
-            } else if (!_isIgnoredCookie(cookieMgrConfig, name) && _pendingCookies[name]) {
+            } else if (!_isIgnoredCookie(cookieMgrConfig, name) && _pendingCookies[name] && _pendingCookies[name].operation === 'set') {
                 // Return cached value if cookies are disabled but not ignored
-                value = _pendingCookies[name].value;
+                // Extract the value part from the formatted cookie string (before first semicolon)
+                let cookieValue = _pendingCookies[name].cookieValue;
+                let idx = strIndexOf(cookieValue, ";");
+                value = idx !== -1 ? strTrim(strLeft(cookieValue, idx)) : strTrim(cookieValue);
             }
 
             return value;
@@ -379,11 +338,24 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             if (_isMgrEnabled(cookieMgr)) {
                 // Only remove the cookie if the manager and cookie support has not been disabled
                 result = cookieMgr.purge(name, path);
-            }
-            
-            // Also remove from cache if it exists
-            if (_pendingCookies[name]) {
-                delete _pendingCookies[name];
+            } else {
+                // Cache the deletion operation when cookies are disabled
+                // Format the deletion cookie string to use when cookies are re-enabled
+                let values = {
+                    [STR_PATH]: path ? path : "/",
+                    [strExpires]: "Thu, 01 Jan 1970 00:00:01 GMT"
+                };
+
+                if (!isIE()) {
+                    // Set max age to expire now
+                    values["max-age"] = "0";
+                }
+
+                _pendingCookies[name] = {
+                    operation: 'delete',
+                    cookieValue: _formatCookieValue(STR_EMPTY, values),
+                    path: path
+                };
                 result = true;
             }
 
