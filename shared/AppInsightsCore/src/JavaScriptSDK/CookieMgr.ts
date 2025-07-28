@@ -28,8 +28,10 @@ const strDisableCookiesUsage = "disableCookiesUsage";
 const strConfigCookieMgr = "_ckMgr";
 
 // Constants for pending cookie operations
-const PENDING_OP_SET = 0;
-const PENDING_OP_PURGE = 1;
+const enum ePendingOp {
+    Set = 0,
+    Purge = 1
+}
 
 let _supportsCookies: boolean = null;
 let _allowUaSameSite: boolean = null;
@@ -241,10 +243,10 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         if (areCookiesSupported(logger)) {
             objForEachKey(_pendingCookies, (name, pendingData) => {
                 if (!_isBlockedCookie(cookieMgrConfig, name)) {
-                    if (pendingData.o === PENDING_OP_SET) {
+                    if (pendingData.o === ePendingOp.Set) {
                         // Apply the cached cookie value directly
                         _setCookieFn(name, pendingData.v);
-                    } else if (pendingData.o === PENDING_OP_PURGE) {
+                    } else if (pendingData.o === ePendingOp.Purge) {
                         // Apply the cached deletion
                         _delCookieFn(name, pendingData.v);
                     }
@@ -317,7 +319,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 } else {
                     // Cache the fully formatted cookie value if cookies are disabled but not blocked
                     _pendingCookies[name] = {
-                        o: PENDING_OP_SET,
+                        o: ePendingOp.Set,
                         v: cookieValue
                     };
                     result = true; // Return true to indicate the operation was "successful" (cached)
@@ -333,7 +335,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             if (!isIgnored) {
                 if (_isMgrEnabled(cookieMgr)) {
                     value = _getCookieFn(name);
-                } else if (_pendingCookies[name] && _pendingCookies[name].o === PENDING_OP_SET) {
+                } else if (_pendingCookies[name] && _pendingCookies[name].o === ePendingOp.Set) {
                     // Return cached value if cookies are disabled but not ignored
                     // Extract the value part from the formatted cookie string (before first semicolon)
                     let cookieValue = _pendingCookies[name].v;
@@ -363,7 +365,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 }
 
                 _pendingCookies[name] = {
-                    o: PENDING_OP_PURGE,
+                    o: ePendingOp.Purge,
                     v: _formatSetCookieValue(STR_EMPTY, values),
                     p: path
                 };
