@@ -178,7 +178,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     let _pendingCookies: { [name: string]: { operation: 'set' | 'purge'; cookieValue?: string; path?: string } } = {};
 
     // Helper function to format a cookie value with all attributes
-    function _formatCookieValue(value: string, maxAgeSec?: number, domain?: string, path?: string): string {
+    function _formatSetCookieValue(value: string, maxAgeSec?: number, domain?: string, path?: string): string {
         let values: any = {};
         let theValue = strTrim(value || STR_EMPTY);
         let idx = strIndexOf(theValue, ";");
@@ -305,7 +305,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             let isBlocked = _isBlockedCookie(cookieMgrConfig, name);
             
             if (!isBlocked) {
-                let cookieValue = _formatCookieValue(value, maxAgeSec, domain, path);
+                let cookieValue = _formatSetCookieValue(value, maxAgeSec, domain, path);
                 
                 if (_isMgrEnabled(cookieMgr)) {
                     _setCookieFn(name, cookieValue);
@@ -360,7 +360,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 
                 _pendingCookies[name] = {
                     operation: 'purge',
-                    cookieValue: _formatCookieValue(STR_EMPTY, values),
+                    cookieValue: _formatSetCookieValue(STR_EMPTY, values),
                     path: path
                 };
                 result = true;
@@ -383,7 +383,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 }
 
                 // let delCookie = cookieMgrConfig.delCookie || _setCookieValue;
-                _delCookieFn(name, _formatCookieValue(STR_EMPTY, values));
+                _delCookieFn(name, _formatSetCookieValue(STR_EMPTY, values));
                 result = true;
             }
 
