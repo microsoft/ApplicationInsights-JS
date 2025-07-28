@@ -223,10 +223,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (callBack) {
                                 callBack(!rsp.rejected);
                                 return true;
-                            } else if (isAsync) {
-                                return !rsp.rejected;
                             }
-                            return result;
+                            return isAsync ? !rsp.rejected : result;
                         });
                     } catch (e) {
                         _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
@@ -1022,10 +1020,33 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     }
 
                     let result: void | IPromise<boolean>;
+                    let callbackExecuted = false;
+                    
                     _sendPostMgr.preparePayload((processedPayload: IPayloadData) => {
                         result = sendPostFunc(processedPayload, onComplete, !isAsync);
+                        callbackExecuted = true;
                     }, _zipPayload, payloadData, !isAsync);
-                    return result;
+                    
+                    if (callbackExecuted) {
+                        return result;
+                    }
+                    
+                    // Callback was not executed synchronously, so we need to return a promise
+                    return createPromise<boolean>((resolve, reject) => {
+                        // Wait for the callback to be executed asynchronously
+                        const checkCallback = () => {
+                            if (callbackExecuted) {
+                                if (isPromiseLike(result)) {
+                                    result.then(resolve, reject);
+                                } else {
+                                    resolve(result as boolean);
+                                }
+                            } else {
+                                scheduleTimeout(checkCallback, 1);
+                            }
+                        };
+                        checkCallback();
+                    });
                 }
                 return null;
             }
