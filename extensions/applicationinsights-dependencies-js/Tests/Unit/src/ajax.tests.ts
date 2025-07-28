@@ -125,6 +125,62 @@ export class AjaxTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Dependencies Configuration: resetAjaxAttempts resets ajax call counter",
+            useFakeTimers: true,
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "instrumentation_key",
+                    maxAjaxCallsPerView: 3, // Set lower limit for easier testing
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+                
+                // Track 3 ajax calls to reach the limit
+                for (let i = 0; i < 3; i++) {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open("GET", "http://microsoft.com");
+                    xhr.setRequestHeader("header name", "header value");
+                    xhr.send();
+                    (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
+                }
+                
+                Assert.equal(3, trackSpy.callCount, "Track should be called 3 times");
+                Assert.equal(false, throwSpy.called, "Should not have thrown error yet");
+                
+                // Try one more - should trigger the limit error
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.setRequestHeader("header name", "header value");
+                xhr.send();
+                (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
+                
+                Assert.equal(3, trackSpy.callCount, "Track should still be 3 after exceeding limit");
+                Assert.equal(true, throwSpy.called, "Should have thrown error for exceeding limit");
+                Assert.equal(_eInternalMessageId.MaxAjaxPerPVExceeded, throwSpy.args[0][1], "Error should be max exceeded");
+                
+                // Reset the ajax attempts counter
+                this._ajax.resetAjaxAttempts();
+                
+                // Clear the spy to start fresh
+                throwSpy.resetHistory();
+                
+                // Now try again - should work because counter was reset
+                var xhr2 = new XMLHttpRequest();
+                xhr2.open("GET", "http://microsoft.com");
+                xhr2.setRequestHeader("header name", "header value");
+                xhr2.send();
+                (<any>xhr2).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
+                
+                Assert.equal(4, trackSpy.callCount, "Track should now be called 4 times after reset");
+                Assert.equal(false, throwSpy.called, "Should not throw error after reset");
+            }
+        });
+
+        this.testCase({
             name: "Dependencies Configuration: Config can be set dynamically",
             useFakeTimers: true,
             test: () => {
