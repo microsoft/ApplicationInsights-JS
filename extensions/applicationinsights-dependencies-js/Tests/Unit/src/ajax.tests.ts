@@ -3891,51 +3891,48 @@ export class AjaxPerfTrackTests extends AITestClass {
                 this._ajax["_currentWindowHost"] = "httpbin.org";
 
                 return this._asyncQueue()
-                            .add(() => {
-                // Setup
-                let headers = new Headers();
-                headers.append('My-Header', 'Header field');
-                let init = {
-                    method: 'get',
-                    headers
-                };
-                const url = 'https://httpbin.org/status/200';
+                    .add(() => {
+                        // Setup
+                        let headers = new Headers();
+                        headers.append('My-Header', 'Header field');
+                        let init = {
+                            method: 'get',
+                            headers
+                        };
+                        const url = 'https://httpbin.org/status/200';
 
-                // Act
-                Assert.ok(trackSpy.notCalled, "No fetch called yet");
-                fetch(url, init).then(() => {
-                    // Assert
-                    Assert.ok(trackSpy.called, "The request was not tracked");
-                    Assert.equal(1, fetchCalls.length);
-                    Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
-                    let headers:Headers = fetchCalls[0].init.headers as Headers;
-                    Assert.equal(true, headers.has("My-Header"), "My-Header should be present");
-                    Assert.equal(false, headers.has(RequestHeaders.requestIdHeader), "Correlation header - AI header should be excluded"); // AI
-                    Assert.equal(false, headers.has(RequestHeaders.traceParentHeader), "Correlation header - W3c header should be excluded"); // W3C
-                }, () => {
-                    Assert.ok(false, "fetch failed!");
-                    
-                });
-                    }
-            }
+                        // Act
+                        Assert.ok(trackSpy.notCalled, "No fetch called yet");
+                        fetch(url, init).then(() => {
+                            // Assert
+                            Assert.ok(trackSpy.called, "The request was not tracked");
+                            Assert.equal(1, fetchCalls.length);
+                            Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
+                            let headers:Headers = fetchCalls[0].init.headers as Headers;
+                            Assert.equal(true, headers.has("My-Header"), "My-Header should be present");
+                            Assert.equal(false, headers.has(RequestHeaders.requestIdHeader), "Correlation header - AI header should be excluded"); // AI
+                            Assert.equal(false, headers.has(RequestHeaders.traceParentHeader), "Correlation header - W3c header should be excluded"); // W3C
+                        }, () => {
+                            Assert.ok(false, "fetch failed!");
+                        });
+                    })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
-                let trackStub = this._context["trackStub"] as SinonStub;
-                if (trackStub.called) {
-                    Assert.ok(trackStub.calledOnce, "track is called");
-                    let data = trackStub.args[0][0].baseData;
-                    Assert.equal("Fetch", data.type, "request is Fatch type");
-                    var id = data.id;
-                    Assert.equal("|", id[0]);
-                    Assert.equal(".", id[id.length - 1]);
-                    return true;
-                }
+                        let trackStub = this._context["trackStub"] as SinonStub;
+                        if (trackStub.called) {
+                            Assert.ok(trackStub.calledOnce, "track is called");
+                            let data = trackStub.args[0][0].baseData;
+                            Assert.equal("Fetch", data.type, "request is Fatch type");
+                            var id = data.id;
+                            Assert.equal("|", id[0]);
+                            Assert.equal(".", id[id.length - 1]);
+                            return true;
+                        }
 
-                return false;
-            }, 'response received', 60, 1000))
+                        return false;
+                    }, 'response received', 60, 1000))
                     .waitComplete();
             }
-        })
-    }
+        });
 }
 
 export class AjaxFrozenTests extends AITestClass {
