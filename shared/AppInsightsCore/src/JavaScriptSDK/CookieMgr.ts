@@ -328,8 +328,8 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 //let setCookieFn = cookieMgrConfig.setCookie || _setCookieValue;
                 _setCookieFn(name, _formatCookieValue(theValue, values));
                 result = true;
-            } else if (!_isIgnoredCookie(cookieMgrConfig, name)) {
-                // Cache the cookie value if cookies are disabled but not ignored
+            } else if (!_isBlockedCookie(cookieMgrConfig, name)) {
+                // Cache the cookie value if cookies are disabled but not blocked
                 // Extract just the value part (before any semicolon) for caching
                 let theValue = strTrim(value || STR_EMPTY);
                 let idx = strIndexOf(theValue, ";");
