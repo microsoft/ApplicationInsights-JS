@@ -27,6 +27,10 @@ const strIsCookieUseDisabled = "isCookieUseDisabled";
 const strDisableCookiesUsage = "disableCookiesUsage";
 const strConfigCookieMgr = "_ckMgr";
 
+// Constants for pending cookie operations
+const PENDING_OP_SET = 0;
+const PENDING_OP_PURGE = 1;
+
 let _supportsCookies: boolean = null;
 let _allowUaSameSite: boolean = null;
 let _parsedCookieValue: string = null;
@@ -175,7 +179,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     let _delCookieFn: (name: string, cookieValue: string) => void;
     
     // Cache for storing cookie values when cookies are disabled
-    let _pendingCookies: { [name: string]: { operation: 'set' | 'purge'; cookieValue?: string; path?: string } } = {};
+    let _pendingCookies: { [name: string]: { o: number; v?: string; p?: string } } = {};
 
     // Helper function to format a cookie value with all attributes
     function _formatSetCookieValue(value: string, maxAgeSec?: number, domain?: string, path?: string): string {
@@ -237,12 +241,12 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         if (areCookiesSupported(logger)) {
             objForEachKey(_pendingCookies, (name, pendingData) => {
                 if (!_isBlockedCookie(cookieMgrConfig, name)) {
-                    if (pendingData.operation === 'set') {
+                    if (pendingData.o === PENDING_OP_SET) {
                         // Apply the cached cookie value directly
-                        _setCookieFn(name, pendingData.cookieValue);
-                    } else if (pendingData.operation === 'purge') {
+                        _setCookieFn(name, pendingData.v);
+                    } else if (pendingData.o === PENDING_OP_PURGE) {
                         // Apply the cached deletion
-                        _delCookieFn(name, pendingData.cookieValue);
+                        _delCookieFn(name, pendingData.v);
                     }
                 }
             });
@@ -313,8 +317,8 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 } else {
                     // Cache the fully formatted cookie value if cookies are disabled but not blocked
                     _pendingCookies[name] = {
-                        operation: 'set',
-                        cookieValue: cookieValue
+                        o: PENDING_OP_SET,
+                        v: cookieValue
                     };
                     result = true; // Return true to indicate the operation was "successful" (cached)
                 }
@@ -329,10 +333,10 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             if (!isIgnored) {
                 if (_isMgrEnabled(cookieMgr)) {
                     value = _getCookieFn(name);
-                } else if (_pendingCookies[name] && _pendingCookies[name].operation === 'set') {
+                } else if (_pendingCookies[name] && _pendingCookies[name].o === PENDING_OP_SET) {
                     // Return cached value if cookies are disabled but not ignored
                     // Extract the value part from the formatted cookie string (before first semicolon)
-                    let cookieValue = _pendingCookies[name].cookieValue;
+                    let cookieValue = _pendingCookies[name].v;
                     let idx = strIndexOf(cookieValue, ";");
                     value = idx !== -1 ? strTrim(strLeft(cookieValue, idx)) : strTrim(cookieValue);
                 }
@@ -359,9 +363,9 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 }
 
                 _pendingCookies[name] = {
-                    operation: 'purge',
-                    cookieValue: _formatSetCookieValue(STR_EMPTY, values),
-                    path: path
+                    o: PENDING_OP_PURGE,
+                    v: _formatSetCookieValue(STR_EMPTY, values),
+                    p: path
                 };
                 result = true;
             }
