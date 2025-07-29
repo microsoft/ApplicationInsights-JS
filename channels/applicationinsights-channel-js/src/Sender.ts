@@ -210,21 +210,21 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 }
             };
         
-            _self.flush = (isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason) => {
+            _self.flush = (async: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean> => {
                 if (!_paused) {
                     // Clear the normal schedule timer as we are going to try and flush ASAP
                     _clearScheduledTimer();
 
                     try {
-                        let result = _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
+                        let result = _self.triggerSend(async, null, sendReason || SendRequestReason.ManualFlush);
                         
                         // Handles non-promise and always called if the returned promise resolves or rejects
-                        return doAwaitResponse(result, (rsp) => {
+                        return doAwaitResponse(result as any, (rsp) => {
                             if (callBack) {
                                 callBack(!rsp.rejected);
                                 return true;
                             }
-                            return isAsync ? !rsp.rejected : result;
+                            return async ? !rsp.rejected : result;
                         });
                     } catch (e) {
                         _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
@@ -1028,7 +1028,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         result = sendPostFunc(processedPayload, onComplete, !isAsync);
                         callbackExecuted = true;
                         if (resolveFn) {
-                            doAwait(result, resolveFn, rejectFn);
+                            doAwait(result as any, resolveFn, rejectFn);
                         }
                     }, _zipPayload, payloadData, !isAsync);
                     
