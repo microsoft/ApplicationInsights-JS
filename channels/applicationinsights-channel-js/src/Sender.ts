@@ -1022,12 +1022,19 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let result: void | IPromise<boolean>;
                     let callbackExecuted = false;
                     let resolveFn: any;
+                    let rejectFn: any;
                     
                     _sendPostMgr.preparePayload((processedPayload: IPayloadData) => {
                         result = sendPostFunc(processedPayload, onComplete, !isAsync);
                         callbackExecuted = true;
                         if (resolveFn) {
-                            doAwait(result, resolveFn);
+                            doAwaitResponse(result, (rsp) => {
+                                if (rsp.rejected) {
+                                    rejectFn(rsp.reason);
+                                } else {
+                                    resolveFn(rsp.value);
+                                }
+                            });
                         }
                     }, _zipPayload, payloadData, !isAsync);
                     
@@ -1038,6 +1045,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     // Callback was not executed synchronously, so we need to return a promise
                     return createPromise<boolean>((resolve, reject) => {
                         resolveFn = resolve;
+                        rejectFn = reject;
                     });
                 }
                 return null;
