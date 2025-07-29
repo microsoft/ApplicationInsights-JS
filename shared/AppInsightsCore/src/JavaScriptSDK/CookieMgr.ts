@@ -317,10 +317,9 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             return enabled;
         },
         setEnabled: (value: boolean) => {
-            // Update the config first to trigger onConfigChange with correct wasEnabled state
-            cookieMgrConfig.enabled = value;
             // Explicitly checking against false, so that setting to undefined will === true
             _enabled = value !== false;
+            cookieMgrConfig.enabled = value;
         },
         set: (name: string, value: string, maxAgeSec?: number, domain?: string, path?: string) => {
             let result = false;
