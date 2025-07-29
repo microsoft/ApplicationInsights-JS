@@ -183,6 +183,21 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     // Cache for storing cookie values when cookies are disabled
     let _pendingCookies: { [name: string]: { o: ePendingOp; v?: string } } = {};
 
+    // Helper function to create deletion cookie values
+    function _createDeletionValues(path?: string): any {
+        let values = {
+            [STR_PATH]: path ? path : "/",
+            [strExpires]: "Thu, 01 Jan 1970 00:00:01 GMT"
+        };
+
+        if (!isIE()) {
+            // Set max age to expire now
+            values["max-age"] = "0";
+        }
+
+        return values;
+    }
+
     // Helper function to format a cookie value with all attributes
     function _formatSetCookieValue(value: string, maxAgeSec?: number, domain?: string, path?: string): string {
         let values: any = {};
@@ -354,19 +369,9 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             } else {
                 // Cache the deletion operation when cookies are disabled
                 // Format the deletion cookie string to use when cookies are re-enabled
-                let values = {
-                    [STR_PATH]: path ? path : "/",
-                    [strExpires]: "Thu, 01 Jan 1970 00:00:01 GMT"
-                };
-
-                if (!isIE()) {
-                    // Set max age to expire now
-                    values["max-age"] = "0";
-                }
-
                 _pendingCookies[name] = {
                     o: ePendingOp.Purge,
-                    v: _formatCookieValue(STR_EMPTY, values)
+                    v: _formatCookieValue(STR_EMPTY, _createDeletionValues(path))
                 };
                 result = true;
             }
@@ -377,18 +382,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             let result = false;
             if (areCookiesSupported(logger)) {
                 // Setting the expiration date in the past immediately removes the cookie
-                let values = {
-                    [STR_PATH]: path ? path : "/",
-                    [strExpires]: "Thu, 01 Jan 1970 00:00:01 GMT"
-                }
-
-                if (!isIE()) {
-                    // Set max age to expire now
-                    values["max-age"] = "0"
-                }
-
-                // let delCookie = cookieMgrConfig.delCookie || _setCookieValue;
-                _delCookieFn(name, _formatCookieValue(STR_EMPTY, values));
+                _delCookieFn(name, _formatCookieValue(STR_EMPTY, _createDeletionValues(path)));
                 result = true;
             }
 
