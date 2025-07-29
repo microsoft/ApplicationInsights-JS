@@ -183,8 +183,8 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     // Cache for storing cookie values when cookies are disabled
     let _pendingCookies: { [name: string]: { o: ePendingOp; v?: string } } = {};
 
-    // Helper function to create deletion cookie values
-    function _createDeletionValues(path?: string): any {
+    // Helper function to format deletion cookie value
+    function _formatDeletionValue(path?: string): string {
         let values = {
             [STR_PATH]: path ? path : "/",
             [strExpires]: "Thu, 01 Jan 1970 00:00:01 GMT"
@@ -195,7 +195,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             values["max-age"] = "0";
         }
 
-        return values;
+        return _formatCookieValue(STR_EMPTY, values);
     }
 
     // Helper function to format a cookie value with all attributes
@@ -371,7 +371,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 // Format the deletion cookie string to use when cookies are re-enabled
                 _pendingCookies[name] = {
                     o: ePendingOp.Purge,
-                    v: _formatCookieValue(STR_EMPTY, _createDeletionValues(path))
+                    v: _formatDeletionValue(path)
                 };
                 result = true;
             }
@@ -382,7 +382,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             let result = false;
             if (areCookiesSupported(logger)) {
                 // Setting the expiration date in the past immediately removes the cookie
-                _delCookieFn(name, _formatCookieValue(STR_EMPTY, _createDeletionValues(path)));
+                _delCookieFn(name, _formatDeletionValue(path));
                 result = true;
             }
 
