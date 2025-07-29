@@ -862,6 +862,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Enable cookies
                 manager.setEnabled(true);
+                this.clock.tick(1);
                 
                 // Cookie should be flushed with the maxAge parameter
                 let actualCookieValue = this._testCookies[newKey];
@@ -990,6 +991,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Enable cookies - only allowed cookie should be flushed
                 manager.setEnabled(true);
+                this.clock.tick(1);
                 
                 Assert.equal(undefined, this._testCookies[blockedKey], "Blocked cookie should not be in storage");
                 Assert.equal(newValue + "; path=/", this._testCookies[allowedKey], "Allowed cookie should be in storage");
@@ -1025,6 +1027,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Enable cookies - only allowed cookie should be flushed
                 manager.setEnabled(true);
+                this.clock.tick(1);
                 
                 Assert.equal(undefined, this._testCookies[ignoredKey], "Ignored cookie should not be in storage");
                 Assert.equal(newValue + "; path=/", this._testCookies[allowedKey], "Allowed cookie should be in storage");
@@ -1056,6 +1059,7 @@ export class CookieManagerTests extends AITestClass {
                 Assert.equal(newValue1, manager.get(newKey1), "Should still return first value from storage");
                 
                 manager.setEnabled(true);
+                this.clock.tick(1);
                 Assert.equal(newValue2 + "; path=/", this._testCookies[newKey2], "Second cookie should be flushed");
                 Assert.equal(newValue1 + "; path=/", this._testCookies[newKey1], "First cookie should still be in storage");
             }
@@ -1107,6 +1111,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Enable cookies via dynamic config change - should flush cached values
                 configValues.cookieCfg.enabled = true;
+                this.clock.tick(1);
 
                 // Verify the cookie was flushed to actual storage
                 Assert.equal(newValue + "; path=/", this._testCookies[newKey], "Cookie should be flushed to actual storage via config change");
@@ -1141,6 +1146,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Enable cookies via dynamic config change - should flush all cached values
                 configValues.cookieCfg.enabled = true;
+                this.clock.tick(1);
 
                 cookies.forEach(cookie => {
                     Assert.equal(cookie.value + "; path=/", this._testCookies[cookie.key], "Cookie should be flushed to actual storage via config change");
@@ -1172,6 +1178,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Enable cookies via dynamic config change - should flush cached value with maxAge
                 configValues.cookieCfg.enabled = true;
+                this.clock.tick(1);
 
                 // Cookie should be flushed with the maxAge parameter
                 let expectedValue = this.isEmulatingIe ? 
@@ -1204,6 +1211,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Enable cookies via dynamic config change - should flush cached values
                 configValues.disableCookiesUsage = false;
+                this.clock.tick(1);
 
                 // Verify the cookie was flushed to actual storage
                 Assert.equal(newValue + "; path=/", this._testCookies[newKey], "Cookie should be flushed to actual storage via legacy config change");
@@ -1241,6 +1249,7 @@ export class CookieManagerTests extends AITestClass {
                 Assert.equal(newValue2, manager.get(newKey2), "Should return second cached value");
 
                 configValues.cookieCfg.enabled = true;
+                this.clock.tick(1);
                 Assert.equal(newValue2 + "; path=/", this._testCookies[newKey2], "Second cookie should be flushed");
             }
         });
@@ -1273,6 +1282,7 @@ export class CookieManagerTests extends AITestClass {
                 
                 // Enable cookies via dynamic config change - cached deletion should be applied
                 configValues.cookieCfg.enabled = true;
+                this.clock.tick(1);
                 
                 // Check that the deletion was applied
                 let cookieValue = this._testCookies[newKey];
