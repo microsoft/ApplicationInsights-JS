@@ -14,7 +14,7 @@ import {
     isArray, isBeaconsSupported, isFeatureEnabled, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange,
     parseResponse, prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
-import { IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { IPromise, createPromise, doAwaitResponse, doAwait } from "@nevware21/ts-async";
 import {
     ITimerHandler, getInst, isFunction, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine,
     scheduleTimeout
@@ -1021,10 +1021,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                     let result: void | IPromise<boolean>;
                     let callbackExecuted = false;
+                    let resolveFn: any;
                     
                     _sendPostMgr.preparePayload((processedPayload: IPayloadData) => {
                         result = sendPostFunc(processedPayload, onComplete, !isAsync);
                         callbackExecuted = true;
+                        if (resolveFn) {
+                            doAwait(result, resolveFn);
+                        }
                     }, _zipPayload, payloadData, !isAsync);
                     
                     if (callbackExecuted) {
@@ -1033,19 +1037,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     
                     // Callback was not executed synchronously, so we need to return a promise
                     return createPromise<boolean>((resolve, reject) => {
-                        // Wait for the callback to be executed asynchronously
-                        const checkCallback = () => {
-                            if (callbackExecuted) {
-                                if (isPromiseLike(result)) {
-                                    result.then(resolve, reject);
-                                } else {
-                                    resolve(result as boolean);
-                                }
-                            } else {
-                                scheduleTimeout(checkCallback, 1);
-                            }
-                        };
-                        checkCallback();
+                        resolveFn = resolve;
                     });
                 }
                 return null;
