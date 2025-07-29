@@ -11,10 +11,10 @@ This release contains a potential breaking change to the `flush` method signatur
 **Interface change:**
 ```typescript
 // Before:
-flush?(async: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean>;
+flush(async: boolean = true, callBack?: (flushComplete?: boolean) => void): void | IPromise<boolean>;
 
 // After: 
-flush?(isAsync: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean>;
+flush(isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean>;
 ```
 
 **This is only a breaking change if you rely on named parameters.** If you have custom channels or plugins that implement the `IChannelControls` interface directly and rely on passing named parameters, you will need to update the parameter name from `async` to `isAsync` in your implementation.
