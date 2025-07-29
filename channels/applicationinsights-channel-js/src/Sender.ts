@@ -224,7 +224,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                                 callBack(!rsp.rejected);
                                 return true;
                             }
-                            return isAsync ? !rsp.rejected : result;
+                            
+                            // When async=true and no callback, return a promise
+                            if (isAsync) {
+                                return createPromise<boolean>((resolve) => {
+                                    resolve(!rsp.rejected);
+                                });
+                            }
+                            
+                            return result;
                         });
                     } catch (e) {
                         _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
