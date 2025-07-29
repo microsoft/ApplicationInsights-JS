@@ -17,12 +17,13 @@ flush?(async: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?
 flush?(isAsync: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean>;
 ```
 
-If you have custom channels or plugins that implement the `IChannelControls` interface directly, you will need to update the parameter name from `async` to `isAsync` in your implementation.
+**This is only a breaking change if you rely on named parameters.** If you have custom channels or plugins that implement the `IChannelControls` interface directly and rely on passing named parameters, you will need to update the parameter name from `async` to `isAsync` in your implementation.
 
 ### Changelog
 
 - #2628 Fix flush method root cause - handle async callbacks in _doSend with proper error handling
-  - **Breaking change**: Renamed `flush` method parameter from `async` to `isAsync` in `IChannelControls` interface to avoid potential keyword conflicts
+  - **Potential breaking change**: Renamed `flush` method parameter from `async` to `isAsync` in `IChannelControls` interface to avoid potential keyword conflicts (only affects code that relies on named parameters)
+  - Fixed return type of `flush` method to properly include `boolean` when callbacks complete synchronously
   - Fixed root cause where `_doSend()` couldn't handle asynchronous callbacks from `preparePayload()` when compression is enabled
   - `await applicationInsights.flush()` now works correctly with compression enabled
   - Added proper error handling and promise rejection propagation through async callback chains

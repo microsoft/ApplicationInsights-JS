@@ -1474,7 +1474,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) will only be returned when no callback is provided
      * and isAsync is true.
      */
-    public flush(isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void): void | IPromise<boolean> {
+    public flush(isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

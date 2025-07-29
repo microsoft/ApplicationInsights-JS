@@ -4173,6 +4173,182 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(1024, appInsightsEnvelope.tags["ai.operation.name"].length, "The ai.operation.name should have been truncated to the maximum");
             }
         });
+
+        this.testCase({
+            name: "flush method handles synchronous callback execution",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                this._sender.initialize({
+                    instrumentationKey: 'abc',
+                    endpointUrl: 'https://example.com',
+                    isBeaconApiDisabled: true
+                }, core, []);
+                this.onDone(() => {
+                    this._sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'test item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                // Add some telemetry to flush
+                this._sender.processTelemetry(telemetryItem);
+
+                // Test sync flush with callback
+                let callbackCalled = false;
+                let callbackResult: boolean;
+                const result = this._sender.flush(false, (success) => {
+                    callbackCalled = true;
+                    callbackResult = success;
+                });
+
+                QUnit.assert.equal(typeof result, 'boolean', "flush should return boolean when callback provided");
+                QUnit.assert.equal(result, true, "flush should return true when callback will be called");
+                QUnit.assert.equal(callbackCalled, true, "callback should be called synchronously");
+                QUnit.assert.equal(callbackResult, true, "callback should receive success=true");
+            }
+        });
+
+        this.testCase({
+            name: "flush method handles asynchronous callback execution without callback",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                this._sender.initialize({
+                    instrumentationKey: 'abc',
+                    endpointUrl: 'https://example.com',
+                    isBeaconApiDisabled: true
+                }, core, []);
+                this.onDone(() => {
+                    this._sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'test item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                // Add some telemetry to flush
+                this._sender.processTelemetry(telemetryItem);
+
+                // Test async flush without callback - should return promise-like
+                const result = this._sender.flush(true);
+                
+                // Check if result is promise-like (has then method)
+                QUnit.assert.ok(result && typeof result === 'object', "flush should return promise-like object when async=true and no callback");
+                QUnit.assert.ok(typeof result.then === 'function', "returned object should have 'then' method");
+            }
+        });
+
+        this.testCase({
+            name: "flush method handles asynchronous callback execution with callback",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                this._sender.initialize({
+                    instrumentationKey: 'abc',
+                    endpointUrl: 'https://example.com',
+                    isBeaconApiDisabled: true
+                }, core, []);
+                this.onDone(() => {
+                    this._sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'test item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                // Add some telemetry to flush
+                this._sender.processTelemetry(telemetryItem);
+
+                // Test async flush with callback
+                let callbackCalled = false;
+                let callbackResult: boolean;
+                const result = this._sender.flush(true, (success) => {
+                    callbackCalled = true;
+                    callbackResult = success;
+                });
+
+                QUnit.assert.equal(typeof result, 'boolean', "flush should return boolean when callback provided");
+                QUnit.assert.equal(result, true, "flush should return true when callback will be called");
+                QUnit.assert.equal(callbackCalled, true, "callback should be called synchronously even when async=true");
+                QUnit.assert.equal(callbackResult, true, "callback should receive success=true");
+            }
+        });
+
+        this.testCase({
+            name: "flush method returns correct boolean result for sync operation",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                this._sender.initialize({
+                    instrumentationKey: 'abc',
+                    endpointUrl: 'https://example.com',
+                    isBeaconApiDisabled: true
+                }, core, []);
+                this.onDone(() => {
+                    this._sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'test item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                // Add some telemetry to flush
+                this._sender.processTelemetry(telemetryItem);
+
+                // Test sync flush without callback - should return undefined/void
+                const result = this._sender.flush(false);
+                
+                QUnit.assert.equal(typeof result, 'undefined', "flush should return undefined when sync=true and no callback");
+            }
+        });
+
+        this.testCase({
+            name: "flush method handles paused state correctly",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                this._sender.initialize({
+                    instrumentationKey: 'abc',
+                    endpointUrl: 'https://example.com',
+                    isBeaconApiDisabled: true
+                }, core, []);
+                this.onDone(() => {
+                    this._sender.teardown();
+                });
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'test item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                // Add some telemetry to flush
+                this._sender.processTelemetry(telemetryItem);
+
+                // Pause the sender
+                this._sender.pause();
+
+                // Test flush when paused - should return undefined
+                const result = this._sender.flush(true);
+                
+                QUnit.assert.equal(typeof result, 'undefined', "flush should return undefined when sender is paused");
+            }
+        });
     }
 }
 
