@@ -7,6 +7,7 @@ import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, No
 import { ArraySendBuffer, SessionStorageSendBuffer } from "../../../src/SendBuffer";
 import { IInternalStorageItem, ISenderConfig } from "../../../src/Interfaces";
 import { createAsyncResolvedPromise } from "@nevware21/ts-async";
+import { isPromiseLike, isUndefined } from "@nevware21/ts-utils";
 import { SinonSpy } from 'sinon';
 
 
@@ -4241,8 +4242,7 @@ export class SenderTests extends AITestClass {
                 const result = this._sender.flush(true);
                 
                 // Check if result is promise-like (has then method)
-                QUnit.assert.ok(result && typeof result === 'object', "flush should return promise-like object when async=true and no callback");
-                QUnit.assert.ok(typeof result.then === 'function', "returned object should have 'then' method");
+                QUnit.assert.ok(isPromiseLike(result), "flush should return promise-like object when async=true and no callback");
             }
         });
 
@@ -4312,7 +4312,7 @@ export class SenderTests extends AITestClass {
                 // Test sync flush without callback - should return undefined/void
                 const result = this._sender.flush(false);
                 
-                QUnit.assert.equal(typeof result, 'undefined', "flush should return undefined when sync=true and no callback");
+                QUnit.assert.ok(isUndefined(result), "flush should return undefined when sync=true and no callback");
             }
         });
 
@@ -4346,7 +4346,7 @@ export class SenderTests extends AITestClass {
                 // Test flush when paused - should return undefined
                 const result = this._sender.flush(true);
                 
-                QUnit.assert.equal(typeof result, 'undefined', "flush should return undefined when sender is paused");
+                QUnit.assert.ok(isUndefined(result), "flush should return undefined when sender is paused");
             }
         });
     }
