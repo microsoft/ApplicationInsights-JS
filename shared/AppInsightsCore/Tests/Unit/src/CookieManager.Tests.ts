@@ -214,23 +214,12 @@ export class CookieManagerTests extends AITestClass {
         this.testCase({
             name: "CookieManager: Set as Disabled",
             test: () => {
-                let getCookieCallCount = 0;
-                let setCookieCallCount = 0;
-                let delCookieCallCount = 0;
-                
                 let manager = createCookieMgr({
                     cookieCfg: {
                         enabled: false,
-                        getCookie: () => { 
-                            getCookieCallCount++;
-                            return "";
-                        },
-                        setCookie: () => { 
-                            setCookieCallCount++;
-                        },
-                        delCookie: () => { 
-                            delCookieCallCount++;
-                        }
+                        getCookie: () => { throw "Should not be called" },
+                        setCookie: () => { throw "Should not be called" },
+                        delCookie: () => { throw "Should not be called" }
                     }
                 });
 
@@ -246,40 +235,23 @@ export class CookieManagerTests extends AITestClass {
                 let delResult = manager.del(newKey);
                 Assert.equal(true, delResult, "Delete should return true when caching");
                 Assert.equal("", manager.get(newKey), "Should return empty string after cached delete");
-                
-                // Verify that actual cookie functions were not called during disabled phase
-                Assert.equal(0, getCookieCallCount, "getCookie should not be called when disabled");
-                Assert.equal(0, setCookieCallCount, "setCookie should not be called when disabled");
-                Assert.equal(0, delCookieCallCount, "delCookie should not be called when disabled");
             }
         });
 
         this.testCase({
             name: "CookieManager: disable cookies using the legacy setting",
             test: () => {
-                let getCookieCallCount = 0;
-                let setCookieCallCount = 0;
-                let delCookieCallCount = 0;
-
-                let getCookieFn = () => { 
-                    getCookieCallCount++;
-                    return "";
-                };
-                let setCookieFn = () => { 
-                    setCookieCallCount++;
-                };
-                let delCookieFn = () => { 
-                    delCookieCallCount++;
-                };
 
                 let core = new AppInsightsCore();
+                let neverCalled = () => { throw "Should not be called" };
+
                 core.initialize({
                     instrumentationKey: "testiKey",
                     isCookieUseDisabled: true,
                     cookieCfg: {
-                        getCookie: getCookieFn,
-                        setCookie: setCookieFn,
-                        delCookie: delCookieFn
+                        getCookie: neverCalled,
+                        setCookie: neverCalled,
+                        delCookie: neverCalled
                     }
                 } as any, [new ChannelPlugin()]);
 
@@ -297,11 +269,6 @@ export class CookieManagerTests extends AITestClass {
                 Assert.equal(true, delResult, "Delete should return true when caching");
                 Assert.equal("", manager.get(newKey), "Should return empty string after cached delete");
 
-                // Verify that actual cookie functions were not called during disabled phase
-                Assert.equal(0, getCookieCallCount, "getCookie should not be called when disabled");
-                Assert.equal(0, setCookieCallCount, "setCookie should not be called when disabled");
-                Assert.equal(0, delCookieCallCount, "delCookie should not be called when disabled");
-
                 // Check the "merged" config
                 Assert.deepEqual({
                     domain: undefined,
@@ -309,9 +276,9 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
-                    getCookie: getCookieFn,
-                    setCookie: setCookieFn,
-                    delCookie: delCookieFn
+                    getCookie: neverCalled,
+                    setCookie: neverCalled,
+                    delCookie: neverCalled
                 }, core.config.cookieCfg);
             }
         });        
@@ -319,30 +286,18 @@ export class CookieManagerTests extends AITestClass {
         this.testCase({
             name: "CookieManager: disable cookies using legacy and new setting both enabled",
             test: () => {
-                let getCookieCallCount = 0;
-                let setCookieCallCount = 0;
-                let delCookieCallCount = 0;
-
-                let getCookieFn = () => { 
-                    getCookieCallCount++;
-                    return "";
-                };
-                let setCookieFn = () => { 
-                    setCookieCallCount++;
-                };
-                let delCookieFn = () => { 
-                    delCookieCallCount++;
-                };
 
                 let core = new AppInsightsCore();
+                let neverCalled = () => { throw "Should not be called" };
+
                 core.initialize({
                     instrumentationKey: "testiKey",
                     isCookieUseDisabled: true,
                     disableCookiesUsage: true,
                     cookieCfg: {
-                        getCookie: getCookieFn,
-                        setCookie: setCookieFn,
-                        delCookie: delCookieFn
+                        getCookie: neverCalled,
+                        setCookie: neverCalled,
+                        delCookie: neverCalled
                     }
                 } as any, [new ChannelPlugin()]);
 
@@ -359,11 +314,6 @@ export class CookieManagerTests extends AITestClass {
                 let delResult = manager.del(newKey);
                 Assert.equal(true, delResult, "Delete should return true when caching");
                 Assert.equal("", manager.get(newKey), "Should return empty string after cached delete");
-
-                // Verify that actual cookie functions were not called during disabled phase
-                Assert.equal(0, getCookieCallCount, "getCookie should not be called when disabled");
-                Assert.equal(0, setCookieCallCount, "setCookie should not be called when disabled");
-                Assert.equal(0, delCookieCallCount, "delCookie should not be called when disabled");
 
                 // Check the "merged" config
                 Assert.deepEqual({
@@ -372,9 +322,9 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
-                    getCookie: getCookieFn,
-                    setCookie: setCookieFn,
-                    delCookie: delCookieFn
+                    getCookie: neverCalled,
+                    setCookie: neverCalled,
+                    delCookie: neverCalled
                 }, core.config.cookieCfg);
             }
         });        
@@ -382,30 +332,18 @@ export class CookieManagerTests extends AITestClass {
         this.testCase({
             name: "CookieManager: disable cookies using legacy disabled and new setting enabled",
             test: () => {
-                let getCookieCallCount = 0;
-                let setCookieCallCount = 0;
-                let delCookieCallCount = 0;
-
-                let getCookieFn = () => { 
-                    getCookieCallCount++;
-                    return "";
-                };
-                let setCookieFn = () => { 
-                    setCookieCallCount++;
-                };
-                let delCookieFn = () => { 
-                    delCookieCallCount++;
-                };
 
                 let core = new AppInsightsCore();
+                let neverCalled = () => { throw "Should not be called" };
+
                 core.initialize({
                     instrumentationKey: "testiKey",
                     isCookieUseDisabled: false,
                     disableCookiesUsage: true,
                     cookieCfg: {
-                        getCookie: getCookieFn,
-                        setCookie: setCookieFn,
-                        delCookie: delCookieFn
+                        getCookie: neverCalled,
+                        setCookie: neverCalled,
+                        delCookie: neverCalled
                     }
                 } as any, [new ChannelPlugin()]);
 
@@ -422,36 +360,21 @@ export class CookieManagerTests extends AITestClass {
                 let delResult = manager.del(newKey);
                 Assert.equal(true, delResult, "Delete should return true when caching");
                 Assert.equal("", manager.get(newKey), "Should return empty string after cached delete");
-                
-                // Verify that actual cookie functions were not called during disabled phase
-                Assert.equal(0, getCookieCallCount, "getCookie should not be called when disabled");
-                Assert.equal(0, setCookieCallCount, "setCookie should not be called when disabled");
-                Assert.equal(0, delCookieCallCount, "delCookie should not be called when disabled");
             }
         });        
 
         this.testCase({
             name: "CookieManager: disable cookies using disableCookiesUsage",
             test: () => {
-                let getCookieCallCount = 0;
-                let setCookieCallCount = 0;
-                let delCookieCallCount = 0;
 
                 let core = new AppInsightsCore();
                 core.initialize({
                     instrumentationKey: "testiKey",
                     disableCookiesUsage: true,
                     cookieCfg: {
-                        getCookie: () => { 
-                            getCookieCallCount++;
-                            return "";
-                        },
-                        setCookie: () => { 
-                            setCookieCallCount++;
-                        },
-                        delCookie: () => { 
-                            delCookieCallCount++;
-                        }
+                        getCookie: () => { throw "Should not be called" },
+                        setCookie: () => { throw "Should not be called" },
+                        delCookie: () => { throw "Should not be called" }
                     }
                 }, [new ChannelPlugin()]);
 
@@ -468,11 +391,6 @@ export class CookieManagerTests extends AITestClass {
                 let delResult = manager.del(newKey);
                 Assert.equal(true, delResult, "Delete should return true when caching");
                 Assert.equal("", manager.get(newKey), "Should return empty string after cached delete");
-                
-                // Verify that actual cookie functions were not called during disabled phase
-                Assert.equal(0, getCookieCallCount, "getCookie should not be called when disabled");
-                Assert.equal(0, setCookieCallCount, "setCookie should not be called when disabled");
-                Assert.equal(0, delCookieCallCount, "delCookie should not be called when disabled");
             }
         });
 
