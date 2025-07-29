@@ -210,13 +210,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 }
             };
         
-            _self.flush = (async: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean> => {
+            _self.flush = (isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean> => {
                 if (!_paused) {
                     // Clear the normal schedule timer as we are going to try and flush ASAP
                     _clearScheduledTimer();
 
                     try {
-                        let result = _self.triggerSend(async, null, sendReason || SendRequestReason.ManualFlush);
+                        let result = _self.triggerSend(isAsync, null, sendReason || SendRequestReason.ManualFlush);
                         
                         // Handles non-promise and always called if the returned promise resolves or rejects
                         return doAwaitResponse(result as any, (rsp) => {
@@ -224,7 +224,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                                 callBack(!rsp.rejected);
                                 return true;
                             }
-                            return async ? !rsp.rejected : result;
+                            return isAsync ? !rsp.rejected : result;
                         });
                     } catch (e) {
                         _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL,
@@ -548,10 +548,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         
             /**
              * Immediately send buffered data
-             * @param async - Indicates if the events should be sent asynchronously
+             * @param isAsync - Indicates if the events should be sent asynchronously
              * @param forcedSender - Indicates the forcedSender, undefined if not passed
              */
-            _self.triggerSend = (async = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason) => {
+            _self.triggerSend = (isAsync = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason) => {
                 let result: void | IPromise<boolean>;
                 if (!_paused) {
                     try {
@@ -563,13 +563,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (buffer.count() > 0) {
                                 const payload = buffer.getItems();
             
-                                _notifySendRequest(sendReason||SendRequestReason.Undefined, async);
+                                _notifySendRequest(sendReason||SendRequestReason.Undefined, isAsync);
             
                                 // invoke send
                                 if (forcedSender) {
-                                    result = forcedSender.call(_self, payload, async);
+                                    result = forcedSender.call(_self, payload, isAsync);
                                 } else {
-                                    result = _self._sender(payload, async);
+                                    result = _self._sender(payload, isAsync);
                                 }
                             }
             
@@ -1464,7 +1464,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * you DO NOT pass a callback function then a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * will be returned which will resolve once the flush is complete. The actual implementation of the `IPromise`
      * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
-     * @param async - send data asynchronously when true
+     * @param isAsync - send data asynchronously when true
      * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
      * If the caller doesn't return true the caller should assume that it may never be called.
      * @param sendReason - specify the reason that you are calling "flush" defaults to ManualFlush (1) if not specified
@@ -1472,9 +1472,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * should assume that any provided callback will never be called, Nothing or if occurring asynchronously a
      * [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) which will be resolved once the unload is complete,
      * the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) will only be returned when no callback is provided
-     * and async is true.
+     * and isAsync is true.
      */
-    public flush(async: boolean = true, callBack?: (flushComplete?: boolean) => void): void | IPromise<boolean> {
+    public flush(isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void): void | IPromise<boolean> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -1510,13 +1510,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) that will resolve once the
      * send is complete. The actual implementation of the `IPromise` will be a native Promise (if supported) or the default
      * as supplied by [ts-async library](https://github.com/nevware21/ts-async)
-     * @param async - Indicates if the events should be sent asynchronously
+     * @param isAsync - Indicates if the events should be sent asynchronously
      * @param forcedSender - Indicates the forcedSender, undefined if not passed
      * @returns - Nothing or optionally, if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * which will be resolved (or reject) once the send is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
-     * should only be returned when async is true.
+     * should only be returned when isAsync is true.
      */
-    public triggerSend(async = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason): void | IPromise<boolean> {
+    public triggerSend(isAsync = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason): void | IPromise<boolean> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
