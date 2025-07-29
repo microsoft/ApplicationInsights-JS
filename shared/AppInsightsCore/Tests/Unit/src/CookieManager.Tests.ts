@@ -225,11 +225,16 @@ export class CookieManagerTests extends AITestClass {
 
                 let newKey = "test." + newId();
                 let newValue = newId();
-                manager.set(newKey, newValue);
-                Assert.equal("", manager.get(newKey));
+                
+                // With caching enabled, set should return true and value should be cached
+                let setResult = manager.set(newKey, newValue);
+                Assert.equal(true, setResult, "Set should return true when caching");
+                Assert.equal(newValue, manager.get(newKey), "Should return cached value when disabled");
 
-                manager.del(newKey);
-                Assert.equal("", manager.get(newKey));
+                // Delete should also be cached
+                let delResult = manager.del(newKey);
+                Assert.equal(true, delResult, "Delete should return true when caching");
+                Assert.equal("", manager.get(newKey), "Should return empty string after cached delete");
             }
         });
 
@@ -253,11 +258,16 @@ export class CookieManagerTests extends AITestClass {
                 let manager = core.getCookieMgr();
                 let newKey = "test." + newId();
                 let newValue = newId();
-                manager.set(newKey, newValue);
-                Assert.equal("", manager.get(newKey));
+                
+                // With caching enabled, set should cache the value
+                let setResult = manager.set(newKey, newValue);
+                Assert.equal(true, setResult, "Set should return true when caching");
+                Assert.equal(newValue, manager.get(newKey), "Should return cached value when disabled");
 
-                manager.del(newKey);
-                Assert.equal("", manager.get(newKey));
+                // Delete should also be cached
+                let delResult = manager.del(newKey);
+                Assert.equal(true, delResult, "Delete should return true when caching");
+                Assert.equal("", manager.get(newKey), "Should return empty string after cached delete");
 
                 // Check the "merged" config
                 Assert.deepEqual({
@@ -294,11 +304,16 @@ export class CookieManagerTests extends AITestClass {
                 let manager = core.getCookieMgr();
                 let newKey = "test." + newId();
                 let newValue = newId();
-                manager.set(newKey, newValue);
-                Assert.equal("", manager.get(newKey));
+                
+                // With caching enabled, set should cache the value
+                let setResult = manager.set(newKey, newValue);
+                Assert.equal(true, setResult, "Set should return true when caching");
+                Assert.equal(newValue, manager.get(newKey), "Should return cached value when disabled");
 
-                manager.del(newKey);
-                Assert.equal("", manager.get(newKey));
+                // Delete should also be cached
+                let delResult = manager.del(newKey);
+                Assert.equal(true, delResult, "Delete should return true when caching");
+                Assert.equal("", manager.get(newKey), "Should return empty string after cached delete");
 
                 // Check the "merged" config
                 Assert.deepEqual({
@@ -335,11 +350,16 @@ export class CookieManagerTests extends AITestClass {
                 let manager = core.getCookieMgr();
                 let newKey = "test." + newId();
                 let newValue = newId();
-                manager.set(newKey, newValue);
-                Assert.equal("", manager.get(newKey));
+                
+                // With caching enabled, set should cache the value
+                let setResult = manager.set(newKey, newValue);
+                Assert.equal(true, setResult, "Set should return true when caching");
+                Assert.equal(newValue, manager.get(newKey), "Should return cached value when disabled");
 
-                manager.del(newKey);
-                Assert.equal("", manager.get(newKey));
+                // Delete should also be cached
+                let delResult = manager.del(newKey);
+                Assert.equal(true, delResult, "Delete should return true when caching");
+                Assert.equal("", manager.get(newKey), "Should return empty string after cached delete");
             }
         });        
 
@@ -361,11 +381,16 @@ export class CookieManagerTests extends AITestClass {
                 let manager = core.getCookieMgr();
                 let newKey = "test." + newId();
                 let newValue = newId();
-                manager.set(newKey, newValue);
-                Assert.equal("", manager.get(newKey));
+                
+                // With caching enabled, set should cache the value
+                let setResult = manager.set(newKey, newValue);
+                Assert.equal(true, setResult, "Set should return true when caching");
+                Assert.equal(newValue, manager.get(newKey), "Should return cached value when disabled");
 
-                manager.del(newKey);
-                Assert.equal("", manager.get(newKey));
+                // Delete should also be cached
+                let delResult = manager.del(newKey);
+                Assert.equal(true, delResult, "Delete should return true when caching");
+                Assert.equal("", manager.get(newKey), "Should return empty string after cached delete");
             }
         });
 
