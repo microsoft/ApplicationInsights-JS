@@ -1028,13 +1028,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         result = sendPostFunc(processedPayload, onComplete, !isAsync);
                         callbackExecuted = true;
                         if (resolveFn) {
-                            doAwaitResponse(result, (rsp) => {
-                                if (rsp.rejected) {
-                                    rejectFn(rsp.reason);
-                                } else {
-                                    resolveFn(rsp.value);
-                                }
-                            });
+                            doAwait(result, resolveFn, rejectFn);
                         }
                     }, _zipPayload, payloadData, !isAsync);
                     
