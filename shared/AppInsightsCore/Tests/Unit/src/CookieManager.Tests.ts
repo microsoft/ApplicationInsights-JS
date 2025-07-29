@@ -799,6 +799,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Enable cookies - should flush cached values
                 manager.setEnabled(true);
+                this.clock.tick(1);
                 Assert.equal(true, manager.isEnabled(), "Cookies should be enabled");
                 
                 // Cookie should now be in actual storage
@@ -833,6 +834,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Enable cookies - should flush all cached values
                 manager.setEnabled(true);
+                this.clock.tick(1);
                 
                 // All cookies should now be in actual storage
                 cookies.forEach(cookie => {
@@ -895,6 +897,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Enable cookies - should flush the latest value
                 manager.setEnabled(true);
+                this.clock.tick(1);
                 
                 Assert.equal(newValue2 + "; path=/", this._testCookies[newKey], "Cookie should have the latest value");
                 Assert.equal(newValue2, manager.get(newKey), "Should return latest value from storage");
@@ -923,6 +926,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Enable cookies - nothing should be flushed since the cookie was deleted
                 manager.setEnabled(true);
+                this.clock.tick(1);
                 
                 Assert.equal(undefined, this._testCookies[newKey], "Cookie should not be in storage");
                 Assert.equal("", manager.get(newKey), "Should still return empty string");
@@ -953,6 +957,7 @@ export class CookieManagerTests extends AITestClass {
                 
                 // Enable cookies - cached deletion should be applied
                 manager.setEnabled(true);
+                this.clock.tick(1);
                 
                 // Check that the deletion was applied (cookie should have expiry in the past)
                 let cookieValue = this._testCookies[newKey];
@@ -1050,6 +1055,7 @@ export class CookieManagerTests extends AITestClass {
                 Assert.equal(newValue1, manager.get(newKey1), "Should return cached value");
                 
                 manager.setEnabled(true);
+                this.clock.tick(1);
                 Assert.equal(newValue1 + "; path=/", this._testCookies[newKey1], "First cookie should be flushed");
 
                 // Second cycle: disable again, set different cookie, enable
@@ -1082,6 +1088,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Enable cookies - nothing should be flushed since cache was cleared
                 manager.setEnabled(true);
+                this.clock.tick(1);
                 Assert.equal(undefined, this._testCookies[newKey], "Cookie should not be in storage after unload");
                 Assert.equal("", manager.get(newKey), "Should return empty string after unload");
             }
