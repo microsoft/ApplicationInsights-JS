@@ -366,7 +366,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 
                 _pendingCookies[name] = {
                     o: ePendingOp.Purge,
-                    v: _formatSetCookieValue(STR_EMPTY, values)
+                    v: _formatCookieValue(STR_EMPTY, values)
                 };
                 result = true;
             }
