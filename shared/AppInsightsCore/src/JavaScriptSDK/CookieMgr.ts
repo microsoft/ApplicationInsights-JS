@@ -181,7 +181,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     let _delCookieFn: (name: string, cookieValue: string) => void;
     
     // Cache for storing cookie values when cookies are disabled
-    let _pendingCookies: { [name: string]: { o: number; v?: string; p?: string } } = {};
+    let _pendingCookies: { [name: string]: { o: ePendingOp; v?: string } } = {};
 
     // Helper function to format a cookie value with all attributes
     function _formatSetCookieValue(value: string, maxAgeSec?: number, domain?: string, path?: string): string {
@@ -366,8 +366,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 
                 _pendingCookies[name] = {
                     o: ePendingOp.Purge,
-                    v: _formatSetCookieValue(STR_EMPTY, values),
-                    p: path
+                    v: _formatSetCookieValue(STR_EMPTY, values)
                 };
                 result = true;
             }
