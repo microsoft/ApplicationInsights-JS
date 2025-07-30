@@ -276,6 +276,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
+                    disableCookieCache: false,
                     getCookie: neverCalled,
                     setCookie: neverCalled,
                     delCookie: neverCalled
@@ -322,6 +323,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
+                    disableCookieCache: false,
                     getCookie: neverCalled,
                     setCookie: neverCalled,
                     delCookie: neverCalled
@@ -432,6 +434,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
+                    disableCookieCache: false,
                     getCookie: core.config.cookieCfg?.getCookie,
                     setCookie: core.config.cookieCfg?.setCookie,
                     delCookie: core.config.cookieCfg?.delCookie
@@ -469,6 +472,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
+                    disableCookieCache: false,
                     getCookie: core.config.cookieCfg?.getCookie,
                     setCookie: core.config.cookieCfg?.setCookie,
                     delCookie: core.config.cookieCfg?.delCookie
@@ -509,6 +513,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: [],
                     blockedCookies: undefined,
+                    disableCookieCache: false,
                     getCookie: core.config.cookieCfg?.getCookie,
                     setCookie: core.config.cookieCfg?.setCookie,
                     delCookie: core.config.cookieCfg?.delCookie
@@ -555,6 +560,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: [ "testCookie" ],
                     blockedCookies: undefined,
+                    disableCookieCache: false,
                     getCookie: core.config.cookieCfg?.getCookie,
                     setCookie: core.config.cookieCfg?.setCookie,
                     delCookie: core.config.cookieCfg?.delCookie
@@ -678,6 +684,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
+                    disableCookieCache: false,
                     getCookie: core.config.cookieCfg?.getCookie,
                     setCookie: core.config.cookieCfg?.setCookie,
                     delCookie: core.config.cookieCfg?.delCookie
@@ -768,6 +775,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
+                    disableCookieCache: false,
                     getCookie: core.config.cookieCfg?.getCookie,
                     setCookie: core.config.cookieCfg?.setCookie,
                     delCookie: core.config.cookieCfg?.delCookie
