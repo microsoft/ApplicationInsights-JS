@@ -4,6 +4,21 @@
 
 ## Unreleased Changes
 
+### Potential breaking changes
+
+This release contains a potential breaking change to the `flush` method signature in the `IChannelControls` interface. The parameter name has been changed from `async` to `isAsync` to avoid potential conflicts with the `async` keyword.
+
+**Interface change:**
+```typescript
+// Before:
+flush(async: boolean = true, callBack?: (flushComplete?: boolean) => void): void | IPromise<boolean>;
+
+// After: 
+flush(isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean>;
+```
+
+**This is only a breaking change if you rely on named parameters.** If you have custom channels or plugins that implement the `IChannelControls` interface directly and rely on passing named parameters, you will need to update the parameter name from `async` to `isAsync` in your implementation.
+
 ### Potential behavioral changes
 
 This release enhances the cookie management behavior when cookies are disabled. Previously, when cookies were disabled, calls to `cookieMgr.set()` would return `false` and cookie values would be lost. Now, these operations are cached in memory and automatically applied when cookies are re-enabled to allow for cookie compliance banners and delayed approval.
@@ -18,6 +33,15 @@ This release enhances the cookie management behavior when cookies are disabled. 
 
 ### Changelog
 
+- #2628 Fix flush method root cause - handle async callbacks in _doSend with proper error handling
+  - **Potential breaking change**: Renamed `flush` method parameter from `async` to `isAsync` in `IChannelControls` interface to avoid potential keyword conflicts (only affects code that relies on named parameters)
+  - Fixed return type of `flush` method to properly include `boolean` when callbacks complete synchronously
+  - Fixed root cause where `_doSend()` couldn't handle asynchronous callbacks from `preparePayload()` when compression is enabled
+  - `await applicationInsights.flush()` now works correctly with compression enabled
+  - Added proper error handling and promise rejection propagation through async callback chains
+  - Improved handling of both synchronous and asynchronous callback execution patterns
+  - No polling overhead - uses direct callback invocation for better performance
+
 - #2631 Implement cookie caching when disabled and automatic flushing when enabled via setEnabled() or dynamic config changes
   - **Enhancement**: Cookie values are now cached in memory when cookies are disabled instead of being lost
   - **Enhancement**: Deletion operations are cached and applied when cookies are re-enabled  
@@ -25,7 +49,6 @@ This release enhances the cookie management behavior when cookies are disabled. 
   - **Enhancement**: Supports both `cookieCfg.enabled = true` and legacy `disableCookiesUsage = false` configuration patterns
   - **Enhancement**: Pre-formats cookie values during caching to avoid reconstruction during flushing for better performance
   - **Enhancement**: Respects existing privacy policies - blocked and ignored cookies are still properly excluded from caching
-
   - **Enhancement**: Added `disableCookieCache` configuration option to maintain backward compatibility with previous behavior
   - **Behavior change**: `cookieMgr.set()` now returns `true` when disabled (cached) instead of `false`
   - **Behavior change**: `cookieMgr.get()` now returns cached values when disabled instead of empty strings

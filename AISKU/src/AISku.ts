@@ -273,11 +273,11 @@ export class AppInsightsSku implements IApplicationInsights {
 
             _self.snippet = snippet;
 
-            _self.flush = (async: boolean = true, callBack?: () => void) => {
+            _self.flush = (isAsync: boolean = true, callBack?: () => void) => {
                 let result: void | IPromise<void>;
 
                 doPerf(_core, () => "AISKU.flush", () => {
-                    if (async && !callBack) {
+                    if (isAsync && !callBack) {
                         result = createPromise((resolve) => {
                             callBack = resolve;
                         });
@@ -294,23 +294,23 @@ export class AppInsightsSku implements IApplicationInsights {
                     arrForEach(_core.getChannels(), channel => {
                         if (channel) {
                             waiting++;
-                            channel.flush(async, flushDone);
+                            channel.flush(isAsync, flushDone);
                         }
                     });
 
                     // decrement the initial "waiting"
                     flushDone();
-                }, null, async);
+                }, null, isAsync);
 
                 return result;
             };
 
-            _self.onunloadFlush = (async: boolean = true) => {
+            _self.onunloadFlush = (isAsync: boolean = true) => {
                 arrForEach(_core.getChannels(), (channel: IChannelControls & Sender) => {
                     if (channel.onunloadFlush) {
                         channel.onunloadFlush();
                     } else {
-                        channel.flush(async);
+                        channel.flush(isAsync);
                     }
                 });
             };
