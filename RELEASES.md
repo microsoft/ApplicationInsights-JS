@@ -2,6 +2,34 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## Unreleased Changes
+
+### Potential behavioral changes
+
+This release enhances the cookie management behavior when cookies are disabled. Previously, when cookies were disabled, calls to `cookieMgr.set()` would return `false` and cookie values would be lost. Now, these operations are cached in memory and automatically applied when cookies are re-enabled.
+
+**Behavior changes:**
+- `cookieMgr.set()` now returns `true` when cookies are disabled (because values are cached), instead of `false`
+- `cookieMgr.get()` now returns cached values when cookies are disabled, instead of empty strings
+- `cookieMgr.del()` operations are now cached and applied when cookies are re-enabled
+- Applications can now recover cookie state after temporary cookie blocking scenarios
+
+**These changes improve data persistence and are considered enhancements rather than breaking changes.** If your application logic depends on the previous behavior of `set()` returning `false` when cookies are disabled, you may need to check `cookieMgr.isEnabled()` instead.
+
+### Changelog
+
+- #2631 Implement cookie caching when disabled and automatic flushing when enabled via setEnabled() or dynamic config changes
+  - **Enhancement**: Cookie values are now cached in memory when cookies are disabled instead of being lost
+  - **Enhancement**: Deletion operations are cached and applied when cookies are re-enabled  
+  - **Enhancement**: Automatic flushing occurs when cookies are enabled via `setEnabled(true)` or dynamic configuration changes
+  - **Enhancement**: Supports both `cookieCfg.enabled = true` and legacy `disableCookiesUsage = false` configuration patterns
+  - **Enhancement**: Pre-formats cookie values during caching to avoid reconstruction during flushing for better performance
+  - **Enhancement**: Respects existing privacy policies - blocked and ignored cookies are still properly excluded from caching
+  - **Enhancement**: Proper memory management with cache cleanup to prevent memory leaks
+  - **Behavior change**: `cookieMgr.set()` now returns `true` when disabled (cached) instead of `false`
+  - **Behavior change**: `cookieMgr.get()` now returns cached values when disabled instead of empty strings
+  - **Behavior change**: Applications can now recover from temporary cookie disable periods
+
 ## 3.3.9 (June 25th, 2025)
 
 This release contains an important fix for a change introduced in v3.3.7 that caused the `autoCaptureHandler` to incorrectly evaluate elements within `trackElementsType`, resulting in some click events not being auto-captured. See more details [here](https://github.com/microsoft/ApplicationInsights-JS/issues/2589).
