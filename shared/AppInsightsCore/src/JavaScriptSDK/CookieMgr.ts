@@ -57,7 +57,7 @@ const rootDefaultConfig: IConfigDefaults<IConfiguration> = {
         enabled: UNDEFINED_VALUE,
         ignoreCookies: UNDEFINED_VALUE,
         blockedCookies: UNDEFINED_VALUE,
-        disableCookieCache: { dfVal: false }
+        disableCookieCache: false
     }),
     cookieDomain: UNDEFINED_VALUE,
     cookiePath: UNDEFINED_VALUE,
