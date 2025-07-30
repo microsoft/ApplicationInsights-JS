@@ -130,6 +130,7 @@ export interface ICookieMgrConfig {
      * Defaults to false, when true this will disable the caching behavior that occurs when cookies are disabled,
      * reverting to the previous behavior where cookie operations would simply return false when cookies are disabled.
      * This is provided to maintain backward compatibility if applications depend on the previous behavior.
+     * @since v3.3.10
      */
-    disableCaching?: boolean;
+    disableCookieCache?: boolean;
 }

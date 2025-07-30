@@ -57,7 +57,7 @@ const rootDefaultConfig: IConfigDefaults<IConfiguration> = {
         enabled: UNDEFINED_VALUE,
         ignoreCookies: UNDEFINED_VALUE,
         blockedCookies: UNDEFINED_VALUE,
-        disableCaching: UNDEFINED_VALUE
+        disableCookieCache: { dfVal: false }
     }),
     cookieDomain: UNDEFINED_VALUE,
     cookiePath: UNDEFINED_VALUE,
@@ -180,6 +180,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     let _getCookieFn: (name: string) => string;
     let _setCookieFn: (name: string, cookieValue: string) => void;
     let _delCookieFn: (name: string, cookieValue: string) => void;
+    let _disableCaching: boolean;
     
     // Cache for storing cookie values when cookies are disabled
     let _pendingCookies: { [name: string]: { o: ePendingOp; v?: string } } = {};
@@ -287,6 +288,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 
         _path = cookieMgrConfig.path || "/";
         _domain = cookieMgrConfig.domain;
+        _disableCaching = cookieMgrConfig.disableCookieCache;
         
         // Check if enabled state is changing
         let wasEnabled = _enabled;
@@ -298,7 +300,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         _delCookieFn = cookieMgrConfig.delCookie || _setCookieValue;
 
         // If cookies were just enabled via config change and we have pending cookies, flush them
-        if (!wasEnabled && _enabled && !cookieMgrConfig.disableCaching) {
+        if (!wasEnabled && _enabled && !_disableCaching) {
             _flushPendingCookies();
         }
     }, logger);
@@ -332,7 +334,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 if (_isMgrEnabled(cookieMgr)) {
                     _setCookieFn(name, cookieValue);
                     result = true;
-                } else if (!cookieMgrConfig.disableCaching) {
+                } else if (!_disableCaching) {
                     // Cache the fully formatted cookie value if cookies are disabled but not blocked and caching is enabled
                     _pendingCookies[name] = {
                         o: ePendingOp.Set,
@@ -351,7 +353,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             if (!isIgnored) {
                 if (_isMgrEnabled(cookieMgr)) {
                     value = _getCookieFn(name);
-                } else if (!cookieMgrConfig.disableCaching && _pendingCookies[name] && _pendingCookies[name].o === ePendingOp.Set) {
+                } else if (!_disableCaching && _pendingCookies[name] && _pendingCookies[name].o === ePendingOp.Set) {
                     // Return cached value if cookies are disabled but not ignored and caching is enabled
                     // Extract the value part from the formatted cookie string (before first semicolon)
                     let cookieValue = _pendingCookies[name].v;
@@ -367,7 +369,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             if (_isMgrEnabled(cookieMgr)) {
                 // Only remove the cookie if the manager and cookie support has not been disabled
                 result = cookieMgr.purge(name, path);
-            } else if (!cookieMgrConfig.disableCaching) {
+            } else if (!_disableCaching) {
                 // Cache the deletion operation when cookies are disabled and caching is enabled
                 // Format the deletion cookie string to use when cookies are re-enabled
                 _pendingCookies[name] = {

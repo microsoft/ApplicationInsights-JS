@@ -14,7 +14,7 @@ This release enhances the cookie management behavior when cookies are disabled. 
 - `cookieMgr.del()` operations are now cached and applied when cookies are re-enabled
 - Applications can now recover cookie state after temporary cookie blocking scenarios
 
-**These changes improve data persistence and are considered enhancements rather than breaking changes.** If your application logic depends on the previous behavior of `set()` returning `false` when cookies are disabled, you may need to check `cookieMgr.isEnabled()` instead, or configure `disableCaching: true` in your `cookieCfg` to maintain the previous behavior.
+**These changes improve data persistence and are considered enhancements rather than breaking changes.** If your application logic depends on the previous behavior of `set()` returning `false` when cookies are disabled, you may need to check `cookieMgr.isEnabled()` instead, or configure `disableCookieCache: true` in your `cookieCfg` to maintain the previous behavior.
 
 ### Changelog
 
@@ -25,8 +25,8 @@ This release enhances the cookie management behavior when cookies are disabled. 
   - **Enhancement**: Supports both `cookieCfg.enabled = true` and legacy `disableCookiesUsage = false` configuration patterns
   - **Enhancement**: Pre-formats cookie values during caching to avoid reconstruction during flushing for better performance
   - **Enhancement**: Respects existing privacy policies - blocked and ignored cookies are still properly excluded from caching
-  - **Enhancement**: Proper memory management with cache cleanup to prevent memory leaks
-  - **Enhancement**: Added `disableCaching` configuration option to maintain backward compatibility with previous behavior
+
+  - **Enhancement**: Added `disableCookieCache` configuration option to maintain backward compatibility with previous behavior
   - **Behavior change**: `cookieMgr.set()` now returns `true` when disabled (cached) instead of `false`
   - **Behavior change**: `cookieMgr.get()` now returns cached values when disabled instead of empty strings
   - **Behavior change**: Applications can now recover from temporary cookie disable periods

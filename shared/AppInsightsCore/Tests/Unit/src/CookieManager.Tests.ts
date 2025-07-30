@@ -1300,12 +1300,12 @@ export class CookieManagerTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CookieManager: disableCaching=true reverts to previous behavior - set returns false when disabled",
+            name: "CookieManager: disableCookieCache=true reverts to previous behavior - set returns false when disabled",
             test: () => {
                 let config: IConfiguration = {
                     cookieCfg: {
                         enabled: false,
-                        disableCaching: true
+                        disableCookieCache: true
                     }
                 };
 
@@ -1324,7 +1324,7 @@ export class CookieManagerTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CookieManager: disableCaching=true with cookie functions that throw",
+            name: "CookieManager: disableCookieCache=true with cookie functions that throw",
             test: () => {
                 let setCookieCalled = 0;
                 let getCookieCalled = 0;
@@ -1333,7 +1333,7 @@ export class CookieManagerTests extends AITestClass {
                 let config: IConfiguration = {
                     cookieCfg: {
                         enabled: false,
-                        disableCaching: true,
+                        disableCookieCache: true,
                         getCookie: (name: string) => {
                             getCookieCalled++;
                             throw "Should not be called - get";
@@ -1363,7 +1363,7 @@ export class CookieManagerTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CookieManager: disableCaching=true prevents flushing when cookies are enabled",
+            name: "CookieManager: disableCookieCache=true prevents flushing when cookies are enabled",
             test: () => {
                 let setCookieCalled = 0;
                 let delCookieCalled = 0;
@@ -1371,7 +1371,7 @@ export class CookieManagerTests extends AITestClass {
                 let config: IConfiguration = {
                     cookieCfg: {
                         enabled: false,
-                        disableCaching: true,
+                        disableCookieCache: true,
                         setCookie: (name: string, value: string) => {
                             setCookieCalled++;
                             this._testCookies[name] = value;
@@ -1408,14 +1408,14 @@ export class CookieManagerTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CookieManager: disableCaching=true via dynamic config change",
+            name: "CookieManager: disableCookieCache=true via dynamic config change",
             test: () => {
                 let setCookieCalled = 0;
 
                 let config: IConfiguration = {
                     cookieCfg: {
                         enabled: false,
-                        disableCaching: false, // Start with caching enabled
+                        disableCookieCache: false, // Start with caching enabled
                         setCookie: (name: string, value: string) => {
                             setCookieCalled++;
                             this._testCookies[name] = value;
@@ -1430,7 +1430,7 @@ export class CookieManagerTests extends AITestClass {
                 Assert.equal("value", manager.get("test"), "get() should return cached value");
                 
                 // Dynamically disable caching
-                config.cookieCfg.disableCaching = true;
+                config.cookieCfg.disableCookieCache = true;
                 this.clock.tick(1); // Allow async config changes
                 
                 // Now set should return false and get should return empty
@@ -1451,14 +1451,14 @@ export class CookieManagerTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CookieManager: disableCaching=false (default) enables caching behavior",
+            name: "CookieManager: disableCookieCache=false (default) enables caching behavior",
             test: () => {
                 let setCookieCalled = 0;
 
                 let config: IConfiguration = {
                     cookieCfg: {
                         enabled: false,
-                        // disableCaching not specified, should default to false
+                        // disableCookieCache not specified, should default to false
                         setCookie: (name: string, value: string) => {
                             setCookieCalled++;
                             this._testCookies[name] = value;
@@ -1482,14 +1482,14 @@ export class CookieManagerTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CookieManager: disableCaching respects blocked and ignored cookies",
+            name: "CookieManager: disableCookieCache respects blocked and ignored cookies",
             test: () => {
                 let setCookieCalled = 0;
 
                 let config: IConfiguration = {
                     cookieCfg: {
                         enabled: false,
-                        disableCaching: false,
+                        disableCookieCache: false,
                         blockedCookies: ["blocked"],
                         ignoreCookies: ["ignored"],
                         setCookie: (name: string, value: string) => {
@@ -1511,8 +1511,8 @@ export class CookieManagerTests extends AITestClass {
                 manager.set("ignored", "value"); // This might cache it
                 Assert.equal("", manager.get("ignored"), "Ignored cookie get should return empty");
                 
-                // When disableCaching=true, same behavior should occur
-                config.cookieCfg.disableCaching = true;
+                // When disableCookieCache=true, same behavior should occur
+                config.cookieCfg.disableCookieCache = true;
                 this.clock.tick(1); // Allow config change
                 
                 Assert.equal(false, manager.set("normal2", "value"), "Normal cookie should not be cached when disabled");
