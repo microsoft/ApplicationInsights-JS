@@ -6,7 +6,7 @@
 
 ### Potential behavioral changes
 
-This release enhances the cookie management behavior when cookies are disabled. Previously, when cookies were disabled, calls to `cookieMgr.set()` would return `false` and cookie values would be lost. Now, these operations are cached in memory and automatically applied when cookies are re-enabled.
+This release enhances the cookie management behavior when cookies are disabled. Previously, when cookies were disabled, calls to `cookieMgr.set()` would return `false` and cookie values would be lost. Now, these operations are cached in memory and automatically applied when cookies are re-enabled to allow for cookie compliance banners and delayed approval.
 
 **Behavior changes:**
 - `cookieMgr.set()` now returns `true` when cookies are disabled (because values are cached), instead of `false`
@@ -14,7 +14,7 @@ This release enhances the cookie management behavior when cookies are disabled. 
 - `cookieMgr.del()` operations are now cached and applied when cookies are re-enabled
 - Applications can now recover cookie state after temporary cookie blocking scenarios
 
-**These changes improve data persistence and are considered enhancements rather than breaking changes.** If your application logic depends on the previous behavior of `set()` returning `false` when cookies are disabled, you may need to check `cookieMgr.isEnabled()` instead.
+**These changes improve data persistence and are considered enhancements rather than breaking changes.** If your application logic depends on the previous behavior of `set()` returning `false` when cookies are disabled, you may need to check `cookieMgr.isEnabled()` instead, or configure `disableCaching: true` in your `cookieCfg` to maintain the previous behavior.
 
 ### Changelog
 
@@ -26,6 +26,7 @@ This release enhances the cookie management behavior when cookies are disabled. 
   - **Enhancement**: Pre-formats cookie values during caching to avoid reconstruction during flushing for better performance
   - **Enhancement**: Respects existing privacy policies - blocked and ignored cookies are still properly excluded from caching
   - **Enhancement**: Proper memory management with cache cleanup to prevent memory leaks
+  - **Enhancement**: Added `disableCaching` configuration option to maintain backward compatibility with previous behavior
   - **Behavior change**: `cookieMgr.set()` now returns `true` when disabled (cached) instead of `false`
   - **Behavior change**: `cookieMgr.get()` now returns cached values when disabled instead of empty strings
   - **Behavior change**: Applications can now recover from temporary cookie disable periods

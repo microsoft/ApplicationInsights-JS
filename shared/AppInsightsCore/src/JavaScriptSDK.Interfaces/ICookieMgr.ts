@@ -125,4 +125,11 @@ export interface ICookieMgrConfig {
      * @param cookieValue - The value to set to expire the cookie
      */
     delCookie?: (name: string, cookieValue: string) => void;
+
+    /**
+     * Defaults to false, when true this will disable the caching behavior that occurs when cookies are disabled,
+     * reverting to the previous behavior where cookie operations would simply return false when cookies are disabled.
+     * This is provided to maintain backward compatibility if applications depend on the previous behavior.
+     */
+    disableCaching?: boolean;
 }

@@ -1298,6 +1298,235 @@ export class CookieManagerTests extends AITestClass {
                 Assert.equal("", manager.get(newKey), "Should return empty string after deletion is applied");
             }
         });
+
+        this.testCase({
+            name: "CookieManager: disableCaching=true reverts to previous behavior - set returns false when disabled",
+            test: () => {
+                let config: IConfiguration = {
+                    cookieCfg: {
+                        enabled: false,
+                        disableCaching: true
+                    }
+                };
+
+                let manager = createCookieMgr(config);
+                Assert.equal(false, manager.isEnabled(), "Cookie manager should be disabled");
+                
+                // Test that set returns false (previous behavior)
+                Assert.equal(false, manager.set("test", "value"), "set() should return false when disabled and caching disabled");
+                
+                // Test that get returns empty string (previous behavior)
+                Assert.equal("", manager.get("test"), "get() should return empty string when disabled and caching disabled");
+                
+                // Test that del returns false (previous behavior)
+                Assert.equal(false, manager.del("test"), "del() should return false when disabled and caching disabled");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: disableCaching=true with cookie functions that throw",
+            test: () => {
+                let setCookieCalled = 0;
+                let getCookieCalled = 0;
+                let delCookieCalled = 0;
+
+                let config: IConfiguration = {
+                    cookieCfg: {
+                        enabled: false,
+                        disableCaching: true,
+                        getCookie: (name: string) => {
+                            getCookieCalled++;
+                            throw "Should not be called - get";
+                        },
+                        setCookie: (name: string, value: string) => {
+                            setCookieCalled++;
+                            throw "Should not be called - set";
+                        },
+                        delCookie: (name: string, value: string) => {
+                            delCookieCalled++;
+                            throw "Should not be called - del";
+                        }
+                    }
+                };
+
+                let manager = createCookieMgr(config);
+                
+                // Cookies are disabled with caching disabled, so no cookie functions should be called
+                manager.set("test", "value");
+                manager.get("test");
+                manager.del("test");
+                
+                Assert.equal(0, setCookieCalled, "setCookie should not be called when disabled");
+                Assert.equal(0, getCookieCalled, "getCookie should not be called when disabled");
+                Assert.equal(0, delCookieCalled, "delCookie should not be called when disabled");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: disableCaching=true prevents flushing when cookies are enabled",
+            test: () => {
+                let setCookieCalled = 0;
+                let delCookieCalled = 0;
+
+                let config: IConfiguration = {
+                    cookieCfg: {
+                        enabled: false,
+                        disableCaching: true,
+                        setCookie: (name: string, value: string) => {
+                            setCookieCalled++;
+                            this._testCookies[name] = value;
+                        },
+                        delCookie: (name: string, value: string) => {
+                            delCookieCalled++;
+                            this._testCookies[name] = value;
+                        }
+                    }
+                };
+
+                let manager = createCookieMgr(config);
+                
+                // Try to set/del cookies while disabled
+                manager.set("test1", "value1");
+                manager.set("test2", "value2");
+                manager.del("test3");
+                
+                Assert.equal(0, setCookieCalled, "setCookie should not be called when disabled");
+                Assert.equal(0, delCookieCalled, "delCookie should not be called when disabled");
+                
+                // Enable cookies
+                manager.setEnabled(true);
+                this.clock.tick(1); // Allow async config changes
+                
+                // Cookie functions should still not be called because no caching occurred
+                Assert.equal(0, setCookieCalled, "setCookie should not be called after enabling when caching was disabled");
+                Assert.equal(0, delCookieCalled, "delCookie should not be called after enabling when caching was disabled");
+                
+                // Values should not be available
+                Assert.equal("", manager.get("test1"), "Should return empty string for uncached value");
+                Assert.equal("", manager.get("test2"), "Should return empty string for uncached value");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: disableCaching=true via dynamic config change",
+            test: () => {
+                let setCookieCalled = 0;
+
+                let config: IConfiguration = {
+                    cookieCfg: {
+                        enabled: false,
+                        disableCaching: false, // Start with caching enabled
+                        setCookie: (name: string, value: string) => {
+                            setCookieCalled++;
+                            this._testCookies[name] = value;
+                        }
+                    }
+                };
+
+                let manager = createCookieMgr(config);
+                
+                // Set a cookie while caching is enabled
+                Assert.equal(true, manager.set("test", "value"), "set() should return true when caching is enabled");
+                Assert.equal("value", manager.get("test"), "get() should return cached value");
+                
+                // Dynamically disable caching
+                config.cookieCfg.disableCaching = true;
+                this.clock.tick(1); // Allow async config changes
+                
+                // Now set should return false and get should return empty
+                Assert.equal(false, manager.set("test2", "value2"), "set() should return false after disabling caching");
+                Assert.equal("", manager.get("test2"), "get() should return empty string for uncached value");
+                
+                // But existing cached value should still be available
+                Assert.equal("value", manager.get("test"), "get() should still return previously cached value");
+                
+                // Enable cookies - only previously cached value should be flushed
+                manager.setEnabled(true);
+                this.clock.tick(1); // Allow async config changes
+                
+                Assert.equal(1, setCookieCalled, "Only previously cached cookie should be flushed");
+                Assert.equal("value", manager.get("test"), "Flushed value should be available");
+                Assert.equal("", manager.get("test2"), "Non-cached value should remain empty");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: disableCaching=false (default) enables caching behavior",
+            test: () => {
+                let setCookieCalled = 0;
+
+                let config: IConfiguration = {
+                    cookieCfg: {
+                        enabled: false,
+                        // disableCaching not specified, should default to false
+                        setCookie: (name: string, value: string) => {
+                            setCookieCalled++;
+                            this._testCookies[name] = value;
+                        }
+                    }
+                };
+
+                let manager = createCookieMgr(config);
+                
+                // Should cache by default
+                Assert.equal(true, manager.set("test", "value"), "set() should return true when caching is enabled by default");
+                Assert.equal("value", manager.get("test"), "get() should return cached value");
+                
+                // Enable cookies and verify flushing occurs
+                manager.setEnabled(true);
+                this.clock.tick(1); // Allow async config changes
+                
+                Assert.equal(1, setCookieCalled, "Cached cookie should be flushed when enabled");
+                Assert.equal("value", manager.get("test"), "Flushed value should be available");
+            }
+        });
+
+        this.testCase({
+            name: "CookieManager: disableCaching respects blocked and ignored cookies",
+            test: () => {
+                let setCookieCalled = 0;
+
+                let config: IConfiguration = {
+                    cookieCfg: {
+                        enabled: false,
+                        disableCaching: false,
+                        blockedCookies: ["blocked"],
+                        ignoreCookies: ["ignored"],
+                        setCookie: (name: string, value: string) => {
+                            setCookieCalled++;
+                            this._testCookies[name] = value;
+                        }
+                    }
+                };
+
+                let manager = createCookieMgr(config);
+                
+                // Normal cookie should be cached
+                Assert.equal(true, manager.set("normal", "value"), "Normal cookie should be cached");
+                
+                // Blocked cookie should not be cached
+                Assert.equal(false, manager.set("blocked", "value"), "Blocked cookie should not be cached");
+                
+                // Ignored cookie should not be cached (get returns empty)
+                manager.set("ignored", "value"); // This might cache it
+                Assert.equal("", manager.get("ignored"), "Ignored cookie get should return empty");
+                
+                // When disableCaching=true, same behavior should occur
+                config.cookieCfg.disableCaching = true;
+                this.clock.tick(1); // Allow config change
+                
+                Assert.equal(false, manager.set("normal2", "value"), "Normal cookie should not be cached when disabled");
+                Assert.equal(false, manager.set("blocked2", "value"), "Blocked cookie should not be cached when disabled");
+                Assert.equal("", manager.get("ignored2"), "Ignored cookie get should return empty when disabled");
+                
+                // Enable cookies - only normal cookie should be flushed
+                manager.setEnabled(true);
+                this.clock.tick(1); // Allow async config changes
+                
+                Assert.equal(1, setCookieCalled, "Only the normal cached cookie should be flushed");
+                Assert.equal("value", manager.get("normal"), "Normal cached value should be available");
+            }
+        });
     }
 }
 
