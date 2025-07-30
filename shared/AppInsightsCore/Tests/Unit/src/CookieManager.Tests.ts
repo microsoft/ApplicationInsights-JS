@@ -777,6 +777,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Write cookies after being enabled - basic functionality",
+            useFakeTimers: true,
             test: () => {
                 let manager = createCookieMgr(this._config);
 
@@ -812,6 +813,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Write cookies after being enabled - multiple cookies",
+            useFakeTimers: true,
             test: () => {
                 let manager = createCookieMgr(this._config);
 
@@ -846,6 +848,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Write cookies after being enabled - with maxAge and domain",
+            useFakeTimers: true,
             test: () => {
                 this._cookieMgrCfg.domain = "test.com";
                 let manager = createCookieMgr(this._config);
@@ -877,6 +880,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Write cookies after being enabled - overwrite cached values",
+            useFakeTimers: true,
             test: () => {
                 let manager = createCookieMgr(this._config);
 
@@ -906,6 +910,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Write cookies after being enabled - delete cached cookies",
+            useFakeTimers: true,
             test: () => {
                 let manager = createCookieMgr(this._config);
 
@@ -935,6 +940,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Delete operation is cached when cookies disabled and applied when enabled",
+            useFakeTimers: true,
             test: () => {
                 let manager = createCookieMgr(this._config);
 
@@ -969,6 +975,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Write cookies after being enabled - ignore blocked cookies",
+            useFakeTimers: true,
             test: () => {
                 let cookieCfg: ICookieMgrConfig = objExtend(true, {}, this._cookieMgrCfg);
                 cookieCfg.blockedCookies = ["blockedCookie"];
@@ -1005,6 +1012,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Write cookies after being enabled - handle ignored cookies",
+            useFakeTimers: true,
             test: () => {
                 let cookieCfg: ICookieMgrConfig = objExtend(true, {}, this._cookieMgrCfg);
                 cookieCfg.ignoreCookies = ["ignoredCookie"];
@@ -1041,6 +1049,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Write cookies after being enabled - multiple enable/disable cycles",
+            useFakeTimers: true,
             test: () => {
                 let manager = createCookieMgr(this._config);
 
@@ -1073,6 +1082,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Write cookies after being enabled - unload clears cache",
+            useFakeTimers: true,
             test: () => {
                 let manager = createCookieMgr(this._config);
 
@@ -1096,6 +1106,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Dynamic config change to enable cookies should flush cached values",
+            useFakeTimers: true,
             test: () => {
                 // Create a dynamic config that can be updated
                 let configValues = {
@@ -1128,6 +1139,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Dynamic config change to enable cookies with multiple cached values",
+            useFakeTimers: true,
             test: () => {
                 // Create a dynamic config that can be updated
                 let configValues = {
@@ -1164,6 +1176,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Dynamic config change with maxAge parameter should preserve options",
+            useFakeTimers: true,
             test: () => {
                 // Create a dynamic config that can be updated
                 let configValues = {
@@ -1197,6 +1210,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Dynamic config change from legacy disableCookiesUsage should flush cached values",
+            useFakeTimers: true,
             test: () => {
                 // Create a dynamic config that can be updated
                 let configValues = {
@@ -1228,6 +1242,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Multiple enable/disable cycles via config change work correctly",
+            useFakeTimers: true,
             test: () => {
                 // Create a dynamic config that can be updated
                 let configValues = {
@@ -1263,6 +1278,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: Deletion operation cached and applied via dynamic config change",
+            useFakeTimers: true,
             test: () => {
                 // Create a dynamic config that can be updated
                 let configValues = {
@@ -1364,6 +1380,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: disableCookieCache=true prevents flushing when cookies are enabled",
+            useFakeTimers: true,
             test: () => {
                 let setCookieCalled = 0;
                 let delCookieCalled = 0;
@@ -1409,6 +1426,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: disableCookieCache=true via dynamic config change",
+            useFakeTimers: true,
             test: () => {
                 let setCookieCalled = 0;
 
@@ -1452,6 +1470,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: disableCookieCache=false (default) enables caching behavior",
+            useFakeTimers: true,
             test: () => {
                 let setCookieCalled = 0;
 
@@ -1483,6 +1502,7 @@ export class CookieManagerTests extends AITestClass {
 
         this.testCase({
             name: "CookieManager: disableCookieCache respects blocked and ignored cookies",
+            useFakeTimers: true,
             test: () => {
                 let setCookieCalled = 0;
 
