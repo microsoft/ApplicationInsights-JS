@@ -2,6 +2,34 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+## Unreleased Changes
+
+### Potential breaking changes
+
+This release contains a potential breaking change to the `flush` method signature in the `IChannelControls` interface. The parameter name has been changed from `async` to `isAsync` to avoid potential conflicts with the `async` keyword.
+
+**Interface change:**
+```typescript
+// Before:
+flush(async: boolean = true, callBack?: (flushComplete?: boolean) => void): void | IPromise<boolean>;
+
+// After: 
+flush(isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean>;
+```
+
+**This is only a breaking change if you rely on named parameters.** If you have custom channels or plugins that implement the `IChannelControls` interface directly and rely on passing named parameters, you will need to update the parameter name from `async` to `isAsync` in your implementation.
+
+### Changelog
+
+- #2628 Fix flush method root cause - handle async callbacks in _doSend with proper error handling
+  - **Potential breaking change**: Renamed `flush` method parameter from `async` to `isAsync` in `IChannelControls` interface to avoid potential keyword conflicts (only affects code that relies on named parameters)
+  - Fixed return type of `flush` method to properly include `boolean` when callbacks complete synchronously
+  - Fixed root cause where `_doSend()` couldn't handle asynchronous callbacks from `preparePayload()` when compression is enabled
+  - `await applicationInsights.flush()` now works correctly with compression enabled
+  - Added proper error handling and promise rejection propagation through async callback chains
+  - Improved handling of both synchronous and asynchronous callback execution patterns
+  - No polling overhead - uses direct callback invocation for better performance
+
 ## 3.3.9 (June 25th, 2025)
 
 This release contains an important fix for a change introduced in v3.3.7 that caused the `autoCaptureHandler` to incorrectly evaluate elements within `trackElementsType`, resulting in some click events not being auto-captured. See more details [here](https://github.com/microsoft/ApplicationInsights-JS/issues/2589).

@@ -520,14 +520,14 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
             };
 
             
-            _self.flush = (async: boolean = true, callback?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean> => {
+            _self.flush = (isAsync: boolean = true, callback?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean> => {
                 let result: IPromise<boolean>;
 
                 if (!_paused) {
 
                     sendReason = sendReason || SendRequestReason.ManualFlush;
 
-                    if (async) {
+                    if (isAsync) {
 
                         if (!callback) {
                             result = createPromise<boolean>((resolve) => {
@@ -1211,7 +1211,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
      * you DO NOT pass a callback function then a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * will be returned which will resolve once the flush is complete. The actual implementation of the `IPromise`
      * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
-     * @param async - send data asynchronously when true
+     * @param isAsync - send data asynchronously when true
      * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
      * If the caller doesn't return true the caller should assume that it may never be called.
      * @param sendReason - specify the reason that you are calling "flush" defaults to ManualFlush (1) if not specified
@@ -1219,9 +1219,9 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
      * should assume that any provided callback will never be called, Nothing or if occurring asynchronously a
      * [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) which will be resolved once the unload is complete,
      * the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) will only be returned when no callback is provided
-     * and async is true.
+     * and isAsync is true.
      */
-    public flush(async: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean> {
+    public flush(isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean> {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
     }
 
