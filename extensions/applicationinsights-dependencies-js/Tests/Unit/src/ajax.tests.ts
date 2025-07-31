@@ -3610,7 +3610,6 @@ export class AjaxPerfTrackTests extends AITestClass {
                         xhr.send();
                         Assert.equal(true, markSpy.called, "The code should have called been mark()");
                     })
-            }
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
@@ -3637,7 +3636,7 @@ export class AjaxPerfTrackTests extends AITestClass {
             
             test: () => {
                 return this._asyncQueue()
-                            .add(() => {
+                    .add(() => {
 
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
