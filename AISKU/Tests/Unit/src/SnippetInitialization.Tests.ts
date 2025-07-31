@@ -792,207 +792,201 @@ export class SnippetInitializationTests extends AITestClass {
             }, 'Set custom tags') as any)
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'Custom Tags: allowed to send custom properties via addTelemetryInitializer & shimmed addTelemetryInitializer',
-            stepDelay: 100,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    theSnippet.addTelemetryInitializer((item: ITelemetryItem) => {
-                        item.tags.push({[this.tagKeys.cloudName]: "my.shim.cloud.name"});
-                    });
-                    theSnippet.trackEvent({ name: "Custom event" });
-                }
-            ]
-            .add(this.asserts(1))
-            .add(PollingAssert.createPollingAssert(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
-                    const payload = JSON.parse(payloadStr[0]);
-                    Assert.ok(payload);
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                theSnippet.addTelemetryInitializer((item: ITelemetryItem) => {
+                    item.tags.push({[this.tagKeys.cloudName]: "my.shim.cloud.name"});
+                });
+                theSnippet.trackEvent({ name: "Custom event" });
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1))
+                    .add(PollingAssert.createPollingAssert(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                            Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                            const payload = JSON.parse(payloadStr[0]);
+                            Assert.ok(payload);
 
-                    if (payload && payload.tags) {
-                        const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
-                        const tagExpect: string = 'my.shim.cloud.name';
-                        Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
-                        return true;
-                    }
-                    return false;
-                }
-            }, 'Set custom tags') as any)
+                            if (payload && payload.tags) {
+                                const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                                const tagExpect: string = 'my.shim.cloud.name';
+                                Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
+                                return true;
+                            }
+                            return false;
+                        }
+                    }, 'Set custom tags') as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'Custom Tags: allowed to send custom properties via shimmed addTelemetryInitializer',
-            stepDelay: 100,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    theSnippet.addTelemetryInitializer((item: ITelemetryItem) => {
-                        item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
-                        item.tags[this.tagKeys.locationCity] = "my.custom.location.city";
-                        item.tags.push({[this.tagKeys.locationCountry]: "my.custom.location.country"});
-                        item.tags.push({[this.tagKeys.operationId]: "my.custom.operation.id"});
-                    });
-                    theSnippet.trackEvent({ name: "Custom event via shimmed addTelemetryInitializer" });
-                }
-            ]
-            .add(this.asserts(1))
-            .add(PollingAssert.createPollingAssert(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
-                    if (payloadStr.length > 1) {
-                        this.dumpPayloadMessages(this.successSpy);
-                    }
-                    Assert.ok(payload);
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                theSnippet.addTelemetryInitializer((item: ITelemetryItem) => {
+                    item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
+                    item.tags[this.tagKeys.locationCity] = "my.custom.location.city";
+                    item.tags.push({[this.tagKeys.locationCountry]: "my.custom.location.country"});
+                    item.tags.push({[this.tagKeys.operationId]: "my.custom.operation.id"});
+                });
+                theSnippet.trackEvent({ name: "Custom event via shimmed addTelemetryInitializer" });
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1))
+                    .add(PollingAssert.createPollingAssert(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                            const payload = JSON.parse(payloadStr[0]);
+                            Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
+                            if (payloadStr.length > 1) {
+                                this.dumpPayloadMessages(this.successSpy);
+                            }
+                            Assert.ok(payload);
 
-                    if (payload && payload.tags) {
-                        const tagResult1: string = payload.tags && payload.tags[this.tagKeys.cloudName];
-                        const tagExpect1: string = 'my.custom.cloud.name';
-                        Assert.equal(tagResult1, tagExpect1, 'telemetryinitializer tag override successful');
-                        const tagResult2: string = payload.tags && payload.tags[this.tagKeys.locationCity];
-                        const tagExpect2: string = 'my.custom.location.city';
-                        Assert.equal(tagResult2, tagExpect2, 'telemetryinitializer tag override successful');
-                        const tagResult3: string = payload.tags && payload.tags[this.tagKeys.locationCountry];
-                        const tagExpect3: string = 'my.custom.location.country';
-                        Assert.equal(tagResult3, tagExpect3, 'telemetryinitializer tag override successful');
-                        const tagResult4: string = payload.tags && payload.tags[this.tagKeys.operationId];
-                        const tagExpect4: string = 'my.custom.operation.id';
-                        Assert.equal(tagResult4, tagExpect4, 'telemetryinitializer tag override successful');
-                        return true;
-                    }
-                    return false;
-                }
-            }, 'Set custom tags') as any)
+                            if (payload && payload.tags) {
+                                const tagResult1: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                                const tagExpect1: string = 'my.custom.cloud.name';
+                                Assert.equal(tagResult1, tagExpect1, 'telemetryinitializer tag override successful');
+                                const tagResult2: string = payload.tags && payload.tags[this.tagKeys.locationCity];
+                                const tagExpect2: string = 'my.custom.location.city';
+                                Assert.equal(tagResult2, tagExpect2, 'telemetryinitializer tag override successful');
+                                const tagResult3: string = payload.tags && payload.tags[this.tagKeys.locationCountry];
+                                const tagExpect3: string = 'my.custom.location.country';
+                                Assert.equal(tagResult3, tagExpect3, 'telemetryinitializer tag override successful');
+                                const tagResult4: string = payload.tags && payload.tags[this.tagKeys.operationId];
+                                const tagExpect4: string = 'my.custom.operation.id';
+                                Assert.equal(tagResult4, tagExpect4, 'telemetryinitializer tag override successful');
+                                return true;
+                            }
+                            return false;
+                        }
+                    }, 'Set custom tags') as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext authId',
-            stepDelay: 100,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    const context = (theSnippet.context) as TelemetryContext;
-                    context.user.setAuthenticatedUserContext('10001');
-                    theSnippet.trackTrace({ message: 'authUserContext test' });
-                }
-            ]
-                .add(this.asserts(1))
-                .add(PollingAssert.createPollingAssert(() => {
-                    let payloadStr = this.getPayloadMessages(this.successSpy);
-                    if (payloadStr.length > 0) {
-                        let payloadEvents = payloadStr.length;
-                        let thePayload:string = payloadStr[0];
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                const context = (theSnippet.context) as TelemetryContext;
+                context.user.setAuthenticatedUserContext('10001');
+                theSnippet.trackTrace({ message: 'authUserContext test' });
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1))
+                    .add(PollingAssert.createPollingAssert(() => {
+                        let payloadStr = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                            let payloadEvents = payloadStr.length;
+                            let thePayload:string = payloadStr[0];
 
-                        if (payloadEvents !== 1) {
-                            // Only 1 track should be sent
-                            return false;
+                            if (payloadEvents !== 1) {
+                                // Only 1 track should be sent
+                                return false;
+                            }
+                            const payload = JSON.parse(thePayload);
+                            if (payload && payload.tags) {
+                                const tagName: string = this.tagKeys.userAuthUserId;
+                                return '10001' === payload.tags[tagName];
+                            }
                         }
-                        const payload = JSON.parse(thePayload);
-                        if (payload && payload.tags) {
-                            const tagName: string = this.tagKeys.userAuthUserId;
-                            return '10001' === payload.tags[tagName];
-                        }
-                    }
-                    return false;
-                }, 'user.authenticatedId') as any)
+                        return false;
+                    }, 'user.authenticatedId') as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext authId and accountId',
-            stepDelay: 100,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    const context = (theSnippet.context) as TelemetryContext;
-                    context.user.setAuthenticatedUserContext('10001', 'account123');
-                    theSnippet.trackTrace({ message: 'authUserContext test' });
-                }
-            ]
-                .add(this.asserts(1))
-                .add(PollingAssert.createPollingAssert(() => {
-                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                    if (payloadStr.length > 0) {
-                        if (payloadStr.length !== 1) {
-                            // Only 1 track should be sent
-                            return false;
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                const context = (theSnippet.context) as TelemetryContext;
+                context.user.setAuthenticatedUserContext('10001', 'account123');
+                theSnippet.trackTrace({ message: 'authUserContext test' });
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1))
+                    .add(PollingAssert.createPollingAssert(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                            if (payloadStr.length !== 1) {
+                                // Only 1 track should be sent
+                                return false;
+                            }
+                            const payload = JSON.parse(payloadStr[0]);
+                            if (payload && payload.tags) {
+                                const authTag: string = this.tagKeys.userAuthUserId;
+                                const accountTag: string = this.tagKeys.userAccountId;
+                                return '10001' === payload.tags[authTag] /*&&
+                                'account123' === payload.tags[accountTag] */; // bug https://msazure.visualstudio.com/One/_workitems/edit/3508825
+                            }
                         }
-                        const payload = JSON.parse(payloadStr[0]);
-                        if (payload && payload.tags) {
-                            const authTag: string = this.tagKeys.userAuthUserId;
-                            const accountTag: string = this.tagKeys.userAccountId;
-                            return '10001' === payload.tags[authTag] /*&&
-                            'account123' === payload.tags[accountTag] */; // bug https://msazure.visualstudio.com/One/_workitems/edit/3508825
-                        }
-                    }
-                    return false;
-                }, 'user.authenticatedId') as any)
+                        return false;
+                    }, 'user.authenticatedId') as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext non-ascii authId and accountId',
-            stepDelay: 100,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    const context = (theSnippet.context) as TelemetryContext;
-                    context.user.setAuthenticatedUserContext("\u0428", "\u0429");
-                    theSnippet.trackTrace({ message: 'authUserContext test' });
-                }
-            ]
-                .add(this.asserts(1))
-                .add(PollingAssert.createPollingAssert(() => {
-                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                    if (payloadStr.length > 0) {
-                        if (payloadStr.length !== 1) {
-                            // Only 1 track should be sent
-                            return false;
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                const context = (theSnippet.context) as TelemetryContext;
+                context.user.setAuthenticatedUserContext("\u0428", "\u0429");
+                theSnippet.trackTrace({ message: 'authUserContext test' });
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1))
+                    .add(PollingAssert.createPollingAssert(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                            if (payloadStr.length !== 1) {
+                                // Only 1 track should be sent
+                                return false;
+                            }
+                            const payload = JSON.parse(payloadStr[0]);
+                            if (payload && payload.tags) {
+                                const authTag: string = this.tagKeys.userAuthUserId;
+                                const accountTag: string = this.tagKeys.userAccountId;
+                                return '\u0428' === payload.tags[authTag] /* &&
+                                '\u0429' === payload.tags[accountTag] */; // bug https://msazure.visualstudio.com/One/_workitems/edit/3508825
+                            }
                         }
-                        const payload = JSON.parse(payloadStr[0]);
-                        if (payload && payload.tags) {
-                            const authTag: string = this.tagKeys.userAuthUserId;
-                            const accountTag: string = this.tagKeys.userAccountId;
-                            return '\u0428' === payload.tags[authTag] /* &&
-                            '\u0429' === payload.tags[accountTag] */; // bug https://msazure.visualstudio.com/One/_workitems/edit/3508825
-                        }
-                    }
-                    return false;
-                }, 'user.authenticatedId') as any)
+                        return false;
+                    }, 'user.authenticatedId') as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'AuthenticatedUserContext: clearAuthenticatedUserContext',
-            stepDelay: 100,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    const context = (theSnippet.context) as TelemetryContext;
-                    context.user.setAuthenticatedUserContext('10002', 'account567');
-                    context.user.clearAuthenticatedUserContext();
-                    theSnippet.trackTrace({ message: 'authUserContext test' });
-                }
-            ]
-                .add(this.asserts(1))
-                .add(PollingAssert.createPollingAssert(() => {
-                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                    if (payloadStr.length > 0) {
-                        if (payloadStr.length !== 1) {
-                            // Only 1 track should be sent
-                            return false;
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                const context = (theSnippet.context) as TelemetryContext;
+                context.user.setAuthenticatedUserContext('10002', 'account567');
+                context.user.clearAuthenticatedUserContext();
+                theSnippet.trackTrace({ message: 'authUserContext test' });
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1))
+                    .add(PollingAssert.createPollingAssert(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                            if (payloadStr.length !== 1) {
+                                // Only 1 track should be sent
+                                return false;
+                            }
+                            const payload = JSON.parse(payloadStr[0]);
+                            if (payload && payload.tags) {
+                                const authTag: string = this.tagKeys.userAuthUserId;
+                                const accountTag: string = this.tagKeys.userAccountId;
+                                return undefined === payload.tags[authTag] &&
+                                    undefined === payload.tags[accountTag];
+                            }
                         }
-                        const payload = JSON.parse(payloadStr[0]);
-                        if (payload && payload.tags) {
-                            const authTag: string = this.tagKeys.userAuthUserId;
-                            const accountTag: string = this.tagKeys.userAccountId;
-                            return undefined === payload.tags[authTag] &&
-                                undefined === payload.tags[accountTag];
-                        }
-                    }
-                    return false;
-                }, 'user.authenticatedId') as any)
+                        return false;
+                    }, 'user.authenticatedId') as any);
+            }
         });
 
         // This doesn't need to be e2e
