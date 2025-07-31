@@ -957,6 +957,7 @@ export class CookieManagerTests extends AITestClass {
                 
                 // Start with cookies enabled and set a cookie
                 manager.setEnabled(true);
+                this.clock.tick(1);
                 manager.set(newKey, newValue);
                 Assert.equal(newValue + "; path=/", this._testCookies[newKey], "Cookie should be in storage");
                 Assert.equal(newValue, manager.get(newKey), "Should return cookie value");

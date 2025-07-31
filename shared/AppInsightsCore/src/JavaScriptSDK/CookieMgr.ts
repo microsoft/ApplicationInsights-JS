@@ -320,16 +320,15 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             return enabled;
         },
         setEnabled: (value: boolean) => {
-            // Store the current state before making changes
-            let wasEnabled = _enabled;
-            // Explicitly checking against false, so that setting to undefined will === true
-            _enabled = value !== false;
+            // Change the default config and allow the asynchronous dynamic config logic
+            // to process all of the changes at once (like handling change to the enabled and
+            // disabling caching at the same time)
             cookieMgrConfig.enabled = value;
-            
-            // If cookies were just enabled and we have pending cookies, flush them immediately
-            // This handles the synchronous case when setEnabled is called directly
-            if (!wasEnabled && _enabled && !_disableCaching) {
-                _flushPendingCookies();
+
+            // If this value is defined someone else might be listening to it so also update it,
+            // this also handles the edge case if the default above is not dynamic
+            if (!isUndefined(rootConfig[strDisableCookiesUsage])) {
+                rootConfig[strDisableCookiesUsage] = !value;
             }
         },
         set: (name: string, value: string, maxAgeSec?: number, domain?: string, path?: string) => {
