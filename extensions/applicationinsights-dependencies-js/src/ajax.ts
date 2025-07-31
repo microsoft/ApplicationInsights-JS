@@ -466,8 +466,6 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
 
                             init.headers = headers;
                         }
-
-                        return init;
                     } else if (xhr) { // XHR
                         if (correlationIdCanIncludeCorrelationHeader(_extensionConfig, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
                             if (_isUsingAIHeaders) {
@@ -512,12 +510,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                                 }
                             }
                         }
-
-                        return xhr;
                     }
                 }
 
-                return undefined;
+                return xhr || init;
             }
 
             _self.trackDependencyDataInternal = (dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) => {
