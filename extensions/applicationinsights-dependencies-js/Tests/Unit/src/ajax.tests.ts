@@ -3730,7 +3730,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 this._ajax["_currentWindowHost"] = "www.example.com";
 
-                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track");
                 this._context["trackStub"] = trackSpy;
 
                 return this._asyncQueue()
@@ -3739,8 +3739,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                 Assert.ok(trackSpy.notCalled, "No fetch called yet");
                 fetch("https://httpbin.org/status/200", {method: "post" });
                 Assert.equal(true, markSpy.called, "The code should have called been mark()");
-                    }
-            }
+                    })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
@@ -3807,7 +3806,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 this._ajax["_currentWindowHost"] = "www.example.com";
 
-                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track");
                 this._context["trackStub"] = trackSpy;
 
                 return this._asyncQueue()
@@ -3828,7 +3827,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                     let props = data.properties;
                     Assert.notEqual(undefined, props, "Should contain properties");
                     if (props) {
-                        Assert.notEqual(undefined, props.ajaxPerf, "Perf detail exists")
+                        Assert.notEqual(undefined, props.ajaxPerf, "Perf detail exists");
                         let perf = props.ajaxPerf || {};
                         if (perf.missing) {
                             Assert.equal(true, !!perf.missing, "Performance was executed but browser did not populate the window.performance entries - " + JSON.stringify(data));
