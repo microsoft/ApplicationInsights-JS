@@ -503,10 +503,9 @@ export class SnippetInitializationTests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: legacy trackException sends to backend',
-            stepDelay: 100,
-            steps: [() => {
+            test: () => {
                 let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                 let exception: Error = null;
                 try {
@@ -517,238 +516,236 @@ export class SnippetInitializationTests extends AITestClass {
                     theSnippet.trackException({ error: exception } as any);
                 }
                 Assert.ok(exception);
-            }].add(this.asserts(1))
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: track metric",
-            stepDelay: 100,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    console.log("* calling trackMetric " + new Date().toISOString());
-                    for (let i = 0; i < 100; i++) {
-                        theSnippet.trackMetric({ name: "test" + i, average: Math.round(100 * Math.random()) });
-                    }
-                    console.log("* done calling trackMetric " + new Date().toISOString());
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                console.log("* calling trackMetric " + new Date().toISOString());
+                for (let i = 0; i < 100; i++) {
+                    theSnippet.trackMetric({ name: "test" + i, average: Math.round(100 * Math.random()) });
                 }
-            ].add(this.asserts(100))
+                console.log("* done calling trackMetric " + new Date().toISOString());
+                
+                return this._asyncQueue()
+                    .add(this.asserts(100));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: `TelemetryContext: track page view ${window.location.pathname}`,
-            stepDelay: 500,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    theSnippet.trackPageView({}); // sends 2
-                }
-            ]
-            .add(this.asserts(2))
-            .add(() => {
-
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data.baseData.id, "pageView id is defined");
-                    Assert.ok(data.baseData.id.length > 0);
-                    Assert.ok(payload.tags["ai.operation.id"]);
-                    Assert.equal(data.baseData.id, payload.tags["ai.operation.id"], "pageView id matches current operation id");
-                } else {
-                    Assert.ok(false, "successSpy not called");
-                }
-            })
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                theSnippet.trackPageView({}); // sends 2
+                
+                return this._asyncQueue()
+                    .add(this.asserts(2))
+                    .add(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                            const payload = JSON.parse(payloadStr[0]);
+                            const data = payload.data;
+                            Assert.ok(data.baseData.id, "pageView id is defined");
+                            Assert.ok(data.baseData.id.length > 0);
+                            Assert.ok(payload.tags["ai.operation.id"]);
+                            Assert.equal(data.baseData.id, payload.tags["ai.operation.id"], "pageView id matches current operation id");
+                        } else {
+                            Assert.ok(false, "successSpy not called");
+                        }
+                    });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: track page view performance",
-            stepDelay: 100,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    theSnippet.trackPageViewPerformance({ name: 'name', uri: 'url' });
-                }
-            ].add(this.asserts(1))
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                theSnippet.trackPageViewPerformance({ name: 'name', uri: 'url' });
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: track all types in batch",
-            stepDelay: 100,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    let exception = null;
-                    try {
-                        window["a"]["b"]();
-                    } catch (e) {
-                        exception = e;
-                    }
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                let exception = null;
+                try {
+                    window["a"]["b"]();
+                } catch (e) {
+                    exception = e;
+                }
 
-                    Assert.ok(exception);
+                Assert.ok(exception);
 
+                theSnippet.trackException({ exception });
+                theSnippet.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
+                theSnippet.trackTrace({ message: "test" });
+                theSnippet.trackPageView({}); // sends 2
+                theSnippet.trackPageViewPerformance({ name: 'name', uri: 'http://someurl' });
+                theSnippet.flush();
+                
+                return this._asyncQueue()
+                    .add(this.asserts(6));
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: track all types in a large batch",
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                let exception = null;
+                try {
+                    window["a"]["b"]();
+                } catch (e) {
+                    exception = e;
+                }
+                Assert.ok(exception);
+
+                for (let i = 0; i < 100; i++) {
                     theSnippet.trackException({ exception });
                     theSnippet.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
                     theSnippet.trackTrace({ message: "test" });
-                    theSnippet.trackPageView({}); // sends 2
-                    theSnippet.trackPageViewPerformance({ name: 'name', uri: 'http://someurl' });
-                    theSnippet.flush();
+                    theSnippet.trackPageView({ name: `${i}` }); // sends 2 1st time
                 }
-            ].add(this.asserts(6))
+                
+                return this._asyncQueue()
+                    .add(this.asserts(401, false));
+            }
         });
 
-        this.testCaseAsync({
-            name: "TelemetryContext: track all types in a large batch",
-            stepDelay: 100,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    let exception = null;
-                    try {
-                        window["a"]["b"]();
-                    } catch (e) {
-                        exception = e;
-                    }
-                    Assert.ok(exception);
-
-                    for (let i = 0; i < 100; i++) {
-                        theSnippet.trackException({ exception });
-                        theSnippet.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
-                        theSnippet.trackTrace({ message: "test" });
-                        theSnippet.trackPageView({ name: `${i}` }); // sends 2 1st time
-                    }
-                }
-            ].add(this.asserts(401, false))
-        });
-
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryInitializer: E2E override envelope data",
-            stepDelay: 100,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    // Setup
-                    const telemetryInitializer = {
-                        init: (envelope) => {
-                            envelope.baseData.name = 'other name'
-                            return true;
-                        }
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                // Setup
+                const telemetryInitializer = {
+                    init: (envelope) => {
+                        envelope.baseData.name = 'other name'
+                        return true;
                     }
-
-
-                    // Act
-                    theSnippet.addTelemetryInitializer(telemetryInitializer.init);
-                    theSnippet.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
                 }
-            ]
-                .add(this.asserts(1))
-                .add(() => {
-                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                    if (payloadStr.length > 0) {
-                        let payloadItems = payloadStr.length;
-                        Assert.equal(1, payloadItems, 'Only 1 track item is sent');
-                        const payload = JSON.parse(payloadStr[0]);
-                        Assert.ok(payload);
 
-                        if (payload && payload.baseData) {
-                            const nameResult: string = payload.data.baseData.metrics[0].name;
-                            const nameExpect: string = 'other name';
-                            Assert.equal(nameExpect, nameResult, 'telemetryinitializer override successful');
+                // Act
+                theSnippet.addTelemetryInitializer(telemetryInitializer.init);
+                theSnippet.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1))
+                    .add(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                            let payloadItems = payloadStr.length;
+                            Assert.equal(1, payloadItems, 'Only 1 track item is sent');
+                            const payload = JSON.parse(payloadStr[0]);
+                            Assert.ok(payload);
+
+                            if (payload && payload.baseData) {
+                                const nameResult: string = payload.data.baseData.metrics[0].name;
+                                const nameExpected: string = 'other name';
+                                Assert.equal(nameExpected, nameResult, 'telemetryinitializer override successful');
+                            }
                         }
-                    }
-                })
+                    });
+            }
         });
     }
 
     public addDependencyPluginTests(snippetName: string, snippetCreator: (config:any) => Snippet): void {
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: trackDependencyData",
-            stepDelay: 100,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    const data: IDependencyTelemetry = {
-                        target: 'http://abc',
-                        responseCode: 200,
-                        type: 'GET',
-                        id: 'abc'
-                    }
-                    theSnippet.trackDependencyData(data);
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                const data: IDependencyTelemetry = {
+                    target: 'http://abc',
+                    responseCode: 200,
+                    type: 'GET',
+                    id: 'abc'
                 }
-            ].add(this.asserts(1))
+                theSnippet.trackDependencyData(data);
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1));
+            }
         });
 
         if (!this.isEmulatingIe) {
             // If we are emulating IE then XHR is not hooked
-            this.testCaseAsync({
+            this.testCase({
                 name: "TelemetryContext: auto collection of ajax requests",
-                stepDelay: 100,
-                steps: [
-                    () => {
-                        let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                        const xhr = new XMLHttpRequest();
-                        xhr.open('GET', 'https://httpbin.org/status/200');
-                        xhr.send();
-                        Assert.ok(true);
-                    }
-                ].add(this.asserts(1))
+                test: () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('GET', 'https://httpbin.org/status/200');
+                    xhr.send();
+                    Assert.ok(true);
+                    
+                    return this._asyncQueue()
+                        .add(this.asserts(1));
+                }
             });
         }
         
         let global = getGlobal();
         if (global && global.fetch && !this.isEmulatingIe) {
-            this.testCaseAsync({
+            this.testCase({
                 name: "DependenciesPlugin: auto collection of outgoing fetch requests " + (this.isFetchPolyfill ? " using polyfill " : ""),
-                stepDelay: 2000,
-                steps: [
-                    () => {
-                        let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                        fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
-                        Assert.ok(true, "fetch monitoring is instrumented");
-                    },
-                    () => {
-                        fetch('https://httpbin.org/status/200', { method: 'GET' });
-                        Assert.ok(true, "fetch monitoring is instrumented");
-                    },
-                    () => {
-                        fetch('https://httpbin.org/status/200');
-                        Assert.ok(true, "fetch monitoring is instrumented");
-                    }
-                ]
-                    .add(this.asserts(3, false, false))
-                    .add(() => {
-                        let args = [];
-                        this.trackSpy.args.forEach(call => {
-                            let message = call[0].baseData.message||"";
-                            // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
-                            if (message.indexOf("AI (Internal): 72 ") == -1) {
-                                args.push(call[0]);
+                test: () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
+                    Assert.ok(true, "fetch monitoring is instrumented");
+                    
+                    return this._asyncQueue()
+                        .add(() => {
+                            fetch('https://httpbin.org/status/200', { method: 'GET' });
+                            Assert.ok(true, "fetch monitoring is instrumented");
+                        })
+                        .add(() => {
+                            fetch('https://httpbin.org/status/200');
+                            Assert.ok(true, "fetch monitoring is instrumented");
+                        })
+                        .add(this.asserts(3, false, false))
+                        .add(() => {
+                            let args = [];
+                            this.trackSpy.args.forEach(call => {
+                                let message = call[0].baseData.message||"";
+                                // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                                if (message.indexOf("AI (Internal): 72 ") == -1) {
+                                    args.push(call[0]);
+                                }
+                            });
+
+                            let type = "Fetch";
+                            if (this.isFetchPolyfill) {
+                                type = "Ajax";
+                                Assert.ok(true, "Using fetch polyfill");
                             }
+                            Assert.equal(3, args.length, "track is called 3 times");
+                            let baseData = args[0].baseData;
+                            Assert.equal(type, baseData.type, "request is " + type + " type");
+                            Assert.equal('value', baseData.properties.requestHeaders['header'], "fetch request's user defined request header is stored");
+                            Assert.ok(baseData.properties.responseHeaders, "fetch request's reponse header is stored");
+
+                            baseData = args[1].baseData;
+                            Assert.equal(3, Object.keys(baseData.properties.requestHeaders).length, "two request headers set up when there's no user defined request header");
+                            Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
+                            Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
+                            Assert.ok(baseData.properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparent");
+                            const id: string = baseData.id;
+                            const regex = id.match(/\|.{32}\..{16}\./g);
+                            Assert.ok(id.length > 0);
+                            Assert.equal(1, regex.length)
+                            Assert.equal(id, regex[0]);
                         });
-
-                        let type = "Fetch";
-                        if (this.isFetchPolyfill) {
-                            type = "Ajax";
-                            Assert.ok(true, "Using fetch polyfill");
-                        }
-                        Assert.equal(3, args.length, "track is called 3 times");
-                        let baseData = args[0].baseData;
-                        Assert.equal(type, baseData.type, "request is " + type + " type");
-                        Assert.equal('value', baseData.properties.requestHeaders['header'], "fetch request's user defined request header is stored");
-                        Assert.ok(baseData.properties.responseHeaders, "fetch request's reponse header is stored");
-
-                        baseData = args[1].baseData;
-                        Assert.equal(3, Object.keys(baseData.properties.requestHeaders).length, "two request headers set up when there's no user defined request header");
-                        Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
-                        Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
-                        Assert.ok(baseData.properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparent");
-                        const id: string = baseData.id;
-                        const regex = id.match(/\|.{32}\..{16}\./g);
-                        Assert.ok(id.length > 0);
-                        Assert.equal(1, regex.length)
-                        Assert.equal(id, regex[0]);
-                    })
+                }
             });
         } else {
             this.testCase({
@@ -761,35 +758,34 @@ export class SnippetInitializationTests extends AITestClass {
     }
 
     public addPropertiesPluginTests(snippetName: string, snippetCreator: (config:any) => Snippet): void {
-        this.testCaseAsync({
+        this.testCase({
             name: 'Custom Tags: allowed to send custom properties via addTelemetryInitializer',
-            stepDelay: 100,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    theSnippet.addTelemetryInitializer((item: ITelemetryItem) => {
-                        item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
-                    });
-                    theSnippet.trackEvent({ name: "Custom event via addTelemetryInitializer" });
-                }
-            ]
-            .add(this.asserts(1, false, false))
-            .add(PollingAssert.createPollingAssert(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length) {
-                    const payload = JSON.parse(payloadStr[0]);
-                        Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
-                        Assert.ok(payload);
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                theSnippet.addTelemetryInitializer((item: ITelemetryItem) => {
+                    item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
+                });
+                theSnippet.trackEvent({ name: "Custom event via addTelemetryInitializer" });
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1, false, false))
+                    .add(PollingAssert.createPollingAssert(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length) {
+                            const payload = JSON.parse(payloadStr[0]);
+                                Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
+                                Assert.ok(payload);
 
-                    if (payload && payload.tags) {
-                        const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
-                        const tagExpect: string = 'my.custom.cloud.name';
-                        Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
-                        return true;
-                    }
-                    return false;
-                }
-            }, 'Set custom tags') as any)
+                            if (payload && payload.tags) {
+                                const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                                const tagExpected: string = 'my.custom.cloud.name';
+                                Assert.equal(tagResult, tagExpected, 'telemetryinitializer tag override successful');
+                                return true;
+                            }
+                            return false;
+                        }
+                    }, 'Set custom tags') as any);
+            }
         });
 
         this.testCase({
