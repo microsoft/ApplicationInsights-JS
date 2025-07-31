@@ -1224,10 +1224,9 @@ export class ApplicationInsightsTests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "E2E.GenericTests: trackException with multiple stack frame formats",
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let errObj = {
                     name: "E2E.GenericTests",
                     reason:{
@@ -1272,9 +1271,12 @@ export class ApplicationInsightsTests extends AITestClass {
                     errObj
                 );
                 this._ai.trackException({ exception: exception }, { custom: "custom value" });
-            }].add(this.asserts(1)).add(() => {
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1))
+                    .add(() => {
 
-                const expectedParsedStack: IStackFrame[] = [
+                        const expectedParsedStack: IStackFrame[] = [
                     { level: 0, method: "<no_method>", assembly: "at http://localhost:3000/static/js/main.206f4846.js:2:296748", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
                     { level: 1, method: "Object.Re", assembly: "at Object.Re (http://localhost:3000/static/js/main.206f4846.js:2:16814)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
                     { level: 2, method: "je", assembly: "at je (http://localhost:3000/static/js/main.206f4846.js:2:16968)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
@@ -1331,13 +1333,13 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
                     }
                 }
-            })
+                    });
+            }
         })
 
-        this.testCaseAsync({
+        this.testCase({
             name: "E2E.GenericTests: trackException with multiple line message",
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let message = "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n" +
                             "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
                             "2. You might be breaking the Rules of Hooks\n" +
@@ -1368,9 +1370,12 @@ export class ApplicationInsightsTests extends AITestClass {
                     errObj
                 );
                 this._ai.trackException({ exception: exception }, { custom: "custom value" });
-            }].add(this.asserts(1)).add(() => {
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1))
+                    .add(() => {
 
-                const expectedParsedStack: IStackFrame[] = [
+                        const expectedParsedStack: IStackFrame[] = [
                     { level: 0, method: "Object.throwInvalidHookError", assembly: "at Object.throwInvalidHookError (https://localhost:44365/static/js/bundle.js:201419:13)", fileName: "https://localhost:44365/static/js/bundle.js", line: 201419 },
                     { level: 1, method: "useContext", assembly: "at useContext (https://localhost:44365/static/js/bundle.js:222943:25)", fileName: "https://localhost:44365/static/js/bundle.js", line: 222943 },
                     { level: 2, method: "useTenantContext", assembly: "at useTenantContext (https://localhost:44365/static/js/bundle.js:5430:68)", fileName: "https://localhost:44365/static/js/bundle.js", line: 5430 },
@@ -1408,118 +1413,117 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
                     }
                 }
-            })
+                    });
+            }
         })
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: track metric",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    console.log("* calling trackMetric " + new Date().toISOString());
-                    for (let i = 0; i < 100; i++) {
-                        this._ai.trackMetric({ name: "test" + i, average: Math.round(100 * Math.random()), min: 1, max: i+1, stdDev: 10.0 * Math.random() });
-                    }
-                    console.log("* done calling trackMetric " + new Date().toISOString());
+            test: () => {
+                console.log("* calling trackMetric " + new Date().toISOString());
+                for (let i = 0; i < 100; i++) {
+                    this._ai.trackMetric({ name: "test" + i, average: Math.round(100 * Math.random()), min: 1, max: i+1, stdDev: 10.0 * Math.random() });
                 }
-            ].add(this.asserts(100))
+                console.log("* done calling trackMetric " + new Date().toISOString());
+                
+                return this._asyncQueue()
+                    .add(this.asserts(100));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: track custom metric",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    console.log("* calling trackMetric " + new Date().toISOString());
-                    this._ai.trackMetric({ name: "my_custom_metric_0", average: 2 });
-                    this._ai.trackMetric({ name: "my_custom_metric_1", average: 1.1, sampleCount: 1, min: 1, max: 1, stdDev: 1.12 });
-                    this._ai.trackMetric({ name: "my_custom_metric_2", average: 1.2, sampleCount: 2, min: 1, max: 2, stdDev: 1.23 });
-                    this._ai.trackMetric({ name: "my_custom_metric_3", average: 1.3, sampleCount: 3, min: 1, max: 2.5, stdDev: 1.35 });
-                    console.log("* done calling trackMetric " + new Date().toISOString());
-                }
-            ].add(this.asserts(4))
+            test: () => {
+                console.log("* calling trackMetric " + new Date().toISOString());
+                this._ai.trackMetric({ name: "my_custom_metric_0", average: 2 });
+                this._ai.trackMetric({ name: "my_custom_metric_1", average: 1.1, sampleCount: 1, min: 1, max: 1, stdDev: 1.12 });
+                this._ai.trackMetric({ name: "my_custom_metric_2", average: 1.2, sampleCount: 2, min: 1, max: 2, stdDev: 1.23 });
+                this._ai.trackMetric({ name: "my_custom_metric_3", average: 1.3, sampleCount: 3, min: 1, max: 2.5, stdDev: 1.35 });
+                console.log("* done calling trackMetric " + new Date().toISOString());
+                
+                return this._asyncQueue()
+                    .add(this.asserts(4));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: `TelemetryContext: track page view ${window.location.pathname}`,
-            stepDelay: 500,
-            steps: [
-                () => {
-                    this._ai.trackPageView(); // sends 2
-                }
-            ]
-            .add(this.asserts(2))
-            .add(() => {
-
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data.baseData.id, "pageView id is defined");
-                    Assert.ok(data.baseData.id.length > 0);
-                    Assert.ok(payload.tags["ai.operation.id"]);
-                    Assert.equal(data.baseData.id, payload.tags["ai.operation.id"], "pageView id matches current operation id");
-                } else {
-                    Assert.ok(false, "successSpy not called");
-                }
-            })
+            test: () => {
+                this._ai.trackPageView(); // sends 2
+                
+                return this._asyncQueue()
+                    .add(this.asserts(2))
+                    .add(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                            const payload = JSON.parse(payloadStr[0]);
+                            const data = payload.data;
+                            Assert.ok(data.baseData.id, "pageView id is defined");
+                            Assert.ok(data.baseData.id.length > 0);
+                            Assert.ok(payload.tags["ai.operation.id"]);
+                            Assert.equal(data.baseData.id, payload.tags["ai.operation.id"], "pageView id matches current operation id");
+                        } else {
+                            Assert.ok(false, "successSpy not called");
+                        }
+                    });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: track page view performance",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    this._ai.trackPageViewPerformance({ name: 'name', uri: 'url' });
-                }
-            ].add(this.asserts(1))
+            test: () => {
+                this._ai.trackPageViewPerformance({ name: 'name', uri: 'url' });
+                
+                return this._asyncQueue()
+                    .add(this.asserts(1));
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: track all types in batch",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    let exception = null;
-                    try {
-                        window["a"]["b"]();
-                    } catch (e) {
-                        exception = e;
-                    }
+            test: () => {
+                let exception = null;
+                try {
+                    window["a"]["b"]();
+                } catch (e) {
+                    exception = e;
+                }
 
-                    Assert.ok(exception);
+                Assert.ok(exception);
 
+                this._ai.trackException({ exception });
+                this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
+                this._ai.trackTrace({ message: "test" });
+                this._ai.trackPageView({}); // sends 2
+                this._ai.trackPageViewPerformance({ name: 'name', uri: 'http://someurl' });
+                this._ai.flush();
+                
+                return this._asyncQueue()
+                    .add(this.asserts(6));
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: track all types in a large batch",
+            test: () => {
+                let exception = null;
+                try {
+                    window["a"]["b"]();
+                } catch (e) {
+                    exception = e;
+                }
+                Assert.ok(exception);
+
+                for (let i = 0; i < 100; i++) {
                     this._ai.trackException({ exception });
                     this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
                     this._ai.trackTrace({ message: "test" });
-                    this._ai.trackPageView({}); // sends 2
-                    this._ai.trackPageViewPerformance({ name: 'name', uri: 'http://someurl' });
-                    this._ai.flush();
+                    this._ai.trackPageView({ name: `${i}` }); // sends 2 1st time
                 }
-            ].add(this.asserts(6))
-        });
-
-        this.testCaseAsync({
-            name: "TelemetryContext: track all types in a large batch",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    let exception = null;
-                    try {
-                        window["a"]["b"]();
-                    } catch (e) {
-                        exception = e;
-                    }
-                    Assert.ok(exception);
-
-                    for (let i = 0; i < 100; i++) {
-                        this._ai.trackException({ exception });
-                        this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
-                        this._ai.trackTrace({ message: "test" });
-                        this._ai.trackPageView({ name: `${i}` }); // sends 2 1st time
-                    }
-                }
-            ].add(this.asserts(401, false))
+                
+                return this._asyncQueue()
+                    .add(this.asserts(401, false));
+            }
         });
 
         this.testCase({
