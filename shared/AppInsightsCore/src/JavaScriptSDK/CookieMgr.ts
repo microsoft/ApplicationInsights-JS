@@ -320,9 +320,17 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             return enabled;
         },
         setEnabled: (value: boolean) => {
+            // Store the current state before making changes
+            let wasEnabled = _enabled;
             // Explicitly checking against false, so that setting to undefined will === true
             _enabled = value !== false;
             cookieMgrConfig.enabled = value;
+            
+            // If cookies were just enabled and we have pending cookies, flush them immediately
+            // This handles the synchronous case when setEnabled is called directly
+            if (!wasEnabled && _enabled && !_disableCaching) {
+                _flushPendingCookies();
+            }
         },
         set: (name: string, value: string, maxAgeSec?: number, domain?: string, path?: string) => {
             let result = false;
