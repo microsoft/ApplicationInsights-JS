@@ -24,8 +24,10 @@ export class CookieManagerTests extends AITestClass {
             setCookie: (name, value) => {
                 _self._testCookies[name] = value;
             },
-            delCookie: (name) => {
-                delete _self._testCookies[name]
+            delCookie: (name, value) => {
+                // Simulate real browser behavior - set the cookie with the deletion value
+                // instead of removing it entirely from the object
+                _self._testCookies[name] = value;
             }
         }
         _self._config = {
