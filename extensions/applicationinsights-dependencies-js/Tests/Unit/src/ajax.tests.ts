@@ -3661,7 +3661,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 this._ajax["_currentWindowHost"] = "httpbin.org";
 
-                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track");
                 this._context["trackStub"] = trackSpy;
 
                 // Send fetch request that should trigger a track event when complete
@@ -3671,8 +3671,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                     return value;
                 });
                 Assert.equal(false, markSpy.called, "The code should not have called been mark()");
-                    }
-            }
+                    })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (this._context["fetchComplete"]) {
