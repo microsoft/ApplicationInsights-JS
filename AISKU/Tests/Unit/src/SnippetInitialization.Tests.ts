@@ -210,8 +210,10 @@ export class SnippetInitializationTests extends AITestClass {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfigConnectionString(this.sessionPrefix)));
                     theSnippet.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
                     
+                    let asserts = this.asserts(1);
                     return this._asyncQueue()
-                        .add(this.asserts(1))
+                        .add(asserts[0])
+                        .add(asserts[1])
                         .add(() => {
                             const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                             if (payloadStr.length > 0) {
@@ -449,8 +451,10 @@ export class SnippetInitializationTests extends AITestClass {
                 let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                 theSnippet.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
                 
+                let asserts = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1))
+                    .add(asserts[0])
+                    .add(asserts[1])
                     .add(() => {
 
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
@@ -470,8 +474,10 @@ export class SnippetInitializationTests extends AITestClass {
                 let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                 theSnippet.trackTrace({ message: 'trace', properties: { "foo": "bar", "prop2": "value2" } });
                 
+                let asserts = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1))
+                    .add(asserts[0])
+                                        .add(asserts[1])
                     .add(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         const payload = JSON.parse(payloadStr[0]);
@@ -498,8 +504,10 @@ export class SnippetInitializationTests extends AITestClass {
                 }
                 Assert.ok(exception);
                 
+                let asserts = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1));
+                    .add(asserts[0])
+                                        .add(asserts[1]);;
             }
         });
 
@@ -517,8 +525,10 @@ export class SnippetInitializationTests extends AITestClass {
                 }
                 Assert.ok(exception);
                 
+                let asserts = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1));
+                    .add(asserts[0])
+                    .add(asserts[1]);
             }
         });
 
@@ -532,8 +542,10 @@ export class SnippetInitializationTests extends AITestClass {
                 }
                 console.log("* done calling trackMetric " + new Date().toISOString());
                 
+                let asserts = this.asserts(100);
                 return this._asyncQueue()
-                    .add(this.asserts(100));
+                    .add(asserts[0])
+                                        .add(asserts[1]);;
             }
         });
 
@@ -543,8 +555,10 @@ export class SnippetInitializationTests extends AITestClass {
                 let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                 theSnippet.trackPageView({}); // sends 2
                 
+                let asserts = this.asserts(2);
                 return this._asyncQueue()
-                    .add(this.asserts(2))
+                    .add(asserts[0])
+                                        .add(asserts[1])
                     .add(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length > 0) {
@@ -567,8 +581,10 @@ export class SnippetInitializationTests extends AITestClass {
                 let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                 theSnippet.trackPageViewPerformance({ name: 'name', uri: 'url' });
                 
+                let asserts = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1));
+                    .add(asserts[0])
+                                        .add(asserts[1]);;
             }
         });
 
@@ -592,8 +608,10 @@ export class SnippetInitializationTests extends AITestClass {
                 theSnippet.trackPageViewPerformance({ name: 'name', uri: 'http://someurl' });
                 theSnippet.flush();
                 
+                let asserts = this.asserts(6);
                 return this._asyncQueue()
-                    .add(this.asserts(6));
+                    .add(asserts[0])
+                                        .add(asserts[1]);;
             }
         });
 
@@ -616,8 +634,10 @@ export class SnippetInitializationTests extends AITestClass {
                     theSnippet.trackPageView({ name: `${i}` }); // sends 2 1st time
                 }
                 
+                let asserts = this.asserts(401, false);
                 return this._asyncQueue()
-                    .add(this.asserts(401, false));
+                    .add(asserts[0])
+                                        .add(asserts[1]);;
             }
         });
 
@@ -637,8 +657,10 @@ export class SnippetInitializationTests extends AITestClass {
                 theSnippet.addTelemetryInitializer(telemetryInitializer.init);
                 theSnippet.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
                 
+                let asserts = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1))
+                    .add(asserts[0])
+                                        .add(asserts[1])
                     .add(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length > 0) {
@@ -672,8 +694,10 @@ export class SnippetInitializationTests extends AITestClass {
                 }
                 theSnippet.trackDependencyData(data);
                 
+                let asserts = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1));
+                    .add(asserts[0])
+                                        .add(asserts[1]);;
             }
         });
 
@@ -688,8 +712,10 @@ export class SnippetInitializationTests extends AITestClass {
                     xhr.send();
                     Assert.ok(true);
                     
+                    let asserts = this.asserts(1);
                     return this._asyncQueue()
-                        .add(this.asserts(1));
+                        .add(asserts[0])
+                                            .add(asserts[1]);;
                 }
             });
         }
@@ -703,6 +729,7 @@ export class SnippetInitializationTests extends AITestClass {
                     fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
                     Assert.ok(true, "fetch monitoring is instrumented");
                     
+                    let asserts = this.asserts(3, false, false);
                     return this._asyncQueue()
                         .add(() => {
                             fetch('https://httpbin.org/status/200', { method: 'GET' });
@@ -712,7 +739,8 @@ export class SnippetInitializationTests extends AITestClass {
                             fetch('https://httpbin.org/status/200');
                             Assert.ok(true, "fetch monitoring is instrumented");
                         })
-                        .add(this.asserts(3, false, false))
+                        .add(asserts[0])
+                                            .add(asserts[1])
                         .add(() => {
                             let args = [];
                             this.trackSpy.args.forEach(call => {
@@ -767,8 +795,10 @@ export class SnippetInitializationTests extends AITestClass {
                 });
                 theSnippet.trackEvent({ name: "Custom event via addTelemetryInitializer" });
                 
+                let asserts = this.asserts(1, false, false);
                 return this._asyncQueue()
-                    .add(this.asserts(1, false, false))
+                    .add(asserts[0])
+                                        .add(asserts[1])
                     .add(PollingAssert.createPollingAssert(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length) {
@@ -797,8 +827,10 @@ export class SnippetInitializationTests extends AITestClass {
                 });
                 theSnippet.trackEvent({ name: "Custom event" });
                 
+                let asserts = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1))
+                    .add(asserts[0])
+                                        .add(asserts[1])
                     .add(PollingAssert.createPollingAssert(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length > 0) {
@@ -830,8 +862,10 @@ export class SnippetInitializationTests extends AITestClass {
                 });
                 theSnippet.trackEvent({ name: "Custom event via shimmed addTelemetryInitializer" });
                 
+                let asserts = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1))
+                    .add(asserts[0])
+                                        .add(asserts[1])
                     .add(PollingAssert.createPollingAssert(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length > 0) {
@@ -871,8 +905,10 @@ export class SnippetInitializationTests extends AITestClass {
                 context.user.setAuthenticatedUserContext('10001');
                 theSnippet.trackTrace({ message: 'authUserContext test' });
                 
+                let asserts = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1))
+                    .add(asserts[0])
+                                        .add(asserts[1])
                     .add(PollingAssert.createPollingAssert(() => {
                         let payloadStr = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length > 0) {
@@ -902,8 +938,10 @@ export class SnippetInitializationTests extends AITestClass {
                 context.user.setAuthenticatedUserContext('10001', 'account123');
                 theSnippet.trackTrace({ message: 'authUserContext test' });
                 
+                let asserts = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1))
+                    .add(asserts[0])
+                                        .add(asserts[1])
                     .add(PollingAssert.createPollingAssert(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length > 0) {
@@ -932,8 +970,10 @@ export class SnippetInitializationTests extends AITestClass {
                 context.user.setAuthenticatedUserContext("\u0428", "\u0429");
                 theSnippet.trackTrace({ message: 'authUserContext test' });
                 
+                let asserts = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1))
+                    .add(asserts[0])
+                                        .add(asserts[1])
                     .add(PollingAssert.createPollingAssert(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length > 0) {
@@ -963,8 +1003,10 @@ export class SnippetInitializationTests extends AITestClass {
                 context.user.clearAuthenticatedUserContext();
                 theSnippet.trackTrace({ message: 'authUserContext test' });
                 
+                let asserts = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1))
+                    .add(asserts[0])
+                                        .add(asserts[1])
                     .add(PollingAssert.createPollingAssert(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length > 0) {

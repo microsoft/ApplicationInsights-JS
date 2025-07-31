@@ -873,6 +873,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._ai.addPlugin(offlineChannel);
                 this._ctx.offlineChannel = offlineChannel;
 
+                let asserts_9499 = this.asserts(1);
                 return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
                     let offlineChannel = this._ctx.offlineChannel;
                     if (offlineChannel && offlineChannel.isInitialized()) {
@@ -899,7 +900,8 @@ export class ApplicationInsightsTests extends AITestClass {
                         return true
                     }
                     return false
-                }, "Wait for init" + new Date().toISOString(), 60) as any).add(this.asserts(1)).add(() => {
+                }, "Wait for init" + new Date().toISOString(), 60) as any).add(asserts_9499[0])
+                                    .add(asserts_9499[1]).add(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
                         const payload = JSON.parse(payloadStr[0]);
@@ -917,8 +919,10 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 this._ai.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
                 
+                let asserts_9499 = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1))
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1])
                     .add(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length > 0) {
@@ -938,8 +942,10 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 this._ai.trackTrace({ message: 'trace', properties: { "foo": "bar", "prop2": "value2" } });
                 
+                let asserts_9499 = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1))
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1])
                     .add(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         const payload = JSON.parse(payloadStr[0]);
@@ -965,8 +971,10 @@ export class ApplicationInsightsTests extends AITestClass {
                 }
                 Assert.ok(exception);
                 
+                let asserts_9499 = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1));
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1]);;
             }
         });
 
@@ -993,8 +1001,10 @@ export class ApplicationInsightsTests extends AITestClass {
                 }
                 Assert.ok(exception);
                 
+                let asserts_9499 = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1));
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1]);;
             }
         });
 
@@ -1021,7 +1031,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 }
                 Assert.ok(exception);
 
-                return this._asyncQueue().add(this.asserts(1));
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]);;
             }
         });
 
@@ -1048,7 +1060,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 }
                 Assert.ok(exception);
 
-                return this._asyncQueue().add(this.asserts(1));
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]);;
             }
         });
 
@@ -1081,7 +1095,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 }
                 Assert.ok(exception);
 
-                return this._asyncQueue().add(this.asserts(1));
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]);;
             }
         });
 
@@ -1114,7 +1130,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 }
                 Assert.ok(exception);
 
-                return this._asyncQueue().add(this.asserts(1));
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]);;
             }
         });
 
@@ -1132,7 +1150,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._ai.trackException({ exception: autoTelemetry });
                 Assert.ok(autoTelemetry);
 
-                return this._asyncQueue().add(this.asserts(1));
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]);;
             }
         });
 
@@ -1141,7 +1161,8 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 this._ai.trackException({ id: "testID", exception: new CustomTestError("Test Custom Error!") });
 
-                return this._asyncQueue().add(this.asserts(1)).add(() => {
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]).add(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
                         const payload = JSON.parse(payloadStr[0]);
@@ -1171,7 +1192,9 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 this._ai.trackException({id:"testId", error: new Error("test local exception"), severityLevel: 3});
 
-                return this._asyncQueue().add(this.asserts(1)).add(() => {
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]).add(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
                         const payload = JSON.parse(payloadStr[0]);
@@ -1197,7 +1220,8 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 this._ai.trackException({ exception: new CustomTestError("Test Custom Error!") }, { custom: "custom value" });
 
-                return this._asyncQueue().add(this.asserts(1)).add(() => {
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]).add(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
                         const payload = JSON.parse(payloadStr[0]);
@@ -1272,8 +1296,10 @@ export class ApplicationInsightsTests extends AITestClass {
                 );
                 this._ai.trackException({ exception: exception }, { custom: "custom value" });
                 
+                let asserts_9499 = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1))
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1])
                     .add(() => {
 
                         const expectedParsedStack: IStackFrame[] = [
@@ -1371,8 +1397,10 @@ export class ApplicationInsightsTests extends AITestClass {
                 );
                 this._ai.trackException({ exception: exception }, { custom: "custom value" });
                 
+                let asserts_9499 = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1))
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1])
                     .add(() => {
 
                         const expectedParsedStack: IStackFrame[] = [
@@ -1426,8 +1454,10 @@ export class ApplicationInsightsTests extends AITestClass {
                 }
                 console.log("* done calling trackMetric " + new Date().toISOString());
                 
+                let asserts_6924 = this.asserts(100);
                 return this._asyncQueue()
-                    .add(this.asserts(100));
+                    .add(asserts_6924[0])
+                                        .add(asserts_6924[1]);;
             }
         });
 
@@ -1441,8 +1471,10 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._ai.trackMetric({ name: "my_custom_metric_3", average: 1.3, sampleCount: 3, min: 1, max: 2.5, stdDev: 1.35 });
                 console.log("* done calling trackMetric " + new Date().toISOString());
                 
+                let asserts_4101 = this.asserts(4);
                 return this._asyncQueue()
-                    .add(this.asserts(4));
+                    .add(asserts_4101[0])
+                                        .add(asserts_4101[1]);;
             }
         });
 
@@ -1451,8 +1483,10 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 this._ai.trackPageView(); // sends 2
                 
+                let asserts_2541 = this.asserts(2);
                 return this._asyncQueue()
-                    .add(this.asserts(2))
+                    .add(asserts_2541[0])
+                                        .add(asserts_2541[1])
                     .add(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length > 0) {
@@ -1474,8 +1508,10 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 this._ai.trackPageViewPerformance({ name: 'name', uri: 'url' });
                 
+                let asserts_9499 = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1));
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1]);;
             }
         });
 
@@ -1498,8 +1534,10 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._ai.trackPageViewPerformance({ name: 'name', uri: 'http://someurl' });
                 this._ai.flush();
                 
+                let asserts_3551 = this.asserts(6);
                 return this._asyncQueue()
-                    .add(this.asserts(6));
+                    .add(asserts_3551[0])
+                                        .add(asserts_3551[1]);;
             }
         });
 
@@ -1521,8 +1559,10 @@ export class ApplicationInsightsTests extends AITestClass {
                     this._ai.trackPageView({ name: `${i}` }); // sends 2 1st time
                 }
                 
+                let asserts_8903 = this.asserts(401, false);
                 return this._asyncQueue()
-                    .add(this.asserts(401, false));
+                    .add(asserts_8903[0])
+                                        .add(asserts_8903[1]);;
             }
         });
 
@@ -1541,8 +1581,10 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._ai.addTelemetryInitializer(telemetryInitializer.init);
                 this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
                 
+                let asserts_9499 = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1))
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1])
                     .add(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length > 0) {
@@ -1567,8 +1609,10 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._ai.trackPageView({ name: 'pageview', properties: { 'prop1': 'val1' }});
                 this._ai.trackEvent({ name: 'event', properties: { 'prop2': undefined } });
                 
+                let asserts_6106 = this.asserts(3);
                 return this._asyncQueue()
-                    .add(this.asserts(3))
+                    .add(asserts_6106[0])
+                                        .add(asserts_6106[1])
                     .add(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         for (let i = 0; i < payloadStr.length; i++) {
@@ -1607,8 +1651,10 @@ export class ApplicationInsightsTests extends AITestClass {
                 }
                 this._ai.trackDependencyData(data);
                 
+                let asserts_9499 = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1));
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1]);;
             }
         });
 
@@ -1622,8 +1668,10 @@ export class ApplicationInsightsTests extends AITestClass {
                 xhr.send();
                 Assert.ok(true);
                 
+                let asserts_9499 = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1));
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1]);;
             }
         });
         let global = getGlobal();
@@ -1642,8 +1690,10 @@ export class ApplicationInsightsTests extends AITestClass {
                     fetch('https://httpbin.org/status/200');
                     Assert.ok(true, "fetch monitoring is instrumented");
                     
+                    let asserts_8076 = this.asserts(3, false, false);
                     return this._asyncQueue()
-                        .add(this.asserts(3, false, false))
+                        .add(asserts_8076[0])
+                                            .add(asserts_8076[1])
                         .add(() => {
                             let args = [];
                             this.trackSpy.args.forEach(call => {
@@ -1698,8 +1748,11 @@ export class ApplicationInsightsTests extends AITestClass {
                 });
                 this._ai.trackEvent({ name: "Custom event via addTelemetryInitializer" });
                 
+                let asserts_9577 = this.asserts(1, false, false);
+                let asserts_9499 = this.asserts(1);
                 return this._asyncQueue()
-                    .add(this.asserts(1, false, false))
+                    .add(asserts_9577[0])
+                                        .add(asserts_9577[1])
                     .add(PollingAssert.createPollingAssert(() => {
                         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length) {
@@ -1727,7 +1780,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 });
                 this._ai.trackEvent({ name: "Custom event" });
                 
-                return this._asyncQueue().add(this.asserts(1))
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1])
                 .add(PollingAssert.createPollingAssert(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
@@ -1758,7 +1813,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 });
                 this._ai.trackEvent({ name: "Custom event via shimmed addTelemetryInitializer" });
                 
-                return this._asyncQueue().add(this.asserts(1))
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1])
                 .add(PollingAssert.createPollingAssert(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
@@ -1797,7 +1854,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 context.user.setAuthenticatedUserContext('10001');
                 this._ai.trackTrace({ message: 'authUserContext test' });
                 
-                return this._asyncQueue().add(this.asserts(1))
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1])
                 .add(PollingAssert.createPollingAssert(() => {
                     let payloadStr = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
@@ -1826,7 +1885,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 context.user.setAuthenticatedUserContext('10001', 'account123');
                 this._ai.trackTrace({ message: 'authUserContext test' });
                 
-                return this._asyncQueue().add(this.asserts(1))
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1])
                 .add(PollingAssert.createPollingAssert(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
@@ -1854,7 +1915,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 context.user.setAuthenticatedUserContext("\u0428", "\u0429");
                 this._ai.trackTrace({ message: 'authUserContext test' });
                 
-                return this._asyncQueue().add(this.asserts(1))
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1])
                 .add(PollingAssert.createPollingAssert(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
@@ -1883,7 +1946,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 context.user.clearAuthenticatedUserContext();
                 this._ai.trackTrace({ message: 'authUserContext test' });
                 
-                return this._asyncQueue().add(this.asserts(1))
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1])
                 .add(PollingAssert.createPollingAssert(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
