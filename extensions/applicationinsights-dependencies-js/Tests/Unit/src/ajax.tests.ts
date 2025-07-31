@@ -2021,8 +2021,8 @@ export class AjaxTests extends AITestClass {
                         }, () => {
                             Assert.ok(false, "fetch failed!");
                         });
-                    }
-                            .add(PollingAssert.asyncTaskPollingAssert(() => {
+                    })
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                         let trackStub = this._context["trackStub"] as SinonStub;
                         if (trackStub.called) {
                             Assert.ok(trackStub.calledOnce, "track is called");
@@ -2105,8 +2105,8 @@ export class AjaxTests extends AITestClass {
                         }, () => {
                             Assert.ok(false, "fetch failed!");
                         });
-                    }
-                            .add(PollingAssert.asyncTaskPollingAssert(() => {
+                    })
+                    .add(PollingAssert.asyncTaskPollingAssert(() => {
                         let trackStub = this._context["trackStub"] as SinonStub;
                         if (trackStub.called) {
                             Assert.ok(trackStub.calledOnce, "track is called");
@@ -2193,8 +2193,7 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-                    }
-            }
+                    })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
@@ -2277,8 +2276,7 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-                    }
-            }
+                    })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
@@ -2368,8 +2366,7 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-                    }
-            }
+                    })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
@@ -2451,8 +2448,7 @@ export class AjaxTests extends AITestClass {
                     Assert.ok(false, "fetch failed!");
                     
                 });
-                    }
-            }
+                    })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
@@ -2539,8 +2535,7 @@ export class AjaxTests extends AITestClass {
                 fetch(new Request(url, { headers: new Headers() }));
                 fetch(new Request(url, { headers }));
                 fetch(new Request(url, init));
-                    }
-            }
+                    })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 let fetchCalls = this._context["fetchCalls"] as IFetchArgs[];
@@ -3343,7 +3338,7 @@ export class AjaxPerfTrackTests extends AITestClass {
         this.testCase({
             name: "AjaxPerf: check that performance tracking is disabled for xhr requests by default",
             
-            steps: [ () => {
+            test: () => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
 
@@ -3363,16 +3358,16 @@ export class AjaxPerfTrackTests extends AITestClass {
                 // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
                 this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
 
+                return this._asyncQueue()
+                    .add(() => {
+                        // Act
+                        var xhr = new XMLHttpRequest();
 
-                // Act
-                var xhr = new XMLHttpRequest();
-
-                // trigger the request that should cause a track event once the xhr request is complete
-                xhr.open("GET", "https://httpbin.org/status/200");
-                xhr.send();
-                Assert.equal(false, markSpy.called, "The code should not have called mark()");
-                    }
-            }
+                        // trigger the request that should cause a track event once the xhr request is complete
+                        xhr.open("GET", "https://httpbin.org/status/200");
+                        xhr.send();
+                        Assert.equal(false, markSpy.called, "The code should not have called mark()");
+                    })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
@@ -3431,7 +3426,6 @@ export class AjaxPerfTrackTests extends AITestClass {
                             duration: 10
                         });
                     })
-            }
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
@@ -3500,8 +3494,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                         { name: "dup", description: "dup2"},
                     ]
                 });
-                    }
-            }
+                    })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
                 let trackStub = this._context["trackStub"] as SinonStub;
                 if (trackStub.called) {
@@ -3574,6 +3567,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                         Assert.equal(1, ajaxCountTwo-ajaxCountOne, "the count should increase by 1");
                     })
                     .waitComplete();
+            }
         });
 
         this.testCase({
@@ -3929,6 +3923,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                     .waitComplete();
             }
         });
+    }
 }
 
 export class AjaxFrozenTests extends AITestClass {
