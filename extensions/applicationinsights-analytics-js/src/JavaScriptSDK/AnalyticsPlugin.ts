@@ -12,14 +12,15 @@ import {
     createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage,
     utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
+import { IAjaxMonitorPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext,
     IExceptionConfig, IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
     ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent,
     TelemetryInitializerFunction, _eInternalMessageId, arrForEach, cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate,
-    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, findAllScripts, generateW3CId,
-    getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString,
-    isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
+    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, fieldRedaction, findAllScripts,
+    generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined,
+    isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
@@ -125,12 +126,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         let _extConfig: IAnalyticsConfig;
         let _autoTrackPageVisitTime: boolean;
         let _expCfg: IExceptionConfig;
-
-        // Counts number of trackAjax invocations.
-        // By default we only monitor X ajax call per view to avoid too much load.
-        // Default value is set in config.
-        // This counter keeps increasing even after the limit is reached.
-        let _trackAjaxAttempts: number = 0;
     
         // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
         let _prevUri: string; // Assigned in the constructor
@@ -264,8 +259,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             _self.trackPageView = (pageView?: IPageViewTelemetry, customProperties?: ICustomProperties) => {
                 try {
                     let inPv = pageView || {};
+                    if (_self.core && _self.core.config) {
+                        inPv.uri = fieldRedaction(inPv.uri, _self.core.config);
+                    }
                     _pageViewManager.trackPageView(inPv, {...inPv.properties, ...inPv.measurements, ...customProperties});
-        
+
                     if (_autoTrackPageVisitTime) {
                         _pageVisitTimeManager.trackPreviousPageVisit(inPv.name, inPv.uri);
                     }
@@ -289,6 +287,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 if (doc) {
                     pageView.refUri = pageView.refUri === undefined ? doc.referrer : pageView.refUri;
                 }
+                if (_self.core && _self.core.config) {
+                    pageView.refUri = fieldRedaction(pageView.refUri, _self.core.config);
+                }
                 if (isNullOrUndefined(pageView.startTime)) {
                     // calculate the start time manually
                     let duration = ((properties || pageView.properties || {}).duration || 0);
@@ -304,7 +305,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                 _self.core.track(telemetryItem);
                 // reset ajaxes counter
-                _trackAjaxAttempts = 0;
+                _resetAjaxAttempts();
             };
 
             /**
@@ -385,7 +386,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         let loc = getLocation();
                         url = loc && loc.href || "";
                     }
-        
+                    if (_self.core && _self.core.config) {
+                        url = fieldRedaction(url, _self.core.config);
+                    }
                     _pageTracking.stop(name, url, properties, measurement);
         
                     if (_autoTrackPageVisitTime) {
@@ -628,6 +631,16 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 return [_errorHookCnt, _autoExceptionInstrumented];
             };
             
+            function _resetAjaxAttempts() {
+                // Reset ajax attempts counter for the new page view
+                if (_self.core) {
+                    let ajaxPlugin = _self.core.getPlugin<IAjaxMonitorPlugin>("AjaxDependencyPlugin");
+                    if (ajaxPlugin && ajaxPlugin.plugin && ajaxPlugin.plugin.resetAjaxAttempts) {
+                        ajaxPlugin.plugin.resetAjaxAttempts();
+                    }
+                }
+            }
+            
             function _populateDefaults(config: IConfiguration) {
                 // it is used for 1DS as well, so config type should be IConfiguration only
                 let identifier = _self.identifier;
@@ -801,7 +814,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     } else {
                         _currUri = locn && locn.href || "";
                     }
-
+                    if (_self.core && _self.core.config) {
+                        _currUri = fieldRedaction(_currUri, _self.core.config);
+                    }
                     if (_enableAutoRouteTracking) {
                         let distributedTraceCtx = _getDistributedTraceCtx();
                         if (distributedTraceCtx) {
@@ -903,15 +918,15 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 _autoUnhandledPromiseInstrumented = false;
                 _autoTrackPageVisitTime = false;
 
-                // Counts number of trackAjax invocations.
-                // By default we only monitor X ajax call per view to avoid too much load.
-                // Default value is set in config.
-                // This counter keeps increasing even after the limit is reached.
-                _trackAjaxAttempts = 0;
+                // Reset ajax attempts counter
+                _resetAjaxAttempts();
             
                 // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
                 let location = getLocation(true);
                 _prevUri = location && location.href || "";
+                if (_self.core && _self.core.config) {
+                    _prevUri = fieldRedaction(_prevUri, _self.core.config);
+                }
                 _currUri = null;
                 _evtNamespace = null;
                 _extConfig = null;

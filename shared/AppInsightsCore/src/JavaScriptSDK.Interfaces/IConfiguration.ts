@@ -157,7 +157,7 @@ export interface IConfiguration {
      * [Optional] An array of the page unload events that you would like to be ignored, special note there must be at least one valid unload
      * event hooked, if you list all or the runtime environment only supports a listed "disabled" event it will still be hooked, if required by the SDK.
      * Unload events include "beforeunload", "unload", "visibilitychange" (with 'hidden' state) and "pagehide".
-     * 
+     *
      * This can be used to avoid jQuery 3.7.1+ deprecation warnings and Chrome warnings about the unload event:
      * @example
      * ```javascript
@@ -165,7 +165,7 @@ export interface IConfiguration {
      *   disablePageUnloadEvents: ["unload"]
      * }
      * ```
-     * 
+     *
      * For more details, see the [Page Unload Events documentation](https://microsoft.github.io/ApplicationInsights-JS/PageUnloadEvents.html).
      */
     disablePageUnloadEvents?: string[];
@@ -174,14 +174,14 @@ export interface IConfiguration {
      * [Optional] An array of page show events that you would like to be ignored, special note there must be at lease one valid show event
      * hooked, if you list all or the runtime environment only supports a listed (disabled) event it will STILL be hooked, if required by the SDK.
      * Page Show events include "pageshow" and "visibilitychange" (with 'visible' state).
-     * 
+     *
      * @example
      * ```javascript
      * {
      *   disablePageShowEvents: ["pageshow"]
      * }
      * ```
-     * 
+     *
      * For more details, see the [Page Unload Events documentation](https://microsoft.github.io/ApplicationInsights-JS/PageUnloadEvents.html).
      */
     disablePageShowEvents?: string[];
@@ -232,6 +232,20 @@ export interface IConfiguration {
      */
     expCfg?: IExceptionConfig;
 
+    /**
+     * [Optional] A flag to enable or disable the use of the field redaction for urls.
+     * @defaultValue true
+     */
+    redactUrls?: boolean;
+
+    /**
+     * [Optional] Additional query parameters to redact beyond the default set.
+     * Use this to specify custom parameters that contain sensitive information.
+     * These will be combined with the default parameters that are redacted.
+     * @defaultValue ["sig", "Signature", "AWSAccessKeyId", "X-Goog-Signature"]
+     * @example ["sig", "Signature", "AWSAccessKeyId", "X-Goog-Signature","auth_token", "api_key", "private_data"]
+     */
+    redactQueryParams?: string[];
 
     ///**
     // * [Optional] Internal SDK configuration for developers

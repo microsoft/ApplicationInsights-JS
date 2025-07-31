@@ -12,8 +12,8 @@ import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICustomProperties, IDistributedTraceContext,
     IInstrumentCallDetails, IInstrumentHooksCallbacks, IPlugin, IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain,
     InstrumentFunc, InstrumentProto, _eInternalMessageId, _throwInternal, arrForEach, createProcessTelemetryContext, createUniqueNamespace,
-    dumpObj, eLoggingSeverity, eventOn, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction,
-    isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, onConfigChange, strPrototype, strTrim
+    dumpObj, eLoggingSeverity, eventOn, fieldRedaction, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation,
+    getPerformance, isFunction, isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, onConfigChange, strPrototype, strTrim
 } from "@microsoft/applicationinsights-core-js";
 import { isWebWorker, objFreeze, scheduleTimeout, strIndexOf, strSplit, strSubstr } from "@nevware21/ts-utils";
 import { DependencyInitializerFunction, IDependencyInitializerDetails, IDependencyInitializerHandler } from "./DependencyInitializer";
@@ -313,6 +313,17 @@ export interface IInstrumentationRequirements extends IDependenciesPlugin {
     includeCorrelationHeaders: (ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) => any;
 }
 
+/**
+ * Interface for the Ajax Monitor Plugin that extends IPlugin and includes ajax specific functionality.
+ * This interface is used for proper typing when retrieving the plugin via getPlugin().
+ */
+export interface IAjaxMonitorPlugin extends IPlugin, IDependenciesPlugin, IInstrumentationRequirements, IDependencyListenerContainer {
+    /**
+     * Resets the ajax attempts counter. This is typically called on page view to allow a fresh set of ajax calls to be tracked.
+     */
+    resetAjaxAttempts(): void;
+}
+
 const _defaultConfig: IConfigDefaults<ICorrelationConfig> = objFreeze({
     maxAjaxCallsPerView: 500,
     disableAjaxTracking: false,
@@ -340,7 +351,7 @@ const _defaultConfig: IConfigDefaults<ICorrelationConfig> = objFreeze({
     addIntEndpoints: true
 });
 
-export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlugin, IInstrumentationRequirements, IDependencyListenerContainer {
+export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlugin {
 
     public static identifier: string = "AjaxDependencyPlugin";
 
@@ -407,6 +418,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 _reportDependencyInternal(_dependencyInitializers, _self.core, null, dependency, properties);
             }
 
+            _self.resetAjaxAttempts = () => {
+                _trackAjaxAttempts = 0;
+            }
+
             _self.includeCorrelationHeaders = (ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any => {
                 // Test Hook to allow the overriding of the location host
                 let currentWindowHost = _self["_currentWindowHost"] || _currentWindowHost;
@@ -451,8 +466,6 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                             init.headers = headers;
                         }
-
-                        return init;
                     } else if (xhr) { // XHR
                         if (correlationIdCanIncludeCorrelationHeader(_extensionConfig, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
                             if (_isUsingAIHeaders) {
@@ -497,12 +510,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 }
                             }
                         }
-
-                        return xhr;
                     }
                 }
 
-                return undefined;
+                return xhr || init;
             }
 
             _self.trackDependencyDataInternal = (dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) => {
@@ -1193,6 +1204,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     }
                 }
 
+                if (_self.core && _self.core.config) {
+                    requestUrl = fieldRedaction(requestUrl, _self.core.config);
+                }
+
                 ajaxData.requestUrl = requestUrl;
 
                 let method = "GET";
@@ -1353,6 +1368,13 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
      * @param dependencyData - dependency data object
      */
     public trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any }) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Resets the ajax attempts counter. This is typically called on page view to allow a fresh set of ajax calls to be tracked.
+     */
+    public resetAjaxAttempts(): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

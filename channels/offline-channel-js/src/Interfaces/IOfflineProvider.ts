@@ -27,11 +27,11 @@ export const enum eStorageProviders {
     IndexedDb = 3
 }
 
-export const StorageProviders = createEnumStyle<typeof eStorageProviders>({
+export const StorageProviders = (/* @__PURE__ */ createEnumStyle<typeof eStorageProviders>({
     LocalStorage: eStorageProviders.LocalStorage,
     SessionStorage: eStorageProviders.SessionStorage,
     IndexedDb: eStorageProviders.IndexedDb
-});
+}));
 export type StorageProviders = number | eStorageProviders;
 
 /**
