@@ -791,6 +791,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Start with cookies disabled
                 manager.setEnabled(false);
+                this.clock.tick(1);
                 Assert.equal(false, manager.isEnabled(), "Cookies should be disabled");
 
                 let newKey = "test." + newId();
@@ -827,6 +828,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Start with cookies disabled
                 manager.setEnabled(false);
+                this.clock.tick(1);
 
                 let cookies = [
                     { key: "test1." + newId(), value: newId() },
@@ -863,6 +865,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Start with cookies disabled
                 manager.setEnabled(false);
+                this.clock.tick(1);
 
                 let newKey = "test." + newId();
                 let newValue = newId();
@@ -894,6 +897,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Start with cookies disabled
                 manager.setEnabled(false);
+                this.clock.tick(1);
 
                 let newKey = "test." + newId();
                 let newValue1 = newId();
@@ -924,6 +928,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Start with cookies disabled
                 manager.setEnabled(false);
+                this.clock.tick(1);
 
                 let newKey = "test." + newId();
                 let newValue = newId();
@@ -964,6 +969,7 @@ export class CookieManagerTests extends AITestClass {
                 
                 // Disable cookies and delete the cookie
                 manager.setEnabled(false);
+                this.clock.tick(1);
                 let delResult = manager.del(newKey);
                 Assert.equal(true, delResult, "Delete should return true when cached");
                 
@@ -995,6 +1001,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Start with cookies disabled
                 manager.setEnabled(false);
+                this.clock.tick(1);
 
                 let blockedKey = "blockedCookie";
                 let allowedKey = "allowedCookie";
@@ -1032,6 +1039,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Start with cookies disabled
                 manager.setEnabled(false);
+                this.clock.tick(1);
 
                 let ignoredKey = "ignoredCookie";
                 let allowedKey = "allowedCookie";
@@ -1069,6 +1077,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // First cycle: disable, set, enable
                 manager.setEnabled(false);
+                this.clock.tick(1);
                 manager.set(newKey1, newValue1);
                 Assert.equal(newValue1, manager.get(newKey1), "Should return cached value");
                 
@@ -1078,6 +1087,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Second cycle: disable again, set different cookie, enable
                 manager.setEnabled(false);
+                this.clock.tick(1);
                 manager.set(newKey2, newValue2);
                 Assert.equal(newValue2, manager.get(newKey2), "Should return second cached value");
                 Assert.equal(newValue1, manager.get(newKey1), "Should still return first value from storage");
@@ -1097,6 +1107,7 @@ export class CookieManagerTests extends AITestClass {
 
                 // Start with cookies disabled and set some cached cookies
                 manager.setEnabled(false);
+                this.clock.tick(1);
                 let newKey = "test." + newId();
                 let newValue = newId();
                 manager.set(newKey, newValue);
