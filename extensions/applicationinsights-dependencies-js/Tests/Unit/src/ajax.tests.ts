@@ -1918,43 +1918,39 @@ export class AjaxTests extends AITestClass {
                     }, 0);
                 });
 
-                try {
-                    this._ajax = new AjaxMonitor();
-                    this._ajax.addDependencyListener((details: IDependencyListenerDetails) => {
-                        return false;
-                    });
-                    let appInsightsCore = new AppInsightsCore();
-                    let coreConfig = {
-                        instrumentationKey: "",
-                        disableFetchTracking: false,
-                        disableAjaxTracking: true
-                    };
-                    appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                    let fetchSpy = this.sandbox.spy(window, "fetch");
+                
+                this._ajax = new AjaxMonitor();
+                this._ajax.addDependencyListener((details: IDependencyListenerDetails) => {
+                    return false;
+                });
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "",
+                    disableFetchTracking: false,
+                    disableAjaxTracking: true
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(window, "fetch");
 
-                    // Setup
-                    let headers = new Headers();
-                    headers.append('My-Header', 'Header field');
-                    let init = {
-                        method: 'get',
-                        headers: headers
-                    };
-                    const url = 'https://httpbin.org/status/200';
+                // Setup
+                let headers = new Headers();
+                headers.append('My-Header', 'Header field');
+                let init = {
+                    method: 'get',
+                    headers: headers
+                };
+                const url = 'https://httpbin.org/status/200';
 
-                    let headerSpy = this.sandbox.spy(this._ajax, "includeCorrelationHeaders");
+                let headerSpy = this.sandbox.spy(this._ajax, "includeCorrelationHeaders");
 
-                    // Act
-                    Assert.ok(fetchSpy.notCalled);
-                    fetch(url, init);
+                // Act
+                Assert.ok(fetchSpy.notCalled);
+                fetch(url, init);
 
-                    // Assert
-                    Assert.ok(fetchSpy.calledOnce);
-                    Assert.ok(headerSpy.calledOnce);
-                    Assert.deepEqual(init, headerSpy.returnValue || headerSpy.returnValues[0]);
-            } catch (e) {
-                    console && console.warn("Exception: " + e);
-                    Assert.ok(false, e);
-                }
+                // Assert
+                Assert.ok(fetchSpy.calledOnce);
+                Assert.ok(headerSpy.calledOnce);
+                Assert.deepEqual(init, headerSpy.returnValue || headerSpy.returnValues[0]);
             }
         });
 
