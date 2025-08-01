@@ -1223,10 +1223,13 @@ export class CookieManagerTests extends AITestClass {
                 this.clock.tick(1);
 
                 // Cookie should be flushed with the maxAge parameter
-                let expectedValue = this.isEmulatingIe ? 
-                    newValue + "; path=/; expires=" : 
-                    newValue + "; path=/; expires=";
-                Assert.ok(this._testCookies[newKey].indexOf(expectedValue) === 0, "Cookie should be flushed with expires");
+                let cookieValue = this._testCookies[newKey];
+                Assert.ok(cookieValue, "Cookie should be flushed to storage");
+                Assert.ok(cookieValue.indexOf(newValue + "; path=/; expires=") === 0, "Cookie should start with value, path and expires");
+                
+                if (!this.isEmulatingIe) {
+                    Assert.ok(cookieValue.indexOf("max-age=" + maxAge) !== -1, "Cookie should include max-age for non-IE browsers");
+                }
             }
         });
 
