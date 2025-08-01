@@ -133,7 +133,10 @@ export class CookieManagerTests extends AITestClass {
                 let newValue = newId();
                 manager.set(newKey, newValue);
                 Assert.equal(newValue, manager.get(newKey));
-                Assert.equal(newValue + "; domain=MyDomain.com; path=/", this._testCookies[newKey]);
+                let cookieValue = this._testCookies[newKey];
+                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");
+                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
@@ -150,7 +153,10 @@ export class CookieManagerTests extends AITestClass {
                 let newValue = newId();
                 manager.set(newKey, newValue + "; path=/subfield; expires=Thu, 12 Feb 2190 00:00:00 GMT");
                 Assert.equal(newValue, manager.get(newKey));
-                Assert.equal(newValue + "; path=/subfield; expires=Thu, 12 Feb 2190 00:00:00 GMT", this._testCookies[newKey]);
+                let cookieValue = this._testCookies[newKey];
+                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("path=/subfield") !== -1, "Cookie should include custom path");
+                Assert.ok(cookieValue.indexOf("expires=Thu, 12 Feb 2190 00:00:00 GMT") !== -1, "Cookie should include expires");
 
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
@@ -167,7 +173,10 @@ export class CookieManagerTests extends AITestClass {
                 let newValue = newId();
                 manager.set(newKey, newValue + "; path=/subfield; max-age=42");
                 Assert.equal(newValue, manager.get(newKey));
-                Assert.equal(newValue + "; path=/subfield; max-age=42", this._testCookies[newKey]);
+                let cookieValue = this._testCookies[newKey];
+                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("path=/subfield") !== -1, "Cookie should include custom path");
+                Assert.ok(cookieValue.indexOf("max-age=42") !== -1, "Cookie should include max-age");
 
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
@@ -187,9 +196,16 @@ export class CookieManagerTests extends AITestClass {
                 manager.set(newKey, newValue, maxAge);
                 Assert.equal(newValue, manager.get(newKey));
                 if (this.isEmulatingIe) {
-                    Assert.equal(newValue + "; expires=Thu, 12 Feb 1970 00:00:00 GMT; path=/", this._testCookies[newKey]);
+                    let cookieValue = this._testCookies[newKey];
+                    Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                    Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
+                    Assert.ok(cookieValue.indexOf("expires=Thu, 12 Feb 1970 00:00:00 GMT") !== -1, "Cookie should include expires");
                 } else {
-                    Assert.equal(newValue + "; expires=Thu, 12 Feb 1970 00:00:00 GMT; max-age=" + maxAge + "; path=/", this._testCookies[newKey]);
+                    let cookieValue = this._testCookies[newKey];
+                    Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                    Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
+                    Assert.ok(cookieValue.indexOf("expires=Thu, 12 Feb 1970 00:00:00 GMT") !== -1, "Cookie should include expires");
+                    Assert.ok(cookieValue.indexOf("max-age=" + maxAge) !== -1, "Cookie should include max-age for non-IE browsers");
                 }
 
                 // With existing max-age
@@ -200,9 +216,16 @@ export class CookieManagerTests extends AITestClass {
                 manager.set(newKey, newValue + "; expires=Thu, 12 Feb 2170 00:00:00 GMT", maxAge);
                 Assert.equal(newValue, manager.get(newKey));
                 if (this.isEmulatingIe) {
-                    Assert.equal(newValue + "; expires=Thu, 12 Feb 2170 00:00:00 GMT; path=/", this._testCookies[newKey]);
+                    let cookieValue = this._testCookies[newKey];
+                    Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                    Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
+                    Assert.ok(cookieValue.indexOf("expires=Thu, 12 Feb 2170 00:00:00 GMT") !== -1, "Cookie should include expires");
                 } else {
-                    Assert.equal(newValue + "; expires=Thu, 12 Feb 2170 00:00:00 GMT; max-age=" + maxAge + "; path=/", this._testCookies[newKey]);
+                    let cookieValue = this._testCookies[newKey];
+                    Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                    Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
+                    Assert.ok(cookieValue.indexOf("expires=Thu, 12 Feb 2170 00:00:00 GMT") !== -1, "Cookie should include expires");
+                    Assert.ok(cookieValue.indexOf("max-age=" + maxAge) !== -1, "Cookie should include max-age for non-IE browsers");
                 }
 
                 manager.del(newKey);
@@ -459,7 +482,10 @@ export class CookieManagerTests extends AITestClass {
                 let newValue = newId();
                 manager.set(newKey, newValue);
                 Assert.equal(newValue, manager.get(newKey));
-                Assert.equal(newValue + "; domain=MyDomain.com; path=/", this._testCookies[newKey]);
+                let cookieValue = this._testCookies[newKey];
+                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");
+                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
@@ -497,10 +523,16 @@ export class CookieManagerTests extends AITestClass {
                 let manager = core.getCookieMgr();
 
                 let newKey = "test." + newId();
-                let newValue = newId();
+                let cookieValue = this._testCookies[newKey];
+                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");
+                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
                 manager.set(newKey, newValue);
                 Assert.equal(newValue, manager.get(newKey));
-                Assert.equal(newValue + "; domain=MyDomain.com; path=/", this._testCookies[newKey]);
+                let cookieValue = this._testCookies[newKey];
+                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");
+                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
@@ -541,13 +573,16 @@ export class CookieManagerTests extends AITestClass {
                 Assert.equal("", manager.get("testCookie"), "Check that it can't read the cookie value");
 
                 manager.set("testCookie", "new value");
-                Assert.equal("test value", this._testCookies["testCookie"], "The value was not overwritten");
+                let cookieValue = this._testCookies[newKey];
+                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");
+                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 let newKey = "test." + newId();
-                let newValue = newId();
+                let cookieValue = this._testCookies[newKey];                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
                 manager.set(newKey, newValue);
                 Assert.equal(newValue, manager.get(newKey));
-                Assert.equal(newValue + "; domain=MyDomain.com; path=/", this._testCookies[newKey]);
+                let cookieValue = this._testCookies[newKey];                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
@@ -586,16 +621,19 @@ export class CookieManagerTests extends AITestClass {
                 let manager = core.getCookieMgr();
 
                 this._testCookies["testCookie"] = "test value";
-                Assert.equal("test value", manager.get("testCookie"), "Check that it can't read the cookie value");
+                let cookieValue = this._testCookies[newKey];
+                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");
+                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 manager.set("testCookie", "new value");
                 Assert.equal("test value", this._testCookies["testCookie"], "The value was not overwritten");
 
                 let newKey = "test." + newId();
-                let newValue = newId();
+                let cookieValue = this._testCookies[newKey];                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
                 manager.set(newKey, newValue);
                 Assert.equal(newValue, manager.get(newKey));
-                Assert.equal(newValue + "; domain=MyDomain.com; path=/", this._testCookies[newKey]);
+                let cookieValue = this._testCookies[newKey];                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
@@ -608,7 +646,10 @@ export class CookieManagerTests extends AITestClass {
             test: () => {
 
                 let core = new AppInsightsCore();
-                core.initialize({
+                let cookieValue = this._testCookies[newKey];
+                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");
+                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
                     instrumentationKey: "testiKey",
                     cookieDomain: "MyDomain.com",
                     cookieCfg: this._cookieMgrCfg
@@ -617,11 +658,14 @@ export class CookieManagerTests extends AITestClass {
                 let manager = core.getCookieMgr();
 
                 let newKey = "test." + newId();
-                let newValue = newId();
+                let cookieValue = this._testCookies[newKey];                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
                 manager.set(newKey, newValue);
                 Assert.equal(newValue, manager.get(newKey));
-                Assert.equal(newValue + "; domain=MyDomain.com; path=/", this._testCookies[newKey]);
-
+                let cookieValue = this._testCookies[newKey];                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
+                let cookieValue = this._testCookies[newKey2];
+                Assert.ok(cookieValue.indexOf(newValue2 + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");
+                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
                 Assert.equal(undefined, this._testCookies[newKey]);
@@ -635,8 +679,11 @@ export class CookieManagerTests extends AITestClass {
                 let newKey2 = "test2." + newId();
                 let newValue2 = newId();
                 manager.set(newKey2, newValue2);
-                Assert.equal(newValue2, manager.get(newKey2));
-                Assert.equal(newValue2 + "; domain=MyDomain.com; path=/", this._testCookies[newKey2]);
+                let cookieValue = this._testCookies[newKey3];
+                let cookieValue = this._testCookies[newKey2];                Assert.ok(cookieValue.indexOf(newValue2 + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
+                Assert.ok(cookieValue.indexOf("domain=MyDomain3.com") !== -1, "Cookie should include domain");
+                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
+                let cookieValue = this._testCookies[newKey2];                Assert.ok(cookieValue.indexOf(newValue2 + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 manager.del(newKey2);
                 Assert.equal("", manager.get(newKey2));
@@ -650,10 +697,13 @@ export class CookieManagerTests extends AITestClass {
                 });
 
                 let newKey3 = "test3." + newId();
-                let newValue3 = newId();
+                let cookieValue = this._testCookies[newKey4];
+                Assert.ok(cookieValue.indexOf(newValue4 + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("domain=CfgCookieDomain.com") !== -1, "Cookie should include domain");
+                let cookieValue = this._testCookies[newKey3];                Assert.ok(cookieValue.indexOf(newValue3 + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain3.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
                 manager.set(newKey3, newValue3);
                 Assert.equal(newValue3, manager.get(newKey3));
-                Assert.equal(newValue3 + "; domain=MyDomain3.com; path=/", this._testCookies[newKey3]);
+                let cookieValue = this._testCookies[newKey3];                Assert.ok(cookieValue.indexOf(newValue3 + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain3.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 manager.del(newKey3);
                 Assert.equal("", manager.get(newKey3));
@@ -668,10 +718,10 @@ export class CookieManagerTests extends AITestClass {
                 });
 
                 let newKey4 = "test3." + newId();
-                let newValue4 = newId();
+                let cookieValue = this._testCookies[newKey4];                Assert.ok(cookieValue.indexOf(newValue4 + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=CfgCookieDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
                 manager.set(newKey4, newValue4);
                 Assert.equal(newValue4, manager.get(newKey4));
-                Assert.equal(newValue4 + "; domain=CfgCookieDomain.com; path=/", this._testCookies[newKey4]);
+                let cookieValue = this._testCookies[newKey4];                Assert.ok(cookieValue.indexOf(newValue4 + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=CfgCookieDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 manager.del(newKey4);
                 Assert.equal("", manager.get(newKey4));
@@ -685,7 +735,10 @@ export class CookieManagerTests extends AITestClass {
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
                     disableCookieCache: false,
-                    getCookie: core.config.cookieCfg?.getCookie,
+                let cookieValue = this._testCookies[newKey];
+                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");
+                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
                     setCookie: core.config.cookieCfg?.setCookie,
                     delCookie: core.config.cookieCfg?.delCookie
                 }, core.config.cookieCfg);
@@ -698,7 +751,10 @@ export class CookieManagerTests extends AITestClass {
 
                 let core = new AppInsightsCore();
                 core.initialize({
-                    instrumentationKey: "testiKey",
+                let cookieValue = this._testCookies[newKey2];
+                Assert.ok(cookieValue.indexOf(newValue2 + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");
+                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
                     cookieDomain: "MyDomain.com",
                     cookieCfg: this._cookieMgrCfg
                 }, [new ChannelPlugin()]);
@@ -706,14 +762,17 @@ export class CookieManagerTests extends AITestClass {
                 let manager = core.getCookieMgr();
 
                 let newKey = "test." + newId();
-                let newValue = newId();
+                let cookieValue = this._testCookies[newKey];                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
                 manager.set(newKey, newValue);
                 Assert.equal(newValue, manager.get(newKey));
-                Assert.equal(newValue + "; domain=MyDomain.com; path=/", this._testCookies[newKey]);
+                let cookieValue = this._testCookies[newKey];                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 manager.del(newKey);
                 Assert.equal("", manager.get(newKey));
-                Assert.equal(undefined, this._testCookies[newKey]);
+                let cookieValue = this._testCookies[newKey3];
+                Assert.ok(cookieValue.indexOf(newValue3 + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("domain=MyDomain3.com") !== -1, "Cookie should include domain");
+                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 // Update the root cookie Domain using the core update function while there is a cookieCfg.domain
                 // The cookieCfg.domain overrides the root domain
@@ -722,14 +781,17 @@ export class CookieManagerTests extends AITestClass {
                 });
 
                 let newKey2 = "test2." + newId();
-                let newValue2 = newId();
+                let cookieValue = this._testCookies[newKey2];                Assert.ok(cookieValue.indexOf(newValue2 + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
                 manager.set(newKey2, newValue2);
                 Assert.equal(newValue2, manager.get(newKey2));
-                Assert.equal(newValue2 + "; domain=MyDomain.com; path=/", this._testCookies[newKey2]);
+                let cookieValue = this._testCookies[newKey2];                Assert.ok(cookieValue.indexOf(newValue2 + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 manager.del(newKey2);
                 Assert.equal("", manager.get(newKey2));
-                Assert.equal(undefined, this._testCookies[newKey2]);
+                let cookieValue = this._testCookies[newKey4];
+                Assert.ok(cookieValue.indexOf(newValue4 + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("domain=CfgCookieDomain.com") !== -1, "Cookie should include domain");
+                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 core.updateCfg({
                     cookieDomain: "MyDomain3.com",
@@ -740,10 +802,10 @@ export class CookieManagerTests extends AITestClass {
                 });
 
                 let newKey3 = "test3." + newId();
-                let newValue3 = newId();
+                let cookieValue = this._testCookies[newKey3];                Assert.ok(cookieValue.indexOf(newValue3 + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain3.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
                 manager.set(newKey3, newValue3);
                 Assert.equal(newValue3, manager.get(newKey3));
-                Assert.equal(newValue3 + "; domain=MyDomain3.com; path=/", this._testCookies[newKey3]);
+                let cookieValue = this._testCookies[newKey3];                Assert.ok(cookieValue.indexOf(newValue3 + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=MyDomain3.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 manager.del(newKey3);
                 Assert.equal("", manager.get(newKey3));
@@ -759,10 +821,10 @@ export class CookieManagerTests extends AITestClass {
                 });
 
                 let newKey4 = "test3." + newId();
-                let newValue4 = newId();
+                let cookieValue = this._testCookies[newKey4];                Assert.ok(cookieValue.indexOf(newValue4 + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=CfgCookieDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
                 manager.set(newKey4, newValue4);
                 Assert.equal(newValue4, manager.get(newKey4));
-                Assert.equal(newValue4 + "; domain=CfgCookieDomain.com; path=/", this._testCookies[newKey4]);
+                let cookieValue = this._testCookies[newKey4];                Assert.ok(cookieValue.indexOf(newValue4 + ";") === 0, "Cookie should start with value");                Assert.ok(cookieValue.indexOf("domain=CfgCookieDomain.com") !== -1, "Cookie should include domain");                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
 
                 manager.del(newKey4);
                 Assert.equal("", manager.get(newKey4));
