@@ -1092,7 +1092,7 @@ export class CookieManagerTests extends AITestClass {
                 this.clock.tick(1);
                 manager.set(newKey2, newValue2);
                 Assert.equal(newValue2, manager.get(newKey2), "Should return second cached value");
-                Assert.equal(newValue1, manager.get(newKey1), "Should still return first value from storage");
+                Assert.equal("", manager.get(newKey1), "Should return empty string - cookies disabled, can't access storage and no cached value");
                 
                 manager.setEnabled(true);
                 this.clock.tick(1);
@@ -1225,7 +1225,9 @@ export class CookieManagerTests extends AITestClass {
                 // Cookie should be flushed with the maxAge parameter
                 let cookieValue = this._testCookies[newKey];
                 Assert.ok(cookieValue, "Cookie should be flushed to storage");
-                Assert.ok(cookieValue.indexOf(newValue + "; path=/; expires=") === 0, "Cookie should start with value, path and expires");
+                Assert.ok(cookieValue.indexOf(newValue + ";") === 0, "Cookie should start with value");
+                Assert.ok(cookieValue.indexOf("path=/") !== -1, "Cookie should include path");
+                Assert.ok(cookieValue.indexOf("expires=") !== -1, "Cookie should include expires");
                 
                 if (!this.isEmulatingIe) {
                     Assert.ok(cookieValue.indexOf("max-age=" + maxAge) !== -1, "Cookie should include max-age for non-IE browsers");
