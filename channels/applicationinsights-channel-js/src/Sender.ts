@@ -14,7 +14,7 @@ import {
     isArray, isBeaconsSupported, isFeatureEnabled, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange,
     parseResponse, prependTransports, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
-import { IPromise, createPromise, doAwaitResponse, doAwait } from "@nevware21/ts-async";
+import { IPromise, createPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
 import {
     ITimerHandler, getInst, isFunction, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine,
     scheduleTimeout

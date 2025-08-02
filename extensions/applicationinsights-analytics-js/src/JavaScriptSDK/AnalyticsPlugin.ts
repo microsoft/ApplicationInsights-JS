@@ -12,7 +12,6 @@ import {
     createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage,
     utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
-import { IAjaxMonitorPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext,
     IExceptionConfig, IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
@@ -22,6 +21,7 @@ import {
     generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined,
     isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
+import { IAjaxMonitorPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { IAnalyticsConfig } from "./Interfaces/IAnalyticsConfig";

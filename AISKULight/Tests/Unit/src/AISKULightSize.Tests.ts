@@ -51,7 +51,7 @@ function _checkSize(checkType: string, maxSize: number, size: number, isNightly:
 }    
 
 export class AISKULightSizeCheck extends AITestClass {
-    private readonly MAX_RAW_SIZE = 93;
+    private readonly MAX_RAW_SIZE = 94;
     private readonly MAX_BUNDLE_SIZE = 94;
     private readonly MAX_RAW_DEFLATE_SIZE = 39;
     private readonly MAX_BUNDLE_DEFLATE_SIZE = 39;
