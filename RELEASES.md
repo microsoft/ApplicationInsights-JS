@@ -42,17 +42,12 @@ This release enhances the cookie management behavior when cookies are disabled. 
   - Improved handling of both synchronous and asynchronous callback execution patterns
   - No polling overhead - uses direct callback invocation for better performance
 
-- #2631 Implement cookie caching when disabled and automatic flushing when enabled via setEnabled() or dynamic config changes
-  - **Enhancement**: Cookie values are now cached in memory when cookies are disabled instead of being lost
-  - **Enhancement**: Deletion operations are cached and applied when cookies are re-enabled  
-  - **Enhancement**: Automatic flushing occurs when cookies are enabled via `setEnabled(true)` or dynamic configuration changes
-  - **Enhancement**: Supports both `cookieCfg.enabled = true` and legacy `disableCookiesUsage = false` configuration patterns
-  - **Enhancement**: Pre-formats cookie values during caching to avoid reconstruction during flushing for better performance
-  - **Enhancement**: Respects existing privacy policies - blocked and ignored cookies are still properly excluded from caching
-  - **Enhancement**: Added `disableCookieCache` configuration option to maintain backward compatibility with previous behavior
+- #2631 [Feature] Update the ICookieMgr implementation to write cookies after being enabled
+  - **Enhancement**: Cookie values are now cached in memory when cookies are disabled instead of being lost, enabling support for consent banner workflows where cookies must be temporarily disabled until user approval
+  - **Enhancement**: Automatic flushing occurs when cookies are re-enabled via `setEnabled(true)` or dynamic configuration changes  
+  - **Enhancement**: Added `disableCookieDefer` configuration option to maintain backward compatibility with previous behavior (defaults to false)
   - **Behavior change**: `cookieMgr.set()` now returns `true` when disabled (cached) instead of `false`
   - **Behavior change**: `cookieMgr.get()` now returns cached values when disabled instead of empty strings
-  - **Behavior change**: Applications can now recover from temporary cookie disable periods
 
 ## 3.3.9 (June 25th, 2025)
 

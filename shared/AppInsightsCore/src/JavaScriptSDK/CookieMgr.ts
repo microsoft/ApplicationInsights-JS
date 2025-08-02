@@ -57,7 +57,7 @@ const rootDefaultConfig: IConfigDefaults<IConfiguration> = {
         enabled: UNDEFINED_VALUE,
         ignoreCookies: UNDEFINED_VALUE,
         blockedCookies: UNDEFINED_VALUE,
-        disableCookieCache: false
+        disableCookieDefer: false
     }),
     cookieDomain: UNDEFINED_VALUE,
     cookiePath: UNDEFINED_VALUE,
@@ -180,10 +180,10 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     let _getCookieFn: (name: string) => string;
     let _setCookieFn: (name: string, cookieValue: string) => void;
     let _delCookieFn: (name: string, cookieValue: string) => void;
-    let _disableCaching: boolean;
     
-    // Cache for storing cookie values when cookies are disabled
-    let _pendingCookies: { [name: string]: { o: ePendingOp; v?: string } } = {};
+    // Buffer for storing cookie operations when cookies are disabled
+    // null = deferral disabled, array = deferral enabled with pending operations
+    let _pendingCookies: Array<{ n: string; o: ePendingOp; v?: string }> | null = [];
 
     // Helper function to format deletion cookie value
     function _formatDeletionValue(path?: string): string {
@@ -255,22 +255,35 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         return _formatCookieValue(theValue, values);
     }
 
+    // Helper function to remove any existing pending operations for a cookie name
+    function _removePendingCookie(name: string) {
+        if (_pendingCookies) {
+            // Remove all existing entries for this cookie name (iterate backwards to handle multiple entries safely)
+            for (let i = _pendingCookies.length - 1; i >= 0; i--) {
+                if (_pendingCookies[i].n === name) {
+                    _pendingCookies.splice(i, 1);
+                }
+            }
+        }
+    }
+
     // Helper function to flush pending cookies when cookies become enabled
     function _flushPendingCookies() {
-        if (areCookiesSupported(logger)) {
-            objForEachKey(_pendingCookies, (name, pendingData) => {
-                if (!_isBlockedCookie(cookieMgrConfig, name)) {
+        if (areCookiesSupported(logger) && _pendingCookies) {
+            // Process all pending cookie operations in order
+            arrForEach(_pendingCookies, (pendingData) => {
+                if (!_isBlockedCookie(cookieMgrConfig, pendingData.n)) {
                     if (pendingData.o === ePendingOp.Set) {
                         // Apply the cached cookie value directly
-                        _setCookieFn(name, pendingData.v);
+                        _setCookieFn(pendingData.n, pendingData.v);
                     } else if (pendingData.o === ePendingOp.Purge) {
                         // Apply the cached deletion
-                        _delCookieFn(name, pendingData.v);
+                        _delCookieFn(pendingData.n, pendingData.v);
                     }
                 }
             });
             // Clear the cache after flushing
-            _pendingCookies = {};
+            _pendingCookies = [];
         }
     }
 
@@ -288,7 +301,16 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 
         _path = cookieMgrConfig.path || "/";
         _domain = cookieMgrConfig.domain;
-        _disableCaching = cookieMgrConfig.disableCookieCache;
+        
+        // Handle deferral state changes based on disableCookieDefer setting
+        if (cookieMgrConfig.disableCookieDefer) {
+            // When deferral is disabled, set to null to disable any deferral behavior
+            // All pending operations are dropped
+            _pendingCookies = null;
+        } else if (_pendingCookies === null) {
+            // When deferral is enabled and was previously disabled, initialize empty buffer
+            _pendingCookies = [];
+        }
         
         // Check if enabled state is changing
         let wasEnabled = _enabled;
@@ -300,7 +322,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         _delCookieFn = cookieMgrConfig.delCookie || _setCookieValue;
 
         // If cookies were just enabled via config change and we have pending cookies, flush them
-        if (!wasEnabled && _enabled && !_disableCaching) {
+        if (!wasEnabled && _enabled && _pendingCookies) {
             _flushPendingCookies();
         }
     }, logger);
@@ -341,13 +363,17 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 if (_isMgrEnabled(cookieMgr)) {
                     _setCookieFn(name, cookieValue);
                     result = true;
-                } else if (!_disableCaching) {
-                    // Cache the fully formatted cookie value if cookies are disabled but not blocked and caching is enabled
-                    _pendingCookies[name] = {
+                } else if (_pendingCookies) {
+                    // Defer the fully formatted cookie value if cookies are disabled and deferral is enabled
+                    // Remove any previous operation for this cookie name (latest operation wins)
+                    _removePendingCookie(name);
+                    // Append new operation to the array
+                    _pendingCookies.push({
+                        n: name,
                         o: ePendingOp.Set,
                         v: cookieValue
-                    };
-                    result = true; // Return true to indicate the operation was "successful" (cached)
+                    });
+                    result = true; // Return true to indicate the operation was "successful" (deferred)
                 }
             }
 
@@ -360,12 +386,23 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             if (!isIgnored) {
                 if (_isMgrEnabled(cookieMgr)) {
                     value = _getCookieFn(name);
-                } else if (!_disableCaching && _pendingCookies[name] && _pendingCookies[name].o === ePendingOp.Set) {
-                    // Return cached value if cookies are disabled but not ignored and caching is enabled
-                    // Extract the value part from the formatted cookie string (before first semicolon)
-                    let cookieValue = _pendingCookies[name].v;
-                    let idx = strIndexOf(cookieValue, ";");
-                    value = idx !== -1 ? strTrim(strLeft(cookieValue, idx)) : strTrim(cookieValue);
+                } else if (_pendingCookies) {
+                    // Search for the most recent operation for this cookie (search backwards through array)
+                    for (let i = _pendingCookies.length - 1; i >= 0; i--) {
+                        let pendingData = _pendingCookies[i];
+                        if (pendingData.n === name) {
+                            // Found the most recent operation for this cookie name
+                            if (pendingData.o === ePendingOp.Set) {
+                                // Return deferred value if it was a set operation
+                                // Extract the value part from the formatted cookie string (before first semicolon)
+                                let cookieValue = pendingData.v;
+                                let idx = strIndexOf(cookieValue, ";");
+                                value = idx !== -1 ? strTrim(strLeft(cookieValue, idx)) : strTrim(cookieValue);
+                            }
+                            // If it was a Purge operation, value remains empty (STR_EMPTY)
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -376,13 +413,16 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             if (_isMgrEnabled(cookieMgr)) {
                 // Only remove the cookie if the manager and cookie support has not been disabled
                 result = cookieMgr.purge(name, path);
-            } else if (!_disableCaching) {
-                // Cache the deletion operation when cookies are disabled and caching is enabled
-                // Format the deletion cookie string to use when cookies are re-enabled
-                _pendingCookies[name] = {
+            } else if (_pendingCookies) {
+                // Defer the deletion operation when cookies are disabled and deferral is enabled
+                // Remove any previous operation for this cookie name (latest operation wins)
+                _removePendingCookie(name);
+                // Append new deletion operation to the array
+                _pendingCookies.push({
+                    n: name,
                     o: ePendingOp.Purge,
                     v: _formatDeletionValue(path)
-                };
+                });
                 result = true;
             }
 
@@ -402,7 +442,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             unloadHandler && unloadHandler.rm();
             unloadHandler = null;
             // Clear any pending cookies on unload
-            _pendingCookies = {};
+            _pendingCookies = null;
         }
     };
 

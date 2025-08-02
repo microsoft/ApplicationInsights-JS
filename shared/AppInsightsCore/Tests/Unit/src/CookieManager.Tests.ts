@@ -289,7 +289,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
-                    disableCookieCache: false,
+                    disableCookieDefer: false,
                     getCookie: neverCalled,
                     setCookie: neverCalled,
                     delCookie: neverCalled
@@ -336,7 +336,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
-                    disableCookieCache: false,
+                    disableCookieDefer: false,
                     getCookie: neverCalled,
                     setCookie: neverCalled,
                     delCookie: neverCalled
@@ -447,7 +447,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
-                    disableCookieCache: false,
+                    disableCookieDefer: false,
                     getCookie: core.config.cookieCfg?.getCookie,
                     setCookie: core.config.cookieCfg?.setCookie,
                     delCookie: core.config.cookieCfg?.delCookie
@@ -488,7 +488,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
-                    disableCookieCache: false,
+                    disableCookieDefer: false,
                     getCookie: core.config.cookieCfg?.getCookie,
                     setCookie: core.config.cookieCfg?.setCookie,
                     delCookie: core.config.cookieCfg?.delCookie
@@ -532,7 +532,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: [],
                     blockedCookies: undefined,
-                    disableCookieCache: false,
+                    disableCookieDefer: false,
                     getCookie: core.config.cookieCfg?.getCookie,
                     setCookie: core.config.cookieCfg?.setCookie,
                     delCookie: core.config.cookieCfg?.delCookie
@@ -582,7 +582,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: [ "testCookie" ],
                     blockedCookies: undefined,
-                    disableCookieCache: false,
+                    disableCookieDefer: false,
                     getCookie: core.config.cookieCfg?.getCookie,
                     setCookie: core.config.cookieCfg?.setCookie,
                     delCookie: core.config.cookieCfg?.delCookie
@@ -721,7 +721,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
-                    disableCookieCache: false,
+                    disableCookieDefer: false,
                     getCookie: core.config.cookieCfg?.getCookie,
                     setCookie: core.config.cookieCfg?.setCookie,
                     delCookie: core.config.cookieCfg?.delCookie
@@ -824,7 +824,7 @@ export class CookieManagerTests extends AITestClass {
                     enabled: undefined,
                     ignoreCookies: undefined,
                     blockedCookies: undefined,
-                    disableCookieCache: false,
+                    disableCookieDefer: false,
                     getCookie: core.config.cookieCfg?.getCookie,
                     setCookie: core.config.cookieCfg?.setCookie,
                     delCookie: core.config.cookieCfg?.delCookie
@@ -1336,10 +1336,12 @@ export class CookieManagerTests extends AITestClass {
                 Assert.equal(newValue1, manager.get(newKey1), "Should return cached value");
 
                 configValues.cookieCfg.enabled = true;
+                this.clock.tick(1); // Allow dynamic config change to propagate
                 Assert.equal(newValue1 + "; path=/", this._testCookies[newKey1], "First cookie should be flushed");
 
                 // Second cycle: disable -> cache -> enable -> flush
                 configValues.cookieCfg.enabled = false;
+                this.clock.tick(1); // Allow dynamic config change to propagate
                 let newKey2 = "test2." + newId();
                 let newValue2 = newId();
 
@@ -1373,6 +1375,7 @@ export class CookieManagerTests extends AITestClass {
                 
                 // Disable cookies via config and delete the cookie
                 configValues.cookieCfg.enabled = false;
+                this.clock.tick(1); // Allow dynamic config change to propagate
                 let delResult = manager.del(newKey);
                 Assert.equal(true, delResult, "Delete should return true when cached");
                 
@@ -1394,12 +1397,12 @@ export class CookieManagerTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CookieManager: disableCookieCache=true reverts to previous behavior - set returns false when disabled",
+            name: "CookieManager: disableCookieDefer=true reverts to previous behavior - set returns false when disabled",
             test: () => {
                 let config: IConfiguration = {
                     cookieCfg: {
                         enabled: false,
-                        disableCookieCache: true
+                        disableCookieDefer: true
                     }
                 };
 
@@ -1418,7 +1421,7 @@ export class CookieManagerTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CookieManager: disableCookieCache=true with cookie functions that throw",
+            name: "CookieManager: disableCookieDefer=true with cookie functions that throw",
             test: () => {
                 let setCookieCalled = 0;
                 let getCookieCalled = 0;
@@ -1427,7 +1430,7 @@ export class CookieManagerTests extends AITestClass {
                 let config: IConfiguration = {
                     cookieCfg: {
                         enabled: false,
-                        disableCookieCache: true,
+                        disableCookieDefer: true,
                         getCookie: (name: string) => {
                             getCookieCalled++;
                             throw "Should not be called - get";
@@ -1457,7 +1460,7 @@ export class CookieManagerTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CookieManager: disableCookieCache=true prevents flushing when cookies are enabled",
+            name: "CookieManager: disableCookieDefer=true prevents flushing when cookies are enabled",
             useFakeTimers: true,
             test: () => {
                 let setCookieCalled = 0;
@@ -1466,7 +1469,7 @@ export class CookieManagerTests extends AITestClass {
                 let config: IConfiguration = {
                     cookieCfg: {
                         enabled: false,
-                        disableCookieCache: true,
+                        disableCookieDefer: true,
                         setCookie: (name: string, value: string) => {
                             setCookieCalled++;
                             this._testCookies[name] = value;
@@ -1503,7 +1506,7 @@ export class CookieManagerTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CookieManager: disableCookieCache=true via dynamic config change",
+            name: "CookieManager: disableCookieDefer=true via dynamic config change",
             useFakeTimers: true,
             test: () => {
                 let setCookieCalled = 0;
@@ -1511,7 +1514,11 @@ export class CookieManagerTests extends AITestClass {
                 let config: IConfiguration = {
                     cookieCfg: {
                         enabled: false,
-                        disableCookieCache: false, // Start with caching enabled
+                        disableCookieDefer: false, // Start with caching enabled
+                        getCookie: (name: string) => {
+                            let theValue = this._testCookies[name] || "";
+                            return theValue.split(";")[0];
+                        },
                         setCookie: (name: string, value: string) => {
                             setCookieCalled++;
                             this._testCookies[name] = value;
@@ -1525,29 +1532,29 @@ export class CookieManagerTests extends AITestClass {
                 Assert.equal(true, manager.set("test", "value"), "set() should return true when caching is enabled");
                 Assert.equal("value", manager.get("test"), "get() should return cached value");
                 
-                // Dynamically disable caching
-                config.cookieCfg.disableCookieCache = true;
+                // Dynamically disable caching - this should drop all pending cookies
+                config.cookieCfg.disableCookieDefer = true;
                 this.clock.tick(1); // Allow async config changes
                 
                 // Now set should return false and get should return empty
                 Assert.equal(false, manager.set("test2", "value2"), "set() should return false after disabling caching");
                 Assert.equal("", manager.get("test2"), "get() should return empty string for uncached value");
                 
-                // But existing cached value should still be available
-                Assert.equal("value", manager.get("test"), "get() should still return previously cached value");
+                // Previously cached value should be gone when disableCookieDefer is set to true
+                Assert.equal("", manager.get("test"), "get() should return empty string - cached cookies dropped when disableCookieDefer=true");
                 
-                // Enable cookies - only previously cached value should be flushed
+                // Enable cookies - no cookies should be flushed since cache was cleared
                 manager.setEnabled(true);
                 this.clock.tick(1); // Allow async config changes
                 
-                Assert.equal(1, setCookieCalled, "Only previously cached cookie should be flushed");
-                Assert.equal("value", manager.get("test"), "Flushed value should be available");
+                Assert.equal(0, setCookieCalled, "No cookies should be flushed since cache was cleared");
+                Assert.equal("", manager.get("test"), "Should return empty string since no cookies were flushed");
                 Assert.equal("", manager.get("test2"), "Non-cached value should remain empty");
             }
         });
 
         this.testCase({
-            name: "CookieManager: disableCookieCache=false (default) enables caching behavior",
+            name: "CookieManager: disableCookieDefer=false (default) enables caching behavior",
             useFakeTimers: true,
             test: () => {
                 let setCookieCalled = 0;
@@ -1555,7 +1562,11 @@ export class CookieManagerTests extends AITestClass {
                 let config: IConfiguration = {
                     cookieCfg: {
                         enabled: false,
-                        // disableCookieCache not specified, should default to false
+                        // disableCookieDefer not specified, should default to false
+                        getCookie: (name: string) => {
+                            let theValue = this._testCookies[name] || "";
+                            return theValue.split(";")[0];
+                        },
                         setCookie: (name: string, value: string) => {
                             setCookieCalled++;
                             this._testCookies[name] = value;
@@ -1579,7 +1590,7 @@ export class CookieManagerTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CookieManager: disableCookieCache respects blocked and ignored cookies",
+            name: "CookieManager: disableCookieDefer respects blocked and ignored cookies",
             useFakeTimers: true,
             test: () => {
                 let setCookieCalled = 0;
@@ -1587,9 +1598,13 @@ export class CookieManagerTests extends AITestClass {
                 let config: IConfiguration = {
                     cookieCfg: {
                         enabled: false,
-                        disableCookieCache: false,
+                        disableCookieDefer: false,
                         blockedCookies: ["blocked"],
                         ignoreCookies: ["ignored"],
+                        getCookie: (name: string) => {
+                            let theValue = this._testCookies[name] || "";
+                            return theValue.split(";")[0];
+                        },
                         setCookie: (name: string, value: string) => {
                             setCookieCalled++;
                             this._testCookies[name] = value;
@@ -1606,23 +1621,26 @@ export class CookieManagerTests extends AITestClass {
                 Assert.equal(false, manager.set("blocked", "value"), "Blocked cookie should not be cached");
                 
                 // Ignored cookie should not be cached (get returns empty)
-                manager.set("ignored", "value"); // This might cache it
+                Assert.equal(false, manager.set("ignored", "value"), "Ignored cookie should not be cached");
                 Assert.equal("", manager.get("ignored"), "Ignored cookie get should return empty");
                 
-                // When disableCookieCache=true, same behavior should occur
-                config.cookieCfg.disableCookieCache = true;
+                // When disableCookieDefer=true, cached cookies should be dropped
+                config.cookieCfg.disableCookieDefer = true;
                 this.clock.tick(1); // Allow config change
                 
                 Assert.equal(false, manager.set("normal2", "value"), "Normal cookie should not be cached when disabled");
                 Assert.equal(false, manager.set("blocked2", "value"), "Blocked cookie should not be cached when disabled");
                 Assert.equal("", manager.get("ignored2"), "Ignored cookie get should return empty when disabled");
                 
-                // Enable cookies - only normal cookie should be flushed
+                // Previously cached normal cookie should be gone
+                Assert.equal("", manager.get("normal"), "Previously cached cookie should be gone when disableCookieDefer=true");
+                
+                // Enable cookies - no cookies should be flushed since cache was cleared
                 manager.setEnabled(true);
                 this.clock.tick(1); // Allow async config changes
                 
-                Assert.equal(1, setCookieCalled, "Only the normal cached cookie should be flushed");
-                Assert.equal("value", manager.get("normal"), "Normal cached value should be available");
+                Assert.equal(0, setCookieCalled, "No cookies should be flushed since cache was cleared");
+                Assert.equal("", manager.get("normal"), "No cached value should be available");
             }
         });
     }
