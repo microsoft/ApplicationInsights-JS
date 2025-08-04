@@ -3,6 +3,7 @@
         "@microsoft/applicationinsights-core-js": {
             "constEnums": [
                 "_eSetDynamicPropertyFlags",
+                "ePendingOp",
                 "CallbackType",
                 "eEventsDiscardedReason",
                 "eBatchDiscardedReason",
