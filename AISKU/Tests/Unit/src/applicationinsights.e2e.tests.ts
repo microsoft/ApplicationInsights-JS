@@ -1160,6 +1160,7 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'E2E.GenericTests: trackException with CustomError sends to backend',
             test: () => {
                 this._ai.trackException({ id: "testID", exception: new CustomTestError("Test Custom Error!") });
+                let asserts_9499 = this.asserts(1);
 
                 return this._asyncQueue().add(asserts_9499[0])
                                     .add(asserts_9499[1]).add(() => {
@@ -1219,6 +1220,7 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'E2E.GenericTests: trackException with CustomError sends to backend with custom properties',
             test: () => {
                 this._ai.trackException({ exception: new CustomTestError("Test Custom Error!") }, { custom: "custom value" });
+                let asserts_9499 = this.asserts(1);
 
                 return this._asyncQueue().add(asserts_9499[0])
                                     .add(asserts_9499[1]).add(() => {
@@ -1945,6 +1947,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 context.user.setAuthenticatedUserContext('10002', 'account567');
                 context.user.clearAuthenticatedUserContext();
                 this._ai.trackTrace({ message: 'authUserContext test' });
+                let asserts_9499 = this.asserts(1);
                 
                 return this._asyncQueue().add(asserts_9499[0])
                                     .add(asserts_9499[1])
