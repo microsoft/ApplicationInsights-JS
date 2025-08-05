@@ -262,12 +262,10 @@ export class ApplicationInsightsTests extends AITestClass {
             }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Init: init with cs promise, when it is resolved and then change with cs string",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
-
+            test: () => {
                 // unload previous one first
                 let oriInst = this._ai;
                 if (oriInst && oriInst.unload) {
@@ -296,44 +294,44 @@ export class ApplicationInsightsTests extends AITestClass {
                 let status = core.activeStatus && core.activeStatus();
                 Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
                 
-                
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this._ai.core
-                let activeStatus = core.activeStatus && core.activeStatus();
-                let csPromise = this._ctx.csPromise;
-                let config = this._ai.config;
-            
-                if (csPromise.state === "resolved" && activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                return this._asyncQueue()
+                    .add(PollingAssert.createPollingAssert(() => {
+                        let core = this._ai.core
+                        let activeStatus = core.activeStatus && core.activeStatus();
+                        let csPromise = this._ctx.csPromise;
+                        let config = this._ai.config;
+                    
+                        if (csPromise.state === "resolved" && activeStatus === ActiveStatus.ACTIVE) {
+                            Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                            Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
 
-                    config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
-                    this.clock.tick(1);
-                    let status = core.activeStatus && core.activeStatus();
-                    // promise is not resolved, no new changes applied
-                    Assert.equal(status, ActiveStatus.ACTIVE, "status should be set to active test1");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60) as any).concat(PollingAssert.createPollingAssert(() => {
-                let core = this._ai.core
-                let activeStatus = core.activeStatus && core.activeStatus();
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal("testIkey1", core.config.instrumentationKey, "ikey should be set test1");
-                    Assert.equal("testUrl1/v2/track", core.config.endpointUrl ,"endpoint shoule be set test1");
-                    return true;
-                }
-                return false;
-            }, "Wait for new string response" + new Date().toISOString(), 60) as any)
+                            config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
+                            this.clock.tick(1);
+                            let status = core.activeStatus && core.activeStatus();
+                            // promise is not resolved, no new changes applied
+                            Assert.equal(status, ActiveStatus.ACTIVE, "status should be set to active test1");
+                            return true;
+                        }
+                        return false;
+                    }, "Wait for promise response" + new Date().toISOString(), 60) as any)
+                    .add(PollingAssert.createPollingAssert(() => {
+                        let core = this._ai.core
+                        let activeStatus = core.activeStatus && core.activeStatus();
+                    
+                        if (activeStatus === ActiveStatus.ACTIVE) {
+                            Assert.equal("testIkey1", core.config.instrumentationKey, "ikey should be set test1");
+                            Assert.equal("testUrl1/v2/track", core.config.endpointUrl ,"endpoint shoule be set test1");
+                            return true;
+                        }
+                        return false;
+                    }, "Wait for new string response" + new Date().toISOString(), 60) as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Init: init with cs promise and change with cs string at the same time",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
-
+            test: () => {
                 // unload previous one first
                 let oriInst = this._ai;
                 if (oriInst && oriInst.unload) {
@@ -368,28 +366,26 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
                 // Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
 
-                
-                
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this._ai.core
-                let activeStatus = core.activeStatus && core.activeStatus();
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60) as any)
+                return this._asyncQueue()
+                    .add(PollingAssert.createPollingAssert(() => {
+                        let core = this._ai.core
+                        let activeStatus = core.activeStatus && core.activeStatus();
+                    
+                        if (activeStatus === ActiveStatus.ACTIVE) {
+                            Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                            Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                            return true;
+                        }
+                        return false;
+                    }, "Wait for promise response" + new Date().toISOString(), 60) as any);
+            }
         });
 
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Init: init with cs promise and offline channel",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
-
+            test: () => {
                 // unload previous one first
                 let oriInst = this._ai;
                 if (oriInst && oriInst.unload) {
@@ -408,7 +404,6 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._config.channels = [[offlineChannel]];
                 this._config.initTimeOut= 80000;
 
-
                 let init = new ApplicationInsights({
                     config: this._config
                 });
@@ -419,40 +414,38 @@ export class ApplicationInsightsTests extends AITestClass {
                 let status = core.activeStatus && core.activeStatus();
                 Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
 
-                
                 config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1"
                 this.clock.tick(1);
                 status = core.activeStatus && core.activeStatus();
                 Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
                 // Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
                 
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
+                    let core = this._ai.core
+                    let activeStatus = core.activeStatus && core.activeStatus();
                 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this._ai.core
-                let activeStatus = core.activeStatus && core.activeStatus();
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
-                    let sendChannel = this._ai.getPlugin(BreezeChannelIdentifier);
-                    let offlineChannelPlugin = this._ai.getPlugin("OfflineChannel").plugin;
-                    Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
-                    Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
-                    let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
-                    Assert.ok(urlConfig, "offline url config is initialized");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60) as any)
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                        Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                        let sendChannel = this._ai.getPlugin(BreezeChannelIdentifier);
+                        let offlineChannelPlugin = this._ai.getPlugin("OfflineChannel").plugin;
+                        Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
+                        Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                        let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+                        Assert.ok(urlConfig, "offline url config is initialized");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60) as any);
+            }
         });
 
 
         
-        this.testCaseAsync({
+        this.testCase({
             name: "Init: init with cs string, change with cs promise",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
+            test: () => {
                 let config = this._ai.config;
                 let expectedIkey = ApplicationInsightsTests._instrumentationKey;
                 let expectedConnectionString = ApplicationInsightsTests._connectionString;
@@ -473,26 +466,24 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
                 //Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
                 
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
+                    let core = this._ai.core
+                    let activeStatus = core.activeStatus && core.activeStatus();
                 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this._ai.core
-                let activeStatus = core.activeStatus && core.activeStatus();
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60) as any)
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                        Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60) as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "Init: init with cs null, ikey promise, endpoint promise",
-            stepDelay: 100,
             useFakeTimers: true,
-            steps: [() => {
-
+            test: () => {
                 // unload previous one first
                 let oriInst = this._ai;
                 if (oriInst && oriInst.unload) {
@@ -514,8 +505,6 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._config.endpointUrl = endpointPromise;
                 this._config.initTimeOut= 80000;
 
-
-
                 let init = new ApplicationInsights({
                     config: this._config
                 });
@@ -527,18 +516,18 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
                 Assert.equal(config.connectionString,null, "connection string shoule be null");
                 
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
+                    let core = this._ai.core
+                    let activeStatus = core.activeStatus && core.activeStatus();
                 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let core = this._ai.core
-                let activeStatus = core.activeStatus && core.activeStatus();
-            
-                if (activeStatus === ActiveStatus.ACTIVE) {
-                    Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl", core.config.endpointUrl ,"endpoint shoule be set");
-                    return true;
-                }
-                return false;
-            }, "Wait for promise response" + new Date().toISOString(), 60) as any)
+                    if (activeStatus === ActiveStatus.ACTIVE) {
+                        Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
+                        Assert.equal("testUrl", core.config.endpointUrl ,"endpoint shoule be set");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60) as any);
+            }
         });
 
 
@@ -728,13 +717,12 @@ export class ApplicationInsightsTests extends AITestClass {
     }
 
     public addCdnMonitorTests(): void {
-        this.testCaseAsync({
+        this.testCase({
             name: "E2E.GenericTests: Fetch Current CDN V3",
-            stepDelay: 1,
             useFakeServer: false,
             useFakeFetch: false,
             fakeFetchAutoRespond: false,
-            steps: [() => {
+            test: () => {
                 // Use beta endpoint to pre-test any changes before public V3 cdn
                 let random = utcNow();
                 // Under Cors Mode, Options request will be auto-triggered
@@ -751,48 +739,48 @@ export class ApplicationInsightsTests extends AITestClass {
                     Assert.ok(false, "Fetch Error: " + e);
                 }
 
-            }].concat(PollingAssert.createPollingAssert(() => {
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
 
-                if (this._ctx && this._ctx.res && this._ctx.val) {
-                    let res = this._ctx.res;
-                    let status = res.status;
-                    if (status === 200) {
-                        // for Response headers:
-                        // content-type: text/javascript; charset=utf-8
-                        // x-ms-meta-aijssdksrc: should present
-                        // x-ms-meta-aijssdkver should present
-                        let headers = res.headers;
-                        let headerCnt = 0;
-                        headers.forEach((val, key) => {
-                            if (key === "content-type") {
-                                Assert.deepEqual(val, "text/javascript; charset=utf-8", "should have correct content-type response header");
-                                headerCnt ++;
-                            }
-                            if (key === "x-ms-meta-aijssdksrc") {
-                                Assert.ok(val, "should have sdk src response header");
-                                headerCnt ++;
-                            }
-                            if (key === "x-ms-meta-aijssdkver") {
-                                Assert.ok(val, "should have version number for response header");
-                                headerCnt ++;
-                            }
-                        });
-                        Assert.equal(headerCnt, 3, "all expected headers should be present");
-                        return true;
+                    if (this._ctx && this._ctx.res && this._ctx.val) {
+                        let res = this._ctx.res;
+                        let status = res.status;
+                        if (status === 200) {
+                            // for Response headers:
+                            // content-type: text/javascript; charset=utf-8
+                            // x-ms-meta-aijssdksrc: should present
+                            // x-ms-meta-aijssdkver should present
+                            let headers = res.headers;
+                            let headerCnt = 0;
+                            headers.forEach((val, key) => {
+                                if (key === "content-type") {
+                                    Assert.deepEqual(val, "text/javascript; charset=utf-8", "should have correct content-type response header");
+                                    headerCnt ++;
+                                }
+                                if (key === "x-ms-meta-aijssdksrc") {
+                                    Assert.ok(val, "should have sdk src response header");
+                                    headerCnt ++;
+                                }
+                                if (key === "x-ms-meta-aijssdkver") {
+                                    Assert.ok(val, "should have version number for response header");
+                                    headerCnt ++;
+                                }
+                            });
+                            Assert.equal(headerCnt, 3, "all expected headers should be present");
+                            return true;
+                        }
+                        return false;
                     }
                     return false;
-                }
-                return false;
-            }, "Wait for response" + new Date().toISOString(), 60) as any)
+                }, "Wait for response" + new Date().toISOString(), 60) as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "E2E.GenericTests: Fetch Current CDN V2",
-            stepDelay: 1,
             useFakeServer: false,
             useFakeFetch: false,
             fakeFetchAutoRespond: false,
-            steps: [() => {
+            test: () => {
                 // Use public endpoint for V2
                 let random = utcNow();
                 // Under Cors Mode, Options request will be triggered
@@ -805,47 +793,47 @@ export class ApplicationInsightsTests extends AITestClass {
                     });
                 });
 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                if (this._ctx && this._ctx.res && this._ctx.val) {
-                    let res = this._ctx.res;
-                    let status = res.status;
-                    if (status === 200) {
-                        // for Response headers:
-                        // content-type: text/javascript; charset=utf-8
-                        // x-ms-meta-aijssdksrc: should present
-                        // x-ms-meta-aijssdkver should present
-                        let headers = res.headers;
-                        let headerCnt = 0;
-                        headers.forEach((val, key) => {
-                            if (key === "content-type") {
-                                Assert.deepEqual(val, "text/javascript; charset=utf-8", "should have correct content-type response header");
-                                headerCnt ++;
-                            }
-                            if (key === "x-ms-meta-aijssdksrc") {
-                                Assert.ok(val, "should have sdk src response header");
-                                headerCnt ++;
-                            }
-                            if (key === "x-ms-meta-aijssdkver") {
-                                Assert.ok(val, "should have version number for response header");
-                                headerCnt ++;
-                            }
-                        });
-                        Assert.equal(headerCnt, 3, "all expected headers should be present");
-                        return true;
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
+                    if (this._ctx && this._ctx.res && this._ctx.val) {
+                        let res = this._ctx.res;
+                        let status = res.status;
+                        if (status === 200) {
+                            // for Response headers:
+                            // content-type: text/javascript; charset=utf-8
+                            // x-ms-meta-aijssdksrc: should present
+                            // x-ms-meta-aijssdkver should present
+                            let headers = res.headers;
+                            let headerCnt = 0;
+                            headers.forEach((val, key) => {
+                                if (key === "content-type") {
+                                    Assert.deepEqual(val, "text/javascript; charset=utf-8", "should have correct content-type response header");
+                                    headerCnt ++;
+                                }
+                                if (key === "x-ms-meta-aijssdksrc") {
+                                    Assert.ok(val, "should have sdk src response header");
+                                    headerCnt ++;
+                                }
+                                if (key === "x-ms-meta-aijssdkver") {
+                                    Assert.ok(val, "should have version number for response header");
+                                    headerCnt ++;
+                                }
+                            });
+                            Assert.equal(headerCnt, 3, "all expected headers should be present");
+                            return true;
+                        }
+                        return false;
                     }
                     return false;
-                }
-                return false;
-            }, "Wait for response" + new Date().toISOString(), 60) as any)
+                }, "Wait for response" + new Date().toISOString(), 60) as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "E2E.GenericTests: Fetch Static Web CDN V3",
-            stepDelay: 1,
             useFakeServer: false,
             useFakeFetch: false,
             fakeFetchAutoRespond: false,
-            steps: [() => {
+            test: () => {
                 // Use beta endpoint to pre-test any changes before public V3 cdn
                 let random = utcNow();
                 // Under Cors Mode, Options request will be auto-triggered
@@ -865,101 +853,114 @@ export class ApplicationInsightsTests extends AITestClass {
                 } catch (e) {
                     this._ctx.err = e;
                 }
-            }].concat(PollingAssert.createPollingAssert(() => {
 
-                if (this._ctx && this._ctx.err) {
-                    return true;
-                }
-                return false;
-            }, "Wait for response" + new Date().toISOString(), 60) as any)
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
+
+                    if (this._ctx && this._ctx.err) {
+                        return true;
+                    }
+                    return false;
+                }, "Wait for response" + new Date().toISOString(), 60) as any);
+            }
         });
     }
 
     public addAsyncTests(): void {
-        this.testCaseAsync({
+        this.testCase({
             name: "E2E.GenericTests: Send events with offline support",
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let offlineChannel = new OfflineChannel();
                 this._ai.addPlugin(offlineChannel);
                 this._ctx.offlineChannel = offlineChannel;
 
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let offlineChannel = this._ctx.offlineChannel;
-                if (offlineChannel && offlineChannel.isInitialized()) {
-                    let urlConfig = offlineChannel["_getDbgPlgTargets"]()[0];
-                    Assert.ok(urlConfig, "offline url config is initialized");
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(PollingAssert.createPollingAssert(() => {
+                    let offlineChannel = this._ctx.offlineChannel;
+                    if (offlineChannel && offlineChannel.isInitialized()) {
+                        let urlConfig = offlineChannel["_getDbgPlgTargets"]()[0];
+                        Assert.ok(urlConfig, "offline url config is initialized");
 
-                    let offlineListener = offlineChannel.getOfflineListener() as any;
-                    Assert.ok(offlineListener, "offlineListener should be initialized");
+                        let offlineListener = offlineChannel.getOfflineListener() as any;
+                        Assert.ok(offlineListener, "offlineListener should be initialized");
 
-                    // online
-                    offlineListener.setOnlineState(1);
-                    let inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
-                    Assert.ok(!inMemoTimer, "offline in memo timer should be null");
-                    this._ai.trackEvent({ name: "online event", properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
+                        // online
+                        offlineListener.setOnlineState(1);
+                        let inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
+                        Assert.ok(!inMemoTimer, "offline in memo timer should be null");
+                        this._ai.trackEvent({ name: "online event", properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
 
-                    // set to offline status right way
-                    offlineListener.setOnlineState(2);
-                    this._ai.trackEvent({ name: "offline event", properties: { "prop2": "value2" }, measurements: { "measurement2": 200 } });
-                    inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
-                    Assert.ok(inMemoTimer, "in memo timer should not be null");
-                    let inMemoBatch = offlineChannel["_getDbgPlgTargets"]()[1][EventPersistence.Normal];
-                    Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one event");
+                        // set to offline status right way
+                        offlineListener.setOnlineState(2);
+                        this._ai.trackEvent({ name: "offline event", properties: { "prop2": "value2" }, measurements: { "measurement2": 200 } });
+                        inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
+                        Assert.ok(inMemoTimer, "in memo timer should not be null");
+                        let inMemoBatch = offlineChannel["_getDbgPlgTargets"]()[1][EventPersistence.Normal];
+                        Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one event");
 
-                    return true
-                }
-                return false
-            }, "Wait for init" + new Date().toISOString(), 60) as any).concat(this.asserts(1)).concat(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok( payload && payload.iKey);
-                    Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
-                    Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
-                    Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
-                }
-            })
+                        return true
+                    }
+                    return false
+                }, "Wait for init" + new Date().toISOString(), 60) as any).add(asserts_9499[0])
+                                    .add(asserts_9499[1]).add(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        const data = payload.data;
+                        Assert.ok( payload && payload.iKey);
+                        Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
+                        Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
+                        Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
+                    }
+                });
+            }
         });
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackEvent sends to backend',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 this._ai.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
-            }].concat(this.asserts(1)).concat(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok( payload && payload.iKey);
-                    Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
-                    Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
-                    Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
-                }
-            })
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue()
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1])
+                    .add(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                            const payload = JSON.parse(payloadStr[0]);
+                            const data = payload.data;
+                            Assert.ok( payload && payload.iKey);
+                            Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
+                            Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
+                            Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
+                        }
+                    });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackTrace sends to backend',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 this._ai.trackTrace({ message: 'trace', properties: { "foo": "bar", "prop2": "value2" } });
-            }].concat(this.asserts(1)).concat(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                const payload = JSON.parse(payloadStr[0]);
-                const data = payload.data;
-                Assert.ok(data && data.baseData &&
-                    data.baseData.properties["foo"] && data.baseData.properties["prop2"]);
-                Assert.equal("bar", data.baseData.properties["foo"]);
-                Assert.equal("value2", data.baseData.properties["prop2"]);
-            })
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue()
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1])
+                    .add(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        const payload = JSON.parse(payloadStr[0]);
+                        const data = payload.data;
+                        Assert.ok(data && data.baseData &&
+                            data.baseData.properties["foo"] && data.baseData.properties["prop2"]);
+                        Assert.equal("bar", data.baseData.properties["foo"]);
+                        Assert.equal("value2", data.baseData.properties["prop2"]);
+                    });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: legacy trackException sends to backend',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let exception: Error = null;
                 try {
                     window['a']['b']();
@@ -969,13 +970,17 @@ export class ApplicationInsightsTests extends AITestClass {
                     this._ai.trackException({ error: exception } as any);
                 }
                 Assert.ok(exception);
-            }].concat(this.asserts(1))
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue()
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1]);;
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with auto telemetry sends to backend',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let exception: Error = null;
                 try {
                     window['a']['b']();
@@ -995,13 +1000,17 @@ export class ApplicationInsightsTests extends AITestClass {
                     this._ai.trackException({ exception: autoTelemetry });
                 }
                 Assert.ok(exception);
-            }].concat(this.asserts(1))
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue()
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1]);;
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with auto telemetry sends to backend with custom properties',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let exception: Error = null;
                 try {
                     window['a']['b']();
@@ -1021,13 +1030,16 @@ export class ApplicationInsightsTests extends AITestClass {
                     this._ai.trackException({ exception: autoTelemetry }, { custom: "custom value" });
                 }
                 Assert.ok(exception);
-            }].concat(this.asserts(1))
+
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]);;
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with message only sends to backend',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let exception: Error = null;
                 try {
                     window['a']['b']();
@@ -1047,13 +1059,16 @@ export class ApplicationInsightsTests extends AITestClass {
                     this._ai.trackException({ exception: autoTelemetry });
                 }
                 Assert.ok(exception);
-            }].concat(this.asserts(1))
+
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]);;
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with message holding error sends to backend',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let exception: Error = null;
                 try {
                     window['a']['b']();
@@ -1079,13 +1094,16 @@ export class ApplicationInsightsTests extends AITestClass {
                     }
                 }
                 Assert.ok(exception);
-            }].concat(this.asserts(1))
+
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]);;
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with message holding error sends to backend with custom properties',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let exception: Error = null;
                 try {
                     window['a']['b']();
@@ -1111,13 +1129,16 @@ export class ApplicationInsightsTests extends AITestClass {
                     }
                 }
                 Assert.ok(exception);
-            }].concat(this.asserts(1))
+
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]);;
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with no Error sends to backend',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let autoTelemetry = {
                     message: "Test Message",
                     url: "https://dummy.no.error.example.com",
@@ -1128,98 +1149,110 @@ export class ApplicationInsightsTests extends AITestClass {
                 } as IAutoExceptionTelemetry;
                 this._ai.trackException({ exception: autoTelemetry });
                 Assert.ok(autoTelemetry);
-            }].concat(this.asserts(1))
+
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]);;
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with CustomError sends to backend',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 this._ai.trackException({ id: "testID", exception: new CustomTestError("Test Custom Error!") });
-            }].concat(this.asserts(1)).concat(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data, "Has Data");
-                    if (data) {
-                        Assert.ok(data.baseData, "Has BaseData");
-                        let baseData = data.baseData;
-                        if (baseData) {
-                            const ex = baseData.exceptions[0];
-                            Assert.ok(ex.message.indexOf("Test Custom Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
-                            Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
-                            Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
-                            Assert.ok(ex.stack.length > 0, "Has stack");
-                            Assert.ok(ex.parsedStack, "Stack was parsed");
-                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
-                            Assert.equal(baseData.properties.id, "testID", "Make sure the error message id is present [" + baseData.properties + "]");
+                let asserts_9499 = this.asserts(1);
+
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]).add(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        const data = payload.data;
+                        Assert.ok(data, "Has Data");
+                        if (data) {
+                            Assert.ok(data.baseData, "Has BaseData");
+                            let baseData = data.baseData;
+                            if (baseData) {
+                                const ex = baseData.exceptions[0];
+                                Assert.ok(ex.message.indexOf("Test Custom Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
+                                Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
+                                Assert.ok(ex.stack.length > 0, "Has stack");
+                                Assert.ok(ex.parsedStack, "Stack was parsed");
+                                Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                                Assert.equal(baseData.properties.id, "testID", "Make sure the error message id is present [" + baseData.properties + "]");
+                            }
                         }
                     }
-                }
-            })
+                });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException will keep id from the original exception',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 this._ai.trackException({id:"testId", error: new Error("test local exception"), severityLevel: 3});
-            }].concat(this.asserts(1)).concat(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data, "Has Data");
-                    if (data) {
-                        Assert.ok(data.baseData, "Has BaseData");
-                        let baseData = data.baseData;
-                        if (baseData) {
-                            const ex = baseData.exceptions[0];
-                            console.log(JSON.stringify(baseData.properties));
-                            Assert.equal(baseData.properties.id, "testId", "Make sure the error message id is present [" + ex.properties + "]");
+
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]).add(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        const data = payload.data;
+                        Assert.ok(data, "Has Data");
+                        if (data) {
+                            Assert.ok(data.baseData, "Has BaseData");
+                            let baseData = data.baseData;
+                            if (baseData) {
+                                const ex = baseData.exceptions[0];
+                                console.log(JSON.stringify(baseData.properties));
+                                Assert.equal(baseData.properties.id, "testId", "Make sure the error message id is present [" + ex.properties + "]");
+                            }
                         }
                     }
-                }
-            })
+                });
+            }
         });
 
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: trackException with CustomError sends to backend with custom properties',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 this._ai.trackException({ exception: new CustomTestError("Test Custom Error!") }, { custom: "custom value" });
-            }].concat(this.asserts(1)).concat(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data, "Has Data");
-                    if (data) {
-                        Assert.ok(data.baseData, "Has BaseData");
-                        let baseData = data.baseData;
-                        if (baseData) {
-                            const ex = baseData.exceptions[0];
-                            Assert.ok(ex.message.indexOf("Test Custom Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
-                            Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
-                            Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
-                            Assert.ok(ex.stack.length > 0, "Has stack");
-                            Assert.ok(ex.parsedStack, "Stack was parsed");
-                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                let asserts_9499 = this.asserts(1);
 
-                            Assert.ok(baseData.properties, "Has BaseData properties");
-                            Assert.equal(baseData.properties.custom, "custom value");
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1]).add(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        const data = payload.data;
+                        Assert.ok(data, "Has Data");
+                        if (data) {
+                            Assert.ok(data.baseData, "Has BaseData");
+                            let baseData = data.baseData;
+                            if (baseData) {
+                                const ex = baseData.exceptions[0];
+                                Assert.ok(ex.message.indexOf("Test Custom Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
+                                Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
+                                Assert.ok(ex.stack.length > 0, "Has stack");
+                                Assert.ok(ex.parsedStack, "Stack was parsed");
+                                Assert.ok(ex.hasFullStack, "Stack has been decoded");
+
+                                Assert.ok(baseData.properties, "Has BaseData properties");
+                                Assert.equal(baseData.properties.custom, "custom value");
+                            }
                         }
                     }
-                }
-            })
+                });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "E2E.GenericTests: trackException with multiple stack frame formats",
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let errObj = {
                     name: "E2E.GenericTests",
                     reason:{
@@ -1264,9 +1297,14 @@ export class ApplicationInsightsTests extends AITestClass {
                     errObj
                 );
                 this._ai.trackException({ exception: exception }, { custom: "custom value" });
-            }].concat(this.asserts(1)).concat(() => {
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue()
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1])
+                    .add(() => {
 
-                const expectedParsedStack: IStackFrame[] = [
+                        const expectedParsedStack: IStackFrame[] = [
                     { level: 0, method: "<no_method>", assembly: "at http://localhost:3000/static/js/main.206f4846.js:2:296748", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
                     { level: 1, method: "Object.Re", assembly: "at Object.Re (http://localhost:3000/static/js/main.206f4846.js:2:16814)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
                     { level: 2, method: "je", assembly: "at je (http://localhost:3000/static/js/main.206f4846.js:2:16968)", fileName: "http://localhost:3000/static/js/main.206f4846.js", line: 2 },
@@ -1323,13 +1361,13 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
                     }
                 }
-            })
+                    });
+            }
         })
 
-        this.testCaseAsync({
+        this.testCase({
             name: "E2E.GenericTests: trackException with multiple line message",
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 let message = "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n" +
                             "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
                             "2. You might be breaking the Rules of Hooks\n" +
@@ -1360,9 +1398,14 @@ export class ApplicationInsightsTests extends AITestClass {
                     errObj
                 );
                 this._ai.trackException({ exception: exception }, { custom: "custom value" });
-            }].concat(this.asserts(1)).concat(() => {
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue()
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1])
+                    .add(() => {
 
-                const expectedParsedStack: IStackFrame[] = [
+                        const expectedParsedStack: IStackFrame[] = [
                     { level: 0, method: "Object.throwInvalidHookError", assembly: "at Object.throwInvalidHookError (https://localhost:44365/static/js/bundle.js:201419:13)", fileName: "https://localhost:44365/static/js/bundle.js", line: 201419 },
                     { level: 1, method: "useContext", assembly: "at useContext (https://localhost:44365/static/js/bundle.js:222943:25)", fileName: "https://localhost:44365/static/js/bundle.js", line: 222943 },
                     { level: 2, method: "useTenantContext", assembly: "at useTenantContext (https://localhost:44365/static/js/bundle.js:5430:68)", fileName: "https://localhost:44365/static/js/bundle.js", line: 5430 },
@@ -1400,272 +1443,293 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
                     }
                 }
-            })
+                    });
+            }
         })
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: track metric",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    console.log("* calling trackMetric " + new Date().toISOString());
-                    for (let i = 0; i < 100; i++) {
-                        this._ai.trackMetric({ name: "test" + i, average: Math.round(100 * Math.random()), min: 1, max: i+1, stdDev: 10.0 * Math.random() });
-                    }
-                    console.log("* done calling trackMetric " + new Date().toISOString());
+            test: () => {
+                console.log("* calling trackMetric " + new Date().toISOString());
+                for (let i = 0; i < 100; i++) {
+                    this._ai.trackMetric({ name: "test" + i, average: Math.round(100 * Math.random()), min: 1, max: i+1, stdDev: 10.0 * Math.random() });
                 }
-            ].concat(this.asserts(100))
+                console.log("* done calling trackMetric " + new Date().toISOString());
+                
+                let asserts_6924 = this.asserts(100);
+                return this._asyncQueue()
+                    .add(asserts_6924[0])
+                                        .add(asserts_6924[1]);;
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: track custom metric",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    console.log("* calling trackMetric " + new Date().toISOString());
-                    this._ai.trackMetric({ name: "my_custom_metric_0", average: 2 });
-                    this._ai.trackMetric({ name: "my_custom_metric_1", average: 1.1, sampleCount: 1, min: 1, max: 1, stdDev: 1.12 });
-                    this._ai.trackMetric({ name: "my_custom_metric_2", average: 1.2, sampleCount: 2, min: 1, max: 2, stdDev: 1.23 });
-                    this._ai.trackMetric({ name: "my_custom_metric_3", average: 1.3, sampleCount: 3, min: 1, max: 2.5, stdDev: 1.35 });
-                    console.log("* done calling trackMetric " + new Date().toISOString());
-                }
-            ].concat(this.asserts(4))
+            test: () => {
+                console.log("* calling trackMetric " + new Date().toISOString());
+                this._ai.trackMetric({ name: "my_custom_metric_0", average: 2 });
+                this._ai.trackMetric({ name: "my_custom_metric_1", average: 1.1, sampleCount: 1, min: 1, max: 1, stdDev: 1.12 });
+                this._ai.trackMetric({ name: "my_custom_metric_2", average: 1.2, sampleCount: 2, min: 1, max: 2, stdDev: 1.23 });
+                this._ai.trackMetric({ name: "my_custom_metric_3", average: 1.3, sampleCount: 3, min: 1, max: 2.5, stdDev: 1.35 });
+                console.log("* done calling trackMetric " + new Date().toISOString());
+                
+                let asserts_4101 = this.asserts(4);
+                return this._asyncQueue()
+                    .add(asserts_4101[0])
+                                        .add(asserts_4101[1]);;
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: `TelemetryContext: track page view ${window.location.pathname}`,
-            stepDelay: 500,
-            steps: [
-                () => {
-                    this._ai.trackPageView(); // sends 2
-                }
-            ]
-            .concat(this.asserts(2))
-            .concat(() => {
-
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data.baseData.id, "pageView id is defined");
-                    Assert.ok(data.baseData.id.length > 0);
-                    Assert.ok(payload.tags["ai.operation.id"]);
-                    Assert.equal(data.baseData.id, payload.tags["ai.operation.id"], "pageView id matches current operation id");
-                } else {
-                    Assert.ok(false, "successSpy not called");
-                }
-            })
+            test: () => {
+                this._ai.trackPageView(); // sends 2
+                
+                let asserts_2541 = this.asserts(2);
+                return this._asyncQueue()
+                    .add(asserts_2541[0])
+                                        .add(asserts_2541[1])
+                    .add(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                            const payload = JSON.parse(payloadStr[0]);
+                            const data = payload.data;
+                            Assert.ok(data.baseData.id, "pageView id is defined");
+                            Assert.ok(data.baseData.id.length > 0);
+                            Assert.ok(payload.tags["ai.operation.id"]);
+                            Assert.equal(data.baseData.id, payload.tags["ai.operation.id"], "pageView id matches current operation id");
+                        } else {
+                            Assert.ok(false, "successSpy not called");
+                        }
+                    });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: track page view performance",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    this._ai.trackPageViewPerformance({ name: 'name', uri: 'url' });
-                }
-            ].concat(this.asserts(1))
+            test: () => {
+                this._ai.trackPageViewPerformance({ name: 'name', uri: 'url' });
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue()
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1]);;
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: track all types in batch",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    let exception = null;
-                    try {
-                        window["a"]["b"]();
-                    } catch (e) {
-                        exception = e;
-                    }
+            test: () => {
+                let exception = null;
+                try {
+                    window["a"]["b"]();
+                } catch (e) {
+                    exception = e;
+                }
 
-                    Assert.ok(exception);
+                Assert.ok(exception);
 
+                this._ai.trackException({ exception });
+                this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
+                this._ai.trackTrace({ message: "test" });
+                this._ai.trackPageView({}); // sends 2
+                this._ai.trackPageViewPerformance({ name: 'name', uri: 'http://someurl' });
+                this._ai.flush();
+                
+                let asserts_3551 = this.asserts(6);
+                return this._asyncQueue()
+                    .add(asserts_3551[0])
+                                        .add(asserts_3551[1]);;
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: track all types in a large batch",
+            test: () => {
+                let exception = null;
+                try {
+                    window["a"]["b"]();
+                } catch (e) {
+                    exception = e;
+                }
+                Assert.ok(exception);
+
+                for (let i = 0; i < 100; i++) {
                     this._ai.trackException({ exception });
                     this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
                     this._ai.trackTrace({ message: "test" });
-                    this._ai.trackPageView({}); // sends 2
-                    this._ai.trackPageViewPerformance({ name: 'name', uri: 'http://someurl' });
-                    this._ai.flush();
+                    this._ai.trackPageView({ name: `${i}` }); // sends 2 1st time
                 }
-            ].concat(this.asserts(6))
+                
+                let asserts_8903 = this.asserts(401, false);
+                return this._asyncQueue()
+                    .add(asserts_8903[0])
+                                        .add(asserts_8903[1]);;
+            }
         });
 
-        this.testCaseAsync({
-            name: "TelemetryContext: track all types in a large batch",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    let exception = null;
-                    try {
-                        window["a"]["b"]();
-                    } catch (e) {
-                        exception = e;
-                    }
-                    Assert.ok(exception);
-
-                    for (let i = 0; i < 100; i++) {
-                        this._ai.trackException({ exception });
-                        this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
-                        this._ai.trackTrace({ message: "test" });
-                        this._ai.trackPageView({ name: `${i}` }); // sends 2 1st time
-                    }
-                }
-            ].concat(this.asserts(401, false))
-        });
-
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryInitializer: E2E override envelope data",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    // Setup
-                    const telemetryInitializer = {
-                        init: (envelope) => {
-                            envelope.baseData.name = 'other name'
-                            return true;
-                        }
+            test: () => {
+                // Setup
+                const telemetryInitializer = {
+                    init: (envelope) => {
+                        envelope.baseData.name = 'other name'
+                        return true;
                     }
-
-                    // Act
-                    this._ai.addTelemetryInitializer(telemetryInitializer.init);
-                    this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
                 }
-            ]
-                .concat(this.asserts(1))
-                .concat(() => {
-                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                    if (payloadStr.length > 0) {
-                        let payloadItems = payloadStr.length;
-                        Assert.equal(1, payloadItems, 'Only 1 track item is sent');
-                        const payload = JSON.parse(payloadStr[0]);
-                        Assert.ok(payload);
 
-                        if (payload && payload.baseData) {
-                            const nameResult: string = payload.data.baseData.metrics[0].name;
-                            const nameExpect: string = 'other name';
-                            Assert.equal(nameExpect, nameResult, 'telemetryinitializer override successful');
+                // Act
+                this._ai.addTelemetryInitializer(telemetryInitializer.init);
+                this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue()
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1])
+                    .add(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length > 0) {
+                            let payloadItems = payloadStr.length;
+                            Assert.equal(1, payloadItems, 'Only 1 track item is sent');
+                            const payload = JSON.parse(payloadStr[0]);
+                            Assert.ok(payload);
+
+                            if (payload && payload.baseData) {
+                                const nameResult: string = payload.data.baseData.metrics[0].name;
+                                const nameExpect: string = 'other name';
+                                Assert.equal(nameExpect, nameResult, 'telemetryinitializer override successful');
+                            }
                         }
-                    }
-                })
+                    });
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'E2E.GenericTests: undefined properties are replaced by customer defined value with config convertUndefined.',
-            stepDelay: 1,
-            steps: [() => {
+            test: () => {
                 this._ai.trackPageView({ name: 'pageview', properties: { 'prop1': 'val1' }});
                 this._ai.trackEvent({ name: 'event', properties: { 'prop2': undefined } });
-            }].concat(this.asserts(3)).concat(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                for (let i = 0; i < payloadStr.length; i++) {
-                    const payload = JSON.parse(payloadStr[i]);const baseType = payload.data.baseType;
-                    // Make the appropriate assersion depending on the baseType
-                    switch (baseType) {
-                        case Event.dataType:
-                            const eventData = payload.data;
-                            Assert.ok(eventData && eventData.baseData && eventData.baseData.properties['prop2']);
-                            Assert.equal(eventData.baseData.properties['prop2'], 'test-value');
-                            break;
-                        case PageView.dataType:
-                            const pageViewData = payload.data;
-                            Assert.ok(pageViewData && pageViewData.baseData && pageViewData.baseData.properties['prop1']);
-                            Assert.equal(pageViewData.baseData.properties['prop1'], 'val1');
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            })
+                
+                let asserts_6106 = this.asserts(3);
+                return this._asyncQueue()
+                    .add(asserts_6106[0])
+                                        .add(asserts_6106[1])
+                    .add(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        for (let i = 0; i < payloadStr.length; i++) {
+                            const payload = JSON.parse(payloadStr[i]);const baseType = payload.data.baseType;
+                            // Make the appropriate assersion depending on the baseType
+                            switch (baseType) {
+                                case Event.dataType:
+                                    const eventData = payload.data;
+                                    Assert.ok(eventData && eventData.baseData && eventData.baseData.properties['prop2']);
+                                    Assert.equal(eventData.baseData.properties['prop2'], 'test-value');
+                                    break;
+                                case PageView.dataType:
+                                    const pageViewData = payload.data;
+                                    Assert.ok(pageViewData && pageViewData.baseData && pageViewData.baseData.properties['prop1']);
+                                    Assert.equal(pageViewData.baseData.properties['prop1'], 'val1');
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    });
+            }
         });
     }
 
     public addDependencyPluginTests(): void {
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: trackDependencyData",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    const data: IDependencyTelemetry = {
-                        target: 'http://abc',
-                        responseCode: 200,
-                        type: 'GET',
-                        id: 'abc'
-                    }
-                    this._ai.trackDependencyData(data);
+            test: () => {
+                const data: IDependencyTelemetry = {
+                    target: 'http://abc',
+                    responseCode: 200,
+                    type: 'GET',
+                    id: 'abc'
                 }
-            ].concat(this.asserts(1))
+                this._ai.trackDependencyData(data);
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue()
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1]);;
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: "TelemetryContext: auto collection of ajax requests",
-            stepDelay: 1,
             useFakeServer: true,
             fakeServerAutoRespond: true,
-            steps: [
-                () => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('GET', 'https://httpbin.org/status/200');
-                    xhr.send();
-                    Assert.ok(true);
-                }
-            ].concat(this.asserts(1))
+            test: () => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', 'https://httpbin.org/status/200');
+                xhr.send();
+                Assert.ok(true);
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue()
+                    .add(asserts_9499[0])
+                                        .add(asserts_9499[1]);;
+            }
         });
         let global = getGlobal();
         if (global && global.fetch) {
-            this.testCaseAsync({
+            this.testCase({
                 name: "DependenciesPlugin: auto collection of outgoing fetch requests " + (this.isFetchPolyfill ? " using polyfill " : ""),
-                stepDelay: 5000,
                 useFakeFetch: true,
                 fakeFetchAutoRespond: true,
-                steps: [
-                    () => {
-                        fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
-                        Assert.ok(true, "fetch monitoring is instrumented");
-                    },
-                    () => {
-                        fetch('https://httpbin.org/status/200', { method: 'GET' });
-                        Assert.ok(true, "fetch monitoring is instrumented");
-                    },
-                    () => {
-                        fetch('https://httpbin.org/status/200');
-                        Assert.ok(true, "fetch monitoring is instrumented");
-                    }
-                ].concat(this.asserts(3, false, false))
-                    .concat(() => {
-                        let args = [];
-                        this.trackSpy.args.forEach(call => {
-                            let message = call[0].baseData.message||"";
-                            // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
-                            if (message.indexOf("AI (Internal): 72 ") == -1) {
-                                args.push(call[0]);
+                test: () => {
+                    fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
+                    Assert.ok(true, "fetch monitoring is instrumented");
+                    
+                    fetch('https://httpbin.org/status/200', { method: 'GET' });
+                    Assert.ok(true, "fetch monitoring is instrumented");
+                    
+                    fetch('https://httpbin.org/status/200');
+                    Assert.ok(true, "fetch monitoring is instrumented");
+                    
+                    let asserts_8076 = this.asserts(3, false, false);
+                    return this._asyncQueue()
+                        .add(asserts_8076[0])
+                                            .add(asserts_8076[1])
+                        .add(() => {
+                            let args = [];
+                            this.trackSpy.args.forEach(call => {
+                                let message = call[0].baseData.message||"";
+                                // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                                if (message.indexOf("AI (Internal): 72 ") == -1) {
+                                    args.push(call[0]);
+                                }
+                            });
+
+                            let type = "Fetch";
+                            if (this.isFetchPolyfill) {
+                                type = "Ajax";
+                                Assert.ok(true, "Using fetch polyfill");
                             }
+
+                            Assert.equal(3, args.length, "track is called 3 times");
+                            let baseData = args[0].baseData;
+                            Assert.equal(type, baseData.type, "request is " + type + " type");
+                            Assert.equal('value', baseData.properties.requestHeaders['header'], "fetch request's user defined request header is stored");
+                            Assert.ok(baseData.properties.responseHeaders, "fetch request's reponse header is stored");
+
+                            baseData = args[1].baseData;
+                            Assert.equal(3, Object.keys(baseData.properties.requestHeaders).length, "two request headers set up when there's no user defined request header");
+                            Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
+                            Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
+                            Assert.ok(baseData.properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparent");
+                            const id: string = baseData.id;
+                            const regex = id.match(/\|.{32}\..{16}\./g);
+                            Assert.ok(id.length > 0);
+                            Assert.equal(1, regex.length)
+                            Assert.equal(id, regex[0]);
                         });
-
-                        let type = "Fetch";
-                        if (this.isFetchPolyfill) {
-                            type = "Ajax";
-                            Assert.ok(true, "Using fetch polyfill");
-                        }
-
-                        Assert.equal(3, args.length, "track is called 3 times");
-                        let baseData = args[0].baseData;
-                        Assert.equal(type, baseData.type, "request is " + type + " type");
-                        Assert.equal('value', baseData.properties.requestHeaders['header'], "fetch request's user defined request header is stored");
-                        Assert.ok(baseData.properties.responseHeaders, "fetch request's reponse header is stored");
-
-                        baseData = args[1].baseData;
-                        Assert.equal(3, Object.keys(baseData.properties.requestHeaders).length, "two request headers set up when there's no user defined request header");
-                        Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
-                        Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
-                        Assert.ok(baseData.properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparent");
-                        const id: string = baseData.id;
-                        const regex = id.match(/\|.{32}\..{16}\./g);
-                        Assert.ok(id.length > 0);
-                        Assert.equal(1, regex.length)
-                        Assert.equal(id, regex[0]);
-                    })
+                }
             });
         } else {
             this.testCase({
@@ -1678,123 +1742,124 @@ export class ApplicationInsightsTests extends AITestClass {
     }
 
     public addPropertiesPluginTests(): void {
-        this.testCaseAsync({
+        this.testCase({
             name: 'Custom Tags: allowed to send custom properties via addTelemetryInitializer',
-            stepDelay: 1,
-            steps: [
-                () => {
-                    this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
-                        item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
-                    });
-                    this._ai.trackEvent({ name: "Custom event via addTelemetryInitializer" });
-                }
-            ]
-            .concat(this.asserts(1, false, false))
-            .concat(PollingAssert.createPollingAssert(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length) {
-                    const payload = JSON.parse(payloadStr[0]);
-                        Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
+            test: () => {
+                this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
+                    item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
+                });
+                this._ai.trackEvent({ name: "Custom event via addTelemetryInitializer" });
+                
+                let asserts_9577 = this.asserts(1, false, false);
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue()
+                    .add(asserts_9577[0])
+                                        .add(asserts_9577[1])
+                    .add(PollingAssert.createPollingAssert(() => {
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        if (payloadStr.length) {
+                            const payload = JSON.parse(payloadStr[0]);
+                                Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
+                                Assert.ok(payload);
+
+                            if (payload && payload.tags) {
+                                const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                                const tagExpect: string = 'my.custom.cloud.name';
+                                Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
+                                return true;
+                            }
+                            return false;
+                        }
+                    }, 'Set custom tags') as any);
+            }
+        });
+
+        this.testCase({
+            name: 'Custom Tags: allowed to send custom properties via addTelemetryInitializer & shimmed addTelemetryInitializer',
+            test: () => {
+                this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
+                    item.tags.push({[this.tagKeys.cloudName]: "my.shim.cloud.name"});
+                });
+                this._ai.trackEvent({ name: "Custom event" });
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1])
+                .add(PollingAssert.createPollingAssert(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                        const payload = JSON.parse(payloadStr[0]);
                         Assert.ok(payload);
 
-                    if (payload && payload.tags) {
-                        const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
-                        const tagExpect: string = 'my.custom.cloud.name';
-                        Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
-                        return true;
+                        if (payload && payload.tags) {
+                            const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                            const tagExpect: string = 'my.shim.cloud.name';
+                            Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
+                            return true;
+                        }
+                        return false;
                     }
-                    return false;
-                }
-            }, 'Set custom tags') as any)
+                }, 'Set custom tags') as any);
+            }
         });
 
-        this.testCaseAsync({
-            name: 'Custom Tags: allowed to send custom properties via addTelemetryInitializer & shimmed addTelemetryInitializer',
-            stepDelay: 1,
-            steps: [
-                () => {
-                    this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
-                        item.tags.push({[this.tagKeys.cloudName]: "my.shim.cloud.name"});
-                    });
-                    this._ai.trackEvent({ name: "Custom event" });
-                }
-            ]
-            .concat(this.asserts(1))
-            .concat(PollingAssert.createPollingAssert(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
-                    const payload = JSON.parse(payloadStr[0]);
-                    Assert.ok(payload);
-
-                    if (payload && payload.tags) {
-                        const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
-                        const tagExpect: string = 'my.shim.cloud.name';
-                        Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
-                        return true;
-                    }
-                    return false;
-                }
-            }, 'Set custom tags') as any)
-        });
-
-        this.testCaseAsync({
+        this.testCase({
             name: 'Custom Tags: allowed to send custom properties via shimmed addTelemetryInitializer',
-            stepDelay: 1,
-            steps: [
-                () => {
-                    this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
-                        item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
-                        item.tags[this.tagKeys.locationCity] = "my.custom.location.city";
-                        item.tags.push({[this.tagKeys.locationCountry]: "my.custom.location.country"});
-                        item.tags.push({[this.tagKeys.operationId]: "my.custom.operation.id"});
-                    });
-                    this._ai.trackEvent({ name: "Custom event via shimmed addTelemetryInitializer" });
-                }
-            ]
-            .concat(this.asserts(1))
-            .concat(PollingAssert.createPollingAssert(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
-                    if (payloadStr.length > 1) {
-                        this.dumpPayloadMessages(this.successSpy);
-                    }
-                    Assert.ok(payload);
+            test: () => {
+                this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
+                    item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
+                    item.tags[this.tagKeys.locationCity] = "my.custom.location.city";
+                    item.tags.push({[this.tagKeys.locationCountry]: "my.custom.location.country"});
+                    item.tags.push({[this.tagKeys.operationId]: "my.custom.operation.id"});
+                });
+                this._ai.trackEvent({ name: "Custom event via shimmed addTelemetryInitializer" });
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1])
+                .add(PollingAssert.createPollingAssert(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
+                        if (payloadStr.length > 1) {
+                            this.dumpPayloadMessages(this.successSpy);
+                        }
+                        Assert.ok(payload);
 
-                    if (payload && payload.tags) {
-                        const tagResult1: string = payload.tags && payload.tags[this.tagKeys.cloudName];
-                        const tagExpect1: string = 'my.custom.cloud.name';
-                        Assert.equal(tagResult1, tagExpect1, 'telemetryinitializer tag override successful');
-                        const tagResult2: string = payload.tags && payload.tags[this.tagKeys.locationCity];
-                        const tagExpect2: string = 'my.custom.location.city';
-                        Assert.equal(tagResult2, tagExpect2, 'telemetryinitializer tag override successful');
-                        const tagResult3: string = payload.tags && payload.tags[this.tagKeys.locationCountry];
-                        const tagExpect3: string = 'my.custom.location.country';
-                        Assert.equal(tagResult3, tagExpect3, 'telemetryinitializer tag override successful');
-                        const tagResult4: string = payload.tags && payload.tags[this.tagKeys.operationId];
-                        const tagExpect4: string = 'my.custom.operation.id';
-                        Assert.equal(tagResult4, tagExpect4, 'telemetryinitializer tag override successful');
-                        return true;
+                        if (payload && payload.tags) {
+                            const tagResult1: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                            const tagExpect1: string = 'my.custom.cloud.name';
+                            Assert.equal(tagResult1, tagExpect1, 'telemetryinitializer tag override successful');
+                            const tagResult2: string = payload.tags && payload.tags[this.tagKeys.locationCity];
+                            const tagExpect2: string = 'my.custom.location.city';
+                            Assert.equal(tagResult2, tagExpect2, 'telemetryinitializer tag override successful');
+                            const tagResult3: string = payload.tags && payload.tags[this.tagKeys.locationCountry];
+                            const tagExpect3: string = 'my.custom.location.country';
+                            Assert.equal(tagResult3, tagExpect3, 'telemetryinitializer tag override successful');
+                            const tagResult4: string = payload.tags && payload.tags[this.tagKeys.operationId];
+                            const tagExpect4: string = 'my.custom.operation.id';
+                            Assert.equal(tagResult4, tagExpect4, 'telemetryinitializer tag override successful');
+                            return true;
+                        }
+                        return false;
                     }
-                    return false;
-                }
-            }, 'Set custom tags') as any)
+                }, 'Set custom tags') as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext authId',
-            stepDelay: 1,
-            steps: [
-                () => {
-                    const context = (this._ai.context) as TelemetryContext;
-                    context.user.setAuthenticatedUserContext('10001');
-                    this._ai.trackTrace({ message: 'authUserContext test' });
-                }
-            ]
-                .concat(this.asserts(1))
-                .concat(PollingAssert.createPollingAssert(() => {
+            test: () => {
+                const context = (this._ai.context) as TelemetryContext;
+                context.user.setAuthenticatedUserContext('10001');
+                this._ai.trackTrace({ message: 'authUserContext test' });
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1])
+                .add(PollingAssert.createPollingAssert(() => {
                     let payloadStr = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
                         let payloadEvents = payloadStr.length;
@@ -1811,21 +1876,21 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
                     }
                     return false;
-                }, 'user.authenticatedId') as any)
+                }, 'user.authenticatedId') as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext authId and accountId',
-            stepDelay: 1,
-            steps: [
-                () => {
-                    const context = (this._ai.context) as TelemetryContext;
-                    context.user.setAuthenticatedUserContext('10001', 'account123');
-                    this._ai.trackTrace({ message: 'authUserContext test' });
-                }
-            ]
-                .concat(this.asserts(1))
-                .concat(PollingAssert.createPollingAssert(() => {
+            test: () => {
+                const context = (this._ai.context) as TelemetryContext;
+                context.user.setAuthenticatedUserContext('10001', 'account123');
+                this._ai.trackTrace({ message: 'authUserContext test' });
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1])
+                .add(PollingAssert.createPollingAssert(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
                         if (payloadStr.length !== 1) {
@@ -1841,21 +1906,21 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
                     }
                     return false;
-                }, 'user.authenticatedId') as any)
+                }, 'user.authenticatedId') as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext non-ascii authId and accountId',
-            stepDelay: 1,
-            steps: [
-                () => {
-                    const context = (this._ai.context) as TelemetryContext;
-                    context.user.setAuthenticatedUserContext("\u0428", "\u0429");
-                    this._ai.trackTrace({ message: 'authUserContext test' });
-                }
-            ]
-                .concat(this.asserts(1))
-                .concat(PollingAssert.createPollingAssert(() => {
+            test: () => {
+                const context = (this._ai.context) as TelemetryContext;
+                context.user.setAuthenticatedUserContext("\u0428", "\u0429");
+                this._ai.trackTrace({ message: 'authUserContext test' });
+                
+                let asserts_9499 = this.asserts(1);
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1])
+                .add(PollingAssert.createPollingAssert(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
                         if (payloadStr.length !== 1) {
@@ -1871,22 +1936,22 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
                     }
                     return false;
-                }, 'user.authenticatedId') as any)
+                }, 'user.authenticatedId') as any);
+            }
         });
 
-        this.testCaseAsync({
+        this.testCase({
             name: 'AuthenticatedUserContext: clearAuthenticatedUserContext',
-            stepDelay: 1,
-            steps: [
-                () => {
-                    const context = (this._ai.context) as TelemetryContext;
-                    context.user.setAuthenticatedUserContext('10002', 'account567');
-                    context.user.clearAuthenticatedUserContext();
-                    this._ai.trackTrace({ message: 'authUserContext test' });
-                }
-            ]
-                .concat(this.asserts(1))
-                .concat(PollingAssert.createPollingAssert(() => {
+            test: () => {
+                const context = (this._ai.context) as TelemetryContext;
+                context.user.setAuthenticatedUserContext('10002', 'account567');
+                context.user.clearAuthenticatedUserContext();
+                this._ai.trackTrace({ message: 'authUserContext test' });
+                let asserts_9499 = this.asserts(1);
+                
+                return this._asyncQueue().add(asserts_9499[0])
+                                    .add(asserts_9499[1])
+                .add(PollingAssert.createPollingAssert(() => {
                     const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
                         if (payloadStr.length !== 1) {
@@ -1902,7 +1967,8 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
                     }
                     return false;
-                }, 'user.authenticatedId') as any)
+                }, 'user.authenticatedId') as any);
+            }
         });
 
         // This doesn't need to be e2e
