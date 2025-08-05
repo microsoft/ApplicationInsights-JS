@@ -1043,7 +1043,7 @@ export class AjaxTests extends AITestClass {
 
         this.testCase({
             name: "Fetch: fetch with disabled flag isn't tracked",
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
@@ -1100,7 +1100,7 @@ export class AjaxTests extends AITestClass {
 
             this.testCase({
                 name: "Fetch: internal url fetch isn't tracked [" + endpointUrl + "]",
-                timeOut: 10000,
+                timeout: 10000,
                 test: () => {
                     this._ajax = new AjaxMonitor();
                     let appInsightsCore = new AppInsightsCore();
@@ -1142,7 +1142,7 @@ export class AjaxTests extends AITestClass {
     
             this.testCase({
                 name: "Fetch: internal url using fetch is tracked [" + endpointUrl + "]",
-                timeOut: 10000,
+                timeout: 10000,
                 test: () => {
                     this._ajax = new AjaxMonitor();
                     let appInsightsCore = new AppInsightsCore();
@@ -1189,7 +1189,7 @@ export class AjaxTests extends AITestClass {
 
         this.testCase({
             name: "Fetch: fetch with disabled flag isn't tracked and any followup request to the same URL event without the disabled flag are also not tracked",
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
@@ -1238,7 +1238,7 @@ export class AjaxTests extends AITestClass {
 
         this.testCase({
             name: "Fetch: fetch with disabled flag false and with exclude request regex pattern isn't tracked and any followup request to the same URL event without the disabled flag are also not tracked",
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
@@ -1288,7 +1288,7 @@ export class AjaxTests extends AITestClass {
 
         this.testCase({
             name: "Fetch: add context into custom dimension with call back configuration on AI initialization.",
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let dependencyFields = hookTrackDependencyInternal(this._ajax);
@@ -1347,7 +1347,7 @@ export class AjaxTests extends AITestClass {
 
         this.testCase({
             name: "Fetch: fetch gets instrumented",
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let dependencyFields = hookTrackDependencyInternal(this._ajax);
@@ -1396,7 +1396,7 @@ export class AjaxTests extends AITestClass {
 
         this.testCase({
             name: "Fetch: Respond with status 0 and no status text",
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let dependencyFields = hookTrackDependencyInternal(this._ajax);
@@ -1455,7 +1455,7 @@ export class AjaxTests extends AITestClass {
 
         this.testCase({
             name: "Fetch: Respond with status 0 and no status text",
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let dependencyFields = hookTrackDependencyInternal(this._ajax);
@@ -1514,7 +1514,7 @@ export class AjaxTests extends AITestClass {
 
         this.testCase({
             name: "Fetch: fetch addDependencyInitializer adding context",
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 let initializerCalled = false;
                 this._ajax = new AjaxMonitor();
@@ -1584,7 +1584,7 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: fetch addDependencyInitializer drops the event",
             
             
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 let initializerCalled = false;
                 this._ajax = new AjaxMonitor();
@@ -1649,7 +1649,7 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: instrumentation handles invalid / missing request or url",
             
             
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let dependencyFields = hookTrackDependencyInternal(this._ajax);
@@ -1723,7 +1723,7 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: instrumentation handles invalid / missing request or url with traceId",
             
             
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let dependencyFields = hookTrackDependencyInternal(this._ajax);
@@ -1808,7 +1808,7 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: instrumentation handles empty string",
             
             
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let dependencyFields = hookTrackDependencyInternal(this._ajax);
@@ -1878,7 +1878,7 @@ export class AjaxTests extends AITestClass {
 
         this.testCase({
             name: "Fetch: instrumentation handles empty string with traceId",
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let dependencyFields = hookTrackDependencyInternal(this._ajax);
@@ -2051,7 +2051,7 @@ export class AjaxTests extends AITestClass {
 
         this.testCase({
             name: "Fetch: should create and pass a traceparent header if ai and w3c is enabled with custom headers",
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
@@ -2142,7 +2142,7 @@ export class AjaxTests extends AITestClass {
 
         this.testCase({
             name: "Fetch: should create and pass a traceparent header if ai and w3c is enabled with no init param",
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
@@ -2227,7 +2227,7 @@ export class AjaxTests extends AITestClass {
         this.testCase({
             name: "Fetch: should create and pass a traceparent header if w3c only is enabled with custom headers",
             
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 return this._asyncQueue()
                             .add(() => {
@@ -2316,7 +2316,7 @@ export class AjaxTests extends AITestClass {
         this.testCase({
             name: "Fetch: should create and pass a traceparent header if w3c only is enabled with no init param",
             
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
@@ -2399,7 +2399,7 @@ export class AjaxTests extends AITestClass {
         this.testCase({
             name: "Fetch: should create and pass a request header if AI only is enabled with custom headers",
             
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
@@ -2488,7 +2488,7 @@ export class AjaxTests extends AITestClass {
         this.testCase({
             name: "Fetch: should create and pass a request header if AI only is enabled with no init param",
             
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
@@ -2570,7 +2570,7 @@ export class AjaxTests extends AITestClass {
         this.testCase({
             name: "Fetch: should add request headers to all valid argument variants",
             
-            timeOut: 10000,
+            timeout: 10000,
             useFakeTimers: true,
             test: () => {
                 this._context["fetchCalls"] = hookFetch((resolve) => {
@@ -3940,7 +3940,7 @@ export class AjaxPerfTrackTests extends AITestClass {
         this.testCase({
             name: "Fetch: should not create and pass correlation header if correlationHeaderExcludePatterns set to exclude all.",
             
-            timeOut: 10000,
+            timeout: 10000,
             test: () => {
                 let fetchCalls = hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
