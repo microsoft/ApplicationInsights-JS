@@ -1100,7 +1100,6 @@ export class AjaxTests extends AITestClass {
                 name: "Fetch: internal url fetch isn't tracked [" + endpointUrl + "]",
                 timeout: 10000,
                 test: () => {
-               
                     hookFetch((resolve) => {
                         AITestClass.orgSetTimeout(function() {
                             resolve({
@@ -1172,7 +1171,6 @@ export class AjaxTests extends AITestClass {
                     
                     return this._asyncQueue()
                         .add(() => {
-                            
                             // Act
                             Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                             return fetch(endpointUrl, {method: "post" }).then(() => {
@@ -1237,7 +1235,6 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: fetch with disabled flag false and with exclude request regex pattern isn't tracked and any followup request to the same URL event without the disabled flag are also not tracked",
             timeout: 10000,
             test: () => {
-
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -1263,8 +1260,6 @@ export class AjaxTests extends AITestClass {
 
                 return this._asyncQueue()
                     .add(() => {
-                        
-
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                         return fetch("https://httpbin.org/status/200", {method: "post"}).then(() => {
@@ -1288,7 +1283,6 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: add context into custom dimension with call back configuration on AI initialization.",
             timeout: 10000,
             test: () => {
-
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -1324,7 +1318,6 @@ export class AjaxTests extends AITestClass {
 
                 return this._asyncQueue()
                     .add(() => {
-
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                         return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
@@ -1394,7 +1387,6 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: Respond with status 0 and no status text",
             timeout: 10000,
             test: () => {
-
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -1452,7 +1444,6 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: Respond with status 0 and no status text",
             timeout: 10000,
             test: () => {
-
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -1483,7 +1474,6 @@ export class AjaxTests extends AITestClass {
 
                 return this._asyncQueue()
                     .add(() => {
-
                         // Act
                         let fetchSpy = this._context.fetchSpy;
                         let throwSpy = this._context.throwSpy;
@@ -1512,7 +1502,6 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: fetch addDependencyInitializer adding context",
             timeout: 10000,
             test: () => {
-
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -1552,7 +1541,6 @@ export class AjaxTests extends AITestClass {
 
                 return this._asyncQueue()
                     .add(() => {
-
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                         return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
@@ -1697,7 +1685,6 @@ export class AjaxTests extends AITestClass {
             name: "Fetch: instrumentation handles invalid / missing request or url with traceId",
             timeout: 10000,
             test: () => {
-
                 hookFetch((resolve) => {
                     AITestClass.orgSetTimeout(function() {
                         resolve({
@@ -1735,7 +1722,6 @@ export class AjaxTests extends AITestClass {
 
                 return this._asyncQueue()
                     .add(() => {
-
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                         return fetch(null, {method: "post", [DisabledPropertyName]: false}).then(() => {
@@ -2125,7 +2111,6 @@ export class AjaxTests extends AITestClass {
 
                 return this._asyncQueue()
                     .add(() => {
-
                         // Act
                         Assert.ok(trackSpy.notCalled, "No fetch called yet");
                         return fetch(url).then(() => {
@@ -2224,7 +2209,6 @@ export class AjaxTests extends AITestClass {
                             Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
                         }, () => {
                             Assert.ok(false, "fetch failed!");
-                            
                         });
                     })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
@@ -2291,8 +2275,6 @@ export class AjaxTests extends AITestClass {
 
                 return this._asyncQueue()
                     .add(() => {
-              
-
                         // Act
                         Assert.ok(trackSpy.notCalled, "No fetch called yet");
                         fetch(url).then(() => {
@@ -2307,7 +2289,6 @@ export class AjaxTests extends AITestClass {
                             Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
                         }, () => {
                             Assert.ok(false, "fetch failed!");
-                            
                         });
                     })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
@@ -2406,7 +2387,6 @@ export class AjaxTests extends AITestClass {
                             Assert.equal("|", id[0]);
                             return true;
                         }
-
                         return false;
                     }, 'response received', 60, 1000))
             }
@@ -2458,7 +2438,6 @@ export class AjaxTests extends AITestClass {
 
                 return this._asyncQueue()
                     .add(() => {
-                
                         // Act
                         Assert.ok(trackSpy.notCalled, "No fetch called yet");
                         fetch(url).then(() => {
@@ -2473,7 +2452,6 @@ export class AjaxTests extends AITestClass {
                             Assert.equal(false, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
                         }, () => {
                             Assert.ok(false, "fetch failed!");
-                            
                         });
                     })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
@@ -2485,7 +2463,6 @@ export class AjaxTests extends AITestClass {
                             Assert.equal("|", id[0]);
                             return true;
                         }
-
                         return false;
                     }, 'response received', 60, 1000))
             }
@@ -2595,12 +2572,9 @@ export class AjaxTests extends AITestClass {
                                 Assert.notEqual(undefined, trackHeaders[RequestHeaders.requestIdHeader], "RequestId present in outbound event");
                                 Assert.notEqual(undefined, trackHeaders[RequestHeaders.requestContextHeader], "RequestContext present in outbound event");
                                 Assert.notEqual(undefined, trackHeaders[RequestHeaders.traceParentHeader], "traceParent present in outbound event");
-
                             }
-
                             return true;
                         }
-
                         this.clock.tick(1000);
                         return false;
                     }, 'response received', 60, 1000))
@@ -3585,9 +3559,8 @@ export class AjaxPerfTrackTests extends AITestClass {
         });
 
 
-         this.testCase({
+        this.testCase({
             name: "AjaxPerf: check that performance tracking is reported, even if the entry is missing when enabled for xhr requests",
-            
             test: () => {
                 let performance = getPerformance();
                 let markSpy = this.sandbox.spy(performance, "mark");
@@ -3613,7 +3586,6 @@ export class AjaxPerfTrackTests extends AITestClass {
                     .add(() => {
                         // Act
                         var xhr = new XMLHttpRequest();
-
                         // trigger the request that should cause a track event once the xhr request is complete
                         xhr.open("GET", "https://httpbin.org/status/200");
                         xhr.send();
@@ -3633,7 +3605,6 @@ export class AjaxPerfTrackTests extends AITestClass {
                             }
                             return true;
                         }
-
                         return false;
                     }, 'response received', 60, 1000))
             }
@@ -3839,7 +3810,6 @@ export class AjaxPerfTrackTests extends AITestClass {
                             }
                             return true;
                         }
-
                         return false;
                     }, 'response received', 600, 1000))
             }
@@ -3899,7 +3869,6 @@ export class AjaxPerfTrackTests extends AITestClass {
 
                 return this._asyncQueue()
                     .add(() => {
-                    
                         // Act
                         Assert.ok(trackSpy.notCalled, "No fetch called yet");
                         fetch(url, init).then(() => {
@@ -3926,7 +3895,6 @@ export class AjaxPerfTrackTests extends AITestClass {
                             Assert.equal(".", id[id.length - 1]);
                             return true;
                         }
-
                         return false;
                     }, 'response received', 60, 1000))
             }
@@ -4027,7 +3995,6 @@ export class AjaxFrozenTests extends AITestClass {
                             Assert.notEqual(-1, data.exception.indexOf("Cannot add property _ajaxData"));
                             return true;
                         }
-
                         return false;
                     }, 'response received', 60, 1000))
             }
