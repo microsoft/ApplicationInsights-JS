@@ -83,7 +83,7 @@ export interface IChannelControls extends ITelemetryPlugin {
      * you DO NOT pass a callback function then a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
      * will be returned which will resolve once the flush is complete. The actual implementation of the `IPromise`
      * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
-     * @param async - send data asynchronously when true
+     * @param isAsync - send data asynchronously when true
      * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
      * If the caller doesn't return true the caller should assume that it may never be called.
      * @param sendReason - specify the reason that you are calling "flush" defaults to ManualFlush (1) if not specified
@@ -91,9 +91,9 @@ export interface IChannelControls extends ITelemetryPlugin {
      * should assume that any provided callback will never be called, Nothing or if occurring asynchronously a
      * [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) which will be resolved once the unload is complete,
      * the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html) will only be returned when no callback is provided
-     * and async is true.
+     * and isAsync is true.
      */
-    flush?(async: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean>;
+    flush?(isAsync: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean>;
 
     /**
      * Get offline support

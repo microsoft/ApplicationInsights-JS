@@ -1,0 +1,158 @@
+---
+name: 'Delete Merged Branches'
+
+# This workflow automatically deletes branches that are associated with
+# closed or merged pull requests. It runs weekly on Sundays at midnight UTC.
+#
+# Protected branches (will NOT be deleted):
+# - main
+# - master
+# - beta
+# - otel-sdk
+# - release* (case-insensitive: release-1.0, release/v2.0, etc.)
+# - Release* (case-insensitive: Release-1.0, Release/v2.0, etc.)
+# - legacy-* (e.g., legacy-v1, legacy-old)
+# - *-legacy (e.g., old-legacy, v1-legacy)
+#
+# The workflow will only delete branches that:
+# 1. Have associated pull requests
+# 2. All PRs for the branch are either merged or closed (no open PRs)
+# 3. Do not match any protected branch pattern
+
+on:
+  schedule:
+    # Run every Sunday at midnight UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+# Required permissions for this workflow:
+# - contents: write - Required to delete branch references via GitHub API
+# - pull-requests: read - Required to query PR status and metadata
+# See: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#permissions
+# See: https://docs.github.com/en/rest/overview/permissions-required-for-github-apps
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  delete-merged-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Delete merged branches
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Weekly branch cleanup script
+          #
+          # This script safely deletes branches associated with merged PRs
+          # while protecting important branches like main, master, release, etc.
+          #
+          # Logic:
+          # 1. Get all remote branches
+          # 2. Filter out protected branches using pattern matching
+          # 3. For each non-protected branch:
+          #    - Check if it has associated PRs
+          #    - Skip if no PRs found
+          #    - Skip if any PRs are still open
+          #    - Delete if all PRs are closed or merged
+          # Protected branch patterns (case-insensitive matching)
+          PROTECTED_PATTERNS=(
+            "main"
+            "master"
+            "beta"
+            "otel-sdk"
+            "release*"
+            "Release*"
+            "legacy-*"
+            "*-legacy"
+          )
+
+          echo "Starting branch cleanup..."
+
+          # Get all remote branches except HEAD
+          git fetch --all --prune
+          branches=$(git for-each-ref \
+            --format='%(refname:short)' refs/remotes/origin | \
+            grep -v 'origin/HEAD' | sed 's|origin/||')
+
+          for branch in $branches; do
+            echo "Checking branch: $branch"
+
+            # Check if branch matches any protected pattern
+            # Use [[ ]] pattern matching instead of case statement to properly
+            # support wildcard patterns stored in variables (e.g., "release*", "*-legacy")
+            # See: https://www.gnu.org/software/bash/manual/html_node/Pattern-Matching.html
+            protected=false
+            for pattern in "${PROTECTED_PATTERNS[@]}"; do
+              if [[ "$branch" =~ $pattern ]]; then
+                protected=true
+                echo "  → Protected (matches: $pattern), skipping"
+                break
+              fi
+            done
+
+            if [ "$protected" = true ]; then
+              continue
+            fi
+
+            # Check if branch is associated with a merged or closed PR
+            echo "  → Checking PR status for branch: $branch"
+
+            # Get PRs for this branch (both merged and closed)
+            # GitHub context variables used here:
+            # - github.repository: owner/repo-name (e.g., microsoft/ApplicationInsights-JS)
+            # - github.repository_owner: repository owner (e.g., microsoft)
+            # - GITHUB_TOKEN: automatically provided GitHub token for API access
+            # See: https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
+            repo_api="https://api.github.com/repos/${{ github.repository }}"
+            query="?head=${{ github.repository_owner }}:$branch&state=all"
+            pr_response=$(curl -s \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "${repo_api}/pulls${query}")
+
+            # Check if any PRs exist for this branch
+            pr_count=$(echo "$pr_response" | jq '. | length')
+
+            if [ "$pr_count" -eq 0 ]; then
+              echo "  → No PR found for branch, skipping"
+              continue
+            fi
+
+            # Check if all PRs for this branch are either merged or closed
+            open_prs=$(echo "$pr_response" | jq '[.[] | select(.state == "open")] | length')
+
+            if [ "$open_prs" -gt 0 ]; then
+              echo "  → Branch has open PR(s), skipping"
+              continue
+            fi
+
+            # All PRs are either merged or closed, safe to delete
+            merged_prs=$(echo "$pr_response" | jq '[.[] | select(.merged_at != null)] | length')
+            closed_prs=$(echo "$pr_response" | jq '[.[] | select(.state == "closed" and .merged_at == null)] | length')
+
+            echo "  → Branch has $merged_prs merged and $closed_prs closed PRs"
+            echo "  → Deleting branch: $branch"
+
+            # Delete the remote branch using GitHub REST API
+            # See: https://docs.github.com/en/rest/git/refs#delete-a-reference
+            delete_url="https://api.github.com/repos/${{ github.repository }}"
+            delete_response=$(curl -s -X DELETE \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "${delete_url}/git/refs/heads/$branch")
+
+            if echo "$delete_response" | jq -e '.message' > /dev/null 2>&1; then
+              error_msg=$(echo "$delete_response" | jq -r '.message')
+              echo "  → Error deleting branch: $error_msg"
+            else
+              echo "  → Successfully deleted branch: $branch"
+            fi
+          done
+
+          echo "Branch cleanup completed!"
