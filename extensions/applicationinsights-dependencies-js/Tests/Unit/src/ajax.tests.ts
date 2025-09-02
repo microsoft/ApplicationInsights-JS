@@ -2711,7 +2711,8 @@ export class AjaxTests extends AITestClass {
 
                                 Assert.equal(true, headers.has(RequestHeaders.requestContextHeader), "requestContext header shoud be present");
                                 Assert.equal(true, headers.has(RequestHeaders.requestIdHeader), "AI header shoud be present"); // AI
-                                Assert.equal(falsee, headers.has(RequestHeaders.traceParentHeader), "traceState should not be present in outbound event"); // W3C
+                                Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
+                                Assert.equal(false, headers.has(RequestHeaders.traceStateHeader), "traceState should not be present in outbound event");
 
                                 Assert.notEqual(undefined, trackHeaders[RequestHeaders.requestIdHeader], "RequestId present in outbound event");
                                 Assert.notEqual(undefined, trackHeaders[RequestHeaders.requestContextHeader], "RequestContext present in outbound event");
