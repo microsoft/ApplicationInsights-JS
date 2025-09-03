@@ -64,6 +64,53 @@ The following is a list of known breaking changes for anyone attempting to imple
 
 - [Beta] Add W3c Trace State support / handling and refactor distributed trace handling to prepare for OptenTelemetry Span style API / management
 
+## Unreleased Changes (from Main)
+
+### Potential breaking changes
+
+This release contains a potential breaking change to the `flush` method signature in the `IChannelControls` interface. The parameter name has been changed from `async` to `isAsync` to avoid potential conflicts with the `async` keyword.
+
+**Interface change:**
+```typescript
+// Before:
+flush(async: boolean = true, callBack?: (flushComplete?: boolean) => void): void | IPromise<boolean>;
+
+// After: 
+flush(isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean>;
+```
+
+**This is only a breaking change if you rely on named parameters.** If you have custom channels or plugins that implement the `IChannelControls` interface directly and rely on passing named parameters, you will need to update the parameter name from `async` to `isAsync` in your implementation.
+
+### Potential behavioral changes
+
+This release enhances the cookie management behavior when cookies are disabled. Previously, when cookies were disabled, calls to `cookieMgr.set()` would return `false` and cookie values would be lost. Now, these operations are cached in memory and automatically applied when cookies are re-enabled to allow for cookie compliance banners and delayed approval.
+
+**Behavior changes:**
+- `cookieMgr.set()` now returns `true` when cookies are disabled (because values are cached), instead of `false`
+- `cookieMgr.get()` now returns cached values when cookies are disabled, instead of empty strings
+- `cookieMgr.del()` operations are now cached and applied when cookies are re-enabled
+- Applications can now recover cookie state after temporary cookie blocking scenarios
+
+**These changes improve data persistence and are considered enhancements rather than breaking changes.** If your application logic depends on the previous behavior of `set()` returning `false` when cookies are disabled, you may need to check `cookieMgr.isEnabled()` instead, or configure `disableCookieCache: true` in your `cookieCfg` to maintain the previous behavior.
+
+### Changelog
+
+- #2628 Fix flush method root cause - handle async callbacks in _doSend with proper error handling
+  - **Potential breaking change**: Renamed `flush` method parameter from `async` to `isAsync` in `IChannelControls` interface to avoid potential keyword conflicts (only affects code that relies on named parameters)
+  - Fixed return type of `flush` method to properly include `boolean` when callbacks complete synchronously
+  - Fixed root cause where `_doSend()` couldn't handle asynchronous callbacks from `preparePayload()` when compression is enabled
+  - `await applicationInsights.flush()` now works correctly with compression enabled
+  - Added proper error handling and promise rejection propagation through async callback chains
+  - Improved handling of both synchronous and asynchronous callback execution patterns
+  - No polling overhead - uses direct callback invocation for better performance
+
+- #2631 [Feature] Update the ICookieMgr implementation to write cookies after being enabled
+  - **Enhancement**: Cookie values are now cached in memory when cookies are disabled instead of being lost, enabling support for consent banner workflows where cookies must be temporarily disabled until user approval
+  - **Enhancement**: Automatic flushing occurs when cookies are re-enabled via `setEnabled(true)` or dynamic configuration changes  
+  - **Enhancement**: Added `disableCookieDefer` configuration option to maintain backward compatibility with previous behavior (defaults to false)
+  - **Behavior change**: `cookieMgr.set()` now returns `true` when disabled (cached) instead of `false`
+  - **Behavior change**: `cookieMgr.get()` now returns cached values when disabled instead of empty strings
+
 ## 3.3.9 (June 25th, 2025)
 
 This release contains an important fix for a change introduced in v3.3.7 that caused the `autoCaptureHandler` to incorrectly evaluate elements within `trackElementsType`, resulting in some click events not being auto-captured. See more details [here](https://github.com/microsoft/ApplicationInsights-JS/issues/2589).

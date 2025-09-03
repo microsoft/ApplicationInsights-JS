@@ -35,6 +35,7 @@
   - [Service Notification](#service-notification)
   - [Single Page Applications](#single-page-applications)
   - [Source Map Support](#source-map-support)
+  - [Using Azure API Management as a proxy for Application Insights Telemetry](https://techcommunity.microsoft.com/blog/azureobservabilityblog/using-azure-api-management-as-a-proxy-for-application-insights-telemetry/4422236)
   - [Examples](#examples)
   - [Application Insights Web Basic](#application-insights-web-basic)
   - [Available Extensions for the SDK](#available-extensions-for-the-sdk)
