@@ -35,9 +35,12 @@ export interface IBaseProcessingContext {
     getCfg: () => IConfiguration;
 
     /**
-     * Gets the named extension config
+     * Gets the named extension configuration
+     * @param identifier - The named extension identifier
+     * @param defaultValue - The default value(s) to return if no defined config exists
+     * @param rootOnly - If true, only the look for the configuration in the top level and not in the "extensionConfig"
      */
-    getExtCfg: <T>(identifier: string, defaultValue?: IConfigDefaults<T>) => T;
+    getExtCfg: <T>(identifier: string, defaultValue?: IConfigDefaults<T>, rootOnly?: boolean) => T;
 
     /**
      * Gets the named config from either the named identifier extension or core config if neither exist then the

@@ -4,7 +4,8 @@
 
 import { getGlobal, strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
 import {
-    getDocument, getInst, getNavigator, getPerformance, hasNavigator, isFunction, isString, isUndefined, mathMax, strIndexOf, strSubstring
+    arrForEach, getDocument, getInst, getNavigator, getPerformance, hasNavigator, isFunction, isNullOrUndefined, isString, isUndefined,
+    mathMax, strIndexOf, strSubstring
 } from "@nevware21/ts-utils";
 import { IConfiguration } from "../applicationinsights-core-js";
 import { strContains } from "./HelperFuncs";
@@ -270,19 +271,19 @@ export function isXhrSupported(): boolean {
 }
 
 
-function _getNamedValue(values: any, name: string) {
+function _getNamedValue<T>(values: any, name: string): T[] {
+    let items: T[]  = [];
     if (values) {
-        for (var i = 0; i < values.length; i++) {
-            var value = values[i] as any;
+        arrForEach(values, (value) => {
             if (value.name) {
                 if(value.name === name) {
-                    return value;
+                    items.push(value);
                 }
             }
-        }
+        });
     }
 
-    return {};
+    return items;
 }
 
 /**
@@ -290,13 +291,31 @@ function _getNamedValue(values: any, name: string) {
  * @param name - The name of the meta-tag to find.
  */
 export function findMetaTag(name: string): any {
-    let doc = getDocument();
-    if (doc && name) {
-        // Look for a meta-tag
-        return _getNamedValue(doc.querySelectorAll("meta"), name).content;
+    let tags = findMetaTags(name);
+    if (tags.length > 0) {
+        return tags[0];
     }
 
     return null;
+}
+
+/**
+ * Helper function to fetch all named meta-tag from the page.
+ * @since 3.4.0
+ * @param name - The name of the meta-tag to find.
+ * @returns - An array of meta-tag values.
+ */
+export function findMetaTags(name: string): string[] {
+    let tags: string[] = [];
+    let doc = getDocument();
+    if (doc && name) {
+        // Look for a meta-tag
+        arrForEach(_getNamedValue<any>(doc.querySelectorAll("meta"), name), (item) => {
+            tags.push(item.content);
+        });
+    }
+
+    return tags;
 }
 
 /**
@@ -305,14 +324,36 @@ export function findMetaTag(name: string): any {
  */
 export function findNamedServerTiming(name: string): any {
     let value: any;
-    let perf = getPerformance();
-    if (perf) {
-        // Try looking for a server-timing header
-        let navPerf = perf.getEntriesByType("navigation") || [];
-        value = _getNamedValue((navPerf.length > 0 ? navPerf[0] : {} as any).serverTiming, name).description;
+    let serverTimings = findNamedServerTimings(name);
+    if (serverTimings.length > 0) {
+        value = serverTimings[0];
     }
 
     return value;
+}
+
+/**
+ * Helper function to fetch the named server timing value from the page response (first navigation event).
+ * @since 3.4.0
+ * @param name - The name of the server timing value to find.
+ * @returns - An array of server timing values.
+ */
+export function findNamedServerTimings(name: string): string[] {
+    let values: string[] = [];
+    let perf = getPerformance();
+    if (perf && perf.getEntriesByType) {
+        // Try looking for a server-timing header
+        arrForEach(perf.getEntriesByType("navigation") || [], (navPerf: any) => {
+            arrForEach(_getNamedValue(navPerf.serverTiming, name), (value: any) => {
+                let desc = value.description;
+                if (!isNullOrUndefined(desc)) {
+                    values.push(desc);
+                }
+            });
+        });
+    }
+
+    return values;
 }
 
 // TODO: should reuse this method for analytics plugin
@@ -362,7 +403,7 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
  * @returns The URL with user information redacted
  */
 function redactUserInfo(url: string): string {
-    return url.replace(/^([a-zA-Z][a-zA-Z0-9+.-]*:\/\/)([^:@]{1,200}):([^@]{1,200})@(.*)$/, "$1REDACTED:REDACTED@$4"); //(/^([a-zA-Z][a-zA-Z0-9+.-]{0,50}:\/\/)([^:@]{0,200})(?::([^@]{0,200}))?@(.*)$/, "$1REDACTED:REDACTED@$4");
+    return url.replace(/^([a-zA-Z][a-zA-Z0-9+.-]*:\/\/)([^:@]{1,200}):([^@]{1,200})@(.*)$/, "$1REDACTED:REDACTED@$4");
 }
 
 /**
@@ -461,7 +502,7 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
  * @returns The redacted URL string or the original string if no redaction was needed or possible.
  */
 export function fieldRedaction(input: string, config: IConfiguration): string {
-    if (!input ||input.indexOf(" ") !== -1) {
+    if (!input || input.indexOf(" ") !== -1) {
         return input;
     }
     const isRedactionDisabled = config && config.redactUrls === false;

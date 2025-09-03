@@ -55,7 +55,7 @@ export const enum eRequestHeaders {
     requestContextAppIdFormat = 2,
     requestIdHeader = 3,
     traceParentHeader = 4,
-    traceStateHeader = 5,     // currently not used
+    traceStateHeader = 5,
     sdkContextHeader = 6,
     sdkContextHeaderAppIdRequest = 7,
     requestContextHeaderLowerCase = 8
@@ -68,7 +68,7 @@ export const RequestHeaders = (/* @__PURE__ */ createValueMap<typeof eRequestHea
     [eRequestHeaders.requestContextAppIdFormat]: "appId=cid-v1:",
     [eRequestHeaders.requestIdHeader]: "Request-Id",
     [eRequestHeaders.traceParentHeader]: "traceparent",
-    [eRequestHeaders.traceStateHeader]: "tracestate",     // currently not used
+    [eRequestHeaders.traceStateHeader]: "tracestate",
     [eRequestHeaders.sdkContextHeader]: "Sdk-Context",
     [eRequestHeaders.sdkContextHeaderAppIdRequest]: "appId",
     [eRequestHeaders.requestContextHeaderLowerCase]: "request-context",
@@ -78,7 +78,7 @@ export const RequestHeaders = (/* @__PURE__ */ createValueMap<typeof eRequestHea
     requestContextAppIdFormat: "appId=cid-v1:",
     requestIdHeader: "Request-Id",
     traceParentHeader: "traceparent",
-    traceStateHeader: "tracestate",     // currently not used
+    traceStateHeader: "tracestate",
     sdkContextHeader: "Sdk-Context",
     sdkContextHeaderAppIdRequest: "appId",
     requestContextHeaderLowerCase: "request-context"
@@ -88,7 +88,7 @@ export const RequestHeaders = (/* @__PURE__ */ createValueMap<typeof eRequestHea
     requestContextAppIdFormat: [ eRequestHeaders.requestContextAppIdFormat, "appId=cid-v1:"],
     requestIdHeader: [ eRequestHeaders.requestIdHeader, "Request-Id"],
     traceParentHeader: [ eRequestHeaders.traceParentHeader, "traceparent"],
-    traceStateHeader: [ eRequestHeaders.traceStateHeader, "tracestate"],     // currently not used
+    traceStateHeader: [ eRequestHeaders.traceStateHeader, "tracestate"],
     sdkContextHeader: [ eRequestHeaders.sdkContextHeader, "Sdk-Context"],
     sdkContextHeaderAppIdRequest: [ eRequestHeaders.sdkContextHeaderAppIdRequest, "appId"],
     requestContextHeaderLowerCase: [ eRequestHeaders.requestContextHeaderLowerCase, "request-context"]

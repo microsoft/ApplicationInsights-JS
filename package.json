@@ -78,6 +78,7 @@
         "rollup-plugin-sourcemaps": "^0.6.3",
         "typedoc": "^0.26.6",
         "typescript": "^4.9.3",
-        "whatwg-fetch": "^3.6.2"
+        "whatwg-fetch": "^3.6.2",
+        "@types/node": "18.19.121"
     }
 }

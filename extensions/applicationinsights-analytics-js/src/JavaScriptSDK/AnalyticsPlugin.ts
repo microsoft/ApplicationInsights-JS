@@ -8,26 +8,25 @@ import {
     AnalyticsPluginIdentifier, Event as EventTelemetry, Exception, IAppInsights, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
     IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
     IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry, Metric, PageView,
-    PageViewPerformance, PropertiesPluginIdentifier, RemoteDependencyData, Trace, createDistributedTraceContextFromTrace, createDomEvent,
-    createTelemetryItem, dataSanitizeString, eSeverityLevel, isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage,
-    utlSetStoragePrefix
+    PageViewPerformance, RemoteDependencyData, Trace, createDomEvent, createTelemetryItem, dataSanitizeString, eSeverityLevel,
+    isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDistributedTraceContext,
-    IExceptionConfig, IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
-    ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent,
-    TelemetryInitializerFunction, _eInternalMessageId, arrForEach, cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate,
-    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eventOff, eventOn, fieldRedaction, findAllScripts,
-    generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined,
-    isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined, throwError
+    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IExceptionConfig,
+    IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem,
+    ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent, TelemetryInitializerFunction, _eInternalMessageId, arrForEach,
+    cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dumpObj,
+    eLoggingSeverity, eventOff, eventOn, fieldRedaction, findAllScripts, generateW3CId, getDocument, getExceptionName, getHistory,
+    getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange,
+    safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
-import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+import { IAjaxMonitorPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { IAnalyticsConfig } from "./Interfaces/IAnalyticsConfig";
-import { IAppInsightsInternal, PageViewManager } from "./Telemetry/PageViewManager";
-import { PageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
-import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
-import { Timing } from "./Timing";
+import { IAppInsightsInternal, IPageViewManager, createPageViewManager } from "./Telemetry/PageViewManager";
+import { IPageViewPerformanceManager, createPageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
+import { IPageVisitTimeManager, createPageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
+import { ITiming, createTiming } from "./Timing";
 
 const strEvent = "event";
 
@@ -108,11 +107,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
     constructor() {
         super();
-        let _eventTracking: Timing;
-        let _pageTracking: Timing;
-        let _pageViewManager: PageViewManager;
-        let _pageViewPerformanceManager: PageViewPerformanceManager;
-        let _pageVisitTimeManager: PageVisitTimeManager;
+        let _eventTracking: ITiming;
+        let _pageTracking: ITiming;
+        let _pageViewManager: IPageViewManager;
+        let _pageViewPerformanceManager: IPageViewPerformanceManager;
+        let _pageVisitTimeManager: IPageVisitTimeManager;
         let _preInitTelemetryInitializers: TelemetryInitializerFunction[];
         let _isBrowserLinkTrackingEnabled: boolean;
         let _browserLinkInitializerAdded: boolean;
@@ -125,12 +124,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         let _extConfig: IAnalyticsConfig;
         let _autoTrackPageVisitTime: boolean;
         let _expCfg: IExceptionConfig;
-
-        // Counts number of trackAjax invocations.
-        // By default we only monitor X ajax call per view to avoid too much load.
-        // Default value is set in config.
-        // This counter keeps increasing even after the limit is reached.
-        let _trackAjaxAttempts: number = 0;
     
         // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
         let _prevUri: string; // Assigned in the constructor
@@ -268,7 +261,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         inPv.uri = fieldRedaction(inPv.uri, _self.core.config);
                     }
                     _pageViewManager.trackPageView(inPv, {...inPv.properties, ...inPv.measurements, ...customProperties});
-        
+
                     if (_autoTrackPageVisitTime) {
                         _pageVisitTimeManager.trackPreviousPageVisit(inPv.name, inPv.uri);
                     }
@@ -310,7 +303,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                 _self.core.track(telemetryItem);
                 // reset ajaxes counter
-                _trackAjaxAttempts = 0;
+                _resetAjaxAttempts();
             };
 
             /**
@@ -572,11 +565,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                     _populateDefaults(config);
     
-                    _pageViewPerformanceManager = new PageViewPerformanceManager(_self.core);
-                    _pageViewManager = new PageViewManager(_self, _extConfig.overridePageViewDuration, _self.core, _pageViewPerformanceManager);
-                    _pageVisitTimeManager = new PageVisitTimeManager(_self.diagLog(), (pageName, pageUrl, pageVisitTime) => trackPageVisitTime(pageName, pageUrl, pageVisitTime))
+                    _pageViewPerformanceManager = createPageViewPerformanceManager(_self.core);
+                    _pageViewManager = createPageViewManager(_self, _extConfig.overridePageViewDuration, _self.core, _pageViewPerformanceManager);
+                    _pageVisitTimeManager = createPageVisitTimeManager(_self.diagLog(), (pageName, pageUrl, pageVisitTime) => trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
-                    _eventTracking = new Timing(_self.diagLog(), "trackEvent");
+                    _eventTracking = createTiming(_self.diagLog(), "trackEvent");
                     _eventTracking.action =
                         (name?: string, url?: string, duration?: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => {
                             if (!properties) {
@@ -592,7 +585,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         }
     
                     // initialize page view timing
-                    _pageTracking = new Timing(_self.diagLog(), "trackPageView");
+                    _pageTracking = createTiming(_self.diagLog(), "trackPageView");
                     _pageTracking.action = (name, url, duration, properties, measurements) => {
     
                         // duration must be a custom property in order for the collector to extract it
@@ -635,6 +628,16 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             _self["_getDbgPlgTargets"] = () => {
                 return [_errorHookCnt, _autoExceptionInstrumented];
             };
+            
+            function _resetAjaxAttempts() {
+                // Reset ajax attempts counter for the new page view
+                if (_self.core) {
+                    let ajaxPlugin = _self.core.getPlugin<IAjaxMonitorPlugin>("AjaxDependencyPlugin");
+                    if (ajaxPlugin && ajaxPlugin.plugin && ajaxPlugin.plugin.resetAjaxAttempts) {
+                        ajaxPlugin.plugin.resetAjaxAttempts();
+                    }
+                }
+            }
             
             function _populateDefaults(config: IConfiguration) {
                 // it is used for 1DS as well, so config type should be IConfiguration only
@@ -764,26 +767,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 }));
             }
 
-            function _getDistributedTraceCtx(): IDistributedTraceContext {
-                let distributedTraceCtx: IDistributedTraceContext = null;
-                if (_self.core && _self.core.getTraceCtx) {
-                    distributedTraceCtx = _self.core.getTraceCtx(false);
-                }
-                
-                if (!distributedTraceCtx) {
-                    // Fallback when using an older Core and PropertiesPlugin
-                    let properties = _self.core.getPlugin<PropertiesPlugin>(PropertiesPluginIdentifier);
-                    if (properties) {
-                        let context = properties.plugin.context;
-                        if (context) {
-                            distributedTraceCtx = createDistributedTraceContextFromTrace(context.telemetryTrace);
-                        }
-                    }
-                }
-
-                return distributedTraceCtx;
-            }
-
             /**
              * Create a custom "locationchange" event which is triggered each time the history object is changed
              */
@@ -813,16 +796,18 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         _currUri = fieldRedaction(_currUri, _self.core.config);
                     }
                     if (_enableAutoRouteTracking) {
-                        let distributedTraceCtx = _getDistributedTraceCtx();
-                        if (distributedTraceCtx) {
-                            distributedTraceCtx.setTraceId(generateW3CId());
-                            let traceLocationName = "_unknown_";
-                            if (locn && locn.pathname) {
-                                traceLocationName = locn.pathname + (locn.hash || "");
-                            }
 
-                            // This populates the ai.operation.name which has a maximum size of 1024 so we need to sanitize it
-                            distributedTraceCtx.setName(dataSanitizeString(_self.diagLog(), traceLocationName));
+                        // TODO(OTelSpan) (create new "context") / spans for the new page view
+                        // Should "end" any previous span (once we have a new one)
+                        let newContext = _self.core.getTraceCtx(true);
+                        // While the above will create a new context instance it doesn't generate a new traceId
+                        // so we need to generate a new one here
+                        newContext.setTraceId(generateW3CId());
+
+                        // This populates the ai.operation.name which has a maximum size of 1024 so we need to sanitize it
+                        newContext.pageName = dataSanitizeString(_self.diagLog(), newContext.pageName || "_unknown_");
+                        if (_self.core && _self.core.getTraceCtx) {
+                            _self.core.setTraceCtx(newContext);
                         }
 
                         scheduleTimeout(((uri: string) => {
@@ -913,11 +898,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 _autoUnhandledPromiseInstrumented = false;
                 _autoTrackPageVisitTime = false;
 
-                // Counts number of trackAjax invocations.
-                // By default we only monitor X ajax call per view to avoid too much load.
-                // Default value is set in config.
-                // This counter keeps increasing even after the limit is reached.
-                _trackAjaxAttempts = 0;
+                // Reset ajax attempts counter
+                _resetAjaxAttempts();
             
                 // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
                 let location = getLocation(true);

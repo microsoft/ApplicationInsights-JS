@@ -27,6 +27,12 @@ const strIsCookieUseDisabled = "isCookieUseDisabled";
 const strDisableCookiesUsage = "disableCookiesUsage";
 const strConfigCookieMgr = "_ckMgr";
 
+// Constants for pending cookie operations
+const enum ePendingOp {
+    Set = 0,
+    Purge = 1
+}
+
 let _supportsCookies: boolean = null;
 let _allowUaSameSite: boolean = null;
 let _parsedCookieValue: string = null;
@@ -50,7 +56,8 @@ const rootDefaultConfig: IConfigDefaults<IConfiguration> = {
         path: { fb: "cookiePath", dfVal: isNotNullOrUndefined },
         enabled: UNDEFINED_VALUE,
         ignoreCookies: UNDEFINED_VALUE,
-        blockedCookies: UNDEFINED_VALUE
+        blockedCookies: UNDEFINED_VALUE,
+        disableCookieDefer: false
     }),
     cookieDomain: UNDEFINED_VALUE,
     cookiePath: UNDEFINED_VALUE,
@@ -173,6 +180,112 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     let _getCookieFn: (name: string) => string;
     let _setCookieFn: (name: string, cookieValue: string) => void;
     let _delCookieFn: (name: string, cookieValue: string) => void;
+    
+    // Buffer for storing cookie operations when cookies are disabled
+    // null = deferral disabled, array = deferral enabled with pending operations
+    let _pendingCookies: Array<{ n: string; o: ePendingOp; v?: string }> | null = [];
+
+    // Helper function to format deletion cookie value
+    function _formatDeletionValue(path?: string): string {
+        let values = {
+            [STR_PATH]: path ? path : "/",
+            [strExpires]: "Thu, 01 Jan 1970 00:00:01 GMT"
+        };
+
+        if (!isIE()) {
+            // Set max age to expire now
+            values["max-age"] = "0";
+        }
+
+        return _formatCookieValue(STR_EMPTY, values);
+    }
+
+    // Helper function to format a cookie value with all attributes
+    function _formatSetCookieValue(value: string, maxAgeSec?: number, domain?: string, path?: string): string {
+        let values: any = {};
+        let theValue = strTrim(value || STR_EMPTY);
+        let idx = strIndexOf(theValue, ";");
+        if (idx !== -1) {
+            theValue = strTrim(strLeft(value, idx));
+            values = _extractParts(strSubstring(value, idx + 1));
+        }
+
+        // Only update domain if not already present (isUndefined) and the value is truthy (not null, undefined or empty string)
+        setValue(values, STR_DOMAIN,  domain || _domain, isTruthy, isUndefined);
+    
+        if (!isNullOrUndefined(maxAgeSec)) {
+            const _isIE = isIE();
+            if (isUndefined(values[strExpires])) {
+                const nowMs = utcNow();
+                // Only add expires if not already present
+                let expireMs = nowMs + (maxAgeSec * 1000);
+    
+                // Sanity check, if zero or -ve then ignore
+                if (expireMs > 0) {
+                    let expiry = new Date();
+                    expiry.setTime(expireMs);
+                    setValue(values, strExpires,
+                        _formatDate(expiry, !_isIE ? strToUTCString : strToGMTString) || _formatDate(expiry, _isIE ? strToGMTString : strToUTCString) || STR_EMPTY,
+                        isTruthy);
+                }
+            }
+    
+            if (!_isIE) {
+                // Only replace if not already present
+                setValue(values, "max-age", STR_EMPTY + maxAgeSec, null, isUndefined);
+            }
+        }
+    
+        let location = getLocation();
+        if (location && location.protocol === "https:") {
+            setValue(values, "secure", null, null, isUndefined);
+
+            // Only set same site if not also secure
+            if (_allowUaSameSite === null) {
+                _allowUaSameSite = !uaDisallowsSameSiteNone((getNavigator() || {} as Navigator).userAgent);
+            }
+
+            if (_allowUaSameSite) {
+                setValue(values, "SameSite", "None", null, isUndefined);
+            }
+        }
+    
+        setValue(values, STR_PATH, path || _path, null, isUndefined);
+        
+        return _formatCookieValue(theValue, values);
+    }
+
+    // Helper function to remove any existing pending operations for a cookie name
+    function _removePendingCookie(name: string) {
+        if (_pendingCookies) {
+            // Remove all existing entries for this cookie name (iterate backwards to handle multiple entries safely)
+            for (let i = _pendingCookies.length - 1; i >= 0; i--) {
+                if (_pendingCookies[i].n === name) {
+                    _pendingCookies.splice(i, 1);
+                }
+            }
+        }
+    }
+
+    // Helper function to flush pending cookies when cookies become enabled
+    function _flushPendingCookies() {
+        if (areCookiesSupported(logger) && _pendingCookies) {
+            // Process all pending cookie operations in order
+            arrForEach(_pendingCookies, (pendingData) => {
+                if (!_isBlockedCookie(cookieMgrConfig, pendingData.n)) {
+                    if (pendingData.o === ePendingOp.Set) {
+                        // Apply the cached cookie value directly
+                        _setCookieFn(pendingData.n, pendingData.v);
+                    } else if (pendingData.o === ePendingOp.Purge) {
+                        // Apply the cached deletion
+                        _delCookieFn(pendingData.n, pendingData.v);
+                    }
+                }
+            });
+            // Clear the cache after flushing
+            _pendingCookies = [];
+        }
+    }
 
     // Make sure the root config is dynamic as it may be the global config
     rootConfig = createDynamicConfig(rootConfig || _globalCookieConfig, null, logger).cfg;
@@ -188,12 +301,30 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 
         _path = cookieMgrConfig.path || "/";
         _domain = cookieMgrConfig.domain;
+        
+        // Handle deferral state changes based on disableCookieDefer setting
+        if (cookieMgrConfig.disableCookieDefer) {
+            // When deferral is disabled, set to null to disable any deferral behavior
+            // All pending operations are dropped
+            _pendingCookies = null;
+        } else if (_pendingCookies === null) {
+            // When deferral is enabled and was previously disabled, initialize empty buffer
+            _pendingCookies = [];
+        }
+        
+        // Check if enabled state is changing
+        let wasEnabled = _enabled;
         // Explicitly checking against false, so that setting to undefined will === true
         _enabled = _isCfgEnabled(rootConfig, cookieMgrConfig) !== false;
 
         _getCookieFn = cookieMgrConfig.getCookie || _getCookieValue;
         _setCookieFn = cookieMgrConfig.setCookie || _setCookieValue;
         _delCookieFn = cookieMgrConfig.delCookie || _setCookieValue;
+
+        // If cookies were just enabled via config change and we have pending cookies, flush them
+        if (!wasEnabled && _enabled && _pendingCookies) {
+            _flushPendingCookies();
+        }
     }, logger);
 
     let cookieMgr: ICookieMgr = {
@@ -211,74 +342,68 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             return enabled;
         },
         setEnabled: (value: boolean) => {
-            // Explicitly checking against false, so that setting to undefined will === true
-            _enabled = value !== false;
+            // Change the default config and allow the asynchronous dynamic config logic
+            // to process all of the changes at once (like handling change to the enabled and
+            // disabling caching at the same time)
             cookieMgrConfig.enabled = value;
+
+            // If this value is defined someone else might be listening to it so also update it,
+            // this also handles the edge case if the default above is not dynamic
+            if (!isUndefined(rootConfig[strDisableCookiesUsage])) {
+                rootConfig[strDisableCookiesUsage] = !value;
+            }
         },
         set: (name: string, value: string, maxAgeSec?: number, domain?: string, path?: string) => {
             let result = false;
-            if (_isMgrEnabled(cookieMgr) && !_isBlockedCookie(cookieMgrConfig, name)) {
-                let values: any = {};
-                let theValue = strTrim(value || STR_EMPTY);
-                let idx = strIndexOf(theValue, ";");
-                if (idx !== -1) {
-                    theValue = strTrim(strLeft(value, idx));
-                    values = _extractParts(strSubstring(value, idx + 1));
+            let isBlocked = _isBlockedCookie(cookieMgrConfig, name);
+            
+            if (!isBlocked) {
+                let cookieValue = _formatSetCookieValue(value, maxAgeSec, domain, path);
+                
+                if (_isMgrEnabled(cookieMgr)) {
+                    _setCookieFn(name, cookieValue);
+                    result = true;
+                } else if (_pendingCookies) {
+                    // Defer the fully formatted cookie value if cookies are disabled and deferral is enabled
+                    // Remove any previous operation for this cookie name (latest operation wins)
+                    _removePendingCookie(name);
+                    // Append new operation to the array
+                    _pendingCookies.push({
+                        n: name,
+                        o: ePendingOp.Set,
+                        v: cookieValue
+                    });
+                    result = true; // Return true to indicate the operation was "successful" (deferred)
                 }
-
-                // Only update domain if not already present (isUndefined) and the value is truthy (not null, undefined or empty string)
-                setValue(values, STR_DOMAIN,  domain || _domain, isTruthy, isUndefined);
-            
-                if (!isNullOrUndefined(maxAgeSec)) {
-                    const _isIE = isIE();
-                    if (isUndefined(values[strExpires])) {
-                        const nowMs = utcNow();
-                        // Only add expires if not already present
-                        let expireMs = nowMs + (maxAgeSec * 1000);
-            
-                        // Sanity check, if zero or -ve then ignore
-                        if (expireMs > 0) {
-                            let expiry = new Date();
-                            expiry.setTime(expireMs);
-                            setValue(values, strExpires,
-                                _formatDate(expiry, !_isIE ? strToUTCString : strToGMTString) || _formatDate(expiry, _isIE ? strToGMTString : strToUTCString) || STR_EMPTY,
-                                isTruthy);
-                        }
-                    }
-            
-                    if (!_isIE) {
-                        // Only replace if not already present
-                        setValue(values, "max-age", STR_EMPTY + maxAgeSec, null, isUndefined);
-                    }
-                }
-            
-                let location = getLocation();
-                if (location && location.protocol === "https:") {
-                    setValue(values, "secure", null, null, isUndefined);
-
-                    // Only set same site if not also secure
-                    if (_allowUaSameSite === null) {
-                        _allowUaSameSite = !uaDisallowsSameSiteNone((getNavigator() || {} as Navigator).userAgent);
-                    }
-
-                    if (_allowUaSameSite) {
-                        setValue(values, "SameSite", "None", null, isUndefined);
-                    }
-                }
-            
-                setValue(values, STR_PATH, path || _path, null, isUndefined);
-            
-                //let setCookieFn = cookieMgrConfig.setCookie || _setCookieValue;
-                _setCookieFn(name, _formatCookieValue(theValue, values));
-                result = true;
             }
 
             return result;
         },
         get: (name: string): string => {
-            let value = STR_EMPTY
-            if (_isMgrEnabled(cookieMgr) && !_isIgnoredCookie(cookieMgrConfig, name)) {
-                value = _getCookieFn(name);
+            let value = STR_EMPTY;
+            let isIgnored = _isIgnoredCookie(cookieMgrConfig, name);
+            
+            if (!isIgnored) {
+                if (_isMgrEnabled(cookieMgr)) {
+                    value = _getCookieFn(name);
+                } else if (_pendingCookies) {
+                    // Search for the most recent operation for this cookie (search backwards through array)
+                    for (let i = _pendingCookies.length - 1; i >= 0; i--) {
+                        let pendingData = _pendingCookies[i];
+                        if (pendingData.n === name) {
+                            // Found the most recent operation for this cookie name
+                            if (pendingData.o === ePendingOp.Set) {
+                                // Return deferred value if it was a set operation
+                                // Extract the value part from the formatted cookie string (before first semicolon)
+                                let cookieValue = pendingData.v;
+                                let idx = strIndexOf(cookieValue, ";");
+                                value = idx !== -1 ? strTrim(strLeft(cookieValue, idx)) : strTrim(cookieValue);
+                            }
+                            // If it was a Purge operation, value remains empty (STR_EMPTY)
+                            break;
+                        }
+                    }
+                }
             }
 
             return value;
@@ -288,6 +413,17 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             if (_isMgrEnabled(cookieMgr)) {
                 // Only remove the cookie if the manager and cookie support has not been disabled
                 result = cookieMgr.purge(name, path);
+            } else if (_pendingCookies) {
+                // Defer the deletion operation when cookies are disabled and deferral is enabled
+                // Remove any previous operation for this cookie name (latest operation wins)
+                _removePendingCookie(name);
+                // Append new deletion operation to the array
+                _pendingCookies.push({
+                    n: name,
+                    o: ePendingOp.Purge,
+                    v: _formatDeletionValue(path)
+                });
+                result = true;
             }
 
             return result;
@@ -296,18 +432,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             let result = false;
             if (areCookiesSupported(logger)) {
                 // Setting the expiration date in the past immediately removes the cookie
-                let values = {
-                    [STR_PATH]: path ? path : "/",
-                    [strExpires]: "Thu, 01 Jan 1970 00:00:01 GMT"
-                }
-
-                if (!isIE()) {
-                    // Set max age to expire now
-                    values["max-age"] = "0"
-                }
-
-                // let delCookie = cookieMgrConfig.delCookie || _setCookieValue;
-                _delCookieFn(name, _formatCookieValue(STR_EMPTY, values));
+                _delCookieFn(name, _formatDeletionValue(path));
                 result = true;
             }
 
@@ -316,6 +441,8 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         unload: (isAsync?: boolean): void | IPromise<void> => {
             unloadHandler && unloadHandler.rm();
             unloadHandler = null;
+            // Clear any pending cookies on unload
+            _pendingCookies = null;
         }
     };
 
