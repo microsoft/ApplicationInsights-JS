@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import dynamicProto from "@microsoft/dynamicproto-js";
 import { IPageViewPerformanceTelemetryInternal, dateTimeUtilsDuration, msToTimeSpan } from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, getNavigator, getPerformance, safeGetLogger
@@ -83,139 +82,135 @@ function _shouldCollectDuration(...durations: number[]): boolean {
 }
 
 /**
- * Class encapsulates sending page view performance telemetry.
+ * Internal interface for PageViewPerformanceManager.
+ * @internal
  */
-export class PageViewPerformanceManager {
+export interface IPageViewPerformanceManager {
 
-    constructor(core: IAppInsightsCore) {
-        let _logger: IDiagnosticLogger = safeGetLogger(core);
+    populatePageViewPerformanceEvent(pageViewPerformance: IPageViewPerformanceTelemetryInternal): void;
 
-        dynamicProto(PageViewPerformanceManager, this, (_self) => {
-            _self.populatePageViewPerformanceEvent = (pageViewPerformance: IPageViewPerformanceTelemetryInternal): void => {
-                pageViewPerformance.isValid = false;
-        
-                /*
-                 * http://www.w3.org/TR/navigation-timing/#processing-model
-                 *  |-navigationStart
-                 *  |             |-connectEnd
-                 *  |             ||-requestStart
-                 *  |             ||             |-responseStart
-                 *  |             ||             |              |-responseEnd
-                 *  |             ||             |              |
-                 *  |             ||             |              |         |-loadEventEnd
-                 *  |---network---||---request---|---response---|---dom---|
-                 *  |--------------------------total----------------------|
-                 *
-                 *  total = The difference between the load event of the current document is completed and the first recorded timestamp of the performance entry : https://developer.mozilla.org/en-US/docs/Web/Performance/Navigation_and_resource_timings#duration
-                 *  network = Redirect time + App Cache + DNS lookup time + TCP connection time
-                 *  request = Request time : https://developer.mozilla.org/en-US/docs/Web/Performance/Navigation_and_resource_timings#request_time
-                 *  response = Response time
-                 *  dom = Document load time : https://html.spec.whatwg.org/multipage/dom.html#document-load-timing-info
-                 *      = Document processing time : https://developers.google.com/web/fundamentals/performance/navigation-and-resource-timing/#document_processing
-                 *      + Loading time : https://developers.google.com/web/fundamentals/performance/navigation-and-resource-timing/#loading
-                 */
-                const navigationTiming = _getPerformanceNavigationTiming();
-                const timing = _getPerformanceTiming();
-                let total = 0;
-                let network = 0;
-                let request = 0;
-                let response = 0;
-                let dom = 0;
-        
-                if (navigationTiming || timing) {
-                    if (navigationTiming) {
-                        total = navigationTiming.duration;
-                        /**
-                         * support both cases:
-                         * - startTime is always zero: https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming
-                         * - for older browsers where the startTime is not zero
-                         */
-                        network = navigationTiming.startTime === 0 ? navigationTiming.connectEnd : dateTimeUtilsDuration(navigationTiming.startTime, navigationTiming.connectEnd);
-                        request = dateTimeUtilsDuration(navigationTiming.requestStart, navigationTiming.responseStart);
-                        response = dateTimeUtilsDuration(navigationTiming.responseStart, navigationTiming.responseEnd);
-                        dom = dateTimeUtilsDuration(navigationTiming.responseEnd, navigationTiming.loadEventEnd);
-                    } else {
-                        total = dateTimeUtilsDuration(timing.navigationStart, timing.loadEventEnd);
-                        network = dateTimeUtilsDuration(timing.navigationStart, timing.connectEnd);
-                        request = dateTimeUtilsDuration(timing.requestStart, timing.responseStart);
-                        response = dateTimeUtilsDuration(timing.responseStart, timing.responseEnd);
-                        dom = dateTimeUtilsDuration(timing.responseEnd, timing.loadEventEnd);
-                    }
-        
-                    if (total === 0) {
-                        _throwInternal(_logger,
-                            eLoggingSeverity.WARNING,
-                            _eInternalMessageId.ErrorPVCalc,
-                            "error calculating page view performance.",
-                            { total, network, request, response, dom });
-        
-                    } else if (!_self.shouldCollectDuration(total, network, request, response, dom)) {
-                        _throwInternal(_logger,
-                            eLoggingSeverity.WARNING,
-                            _eInternalMessageId.InvalidDurationValue,
-                            "Invalid page load duration value. Browser perf data won't be sent.",
-                            { total, network, request, response, dom });
-        
-                    } else if (total < mathFloor(network) + mathFloor(request) + mathFloor(response) + mathFloor(dom)) {
-                        // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
-                        // in this case, don't report client performance from this page
-                        _throwInternal(_logger,
-                            eLoggingSeverity.WARNING,
-                            _eInternalMessageId.ClientPerformanceMathError,
-                            "client performance math error.",
-                            { total, network, request, response, dom });
-        
-                    } else {
-                        pageViewPerformance.durationMs = total;
-                        // // convert to timespans
-                        pageViewPerformance.perfTotal = pageViewPerformance.duration = msToTimeSpan(total);
-                        pageViewPerformance.networkConnect = msToTimeSpan(network);
-                        pageViewPerformance.sentRequest = msToTimeSpan(request);
-                        pageViewPerformance.receivedResponse = msToTimeSpan(response);
-                        pageViewPerformance.domProcessing = msToTimeSpan(dom);
-                        pageViewPerformance.isValid = true;
-                    }
-                }
-            }
-        
-            _self.getPerformanceTiming = _getPerformanceTiming;
-            _self.isPerformanceTimingSupported = _isPerformanceTimingSupported;
-            _self.isPerformanceTimingDataReady = _isPerformanceTimingDataReady;
-            _self.shouldCollectDuration = _shouldCollectDuration;
-        });
-    }
-
-    public populatePageViewPerformanceEvent(pageViewPerformance: IPageViewPerformanceTelemetryInternal): void {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    }
-
-    public getPerformanceTiming(): PerformanceTiming | null {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return null;
-    }
+    getPerformanceTiming(): PerformanceTiming | null;
 
     /**
     * Returns true is window performance timing API is supported, false otherwise.
     */
-    public isPerformanceTimingSupported() {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return true;
-    }
+    isPerformanceTimingSupported(): boolean;
 
     /**
     * As page loads different parts of performance timing numbers get set. When all of them are set we can report it.
     * Returns true if ready, false otherwise.
     */
-    public isPerformanceTimingDataReady() {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return true;
-    }
+    isPerformanceTimingDataReady(): boolean;
 
     /**
     * This method tells if given durations should be excluded from collection.
     */
-    public shouldCollectDuration(...durations: number[]): boolean {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return true;
-    }
+    shouldCollectDuration(...durations: number[]): boolean;
+}
+
+/**
+ * Factory function to create a PageViewPerformanceManager instance.
+ * @param core - App Insights core instance
+ * @returns A new IPageViewPerformanceManager instance.
+ * @internal
+ */
+export function createPageViewPerformanceManager(core: IAppInsightsCore): IPageViewPerformanceManager {
+    let _logger: IDiagnosticLogger = safeGetLogger(core);
+
+    return {
+        populatePageViewPerformanceEvent: (pageViewPerformance: IPageViewPerformanceTelemetryInternal): void => {
+            pageViewPerformance.isValid = false;
+    
+            /*
+             * http://www.w3.org/TR/navigation-timing/#processing-model
+             *  |-navigationStart
+             *  |             |-connectEnd
+             *  |             ||-requestStart
+             *  |             ||             |-responseStart
+             *  |             ||             |              |-responseEnd
+             *  |             ||             |              |
+             *  |             ||             |              |         |-loadEventEnd
+             *  |---network---||---request---|---response---|---dom---|
+             *  |--------------------------total----------------------|
+             *
+             *  total = The difference between the load event of the current document is completed and the first recorded timestamp of the performance entry : https://developer.mozilla.org/en-US/docs/Web/Performance/Navigation_and_resource_timings#duration
+             *  network = Redirect time + App Cache + DNS lookup time + TCP connection time
+             *  request = Request time : https://developer.mozilla.org/en-US/docs/Web/Performance/Navigation_and_resource_timings#request_time
+             *  response = Response time
+             *  dom = Document load time : https://html.spec.whatwg.org/multipage/dom.html#document-load-timing-info
+             *      = Document processing time : https://developers.google.com/web/fundamentals/performance/navigation-and-resource-timing/#document_processing
+             *      + Loading time : https://developers.google.com/web/fundamentals/performance/navigation-and-resource-timing/#loading
+             */
+            const navigationTiming = _getPerformanceNavigationTiming();
+            const timing = _getPerformanceTiming();
+            let total = 0;
+            let network = 0;
+            let request = 0;
+            let response = 0;
+            let dom = 0;
+    
+            if (navigationTiming || timing) {
+                if (navigationTiming) {
+                    total = navigationTiming.duration;
+                    /**
+                     * support both cases:
+                     * - startTime is always zero: https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming
+                     * - for older browsers where the startTime is not zero
+                     */
+                    network = navigationTiming.startTime === 0 ? navigationTiming.connectEnd : dateTimeUtilsDuration(navigationTiming.startTime, navigationTiming.connectEnd);
+                    request = dateTimeUtilsDuration(navigationTiming.requestStart, navigationTiming.responseStart);
+                    response = dateTimeUtilsDuration(navigationTiming.responseStart, navigationTiming.responseEnd);
+                    dom = dateTimeUtilsDuration(navigationTiming.responseEnd, navigationTiming.loadEventEnd);
+                } else {
+                    total = dateTimeUtilsDuration(timing.navigationStart, timing.loadEventEnd);
+                    network = dateTimeUtilsDuration(timing.navigationStart, timing.connectEnd);
+                    request = dateTimeUtilsDuration(timing.requestStart, timing.responseStart);
+                    response = dateTimeUtilsDuration(timing.responseStart, timing.responseEnd);
+                    dom = dateTimeUtilsDuration(timing.responseEnd, timing.loadEventEnd);
+                }
+    
+                if (total === 0) {
+                    _throwInternal(_logger,
+                        eLoggingSeverity.WARNING,
+                        _eInternalMessageId.ErrorPVCalc,
+                        "error calculating page view performance.",
+                        { total, network, request, response, dom });
+    
+                } else if (!_shouldCollectDuration(total, network, request, response, dom)) {
+                    _throwInternal(_logger,
+                        eLoggingSeverity.WARNING,
+                        _eInternalMessageId.InvalidDurationValue,
+                        "Invalid page load duration value. Browser perf data won't be sent.",
+                        { total, network, request, response, dom });
+    
+                } else if (total < mathFloor(network) + mathFloor(request) + mathFloor(response) + mathFloor(dom)) {
+                    // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
+                    // in this case, don't report client performance from this page
+                    _throwInternal(_logger,
+                        eLoggingSeverity.WARNING,
+                        _eInternalMessageId.ClientPerformanceMathError,
+                        "client performance math error.",
+                        { total, network, request, response, dom });
+    
+                } else {
+                    pageViewPerformance.durationMs = total;
+                    // // convert to timespans
+                    pageViewPerformance.perfTotal = pageViewPerformance.duration = msToTimeSpan(total);
+                    pageViewPerformance.networkConnect = msToTimeSpan(network);
+                    pageViewPerformance.sentRequest = msToTimeSpan(request);
+                    pageViewPerformance.receivedResponse = msToTimeSpan(response);
+                    pageViewPerformance.domProcessing = msToTimeSpan(dom);
+                    pageViewPerformance.isValid = true;
+                }
+            }
+        },
+
+        getPerformanceTiming: _getPerformanceTiming,
+
+        isPerformanceTimingSupported: _isPerformanceTimingSupported,
+
+        isPerformanceTimingDataReady: _isPerformanceTimingDataReady,
+
+        shouldCollectDuration: _shouldCollectDuration
+    };
 }

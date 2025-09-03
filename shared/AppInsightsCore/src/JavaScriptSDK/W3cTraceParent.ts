@@ -1,4 +1,5 @@
-import { arrForEach, isArray, isString, strLeft, strTrim } from "@nevware21/ts-utils";
+import { arrForEach, isArray, isNullOrUndefined, isString, strLeft, strTrim } from "@nevware21/ts-utils";
+import { eW3CTraceFlags } from "../JavaScriptSDK.Enums/W3CTraceFlags";
 import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
 import { generateW3CId } from "./CoreUtils";
 import { findMetaTag, findNamedServerTiming } from "./EnvUtils";
@@ -8,8 +9,8 @@ import { STR_EMPTY } from "./InternalConstants";
 const TRACE_PARENT_REGEX = /^([\da-f]{2})-([\da-f]{32})-([\da-f]{16})-([\da-f]{2})(-[^\s]{1,64})?$/i;
 const DEFAULT_VERSION = "00";
 const INVALID_VERSION = "ff";
-const INVALID_TRACE_ID = "00000000000000000000000000000000";
-const INVALID_SPAN_ID = "0000000000000000";
+export const INVALID_TRACE_ID = "00000000000000000000000000000000";
+export const INVALID_SPAN_ID = "0000000000000000";
 const SAMPLED_FLAG = 0x01;
 
 function _isValid(value: string, len: number, invalidValue?: string): boolean {
@@ -55,7 +56,7 @@ export function createTraceParent(traceId?: string, spanId?: string, flags?: num
         version: _isValid(version, 2, INVALID_VERSION) ? version : DEFAULT_VERSION,
         traceId: isValidTraceId(traceId) ? traceId : generateW3CId(),
         spanId: isValidSpanId(spanId) ? spanId : strLeft(generateW3CId(), 16),
-        traceFlags: flags >= 0 && flags <= 0xFF ? flags : 1
+        traceFlags: (!isNullOrUndefined(flags) && flags >= 0 && flags <= 0xFF ? flags : eW3CTraceFlags.Sampled)
     };
 }
 
@@ -74,7 +75,7 @@ export function parseTraceParent(value: string, selectIdx?: number): ITraceParen
 
     if (isArray(value)) {
         // The value may have been encoded on the page into an array so handle this automatically
-        value = value[0] || "";
+        value = value[0] || STR_EMPTY;
     }
 
     if (!value || !isString(value) || value.length > 8192) {
@@ -88,6 +89,7 @@ export function parseTraceParent(value: string, selectIdx?: number): ITraceParen
     }
 
     // See https://www.w3.org/TR/trace-context/#versioning-of-traceparent
+    TRACE_PARENT_REGEX.lastIndex = 0;
     const match = TRACE_PARENT_REGEX.exec(strTrim(value));
     if (!match ||                               // No match
             match[1] === INVALID_VERSION ||     // version ff is forbidden
@@ -185,7 +187,7 @@ export function formatTraceParent(value: ITraceParent) {
         return `${version.toLowerCase()}-${_formatValue(value.traceId, 32, INVALID_TRACE_ID).toLowerCase()}-${_formatValue(value.spanId, 16, INVALID_SPAN_ID).toLowerCase()}-${flags.toLowerCase()}`;
     }
 
-    return "";
+    return STR_EMPTY;
 }
 
 /**

@@ -31,7 +31,7 @@ function _stringToBoolOrDefault<T>(theValue: any, defaultValue: boolean, theConf
  * @param defaultValue - The default value to apply it not provided or it's not valid
  * @returns a new IConfigDefaultCheck structure
  */
-export function cfgDfMerge<V, T = IConfiguration, C = IConfiguration>(defaultValue: V | IConfigDefaults<V, T>): IConfigDefaultCheck<T, V, C> {
+export function cfgDfMerge<V, T = IConfiguration, C = IConfiguration>(defaultValue: (V | undefined) | IConfigDefaults<V | undefined, T>): IConfigDefaultCheck<T, V | undefined, C> {
     return {
         mrg: true,
         v: defaultValue

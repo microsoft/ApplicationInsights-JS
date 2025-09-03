@@ -21,7 +21,7 @@ export function getImageHref(element: HTMLImageElement): string {
     var temp = element;
     if (temp) {
         var parent = findClosestAnchor(temp as Element);
-        if ((parent as any).length === 1) {
+        if (parent && (parent as any).length === 1) {
             const firstParent = parent[0];
             if (firstParent.href) {
                 return firstParent.href;

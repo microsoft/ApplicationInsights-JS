@@ -164,9 +164,9 @@ export class ApplicationInsights {
 
     /**
      * Immediately send all batched telemetry
-     * @param async - Should the flush be performed asynchronously
+     * @param isAsync - Should the flush be performed asynchronously
      */
-    public flush(async: boolean = true) {
+    public flush(isAsync: boolean = true) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

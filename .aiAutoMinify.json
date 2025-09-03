@@ -3,7 +3,9 @@
         "@microsoft/applicationinsights-core-js": {
             "constEnums": [
                 "_eSetDynamicPropertyFlags",
+                "ePendingOp",
                 "CallbackType",
+                "eTraceStateKeyType",
                 "eEventsDiscardedReason",
                 "eBatchDiscardedReason",
                 "FeatureOptInMode",
@@ -15,7 +17,9 @@
                 "TransportType",
                 "eStatsType",
                 "TelemetryUnloadReason",
-                "TelemetryUpdateReason"
+                "TelemetryUpdateReason",
+                "eTraceHeadersMode",
+                "eW3CTraceFlags"
             ]
         },
         "@microsoft/applicationinsights-perfmarkmeasure-js": {

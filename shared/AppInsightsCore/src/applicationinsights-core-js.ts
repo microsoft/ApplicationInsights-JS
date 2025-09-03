@@ -81,7 +81,7 @@ export {
     ProcessTelemetryContext, createProcessTelemetryContext
     // Explicitly NOT exporting createProcessTelemetryUnloadContext() and createProcessTelemetryUpdateContext() as these should only be created internally
 } from "./JavaScriptSDK/ProcessTelemetryContext";
-export { initializePlugins, sortPlugins, unloadComponents } from "./JavaScriptSDK/TelemetryHelpers";
+export { initializePlugins, sortPlugins, unloadComponents, createDistributedTraceContext } from "./JavaScriptSDK/TelemetryHelpers";
 export { _eInternalMessageId, _InternalMessageId, LoggingSeverity, eLoggingSeverity } from "./JavaScriptSDK.Enums/LoggingEnums";
 export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs, InstrumentEvent } from "./JavaScriptSDK/InstrumentHooks";
 export { ICookieMgr, ICookieMgrConfig } from "./JavaScriptSDK.Interfaces/ICookieMgr";
@@ -99,7 +99,8 @@ export { ITelemetryUnloadState } from "./JavaScriptSDK.Interfaces/ITelemetryUnlo
 export { IDistributedTraceContext } from "./JavaScriptSDK.Interfaces/IDistributedTraceContext";
 export { ITraceParent } from "./JavaScriptSDK.Interfaces/ITraceParent";
 export {
-    createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent, findAllScripts
+    createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent,
+    findAllScripts
 } from "./JavaScriptSDK/W3cTraceParent";
 
 // Dynamic Config definitions
@@ -110,3 +111,21 @@ export { IWatchDetails, IWatcherHandler, WatcherFunction } from "./Config/IDynam
 export { createDynamicConfig, onConfigChange } from "./Config/DynamicConfig";
 export { getDynamicConfigHandler, blockDynamicConversion, forceDynamicConversion } from "./Config/DynamicSupport";
 export { cfgDfValidate, cfgDfMerge, cfgDfBoolean, cfgDfFunc, cfgDfString, cfgDfSet, cfgDfBlockPropValue } from "./Config/ConfigDefaultHelpers";
+
+// W3c TraceState support
+export { eW3CTraceFlags } from "./JavaScriptSDK.Enums/W3CTraceFlags";
+export { IW3cTraceState } from "./JavaScriptSDK.Interfaces/IW3cTraceState";
+export { createW3cTraceState, findW3cTraceState, isW3cTraceState, snapshotW3cTraceState } from "./JavaScriptSDK/W3cTraceState";
+
+// ==========================================================================
+// OpenTelemetry exports
+// ==========================================================================
+
+
+// ---------------------------------------------------------------------------
+// Interfaces
+// ---------------------------------------------------------------------------
+
+// Trace
+export { IOTelTraceState } from "./OpenTelemetry/interfaces/trace/IOTelTraceState";
+export { IOTelSpanContext } from "./OpenTelemetry/interfaces/trace/IOTelSpanContext";
