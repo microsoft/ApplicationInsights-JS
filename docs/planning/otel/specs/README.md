@@ -9,14 +9,7 @@ Start with the main specification document: [../OTelWebSdk.md](../OTelWebSdk.md)
 ## Component Specifications
 
 ### Core Implementation
-- **[OTelWebSdk-Core.md](./OTelWebSdk-Core.md)** - SDK factory, lifecycle, and core functionality
 - **[OTelWebSdk-Architecture.md](./OTelWebSdk-Architecture.md)** - Architecture patterns, IoC principles, and design details
-
-### Provider Implementations
-- **[OTelWebSdk-Trace.md](./OTelWebSdk-Trace.md)** - Tracing provider with web-specific optimizations
-- **[OTelWebSdk-Log.md](./OTelWebSdk-Log.md)** - Logging provider with structured logging support
-- **[OTelWebSdk-Metric.md](./OTelWebSdk-Metric.md)** - Basic metrics provider implementation
-- **[OTelWebSdk-Context.md](./OTelWebSdk-Context.md)** - Context propagation and management
 
 ### Feature Specifications
 - **[OTelWebSdk-TelemetryInitializers.md](./OTelWebSdk-TelemetryInitializers.md)** - Lightweight telemetry processors

@@ -52,54 +52,52 @@ export function createTraceProvider(config: ITraceProviderConfig): ITraceProvide
 
   let _self = {} as ITraceProvider;
 
-  dynamicProto(TraceProvider, _self, (_self, _base) => {
+  // Define methods directly on the interface instance
+  _self.getTracer = (name: string, version?: string, options?: ITracerOptions): ITracer => {
+    if (_isShutdown) {
+      logger.warn("TraceProvider is shutdown, returning no-op tracer");
+      return createNoOpTracer();
+    }
     
-    _self.getTracer = (name: string, version?: string, options?: ITracerOptions): ITracer => {
-      if (_isShutdown) {
-        logger.warn("TraceProvider is shutdown, returning no-op tracer");
-        return createNoOpTracer();
-      }
-      
-      const key = `${name}@${version || 'unknown'}`;
-      let tracer = _tracers.get(key);
-      
-      if (!tracer) {
-        // Inject dependencies into tracer creation
-        tracer = createTracer({
-          name,
-          version,
-          resource,           // Injected from provider config
-          spanProcessors,     // Injected from provider config
-          sampler,           // Injected from provider config
-          idGenerator,       // Injected from provider config
-          contextManager,    // Injected from provider config
-          logger,            // Injected from provider config
-          clock,             // Injected from provider config
-          performanceNow,    // Injected from provider config
-          ...options
-        });
-        _tracers.set(key, tracer);
-      }
-      
-      return tracer;
-    };
+    const key = `${name}@${version || 'unknown'}`;
+    let tracer = _tracers.get(key);
+    
+    if (!tracer) {
+      // Inject dependencies into tracer creation
+      tracer = createTracer({
+        name,
+        version,
+        resource,           // Injected from provider config
+        spanProcessors,     // Injected from provider config
+        sampler,           // Injected from provider config
+        idGenerator,       // Injected from provider config
+        contextManager,    // Injected from provider config
+        logger,            // Injected from provider config
+        clock,             // Injected from provider config
+        performanceNow,    // Injected from provider config
+        ...options
+      });
+      _tracers.set(key, tracer);
+    }
+    
+    return tracer;
+  };
 
-    // All operations use injected dependencies, never global state
-    _self.shutdown = async (): Promise<void> => {
-      if (_isShutdown) return;
-      
-      _isShutdown = true;
-      
-      // Shutdown injected processors
-      await Promise.all(spanProcessors.map(processor => 
-        processor.shutdown().catch(err => 
-          logger.error("Error shutting down processor", err)
-        )
-      ));
-      
-      _tracers.clear();
-    };
-  });
+  // All operations use injected dependencies, never global state
+  _self.shutdown = async (): Promise<void> => {
+    if (_isShutdown) return;
+    
+    _isShutdown = true;
+    
+    // Shutdown injected processors
+    await Promise.all(spanProcessors.map(processor => 
+      processor.shutdown().catch(err => 
+        logger.error("Error shutting down processor", err)
+      )
+    ));
+    
+    _tracers.clear();
+  };
 
   return _self;
 }
@@ -281,11 +279,13 @@ export type LogSeverity = number | eLogSeverity;
 - **Enum documentation with value explanations** and mapping to OpenTelemetry specification values
 - **Clear distinction between internal const enums and public enum objects** with appropriate `@internal` tags
 
-### 2. Closure-Based Implementation with DynamicProto
-- **Performance Optimization**: Uses closures combined with DynamicProto-JS for optimal runtime performance
-- **Memory Efficiency**: Reduced memory footprint through shared prototype methods
-- **Tree-Shaking**: Enhanced dead code elimination for minimal bundle sizes
-- **Private State Management**: True encapsulation of internal state without exposing implementation details
+### 2. Closure-Based Implementation OR DynamicProto-JS Classes
+- **Implementation Choice**: Use EITHER closure pattern for interface implementations OR DynamicProto-JS for class-based implementations
+- **Closure Pattern**: Use closures when implementing interfaces - provides private member hiding with direct object property assignment
+- **DynamicProto Classes**: Use DynamicProto-JS when you need class inheritance - provides private member hiding with prototype-based inheritance
+- **Bundle Size Optimization**: Both patterns provide optimal bundle size through tree-shaking and dead code elimination
+- **Private Member Hiding**: Both patterns provide true encapsulation - closures through closure variables, DynamicProto through internal closures
+- **Usage Guideline**: Use closures for interface implementations, use DynamicProto only when class inheritance is required
 
 ### 3. Factory Function Pattern with Dependency Injection
 - **Controlled Instantiation**: All components created through factory functions following `create*` naming convention
@@ -338,7 +338,7 @@ The SDK implements a complete set of enterprise-grade features following strict 
 9. **High-Performance Architecture**: Minimal overhead design with advanced batching, resource management, and bundle optimization
 10. **Context Management**: Better control over context propagation with explicit context creation and management
 11. **Extensibility**: Support for custom exporters, processors, and samplers to extend functionality
-12. **DynamicProto-JS**: When classes are required, use DynamicProto-JS for complex implementations to optimize performance while maintaining prototype inheritance benefits
+12. **DynamicProto-JS**: When classes are required, use DynamicProto-JS for complex implementations to optimize bundle size while maintaining prototype inheritance benefits
 13. **Azure Monitor Integration**: Seamless integration with Azure Monitor through specialized exporters
 
 ## SDK Instance Factory Architecture
@@ -863,25 +863,26 @@ This dual approach provides OpenTelemetry standard compliance while delivering t
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Closure Pattern with DynamicProto
+## Implementation Patterns: Closures OR DynamicProto Classes
 
-Instead of using traditional ES6 classes, the SDK uses closures combined with DynamicProto-JS to optimize performance and reduce bundle size. This approach provides significant advantages for production web applications:
+The SDK uses two distinct implementation patterns depending on the specific requirements:
 
-### Benefits of Closure + DynamicProto Pattern
+### Pattern 1: Closure-Based Interface Implementation
 
-1. **Superior Minification**: Closure variables can be aggressively minified by modern bundlers
+For most interface implementations, the SDK uses closures with direct object property assignment:
+
+### Benefits of Closure Pattern
+
+1. **Superior Bundle Size Optimization**: Closure variables can be aggressively minified by modern bundlers
 2. **True Private State**: Internal variables remain completely inaccessible from outside the closure
-3. **Enhanced Performance**: Eliminates prototype chain traversal overhead for frequently accessed methods
-4. **Reduced Bundle Size**: More effective tree-shaking and dead code elimination
-5. **Browser Compatibility**: Works consistently across all target browsers including legacy environments
-6. **Memory Efficiency**: Shared prototype methods reduce per-instance memory overhead
-7. **Runtime Optimization**: V8 and other engines can better optimize closure-based code
+3. **Enhanced Tree-Shaking**: More effective dead code elimination for minimal bundle sizes
+4. **Browser Compatibility**: Works consistently across all target browsers including legacy environments
+5. **Efficient Implementation**: Direct property assignment with optimized execution patterns
+6. **Runtime Optimization**: V8 and other engines can better optimize closure-based code
 
 ### Implementation Pattern
 
 ```typescript
-import { dynamicProto } from "@microsoft/dynamicproto-js";
-
 export function createTraceProvider(config: ITraceProviderConfig): ITraceProvider {
   // Private closure variables - completely encapsulated
   let _config = { ...defaultConfig, ...config };
@@ -896,71 +897,159 @@ export function createTraceProvider(config: ITraceProviderConfig): ITraceProvide
   // Create the interface instance
   let _self = {} as ITraceProvider;
 
-  // Apply DynamicProto pattern for optimal performance
-  dynamicProto(TraceProvider, _self, (_self, _base) => {
+  // Define methods directly on the interface instance
+  // Public method implementations with closure access
+  _self.getTracer = (name: string, version?: string, options?: ITracerOptions): ITracer => {
+    if (_isShutdown) {
+      _logger.warn("TraceProvider is shutdown, returning no-op tracer");
+      return createNoOpTracer();
+    }
     
-    // Public method implementations with closure access
-    _self.getTracer = (name: string, version?: string, options?: ITracerOptions): ITracer => {
-      if (_isShutdown) {
-        _logger.warn("TraceProvider is shutdown, returning no-op tracer");
-        return createNoOpTracer();
-      }
-      
-      const key = `${name}@${version || 'unknown'}`;
-      let tracer = _tracers.get(key);
-      
-      if (!tracer) {
-        tracer = createTracer({
-          name,
-          version,
-          traceProvider: _self,
-          resource: _config.resource,
-          ...options
-        });
-        _tracers.set(key, tracer);
-      }
-      
-      return tracer;
-    };
+    const key = `${name}@${version || 'unknown'}`;
+    let tracer = _tracers.get(key);
+    
+    if (!tracer) {
+      tracer = createTracer({
+        name,
+        version,
+        traceProvider: _self,
+        resource: _config.resource,
+        ...options
+      });
+      _tracers.set(key, tracer);
+    }
+    
+    return tracer;
+  };
 
-    _self.addSpanProcessor = (processor: ISpanProcessor): void => {
-      if (_isShutdown) {
-        throw new Error("Cannot add processor to shutdown TraceProvider");
-      }
-      
-      _processors.push(processor);
-      // Notify existing tracers of new processor
-      _tracers.forEach(tracer => tracer._addProcessor(processor));
-    };
+  _self.addSpanProcessor = (processor: ISpanProcessor): void => {
+    if (_isShutdown) {
+      throw new Error("Cannot add processor to shutdown TraceProvider");
+    }
+    
+    _processors.push(processor);
+    // Notify existing tracers of new processor
+    _tracers.forEach(tracer => tracer._addProcessor(processor));
+  };
 
-    _self.shutdown = async (): Promise<void> => {
-      if (_isShutdown) return;
-      
-      _isShutdown = true;
-      
-      // Shutdown all processors in parallel
-      await Promise.all(_processors.map(processor => 
-        processor.shutdown().catch(err => 
-          _logger.error("Error shutting down processor", err)
-        )
-      ));
-      
-      // Clear references for garbage collection
-      _tracers.clear();
-      _processors.length = 0;
+  _self.shutdown = async (): Promise<void> => {
+    if (_isShutdown) return;
+    
+    _isShutdown = true;
+    
+    // Shutdown all processors in parallel
+    await Promise.all(_processors.map(processor => 
+      processor.shutdown().catch(err => 
+        _logger.error("Error shutting down processor", err)
+      )
+    ));
+    
+    // Clear references for garbage collection
+    _tracers.clear();
+    _processors.length = 0;
+  };
+
+  return _self;
+}
+```
+
+### Pattern 2: DynamicProto-JS Classes (When Inheritance is Needed)
+
+When class inheritance or complex prototype chains are required, use DynamicProto-JS:
+
+```typescript
+import { dynamicProto } from "@microsoft/dynamicproto-js";
+
+export function createComplexProcessor(config: IProcessorConfig): ISpanProcessor {
+  // Private closure variables
+  let _config = { ...config };
+  let _isShutdown = false;
+  
+  // Create class instance
+  let _self = {} as ISpanProcessor;
+  
+  // Use DynamicProto for complex inheritance scenarios
+  dynamicProto(BaseProcessor, _self, (_self) => {
+    
+    _self.onStart = (span: ISpan): void => {
+      // Implementation with access to closure variables
+      if (!_isShutdown) {
+        // Process span using _config
+      }
     };
+    
+    _self.onEnd = (span: ISpan): void => {
+      // Implementation
+    };
+    
   });
-
+  
   return _self;
 }
 
 /**
- * @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+ * @DynamicProtoStub
  */
-function TraceProvider() {
-  // This is a stub for TypeScript definitions - actual implementation is in the closure
+function BaseProcessor() {
+  // Stub for DynamicProto
 }
 ```
+  let _self = {} as ITraceProvider;
+
+  // Define methods directly on the interface instance
+  // Public method implementations with closure access
+  _self.getTracer = (name: string, version?: string, options?: ITracerOptions): ITracer => {
+    if (_isShutdown) {
+      _logger.warn("TraceProvider is shutdown, returning no-op tracer");
+      return createNoOpTracer();
+    }
+    
+    const key = `${name}@${version || 'unknown'}`;
+    let tracer = _tracers.get(key);
+    
+    if (!tracer) {
+      tracer = createTracer({
+        name,
+        version,
+        traceProvider: _self,
+        resource: _config.resource,
+        ...options
+      });
+      _tracers.set(key, tracer);
+    }
+    
+    return tracer;
+  };
+
+  _self.addSpanProcessor = (processor: ISpanProcessor): void => {
+    if (_isShutdown) {
+      throw new Error("Cannot add processor to shutdown TraceProvider");
+    }
+    
+    _processors.push(processor);
+    // Notify existing tracers of new processor
+    _tracers.forEach(tracer => tracer._addProcessor(processor));
+  };
+
+  _self.shutdown = async (): Promise<void> => {
+    if (_isShutdown) return;
+    
+    _isShutdown = true;
+    
+    // Shutdown all processors in parallel
+    await Promise.all(_processors.map(processor => 
+      processor.shutdown().catch(err => 
+        _logger.error("Error shutting down processor", err)
+      )
+    ));
+    
+    // Clear references for garbage collection
+    _tracers.clear();
+    _processors.length = 0;
+  };
+
+  return _self;
+}
 
 ### Performance Characteristics
 
@@ -968,7 +1057,7 @@ function TraceProvider() {
 - **Span Creation**: <0.1ms per span with minimal memory allocation
 - **Context Propagation**: <0.05ms per operation with optimized header handling
 - **Bundle Size**: 15-25KB gzipped for full SDK (vs 40-60KB for class-based implementations)
-- **Memory Usage**: 50-70% reduction compared to traditional prototype-based patterns
+- **Memory Usage**: DynamicProto provides 50-70% reduction through shared prototypes; closures optimize per-instance overhead
 
 ## Interface Design and Naming Conventions
 
@@ -1703,15 +1792,6 @@ The Implementation document provides:
 - Specific interface requirements and implementation patterns
 - Timeline and milestone planning
 - Resource coordination and dependency management
-
-### Related Implementation Documents
-
-For additional implementation specifications, refer to the following documents:
-
-- [OTelWebSdk-Core.md](./OTelWebSdk-Core.md) - Core SDK implementation details
-- [OTelWebSdk-Trace.md](./OTelWebSdk-Trace.md) - Distributed tracing implementation
-- [OTelWebSdk-Log.md](./OTelWebSdk-Log.md) - Structured logging implementation
-- [OTelWebSdk-Context.md](./OTelWebSdk-Context.md) - Context management implementation
 
 ## Next Steps and Implementation Roadmap
 

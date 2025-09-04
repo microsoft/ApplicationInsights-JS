@@ -568,8 +568,6 @@ The SDK provides multiple factory access patterns to support different deploymen
 - **Named Factory Pattern**: For multi-project scenarios
 - **Direct Factory Creation**: For custom scenarios
 
-```
-
 ### Version-Aware and Async Factory Loading
 
 The factory supports both synchronous and asynchronous loading patterns with version specification and compatibility checking.
@@ -1535,14 +1533,6 @@ For comprehensive architectural details including:
 See the [Architecture Documentation](./specs/OTelWebSdk-Architecture.md).
 
 ## Implementation Documentation
-
-### Component-Specific Implementation Guides
-
-- **[Core SDK Implementation](./specs/OTelWebSdk-Core.md)** - SDK factory, lifecycle, and core functionality
-- **[Trace Provider Implementation](./specs/OTelWebSdk-Trace.md)** - Tracing provider with web-specific optimizations  
-- **[Log Provider Implementation](./specs/OTelWebSdk-Log.md)** - Logging provider with structured logging support
-- **[Metric Provider Implementation](./specs/OTelWebSdk-Metric.md)** - Future comprehensive metrics provider implementation (beyond basic metrics)
-- **[Context Management Implementation](./specs/OTelWebSdk-Context.md)** - Context propagation and management
 
 ### Operational Documentation
 

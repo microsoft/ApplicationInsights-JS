@@ -4,7 +4,7 @@
 ### Phase 1: Core Architecture Foundation
 - **Multi-Tenant SDK Factory**: Implement centralized SDK factory with IoC patterns
 - **Interface Definitions**: Define comprehensive TypeScript interfaces for all components
-- **Closure + DynamicProto**: Implement performance-optimized closure pattern
+- **Closure OR DynamicProto**: Implement bundle-size-optimized patterns (closure for simple implementations, DynamicProto for complex inheritance)
 - **Dependency Injection**: Build IoC container with explicit dependency management
 - **Basic Configuration**: Implement reactive configuration management system
 
@@ -65,13 +65,13 @@ For detailed implementation specifications, refer to the individual component de
 
 **Key Tasks**:
 - **Unified SDK Implementation**: Implement the unified OTelWebSdk class behind IOTelWebSdk interface
-  - Create hidden OTelWebSdkImpl class using DynamicProto-JS pattern
+  - Create factory function to return IOTelWebSdk interface implementation using closure pattern for bundle size optimization
   - Implement lifecycle management (initialize, shutdown, flush, unload methods)
   - Add comprehensive error handling and diagnostics with proper logging
   - Implement configuration validation and parsing (connection strings, endpoints)
-  - *See [Closure-Based Implementation](./OTelWebSdk-Architecture.md#2-closure-based-implementation-with-dynamicproto) for implementation patterns*
+  - *See [Implementation Patterns](./OTelWebSdk-Architecture.md#implementation-patterns-closures-or-dynamicproto-classes) for bundle size optimization patterns*
 - **Context Management**: Implement the context manager with explicit context handling via IContextManager interface
-  - Create ContextManagerImpl with proper context storage and propagation
+  - Create factory function to return IContextManager interface implementation with proper context storage and propagation
   - Implement W3C Trace Context and Baggage propagation standards
   - Add support for async context propagation without global state
   - Implement context injection and extraction for HTTP headers
@@ -97,13 +97,13 @@ For detailed implementation specifications, refer to the individual component de
 
 **Key Tasks**:
 - **Tracer Provider & Tracer**: Implement tracer provider and tracer interfaces (ITracerProvider, ITracer, ISpan)
-  - Create TracerProviderImpl and TracerImpl using DynamicProto-JS pattern
+  - Create factory functions to return interface implementations using closure pattern for bundle size optimization
   - Implement span lifecycle management (start, end, context linking)
   - Add span attribute validation and limits enforcement
   - Implement span event recording and exception tracking
   - *See [Interface-First Design](./OTelWebSdk-Architecture.md#1-interface-first-design) for interface requirements*
 - **Span Management**: Implement span creation and management with proper context via interface-based design
-  - Create SpanImpl with comprehensive span data model
+  - Create factory function to return ISpan interface implementation with comprehensive span data model
   - Implement span context creation and propagation
   - Add span relationships (parent-child, links) and trace tree construction
   - Implement span status codes and error handling
@@ -133,13 +133,13 @@ For detailed implementation specifications, refer to the individual component de
 
 **Key Tasks**:
 - **Logger Provider & Logger**: Implement logger provider and logger interfaces (ILoggerProvider, ILogger, ILogRecord)
-  - Create LoggerProviderImpl and LoggerImpl using DynamicProto-JS pattern
+  - Create factory functions to return interface implementations using closure pattern for bundle size optimization
   - Implement log record creation with severity levels and structured data
   - Add log correlation with active spans and trace context
   - Implement logger hierarchy and inheritance
-  - *See [Closure-Based Implementation](./OTelWebSdk-Architecture.md#2-closure-based-implementation-with-dynamicproto) for implementation patterns*
+  - *See [Implementation Patterns](./OTelWebSdk-Architecture.md#implementation-patterns-closures-or-dynamicproto-classes) for bundle size optimization patterns*
 - **Log Record Management**: Implement log record creation with severity levels via interface-based design
-  - Create LogRecordImpl with comprehensive log data model
+  - Create factory function to return ILogRecord interface implementation with comprehensive log data model
   - Implement log severity mapping and validation (TRACE to FATAL)
   - Add structured logging support with nested objects and arrays
   - Implement log correlation with traces using span context
@@ -169,15 +169,15 @@ For detailed implementation specifications, refer to the individual component de
 
 **Key Tasks**:
 - **Meter Provider & Meter**: Implement basic meter provider and meter interfaces (IMeterProvider, IMeter)
-  - Create simplified MeterProviderImpl and MeterImpl using DynamicProto-JS pattern
+  - Create factory functions to return interface implementations using closure pattern for bundle size optimization
   - Implement basic meter registry and instrument management
   - Add meter versioning and scope management
   - Implement meter lifecycle and cleanup
   - *See [SDK Instance Factory Architecture](./OTelWebSdk-Architecture.md#sdk-instance-factory-architecture) for factory patterns*
 - **Basic Metrics Collection**: Implement simple metrics collection for basic instrument types only
-  - Create CounterImpl for simple monotonic value accumulation
-  - Implement HistogramImpl for basic value distribution measurement
-  - Add GaugeImpl for current value observations
+  - Create factory function to return ICounter interface implementation for simple monotonic value accumulation
+  - Create factory function to return IHistogram interface implementation for basic value distribution measurement
+  - Create factory function to return IGauge interface implementation for current value observations
   - Note: Advanced instruments and observable metrics are intentionally excluded
 - **Simple Aggregation Support**: Add basic aggregation support for simple metric types
   - Implement SumAggregator for counter aggregation

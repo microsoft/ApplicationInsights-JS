@@ -164,13 +164,6 @@ Once the OpenTelemetry Web SDK implementation is complete, this document will be
 ## References
 
 - [OpenTelemetry Web SDK Architecture](./OTelWebSdk-Architecture.md)
-- [Core SDK Documentation](./OTelWebSdk-Core.md)
 - [Testing Strategy](./OTelWebSdk-Testing.md)
 - [Performance Strategy](./OTelWebSdk-Performance.md)
-
-## References
-
-- [OpenTelemetry Web SDK Architecture](./OTelWebSdk-Architecture.md)
-- [Core SDK Documentation](./OTelWebSdk-Core.md)
-- [Testing Strategy](./OTelWebSdk-Testing.md)
 - [Performance Strategy](./OTelWebSdk-Performance.md)

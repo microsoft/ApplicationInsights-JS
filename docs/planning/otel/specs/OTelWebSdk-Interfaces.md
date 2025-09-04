@@ -7,7 +7,7 @@ This document contains the complete interface definitions for the OpenTelemetry 
 - **No Global State**: All dependencies must be explicitly injected through factory functions
 - **Interface-First**: All public APIs defined as TypeScript interfaces before implementation
 - **Dependency Injection**: Components receive dependencies through configuration, not global access
-- **Closure + DynamicProto**: Implementation uses closure pattern with DynamicProto for performance
+- **Closure OR DynamicProto**: Implementation uses EITHER closure pattern OR DynamicProto-JS for complex inheritance
 - **Multi-Tenant Support**: Multiple SDK instances can coexist without interference
 
 ## Core SDK Interfaces
@@ -480,6 +480,7 @@ export interface ISDKInstanceStats {
   /** Memory usage in bytes */
   memoryUsageBytes: number;
 }
+```
 
 ### Configuration and Options Interfaces
 
@@ -1048,13 +1049,13 @@ This comprehensive interface definition enables:
 6. **Standards Compliance**: Follows OpenTelemetry API specifications
 7. **Resource Management**: Complete lifecycle and cleanup control
 8. **Dependency Injection**: All dependencies explicitly provided, no global state
-9. **Performance Optimization**: Designed for closure + DynamicProto implementation pattern
+9. **Performance Optimization**: Designed for closure OR DynamicProto implementation patterns
 
 ## Implementation Pattern Guidelines
 
-### Closure + DynamicProto Implementation
+### Implementation Pattern Guidelines
 
-All interfaces are designed to be implemented using the closure + DynamicProto pattern:
+All interfaces are designed to be implemented using EITHER the closure pattern OR DynamicProto-JS pattern:
 
 ```typescript
 // Example implementation pattern for ITraceProvider
@@ -1074,45 +1075,35 @@ export function createTraceProvider(config: ITraceProviderConfig): ITraceProvide
   // Create the interface instance
   let _self = {} as ITraceProvider;
 
-  // Apply DynamicProto pattern for optimal performance
-  dynamicProto(TraceProvider, _self, (_self, _base) => {
+  // Define methods directly on the interface instance
+  _self.getTracer = (name: string, version?: string, options?: ITracerOptions): ITracer => {
+    if (_isShutdown) {
+      throw new Error("TraceProvider is shutdown");
+    }
     
-    _self.getTracer = (name: string, version?: string, options?: ITracerOptions): ITracer => {
-      if (_isShutdown) {
-        throw new Error("TraceProvider is shutdown");
-      }
-      
-      const key = `${name}@${version || 'unknown'}`;
-      let tracer = _tracers.get(key);
-      
-      if (!tracer) {
-        tracer = createTracer({
-          name,
-          version,
-          resource: _config.resource,  // Injected dependency
-          processors: _processors,     // Injected dependency
-          contextManager: _config.contextManager, // Injected dependency
-          logger: _config.logger,      // Injected dependency
-          // All dependencies come from injected config
-          ...options
-        });
-        _tracers.set(key, tracer);
-      }
-      
-      return tracer;
-    };
+    const key = `${name}@${version || 'unknown'}`;
+    let tracer = _tracers.get(key);
+    
+    if (!tracer) {
+      tracer = createTracer({
+        name,
+        version,
+        resource: _config.resource,  // Injected dependency
+        processors: _processors,     // Injected dependency
+        contextManager: _config.contextManager, // Injected dependency
+        logger: _config.logger,      // Injected dependency
+        // All dependencies come from injected config
+        ...options
+      });
+      _tracers.set(key, tracer);
+    }
+    
+    return tracer;
+  };
 
-    // Other method implementations...
-  });
+  // Other method implementations...
 
   return _self;
-}
-
-/**
- * @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
- */
-function TraceProvider() {
-  // This is a stub for TypeScript definitions - actual implementation is in the closure
 }
 ```
 
@@ -1126,13 +1117,6 @@ function TraceProvider() {
 6. **Testability**: All dependencies can be mocked through the config parameter
 
 ## Related Documentation
-
-### Implementation Guides
-- **[Core SDK Implementation](./OTelWebSdk-Core.md)** - Main SDK factory and lifecycle management
-- **[Trace Provider Implementation](./OTelWebSdk-Trace.md)** - Detailed tracing implementation
-- **[Log Provider Implementation](./OTelWebSdk-Log.md)** - Logging provider implementation
-- **[Metric Provider Implementation](./OTelWebSdk-Metric.md)** - Future comprehensive metrics implementation (beyond basic metrics)
-- **[Context Management Implementation](./OTelWebSdk-Context.md)** - Context propagation implementation
 
 ### Operational Guides
 - **[Testing Strategy](./OTelWebSdk-Testing.md)** - Interface testing patterns and mock strategies
