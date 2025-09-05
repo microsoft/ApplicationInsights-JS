@@ -175,7 +175,7 @@ class ReactInstrumentation implements IThirdPartyInstrumentation {
   private _hooks: Set<Function> = new Set();
   private _enabled = false;
   
-  async initialize(config: IInstrumentationConfig): Promise<void> {
+  async initialize(config: IOTelInstrumentationConfig): Promise<void> {
     // Validate React is available
     if (typeof React === 'undefined') {
       throw new Error('React is required for ReactInstrumentation');
@@ -207,7 +207,7 @@ class ReactInstrumentation implements IThirdPartyInstrumentation {
     // Additional cleanup
   }
   
-  private _setupComponentTracking(config: IInstrumentationConfig): void {
+  private _setupComponentTracking(config: IOTelInstrumentationConfig): void {
     // Implementation details...
   }
   
@@ -269,7 +269,7 @@ class VueInstrumentation implements IThirdPartyInstrumentation {
   readonly vendor = 'vue-tools-inc';
   readonly dependencies = ['vue'];
   
-  async initialize(config: IInstrumentationConfig): Promise<void> {
+  async initialize(config: IOTelInstrumentationConfig): Promise<void> {
     if (typeof Vue === 'undefined') {
       throw new Error('Vue.js is required for VueInstrumentation');
     }
@@ -316,7 +316,7 @@ class EcommerceInstrumentation implements IThirdPartyInstrumentation {
   readonly version = '1.0.0';
   readonly vendor = 'internal';
   
-  async initialize(config: IInstrumentationConfig): Promise<void> {
+  async initialize(config: IOTelInstrumentationConfig): Promise<void> {
     // Setup business event tracking
     window.addEventListener('cart-add', this._trackCartAdd.bind(this));
     window.addEventListener('purchase-complete', this._trackPurchase.bind(this));

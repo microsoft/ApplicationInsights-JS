@@ -22,19 +22,19 @@ This document contains the complete interface definitions for the OpenTelemetry 
  */
 export interface IOTelWebSdk {
   /** Get a tracer for creating spans */
-  getTracer(name: string, version?: string, options?: ITracerOptions): ITracer;
+  getTracer(name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer;
   
   /** Get a logger for emitting log records */  
-  getLogger(name: string, version?: string, options?: ILoggerOptions): ILogger;
+  getLogger(name: string, version?: string, options?: IOTelLoggerOptions): IOTelLogger;
   
   /** Get a meter for recording metrics */
-  getMeter(name: string, version?: string, options?: IMeterOptions): IMeter;
+  getMeter(name: string, version?: string, options?: IOTelMeterOptions): IOTelMeter;
   
   /** Update SDK configuration at runtime (where supported) */
   updateConfig(config: Partial<IOTelWebSdkConfig>): Promise<void>;
   
   /** Completely unload the SDK instance and cleanup all resources */
-  unload(): Promise<IUnloadResult>;
+  unload(onDone?: (result: IUnloadResult) => void, timeoutMs?: number): Promise<IUnloadResult>;
   
   /** Get current SDK configuration (read-only) */
   getConfig(): Readonly<IOTelWebSdkConfig>;
@@ -49,10 +49,10 @@ export interface IOTelWebSdk {
  */
 export interface IOTelWebSdkConfig {
   /** REQUIRED: Resource information for this SDK instance */
-  resource: IResource;
+  resource: IOTelResource;
   
   /** REQUIRED: Logger for SDK internal diagnostics */
-  logger: ILogger;
+  logger: IOTelLogger;
   
   /** REQUIRED: Performance timing function (injected for testability) */
   performanceNow: () => number;
@@ -79,25 +79,25 @@ export interface IOTelWebSdkConfig {
   debug?: boolean;
   
   /** REQUIRED: Span processors (must be explicitly provided) */
-  spanProcessors: ISpanProcessor[];
+  spanProcessors: IOTelSpanProcessor[];
   
   /** REQUIRED: Log processors (must be explicitly provided) */
-  logProcessors: ILogProcessor[];
+  logProcessors: IOTelLogProcessor[];
   
   /** REQUIRED: Metric readers (must be explicitly provided) */
-  metricReaders: IMetricReader[];
+  metricReaders: IOTelMetricReader[];
   
   /** REQUIRED: Context manager implementation */
-  contextManager: IContextManager;
+  contextManager: IOTelContextManager;
   
   /** REQUIRED: Span ID generator implementation */
-  idGenerator: IIdGenerator;
+  idGenerator: IOTelIdGenerator;
   
   /** REQUIRED: Span sampler implementation */
-  sampler: ISampler;
+  sampler: IOTelSampler;
   
   /** Instrumentation configurations */
-  instrumentations?: IInstrumentationConfig[];
+  instrumentations?: IOTelInstrumentationConfig[];
 }
 
 /**
@@ -124,107 +124,21 @@ export interface IUnloadResult {
 }
 ```
 
-### SDK Manager Interface
-
-```typescript
-/**
- * Interface for managing multiple SDK instances
- * Enables enterprise multi-tenant support with resource sharing
- */
-export interface IOTelWebSDKManager {
-  /** Create a new SDK instance with the given configuration */
-  createSDKInstance(instanceName: string, config?: Partial<IOTelWebSdkConfig>): IOTelWebSdk;
-  
-  /** Get an existing SDK instance by name */
-  getSDKInstance(instanceName: string): IOTelWebSdk | undefined;
-  
-  /** List all active SDK instances */
-  getAllInstances(): Map<string, IOTelWebSdk>;
-  
-  /** Update configuration for a specific instance */
-  updateInstanceConfig(instanceName: string, config: Partial<IOTelWebSdkConfig>): void;
-  
-  /** Update enterprise-wide configuration policy */
-  updateEnterprisePolicy(policy: IEnterprisePolicy): void;
-  
-  /** Unload a specific SDK instance */
-  unloadInstance(instanceName: string): Promise<IUnloadResult>;
-  
-  /** Unload all SDK instances */
-  unloadAll(): Promise<IEnterpriseUnloadResult>;
-  
-  /** Get resource usage statistics */
-  getResourceStats(): IResourceStats;
-}
-
-/**
- * Enterprise policy configuration
- */
-export interface IEnterprisePolicy {
-  /** Default sampling rate for new instances */
-  defaultSamplingRate: number;
-  
-  /** Allowed connection strings */
-  allowedConnectionStrings?: string[];
-  
-  /** Required telemetry processors */
-  requiredProcessors?: string[];
-  
-  /** Data retention policy */
-  dataRetention?: IDataRetentionPolicy;
-  
-  /** Compliance settings */
-  compliance?: IComplianceSettings;
-  
-  /** Resource limits */
-  resourceLimits?: IResourceLimits;
-}
-
-/**
- * Result interface for enterprise-wide unload operations
- */
-export interface IEnterpriseUnloadResult {
-  /** Total number of instances unloaded */
-  totalInstances: number;
-  
-  /** Total spans exported across all instances */
-  totalSpansExported: number;
-  
-  /** Total logs exported across all instances */
-  totalLogsExported: number;
-  
-  /** Total metrics exported across all instances */
-  totalMetricsExported: number;
-  
-  /** Per-instance unload results */
-  instanceResults: Map<string, IUnloadResult>;
-  
-  /** Total cleanup time in milliseconds */
-  totalCleanupTimeMs: number;
-  
-  /** Overall success status */
-  success: boolean;
-  
-  /** Any errors encountered during enterprise unload */
-  errors?: Error[];
-}
-```
-
 ### Telemetry Provider Interfaces
 
 ```typescript
 /**
  * Trace provider interface - created through factory with injected dependencies
  */
-export interface ITraceProvider {
+export interface IOTelTraceProvider {
   /** Get a tracer instance */
-  getTracer(name: string, version?: string, options?: ITracerOptions): ITracer;
+  getTracer(name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer;
   
   /** Add a span processor */
-  addSpanProcessor(processor: ISpanProcessor): void;
+  addSpanProcessor(processor: IOTelSpanProcessor): void;
   
   /** Get active span processors */
-  getActiveSpanProcessors(): ISpanProcessor[];
+  getActiveSpanProcessors(): IOTelSpanProcessor[];
   
   /** Force flush all processors */
   forceFlush(): Promise<void>;
@@ -236,15 +150,15 @@ export interface ITraceProvider {
 /**
  * Log provider interface - created through factory with injected dependencies
  */
-export interface ILogProvider {
+export interface IOTelLogProvider {
   /** Get a logger instance */
-  getLogger(name: string, version?: string, options?: ILoggerOptions): ILogger;
+  getLogger(name: string, version?: string, options?: IOTelLoggerOptions): IOTelLogger;
   
   /** Add a log processor */
-  addLogProcessor(processor: ILogProcessor): void;
+  addLogProcessor(processor: IOTelLogProcessor): void;
   
   /** Get active log processors */
-  getActiveLogProcessors(): ILogProcessor[];
+  getActiveLogProcessors(): IOTelLogProcessor[];
   
   /** Force flush all processors */
   forceFlush(): Promise<void>;
@@ -256,15 +170,15 @@ export interface ILogProvider {
 /**
  * Meter provider interface - created through factory with injected dependencies
  */
-export interface IMeterProvider {
+export interface IOTelMeterProvider {
   /** Get a meter instance */
-  getMeter(name: string, version?: string, options?: IMeterOptions): IMeter;
+  getMeter(name: string, version?: string, options?: IOTelMeterOptions): IOTelMeter;
   
   /** Add a metric reader */
-  addMetricReader(reader: IMetricReader): void;
+  addMetricReader(reader: IOTelMetricReader): void;
   
   /** Get active metric readers */
-  getActiveMetricReaders(): IMetricReader[];
+  getActiveMetricReaders(): IOTelMetricReader[];
   
   /** Force flush all readers */
   forceFlush(): Promise<void>;
@@ -276,20 +190,20 @@ export interface IMeterProvider {
 /**
  * Tracer interface for creating and managing spans
  */
-export interface ITracer {
+export interface IOTelTracer {
   /** Start a new span */
-  startSpan(name: string, options?: ISpanOptions): ISpan;
+  startSpan(name: string, options?: IOTelSpanOptions): IOTelSpan;
   
   /** Start a span and set it as active in the current context */
-  startActiveSpan<T>(name: string, fn: (span: ISpan) => T): T;
-  startActiveSpan<T>(name: string, options: ISpanOptions, fn: (span: ISpan) => T): T;
-  startActiveSpan<T>(name: string, options: ISpanOptions, context: IContext, fn: (span: ISpan) => T): T;
+  startActiveSpan<T>(name: string, fn: (span: IOTelSpan) => T): T;
+  startActiveSpan<T>(name: string, options: IOTelSpanOptions, fn: (span: IOTelSpan) => T): T;
+  startActiveSpan<T>(name: string, options: IOTelSpanOptions, context: IOTelContext, fn: (span: IOTelSpan) => T): T;
 }
 
 /**
  * Span interface for recording trace data
  */
-export interface ISpan {
+export interface IOTelSpan {
   /** Set an attribute on the span */
   setAttribute(key: string, value: any): void;
   
@@ -318,7 +232,7 @@ export interface ISpan {
 /**
  * Logger interface for emitting log records
  */
-export interface ILogger {
+export interface IOTelLogger {
   /** Emit a log record */
   emit(logRecord: ILogRecord): void;
   
@@ -339,7 +253,7 @@ export interface ILogger {
  * Meter interface for recording basic metrics
  * Note: Only includes basic metric types - advanced features like observable metrics are excluded
  */
-export interface IMeter {
+export interface IOTelMeter {
   /** Create a counter metric */
   createCounter(name: string, options?: IMetricOptions): ICounter;
   
@@ -358,32 +272,32 @@ export interface IMeter {
 /**
  * Context manager interface for managing execution context
  */
-export interface IContextManager {
+export interface IOTelContextManager {
   /** Get the active context */
-  active(): IContext;
+  active(): IOTelContext;
   
   /** Execute a function with a specific context as active */
-  with<T>(context: IContext, fn: () => T): T;
+  with<T>(context: IOTelContext, fn: () => T): T;
   
   /** Create a new context with a span set as active */
-  setSpan(context: IContext, span: ISpan): IContext;
+  setSpan(context: IOTelContext, span: IOTelSpan): IOTelContext;
   
   /** Get the active span from a context */
-  getSpan(context: IContext): ISpan | undefined;
+  getSpan(context: IOTelContext): IOTelSpan | undefined;
 }
 
 /**
  * Context interface representing execution context
  */
-export interface IContext {
+export interface IOTelContext {
   /** Get a value from the context */
   getValue(key: symbol): any;
   
   /** Set a value in the context */
-  setValue(key: symbol, value: any): IContext;
+  setValue(key: symbol, value: any): IOTelContext;
   
   /** Delete a value from the context */
-  deleteValue(key: symbol): IContext;
+  deleteValue(key: symbol): IOTelContext;
 }
 ```
 
@@ -393,7 +307,7 @@ export interface IContext {
 /**
  * ID generator interface - must be injected into trace provider
  */
-export interface IIdGenerator {
+export interface IOTelIdGenerator {
   /** Generate a new trace ID */
   generateTraceId(): string;
   
@@ -404,9 +318,9 @@ export interface IIdGenerator {
 /**
  * Sampler interface - must be injected into trace provider
  */
-export interface ISampler {
+export interface IOTelSampler {
   /** Make sampling decision for a span */
-  shouldSample(context: IContext, traceId: string, spanName: string, spanKind: ISpanKind, attributes?: Record<string, any>, links?: ISpanLink[]): ISamplingResult;
+  shouldSample(context: IOTelContext, traceId: string, spanName: string, spanKind: ISpanKind, attributes?: Record<string, any>, links?: ISpanLink[]): ISamplingResult;
 }
 
 /**
@@ -440,7 +354,7 @@ export enum ISamplingDecision {
 /**
  * Metric reader interface - must be injected into meter provider
  */
-export interface IMetricReader {
+export interface IOTelMetricReader {
   /** Collect metrics */
   collect(): Promise<IMetricData[]>;
   
@@ -488,7 +402,7 @@ export interface ISDKInstanceStats {
 /**
  * Options for creating a tracer
  */
-export interface ITracerOptions {
+export interface IOTelTracerOptions {
   /** Schema URL for semantic conventions */
   schemaUrl?: string;
   
@@ -499,7 +413,7 @@ export interface ITracerOptions {
 /**
  * Options for creating a logger
  */
-export interface ILoggerOptions {
+export interface IOTelLoggerOptions {
   /** Schema URL for semantic conventions */
   schemaUrl?: string;
   
@@ -510,7 +424,7 @@ export interface ILoggerOptions {
 /**
  * Options for creating a meter
  */
-export interface IMeterOptions {
+export interface IOTelMeterOptions {
   /** Schema URL for semantic conventions */
   schemaUrl?: string;
   
@@ -521,7 +435,7 @@ export interface IMeterOptions {
 /**
  * Options for creating a span
  */
-export interface ISpanOptions {
+export interface IOTelSpanOptions {
   /** Span kind */
   kind?: ISpanKind;
   
@@ -535,13 +449,13 @@ export interface ISpanOptions {
   links?: ISpanLink[];
   
   /** Parent context */
-  parent?: IContext;
+  parent?: IOTelContext;
 }
 
 /**
  * Configuration for instrumentations
  */
-export interface IInstrumentationConfig {
+export interface IOTelInstrumentationConfig {
   /** Name of the instrumentation */
   name: string;
   
@@ -562,12 +476,12 @@ export interface IInstrumentationConfig {
 /**
  * Span processor interface
  */
-export interface ISpanProcessor {
+export interface IOTelSpanProcessor {
   /** Called when a span is started */
-  onStart(span: ISpan, parentContext?: IContext): void;
+  onStart(span: IOTelSpan, parentContext?: IOTelContext): void;
   
   /** Called when a span is ended */
-  onEnd(span: ISpan): void;
+  onEnd(span: IOTelSpan): void;
   
   /** Force flush any pending spans */
   forceFlush(): Promise<void>;
@@ -581,7 +495,7 @@ export interface ISpanProcessor {
  */
 export interface ISpanExporter {
   /** Export spans */
-  export(spans: ISpan[]): Promise<IExportResult>;
+  export(spans: IOTelSpan[]): Promise<IExportResult>;
   
   /** Shutdown the exporter */
   shutdown(): Promise<void>;
@@ -590,7 +504,7 @@ export interface ISpanExporter {
 /**
  * Log processor interface
  */
-export interface ILogProcessor {
+export interface IOTelLogProcessor {
   /** Called when a log record is emitted */
   onEmit(logRecord: ILogRecord): void;
   
@@ -658,7 +572,7 @@ export interface ILogRecord {
   attributes?: Record<string, any>;
   
   /** Resource attributes */
-  resource?: IResource;
+  resource?: IOTelResource;
   
   /** Instrumentation scope */
   instrumentationScope?: IInstrumentationScope;
@@ -684,7 +598,7 @@ export interface IMetricData {
   dataPoints: IDataPoint[];
   
   /** Resource attributes */
-  resource?: IResource;
+  resource?: IOTelResource;
   
   /** Instrumentation scope */
   instrumentationScope?: IInstrumentationScope;
@@ -713,12 +627,12 @@ export interface ISpanContext {
 /**
  * Resource interface
  */
-export interface IResource {
+export interface IOTelResource {
   /** Resource attributes */
   attributes: Record<string, any>;
   
   /** Merge with another resource */
-  merge(other: IResource): IResource;
+  merge(other: IOTelResource): IOTelResource;
 }
 
 /**
@@ -739,121 +653,9 @@ export interface IInstrumentationScope {
 }
 ```
 
-### Enterprise Management Interfaces
-
-```typescript
-/**
- * Data retention policy interface
- */
-export interface IDataRetentionPolicy {
-  /** Retention period in days */
-  retentionDays: number;
-  
-  /** Whether to automatically delete expired data */
-  autoDelete: boolean;
-  
-  /** Retention rules by telemetry type */
-  rules?: {
-    traces?: IRetentionRule;
-    logs?: IRetentionRule;
-    metrics?: IRetentionRule;
-  };
-}
-
-/**
- * Compliance settings interface
- */
-export interface IComplianceSettings {
-  /** Whether PII scrubbing is enabled */
-  piiScrubbing: boolean;
-  
-  /** Data residency requirements */
-  dataResidency?: string[];
-  
-  /** Audit trail configuration */
-  auditTrail?: IAuditTrailConfig;
-  
-  /** Encryption requirements */
-  encryption?: IEncryptionConfig;
-}
-
-/**
- * Resource limits interface
- */
-export interface IResourceLimits {
-  /** Maximum number of SDK instances */
-  maxInstances?: number;
-  
-  /** Maximum memory usage in MB */
-  maxMemoryMB?: number;
-  
-  /** Maximum export rate per second */
-  maxExportRatePerSecond?: number;
-  
-  /** Maximum queue size across all instances */
-  maxTotalQueueSize?: number;
-}
-
-/**
- * Resource statistics interface
- */
-export interface IResourceStats {
-  /** Number of active SDK instances */
-  activeInstances: number;
-  
-  /** Current memory usage in MB */
-  memoryUsageMB: number;
-  
-  /** Current export rate per second */
-  exportRatePerSecond: number;
-  
-  /** Total queue size across all instances */
-  totalQueueSize: number;
-  
-  /** Per-instance statistics */
-  instanceStats: Map<string, IInstanceStats>;
-}
-
-/**
- * Individual instance statistics
- */
-export interface IInstanceStats {
-  /** Instance name */
-  name: string;
-  
-  /** Creation timestamp */
-  createdAt: number;
-  
-  /** Last activity timestamp */
-  lastActivityAt: number;
-  
-  /** Number of spans created */
-  spansCreated: number;
-  
-  /** Number of logs emitted */
-  logsEmitted: number;
-  
-  /** Number of metrics recorded */
-  metricsRecorded: number;
-  
-  /** Current queue sizes */
-  queueSizes: {
-    spans: number;
-    logs: number;
-    metrics: number;
-  };
-}
-```
-
 ### Factory Function Interfaces
 
 ```typescript
-/**
- * Factory function to create SDK manager
- * All dependencies must be explicitly provided - no global access
- */
-export function createSDKManager(config: ISDKManagerConfig): IOTelWebSDKManager;
-
 /**
  * Factory function to create standalone SDK instance
  * All dependencies must be explicitly provided through config
@@ -863,65 +665,39 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk;
 /**
  * Factory function for trace provider with dependency injection
  */
-export function createTraceProvider(config: ITraceProviderConfig): ITraceProvider;
+export function createTraceProvider(config: ITraceProviderConfig): IOTelTraceProvider;
 
 /**
  * Factory function for log provider with dependency injection
  */
-export function createLogProvider(config: ILogProviderConfig): ILogProvider;
+export function createLogProvider(config: ILogProviderConfig): IOTelLogProvider;
 
 /**
  * Factory function for meter provider with dependency injection
  */
-export function createMeterProvider(config: IMeterProviderConfig): IMeterProvider;
-
-/**
- * SDK Manager configuration - all dependencies explicitly provided
- */
-export interface ISDKManagerConfig {
-  /** REQUIRED: Application identifier */
-  applicationId: string;
-  
-  /** REQUIRED: Logger for SDK manager internal diagnostics */
-  logger: ILogger;
-  
-  /** REQUIRED: Performance timing function */
-  performanceNow: () => number;
-  
-  /** REQUIRED: Resource information */
-  resource: IResource;
-  
-  /** Enterprise policy */
-  enterprisePolicy?: IEnterprisePolicy;
-  
-  /** Default configuration for new instances */
-  defaultInstanceConfig?: Partial<IOTelWebSdkConfig>;
-  
-  /** Resource sharing configuration */
-  resourceSharing?: IResourceSharingConfig;
-}
+export function createMeterProvider(config: IMeterProviderConfig): IOTelMeterProvider;
 
 /**
  * Trace provider configuration with explicit dependencies
  */
 export interface ITraceProviderConfig {
   /** REQUIRED: Resource information */
-  resource: IResource;
+  resource: IOTelResource;
   
   /** REQUIRED: Span processors */
-  spanProcessors: ISpanProcessor[];
+  spanProcessors: IOTelSpanProcessor[];
   
   /** REQUIRED: Sampler implementation */
-  sampler: ISampler;
+  sampler: IOTelSampler;
   
   /** REQUIRED: ID generator for span and trace IDs */
-  idGenerator: IIdGenerator;
+  idGenerator: IOTelIdGenerator;
   
   /** REQUIRED: Context manager */
-  contextManager: IContextManager;
+  contextManager: IOTelContextManager;
   
   /** REQUIRED: Logger for internal diagnostics */
-  logger: ILogger;
+  logger: IOTelLogger;
   
   /** REQUIRED: Performance timing function */
   performanceNow: () => number;
@@ -932,16 +708,16 @@ export interface ITraceProviderConfig {
  */
 export interface ILogProviderConfig {
   /** REQUIRED: Resource information */
-  resource: IResource;
+  resource: IOTelResource;
   
   /** REQUIRED: Log processors */
-  logProcessors: ILogProcessor[];
+  logProcessors: IOTelLogProcessor[];
   
   /** REQUIRED: Context manager */
-  contextManager: IContextManager;
+  contextManager: IOTelContextManager;
   
   /** REQUIRED: Logger for internal diagnostics */
-  logger: ILogger;
+  logger: IOTelLogger;
   
   /** REQUIRED: Performance timing function */
   performanceNow: () => number;
@@ -952,33 +728,16 @@ export interface ILogProviderConfig {
  */
 export interface IMeterProviderConfig {
   /** REQUIRED: Resource information */
-  resource: IResource;
+  resource: IOTelResource;
   
   /** REQUIRED: Metric readers */
-  metricReaders: IMetricReader[];
+  metricReaders: IOTelMetricReader[];
   
   /** REQUIRED: Logger for internal diagnostics */
-  logger: ILogger;
+  logger: IOTelLogger;
   
   /** REQUIRED: Performance timing function */
   performanceNow: () => number;
-}
-
-/**
- * Resource sharing configuration
- */
-export interface IResourceSharingConfig {
-  /** Whether to share export timers */
-  shareExportTimers?: boolean;
-  
-  /** Whether to share network connections */
-  shareConnections?: boolean;
-  
-  /** Whether to coordinate batch exports */
-  coordinateBatching?: boolean;
-  
-  /** Whether to share context propagation */
-  shareContextPropagation?: boolean;
 }
 ```
 
@@ -1043,7 +802,7 @@ This comprehensive interface definition enables:
 
 1. **Type Safety**: Full TypeScript support with strict typing
 2. **Interface-First Design**: All APIs defined as contracts before implementation
-3. **Enterprise Support**: Multi-tenant management with resource sharing
+3. **Multi-Tenant Support**: Multiple SDK instance management with resource sharing
 4. **Extensibility**: Plugin architecture through processor and exporter interfaces
 5. **Testability**: All interfaces can be mocked for testing
 6. **Standards Compliance**: Follows OpenTelemetry API specifications
@@ -1058,8 +817,8 @@ This comprehensive interface definition enables:
 All interfaces are designed to be implemented using EITHER the closure pattern OR DynamicProto-JS pattern:
 
 ```typescript
-// Example implementation pattern for ITraceProvider
-export function createTraceProvider(config: ITraceProviderConfig): ITraceProvider {
+// Example implementation pattern for IOTelTraceProvider
+export function createTraceProvider(config: ITraceProviderConfig): IOTelTraceProvider {
   // Validate all required dependencies are provided
   if (!config.resource) {
     throw new Error("Resource must be provided to TraceProvider");
@@ -1068,15 +827,15 @@ export function createTraceProvider(config: ITraceProviderConfig): ITraceProvide
 
   // Private closure variables - completely encapsulated
   let _config = { ...config };
-  let _tracers = new Map<string, ITracer>();
+  let _tracers = new Map<string, IOTelTracer>();
   let _processors = [...config.spanProcessors];
   let _isShutdown = false;
 
   // Create the interface instance
-  let _self = {} as ITraceProvider;
+  let _self = {} as IOTelTraceProvider;
 
   // Define methods directly on the interface instance
-  _self.getTracer = (name: string, version?: string, options?: ITracerOptions): ITracer => {
+  _self.getTracer = (name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer => {
     if (_isShutdown) {
       throw new Error("TraceProvider is shutdown");
     }

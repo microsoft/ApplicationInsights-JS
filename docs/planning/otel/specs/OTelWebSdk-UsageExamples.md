@@ -162,15 +162,14 @@ The OTelWebSdk supports various multi-instance patterns for different organizati
 
 ```typescript
 import { 
-  createSdkFactory, 
-  IOTelWebSDKManager 
+  createSdkFactory
 } from '@microsoft/applicationinsights-otelwebsdk-js';
 
 // ===== Primary Entry Point: Get or Create Factory =====
-const factory: IOTelWebSDKManager = createSdkFactory();
+const factory = createSdkFactory();
 
 // ===== Team A: E-commerce Team =====
-const ecommerceSDK = manager.newInst('ecommerce-team', {
+const ecommerceSDK = factory.createSDKInstance('ecommerce-team', {
   // Team-specific overrides while inheriting manager defaults
   tracerConfig: {
     serviceName: 'ecommerce-frontend',
@@ -187,7 +186,7 @@ const ecommerceSDK = manager.newInst('ecommerce-team', {
 });
 
 // ===== Team B: Analytics Team =====
-const analyticsSDK = manager.newInst('analytics-team', {
+const analyticsSDK = factory.createSDKInstance('analytics-team', {
   tracerConfig: {
     serviceName: 'analytics-widgets',
     serviceVersion: '1.5.2'
@@ -203,7 +202,7 @@ const analyticsSDK = manager.newInst('analytics-team', {
 });
 
 // ===== Team C: Platform Team =====
-const platformSDK = manager.newInst('platform-team', {
+const platformSDK = factory.createSDKInstance('platform-team', {
   tracerConfig: {
     serviceName: 'platform-services',
     serviceVersion: '3.0.0'
@@ -214,8 +213,10 @@ const platformSDK = manager.newInst('platform-team', {
   }
 });
 
-// Initialize all instances through manager (efficient resource sharing)
-await manager.initializeAllInstances();
+// Initialize instances individually (each team manages their own lifecycle)
+await ecommerceSDK.initialize();
+await analyticsSDK.initialize(); 
+await platformSDK.initialize();
 
 // ===== Teams Use Their Isolated SDK Instances =====
 
@@ -558,33 +559,28 @@ await alphaMgr.shutdownAll();
 console.log(`Beta instances: ${betaMgr.getInstanceCount()}`);
 ```
 
-### Using Multiple Managers
+### Factory-based Multi-Team Usage
 
 ```typescript
 import { createSdkFactory } from '@microsoft/applicationinsights-otelwebsdk-js';
 
 // Create SDK instances for different teams using factory
 const factory = createSdkFactory();
-const teamCInstance = factory.newInst('team-c', {
+const teamCInstance = factory.createSDKInstance('team-c', {
   connectionString: 'InstrumentationKey=team-c-key'
 });
 
-const teamDInstance = factory.newInst('team-d', {
+const teamDInstance = factory.createSDKInstance('team-d', {
   connectionString: 'InstrumentationKey=team-d-key'
 });
 
 // Initialize the instances
-teamCInstance.initialize();
-teamDInstance.initialize();
+await teamCInstance.initialize();
+await teamDInstance.initialize();
 
-// Access factory coordination
-const sharedResources = factory.getSharedResources();
-
-console.log(`Project Alpha instances: ${alphaManager.getInstanceCount()}`);
-console.log(`Project Beta instances: ${betaManager.getInstanceCount()}`);
-
-// Independent control over each manager's resources
-alphaManager.getSharedResources().exportQueue.flush();
+// Each team manages their own SDK instance independently
+const tracerC = teamCInstance.getTracer('team-c-service');
+const tracerD = teamDInstance.getTracer('team-d-service');
 ```
 
 ### Advanced Resource Control

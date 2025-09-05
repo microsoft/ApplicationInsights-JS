@@ -42,9 +42,10 @@ For detailed implementation specifications, refer to the individual component de
 **Key Tasks**:
 - **Interface Design**: Define comprehensive interfaces for all components following interface-first design pattern
   - Create core OpenTelemetry interface definitions from OpenTelemetry specification
-  - Design public interfaces with `I` prefix (e.g., `ITraceProvider`, `ILogger`, `IMeterProvider`)
-  - Design internal interfaces with `_I` prefix and `@internal` JSDoc tags
-  - Ensure all interfaces have comprehensive JSDoc documentation with examples and default values
+  - Design public interfaces with `I` prefix (e.g., `ISdkLoader`, `IUnloadResult`)
+  - Create OpenTelemetry interfaces with `IOTel` prefix (e.g., `IOTelTraceProvider`, `IOTelLogger`, `IOTelMeterProvider`)  
+  - Design internal interfaces with `_I` prefix and `@internal` TypeDoc tags
+  - Ensure all interfaces have comprehensive TypeDoc documentation with examples and default values
   - *See [Interface-First Design](./OTelWebSdk-Architecture.md#1-interface-first-design) for detailed architectural requirements*
 - **Factory Functions**: Create factory functions for component instantiation following `create*` naming pattern
   - Implement `createOTelWebSdk`, `createTracerProvider`, `createLoggerProvider`, `createMeterProvider`
@@ -70,8 +71,8 @@ For detailed implementation specifications, refer to the individual component de
   - Add comprehensive error handling and diagnostics with proper logging
   - Implement configuration validation and parsing (connection strings, endpoints)
   - *See [Implementation Patterns](./OTelWebSdk-Architecture.md#implementation-patterns-closures-or-dynamicproto-classes) for bundle size optimization patterns*
-- **Context Management**: Implement the context manager with explicit context handling via IContextManager interface
-  - Create factory function to return IContextManager interface implementation with proper context storage and propagation
+- **Context Management**: Implement the context manager with explicit context handling via IOTelContextManager interface
+  - Create factory function to return IOTelContextManager interface implementation with proper context storage and propagation
   - Implement W3C Trace Context and Baggage propagation standards
   - Add support for async context propagation without global state
   - Implement context injection and extraction for HTTP headers
@@ -96,14 +97,14 @@ For detailed implementation specifications, refer to the individual component de
 **Objective**: Complete distributed tracing capabilities with full OpenTelemetry compliance
 
 **Key Tasks**:
-- **Tracer Provider & Tracer**: Implement tracer provider and tracer interfaces (ITracerProvider, ITracer, ISpan)
+- **Tracer Provider & Tracer**: Implement tracer provider and tracer interfaces (IOTelTraceProvider, IOTelTracer, IOTelSpan)
   - Create factory functions to return interface implementations using closure pattern for bundle size optimization
   - Implement span lifecycle management (start, end, context linking)
   - Add span attribute validation and limits enforcement
   - Implement span event recording and exception tracking
   - *See [Interface-First Design](./OTelWebSdk-Architecture.md#1-interface-first-design) for interface requirements*
 - **Span Management**: Implement span creation and management with proper context via interface-based design
-  - Create factory function to return ISpan interface implementation with comprehensive span data model
+  - Create factory function to return IOTelSpan interface implementation with comprehensive span data model
   - Implement span context creation and propagation
   - Add span relationships (parent-child, links) and trace tree construction
   - Implement span status codes and error handling
@@ -132,7 +133,7 @@ For detailed implementation specifications, refer to the individual component de
 **Objective**: Structured logging with correlation to traces and comprehensive filtering
 
 **Key Tasks**:
-- **Logger Provider & Logger**: Implement logger provider and logger interfaces (ILoggerProvider, ILogger, ILogRecord)
+- **Logger Provider & Logger**: Implement logger provider and logger interfaces (IOTelLogProvider, IOTelLogger, ILogRecord)
   - Create factory functions to return interface implementations using closure pattern for bundle size optimization
   - Implement log record creation with severity levels and structured data
   - Add log correlation with active spans and trace context
@@ -168,7 +169,7 @@ For detailed implementation specifications, refer to the individual component de
 **Objective**: Simple metrics collection with basic instrument types only (no views or complex aggregations)
 
 **Key Tasks**:
-- **Meter Provider & Meter**: Implement basic meter provider and meter interfaces (IMeterProvider, IMeter)
+- **Meter Provider & Meter**: Implement basic meter provider and meter interfaces (IOTelMeterProvider, IOTelMeter)
   - Create factory functions to return interface implementations using closure pattern for bundle size optimization
   - Implement basic meter registry and instrument management
   - Add meter versioning and scope management

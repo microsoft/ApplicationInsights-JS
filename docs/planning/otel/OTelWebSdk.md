@@ -564,214 +564,189 @@ For complete interface definitions, see [OTelWebSdk-Interfaces.md](./specs/OTelW
 The SDK provides multiple factory access patterns to support different deployment scenarios:
 
 - **Synchronous Factory Access**: For immediate SDK access
-- **Asynchronous Factory Access**: For CDN loading and version fetching
+- **Asynchronous Factory Access**: For CDN loading
 - **Named Factory Pattern**: For multi-project scenarios
 - **Direct Factory Creation**: For custom scenarios
 
-### Version-Aware and Async Factory Loading
+### Factory Loading Patterns
 
-The factory supports both synchronous and asynchronous loading patterns with version specification and compatibility checking.
+**CRITICAL: Factory Availability and Callback Requirements**
 
-#### **Synchronous Factory Access**
+⚠️ **The `createSdkFactory()` function return value is ONLY immediately available for NPM package imports. For all CDN loading scenarios, you MUST use callbacks.**
+
+| Loading Method | Synchronous Access | Pattern Required |
+|----------------|-------------------|------------------|
+| **NPM Package** | ✅ `const factory = createSdkFactory()` | Direct assignment valid |
+| **CDN Script Tag** | ❌ Return may be null/undefined | **MUST use callbacks** |
+| **CDN Dynamic Loading** | ❌ Return may be null/undefined | **MUST use callbacks** |
+| **Mixed CDN/NPM** | ❌ Return may be null/undefined | **MUST use callbacks** |
+
+**Why Callbacks Are Required for CDN:**
+- The loader loads first, then dynamically loads the actual SDK
+- `createSdkFactory()` returns `null`/`undefined` until SDK is fully loaded
+- Only the `onInit` callback guarantees a valid factory instance
+
+The factory supports both synchronous and asynchronous loading patterns for different deployment scenarios.
+
+#### **Factory Access Patterns**
 
 ```typescript
-// Basic usage - gets existing factory or creates new one
-const factory = createSdkFactory();
-console.log(`Using SDK version: ${factory.version}`);
+// NPM usage - only valid when SDK is imported via NPM package
+// Note: This ONLY works with npm packages, NOT with CDN loading
+import { createSdkFactory } from '@microsoft/otel-web-sdk';
+const factory = createSdkFactory(); // Safe with NPM - factory and SDK is immediately available
+console.log(`Using SDK version: ${factory.info.ver}`);
 
-// Version-aware access with options
-const factory = createSdkFactory({
-  version: '1.5.0',                    // Request specific version
-  versionStrategy: 'compatible',       // Accept compatible versions
-  allowFallback: true                  // Fall back if exact version unavailable
+// CDN usage with callbacks (REQUIRED pattern for CDN loading)
+// Note: The loader provides createSdkFactory() which can then load the actual SDK
+// NEVER rely on return value - always use callbacks for CDN scenarios
+createSdkFactory({
+  src: 'https://js.monitor.azure.com/scripts/otel/otel-web-sdk.min.js',
+  onInit: (factory) => {
+    console.log(`SDK loaded successfully, version: ${factory.info.ver}`);
+    // Initialize SDK here since synchronous call may return null/undefined
+    const sdk = factory.newInst('my-app', config);
+    sdk.initialize();
+  },
+  onError: (error) => {
+    console.error('Failed to load SDK:', error.message);
+    // Handle error or fallback logic here
+  }
 });
-
-// Verify version compatibility
-if (factory.version !== '1.5.0') {
-  console.warn(`Using ${factory.version} instead of requested 1.5.0`);
-}
+// Return value ignored - may be null/undefined during CDN loading
 ```
 
 #### **Asynchronous Factory Access**
 
 ```typescript
 // Async loading for CDN scenarios
+// Note: The loader provides createSdkFactoryAsync() which can then load the actual SDK (The loader is available as an npm package, direct script or from the CDN)
+
 const factory = await createSdkFactoryAsync();
 
-// Request specific version with CDN loading
+// Load from specific CDN URL
 const factory = await createSdkFactoryAsync({
-  version: '1.5.0',
-  versionStrategy: 'exact',
-  timeout: 10000,                      // 10 second timeout
-  cdnBaseUrl: 'https://custom-cdn.com/otel-web-sdk'
+  src: 'https://js.monitor.azure.com/scripts/otel/otel-web-sdk.min.js',
+  timeout: 10000                       // 10 second timeout
 });
 
 // Handle loading failures
 try {
   const factory = await createSdkFactoryAsync({
-    version: '2.0.0',
-    versionStrategy: 'exact',
-    allowFallback: false
+    src: 'https://js.monitor.azure.com/scripts/otel/v2.0.0/otel-web-sdk.js'
   });
 } catch (error) {
-  console.error('Failed to load exact version 2.0.0:', error.message);
-  // Fallback to any available version
-  const factory = await createSdkFactoryAsync({ versionStrategy: 'any' });
+  console.error('Failed to load from CDN:', error.message);
 }
 ```
 
-#### **Version Strategy Behaviors**
+#### **CDN Loading with Callbacks**
 
 ```typescript
-interface IVersionMatchResult {
-  requested: string;
-  resolved: string;
-  strategy: string;
-  source: 'local' | 'cdn' | 'cache';
-  compatible: boolean;
-  fallbackUsed: boolean;
-}
+// Load from CDN with callbacks (returns promise)
+// Note: The loader provides createSdkFactory() and createSdkFactoryAsync() which can then load the actual SDK (The loader is available as an npm package, direct script or from the CDN)
 
-// Version strategy examples
-const strategies = {
-  'exact': '1.5.0',           // Must be exactly 1.5.0
-  'compatible': '^1.5.0',     // Accepts 1.5.x, 1.6.x, but not 2.x
-  'latest': 'latest',         // Gets latest available version
-  'any': '*'                  // Accepts any version
-};
-
-// Check version resolution details
 const factory = await createSdkFactoryAsync({
-  version: '1.5.0',
-  versionStrategy: 'compatible'
-});
-
-const versionInfo: IVersionMatchResult = factory.buildInfo.versionMatch;
-console.log({
-  requested: versionInfo.requested,        // "1.5.0"
-  resolved: versionInfo.resolved,          // "1.5.2"  
-  compatible: versionInfo.compatible,      // true
-  fallbackUsed: versionInfo.fallbackUsed   // false
-});
-```
-
-#### **CDN Dynamic Loading**
-
-```typescript
-// Automatic CDN loading when version not locally available
-const factory = await createSdkFactoryAsync({
-  version: '1.6.0',
-  versionStrategy: 'exact',
-  cdnBaseUrl: 'https://cdn.jsdelivr.net/npm/@microsoft/otel-web-sdk'
-});
-
-// The factory will:
-// 1. Check for existing local version 1.6.0
-// 2. If not found, load from CDN
-// 3. Verify integrity and compatibility
-// 4. Return factory with requested version
-
-// Custom loading with progress callback
-const factory = await createSdkFactoryAsync({
-  version: '1.6.0',
-  onProgress: (progress: ILoadProgress) => {
-    console.log(`Loading: ${progress.percent}% - ${progress.stage}`);
+  src: 'https://js.monitor.azure.com/scripts/otel/otel-web-sdk.min.js',
+  onInit: (factory) => {
+    console.log(`SDK loaded successfully, version: ${factory.info.ver}`);
+  },
+  onError: (error) => {
+    console.error('Failed to load SDK:', error.message);
   }
 });
 
-interface ILoadProgress {
-  percent: number;
-  stage: 'checking' | 'downloading' | 'verifying' | 'initializing';
-  bytesLoaded?: number;
-  totalBytes?: number;
+// Load from CDN with callbacks only (synchronous if already loaded)
+const factory = createSdkFactory({
+  src: 'https://js.monitor.azure.com/scripts/otel/otel-web-sdk.min.js',
+  onInit: (factory) => {
+    console.log(`SDK loaded successfully, version: ${factory.info.ver}`);
+    // Initialize SDK here
+    const sdk = factory.newInst('my-app', config);
+    sdk.initialize();
+  },
+  onError: (error) => {
+    console.error('Failed to load SDK:', error.message);
+    // Handle error or fallback logic here
+  }
+});
+// Returns factory immediately if already loaded, null/undefined if still loading or unavailable
+// Note: For NPM usage or when SDK source is not available, may return null/undefined
+// Recommended to use onInit callback for reliable initialization
+if (factory) {
+  console.log(`Factory available immediately: ${factory.info.ver}`);
 }
+```
+
+#### **Multi-Instance with Different Sources**
+
+```typescript
+// Application with multiple SDK sources
+// Note: The loader provides createSdkFactory() and createSdkFactoryAsync() which can then load the actual SDK
+
+const legacyFactory = await createSdkFactoryAsync({
+  src: 'https://js.monitor.azure.com/scripts/otel/v1.4/otel-web-sdk.js'
+});
+
+const modernFactory = await createSdkFactoryAsync({
+  src: 'https://js.monitor.azure.com/scripts/otel/latest/otel-web-sdk.js'
+});
+
+// Each factory manages its own instances with complete isolation
+const legacySDK = legacyFactory.newInst('legacy-component', legacyConfig);
+const modernSDK = modernFactory.newInst('modern-component', modernConfig);
+
+// Factories loaded from different sources operate independently
+console.log(`Legacy SDK version: ${legacyFactory.info.ver}`);
+console.log(`Modern SDK version: ${modernFactory.info.ver}`);
 ```
 
 #### **Multi-Version Coordination**
 
 ```typescript
-// Application with multiple SDK versions
+// Application with multiple SDK sources
 const legacyFactory = await createSdkFactoryAsync({
-  version: '1.4.0',
-  versionStrategy: 'exact'
+  src: 'https://js.monitor.azure.com/scripts/otel/v1.4/otel-web-sdk.js'
 });
 
 const modernFactory = await createSdkFactoryAsync({
-  version: '1.6.0', 
-  versionStrategy: 'exact'
+  src: 'https://js.monitor.azure.com/scripts/otel/latest/otel-web-sdk.js'
 });
 
-// Each factory manages its own instances with version isolation
+// Each factory manages its own instances with complete isolation
 const legacySDK = legacyFactory.newInst('legacy-component', legacyConfig);
 const modernSDK = modernFactory.newInst('modern-component', modernConfig);
 
-// Cross-version compatibility checking
-const compatibility = checkVersionCompatibility(
-  legacyFactory.version,
-  modernFactory.version
-);
-
-if (!compatibility.canCoexist) {
-  console.warn('Version conflict detected:', compatibility.issues);
-}
-```
-
-#### **Factory Error Handling**
-
-```typescript
-// Comprehensive error handling for async loading
-async function initializeWithErrorHandling() {
-  try {
-    // Try exact version first
-    return await createSdkFactoryAsync({
-      version: '1.5.0',
-      versionStrategy: 'exact',
-      timeout: 5000
-    });
-  } catch (exactError) {
-    console.warn('Exact version failed:', exactError.message);
-    
-    try {
-      // Fallback to compatible version
-      return await createSdkFactoryAsync({
-        version: '1.5.0',
-        versionStrategy: 'compatible',
-        timeout: 5000
-      });
-    } catch (compatibleError) {
-      console.warn('Compatible version failed:', compatibleError.message);
-      
-      // Final fallback to any version
-      return createSdkFactory(); // Synchronous fallback
-    }
-  }
-}
-
-// Usage with comprehensive error handling
-const factory = await initializeWithErrorHandling();
-console.log(`Successfully loaded SDK version ${factory.version}`);
+// Factories loaded from different sources operate independently
+console.log(`Legacy SDK version: ${legacyFactory.info.ver}`);
+console.log(`Modern SDK version: ${modernFactory.info.ver}`);
 ```
 
 #### **Build Information Access**
 
 ```typescript
-// Access detailed build information
-const factory = createSdkFactory();
-const buildInfo = factory.buildInfo;
+// NPM usage - synchronous access to SDK and build information
+import { createSdkFactory } from '@microsoft/otel-web-sdk';
+const factory = createSdkFactory(); // Valid: NPM ensures immediate availability (when use the SDK package)
+const info = factory.info;
 
 console.log({
-  version: buildInfo.version,           // "1.5.2"
-  buildDate: buildInfo.buildDate,       // "2025-07-30T10:30:00Z"
-  buildNumber: buildInfo.buildNumber,   // "12345"
-  gitCommit: buildInfo.gitCommit,       // "abc123def456"
-  distribution: buildInfo.distribution  // "cdn" | "npm" | "custom"
+  id: info.id,                 // "factory-abc123" - Unique factory instance ID
+  ver: info.ver,               // "1.5.2" - SDK version
+  loadMethod: info.loadMethod  // "npm" | "cdn" | "dynamic" - How factory was created
 });
 
-// Version comparison utilities
-import { compareVersions, isVersionCompatible } from '@microsoft/otel-web-sdk/utils';
-
-const isNewer = compareVersions('1.5.2', '1.5.0'); // 1 (newer)
-const compatible = isVersionCompatible('1.5.0', '^1.5.0'); // true
+// CDN usage - access build information in callback (assumes the loader has been loaded and is available via window (loaded from the CDN))
+window.createSdkFactory({
+  onInit: (factory) => {
+    const info = factory.info;
+    console.log({
+      id: info.id,
+      ver: info.ver,
+      loadMethod: info.loadMethod
+    });
+  }
+});
 ```
 
 ### Instance Creation and Configuration
@@ -796,7 +771,7 @@ interface IOTelWebSdk {
   
   // Lifecycle Management
   initialize(): Promise<void>;
-  unload(): Promise<void>;
+  unload(onDone?: (result: IUnloadResult) => void, timeoutMs?: number): Promise<IUnloadResult>;
   flush(): Promise<void>;
   
   // Instance Information
@@ -825,121 +800,25 @@ interface IOTelWebSdk {
 }
 ```
 
-### Resource Sharing Architecture
-
-The manager implements sophisticated resource sharing to minimize memory footprint and network usage:
-
-```typescript
-class OTelWebSDKManager implements IOTelWebSDKManager {
-  private _instances: Map<string, IOTelWebSdk> = new Map();
-  private _sharedResources: ISharedResources;
-  private _sharedConfig: Partial<IOTelWebSDKConfig> = {};
-  private _initialized: boolean = false;
-
-  constructor(private _config: IManagerConfig = {}) {
-    this._sharedResources = this._createSharedResources();
-  }
-
-  getInst(name: string): IOTelWebSdk | undefined {
-    return this._instances.get(name);
-  }
-
-  newInst(name: string, config: Partial<IOTelWebSDKConfig>): IOTelWebSdk {
-    if (this._instances.has(name)) {
-      throw new Error(`SDK instance '${name}' already exists. Use getInst() to retrieve existing instance.`);
-    }
-
-    if (this._config.maxInstances && this._instances.size >= this._config.maxInstances) {
-      throw new Error(`Maximum instances (${this._config.maxInstances}) exceeded`);
-    }
-
-    // Merge shared configuration with instance-specific overrides
-    const mergedConfig = this._mergeConfigs(this._sharedConfig, config);
-    
-    const instance = new OTelWebSDK(name, mergedConfig, this._sharedResources);
-    this._instances.set(name, instance);
-    
-    // Auto-initialize if manager is already initialized
-    if (this._initialized) {
-      instance.initialize();
-    }
-    
-    return instance;
-  }
-
-  async initializeAllInstances(): Promise<void> {
-    const initPromises = Array.from(this._instances.values()).map(instance => 
-      instance.initialize()
-    );
-    
-    await Promise.all(initPromises);
-    this._initialized = true;
-  }
-
-  async unloadAllInstances(): Promise<void> {
-    const unloadPromises = Array.from(this._instances.values()).map(instance => 
-      instance.unload()
-    );
-    
-    await Promise.all(unloadPromises);
-    this._instances.clear();
-    this._initialized = false;
-  }
-
-  getSharedResources(): ISharedResources {
-    return this._sharedResources;
-  }
-
-  private _createSharedResources(): ISharedResources {
-    return {
-      exportQueue: new SharedExportQueue(this._config.sharedResourceLimits?.maxQueueSize || 1000),
-      connectionPool: new SharedConnectionPool(this._config.sharedResourceLimits?.maxConnections || 2),
-      timerManager: new SharedTimerManager(this._config.sharedResourceLimits?.timerMinInterval || 1000),
-      performanceObserver: new SharedPerformanceObserver()
-    };
-  }
-
-  private _mergeConfigs(
-    baseConfig: Partial<IOTelWebSDKConfig>, 
-    overrides: Partial<IOTelWebSDKConfig>
-  ): IOTelWebSDKConfig {
-    // Deep merge configuration with proper inheritance rules
-    return {
-      ...baseConfig,
-      ...overrides,
-      tracerConfig: {
-        ...baseConfig.tracerConfig,
-        ...overrides.tracerConfig
-      },
-      appInsightsConfig: {
-        ...baseConfig.appInsightsConfig,
-        ...overrides.appInsightsConfig
-      },
-      contextConfig: {
-        ...baseConfig.contextConfig,
-        ...overrides.contextConfig
-      }
-    };
-  }
-}
-```
-
 ### Multi-Manager Support
 
 For complex enterprise scenarios, the SDK supports multiple named managers:
 
 ```typescript
+// NPM usage - synchronous factory access is valid
+import { createSdkFactory } from '@microsoft/otel-web-sdk';
+
 // Default factory (singleton)
-const defaultFactory = createSdkFactory();
+const defaultFactory = createSdkFactory(); // Valid: NPM ensures immediate availability
 
 // Named factories for different projects/environments
-const productionFactory = createSdkFactory('production');
-const stagingFactory = createSdkFactory('staging');
-const developmentFactory = createSdkFactory('development');
+const productionFactory = createSdkFactory('production');  // Valid: NPM usage
+const stagingFactory = createSdkFactory('staging');        // Valid: NPM usage
+const developmentFactory = createSdkFactory('development'); // Valid: NPM usage
 
-// Each factory maintains its own instance pool and shared resources
-console.log(`Production instances: ${productionFactory.getInstanceCount()}`);
-console.log(`Staging instances: ${stagingFactory.getInstanceCount()}`);
+// Each factory operates independently with its own configuration
+console.log(`Production factory: ${productionFactory.info.id}`);
+console.log(`Staging factory: ${stagingFactory.info.id}`);
 
 // Independent lifecycle management
 await productionFactory.initializeAllInstances();
@@ -1049,20 +928,20 @@ class SharedConnectionPool implements IConnectionPool {
 
 The OTelWebSdk factory requires different strategies for sharing and distribution depending on how teams consume the SDK. This section details how the factory handles NPM vs CDN loading scenarios and prevents conflicts.
 
-### **NPM Distribution: Isolated Factories with Optional Global Registry**
+### **NPM Distribution: Isolated Factories**
 
-When teams import the SDK via NPM, each import creates an isolated factory instance by default. This prevents accidental sharing but requires explicit coordination for multi-team scenarios.
+When teams import the SDK via NPM, each import creates an isolated factory instance by default. This ensures complete isolation and prevents accidental sharing between teams.
 
 #### **Default NPM Behavior: Isolated Factories**
 
 ```typescript
-// Team A's package
+// Team A's package - NPM import (synchronous access is valid)
 import { createSdkFactory } from '@microsoft/otel-web-sdk';
-const teamAFactory = createSdkFactory(); // Creates isolated factory
+const teamAFactory = createSdkFactory(); // Valid: NPM ensures factory is immediately available
 
-// Team B's package  
+// Team B's package - NPM import (synchronous access is valid)
 import { createSdkFactory } from '@microsoft/otel-web-sdk';
-const teamBFactory = createSdkFactory(); // Creates separate isolated factory
+const teamBFactory = createSdkFactory(); // Valid: NPM ensures factory is immediately available
 ```
 
 **Isolation Benefits:**
@@ -1070,233 +949,125 @@ const teamBFactory = createSdkFactory(); // Creates separate isolated factory
 - Independent versioning and configuration
 - Clear ownership boundaries
 - Simplified testing and development
+- Complete adherence to "no globals" principle
 
-#### **NPM Global Registry: Coordinated Sharing**
+### **CDN Distribution: Loader-Based Loading**
 
-For teams that want to share resources, the SDK provides a global registry mechanism:
+When loaded via CDN, teams load the SDK loader which then provides factory creation capabilities. The loader supports two distinct loading patterns.
 
-```typescript
-// Application bootstrap (runs first)
-import { createSdkFactory, enableGlobalRegistry } from '@microsoft/otel-web-sdk';
+**Important URL Distinction:**
+- **Script tags** load the **loader** (`sdkldr.min.js`) which provides `createSdkFactory()` and `createSdkFactoryAsync()` functions
+- **Factory functions** load the **SDK** (`otel-web-sdk.min.js`) which provides the actual telemetry functionality
 
-// Enable global factory sharing with version specification
-enableGlobalRegistry('my-app-v1', {
-  enforceVersionCompatibility: true,
-  requiredVersion: '^1.5.0'  // Require compatible version
-});
+**Loader Version Agnosticism:**
+The loader itself is **version-agnostic** and can load any SDK version, including future releases. While the loader has a configured default SDK version (used when no `src` parameter is provided), the same loader can dynamically load different SDK versions by specifying the `src` parameter. This design enables:
+- **Forward Compatibility**: Older loaders can load newer SDK versions
+- **Flexible Deployment**: Teams can use stable loader versions while adopting newer SDK features
+- **Migration Support**: Gradual rollout of new SDK versions without loader updates
+- **Testing Scenarios**: Load specific SDK versions for testing or comparison
 
-const sharedFactory = createSdkFactory({
-  version: '1.5.0',
-  versionStrategy: 'compatible'
-});
-// This factory will now be shared across all teams using the same namespace
-
-// Team A (anywhere in the app)
-import { createSdkFactory } from '@microsoft/otel-web-sdk';
-const factory = createSdkFactory(); // Gets the shared factory instance
-
-// Team B (anywhere in the app)  
-import { createSdkFactory } from '@microsoft/otel-web-sdk';
-const factory = createSdkFactory(); // Gets the same shared factory instance
-```
-
-**Global Registry Features:**
-- **Namespace Protection**: Prevents conflicts between different applications
-- **Lazy Creation**: Factory created on first access
-- **Version Checking**: Ensures compatible SDK versions across teams
-- **Opt-in Model**: Teams must explicitly enable sharing
-
-#### **NPM Factory Registry Implementation**
-
-```typescript
-interface IGlobalFactoryRegistry {
-  enableGlobalRegistry(namespace: string, options?: IRegistryOptions): void;
-  disableGlobalRegistry(): void;
-  isGlobalRegistryEnabled(): boolean;
-  getFactoryNamespace(): string | undefined;
-}
-
-interface IRegistryOptions {
-  enforceVersionCompatibility?: boolean;
-  maxFactoryAge?: number; // Auto-cleanup after milliseconds
-  warningCallback?: (message: string) => void;
-}
-
-// Registry prevents version conflicts
-enableGlobalRegistry('my-app-v1', {
-  enforceVersionCompatibility: true, // Throws on version mismatch
-  warningCallback: (msg) => console.warn(`OTel Factory: ${msg}`)
-});
-```
-
-### **CDN Distribution: Single Instance with Version Protection**
-
-When loaded via CDN, the SDK automatically ensures only one instance exists globally while protecting against version conflicts.
-
-#### **CDN Auto-Detection and Protection**
-
-```typescript
-// CDN Version Protection (built into SDK)
-(function(window) {
-  const GLOBAL_KEY = '__OTEL_WEB_SDK_FACTORY__';
-  const CURRENT_VERSION = '1.2.3';
-  
-  // Check for existing SDK instance
-  if (window[GLOBAL_KEY]) {
-    const existing = window[GLOBAL_KEY];
-    
-    // Version compatibility check
-    if (existing.version !== CURRENT_VERSION) {
-      console.warn(`OTel Web SDK: Multiple versions detected. ` +
-        `Using existing v${existing.version}, ignoring v${CURRENT_VERSION}`);
-    }
-    
-    // Return existing factory instead of creating new one
-    return existing.factory;
-  }
-  
-  // Create new factory and register globally
-  const factory = createSdkFactory();
-  window[GLOBAL_KEY] = {
-    version: CURRENT_VERSION,
-    factory: factory,
-    loadTime: Date.now()
-  };
-  
-  return factory;
-})(typeof window !== 'undefined' ? window : global);
-```
+The Loader itself is available 
+- via an npm package to allow direct usage
+- as a stand-alone script (the same as the Application Insights SDK Loader is today)
+- From the CDN by dropping a script tag on the page
 
 #### **CDN Loading Patterns**
 
-**Standard CDN Loading (Synchronous):**
+**Standard CDN Loading (Script Tag - Side effect of Global Registration):**
 ```html
-<!-- Single CDN load - automatic sharing -->
-<script src="https://cdn.jsdelivr.net/npm/@microsoft/otel-web-sdk@1.5.0/dist/browser/otel-web-sdk.min.js"></script>
+<!-- Load SDK loader via script tag - registers window.createSdkFactory globally -->
+<script src="https://js.monitor.azure.com/scripts/otel/sdkldr.min.js"></script>
 <script>
-  // All teams get the same factory instance
-  const factory = window.createSdkFactory();
-  console.log(`Loaded version: ${factory.version}`); // "1.5.0"
-</script>
-```
-
-**Dynamic CDN Loading (Asynchronous):**
-```html
-<script>
-  // Load specific version dynamically
-  (async function() {
-    try {
-      const factory = await createSdkFactoryAsync({
-        version: '1.5.0',
-        versionStrategy: 'compatible',
-        cdnBaseUrl: 'https://cdn.jsdelivr.net/npm/@microsoft/otel-web-sdk'
-      });
-      
-      console.log(`Dynamically loaded version: ${factory.version}`);
-      window.telemetryFactory = factory; // Make available globally
-    } catch (error) {
-      console.error('Failed to load SDK:', error);
+  // Even with script tag loading, use callback pattern for reliability
+  // The loader is available, but may need to load the actual SDK
+  window.createSdkFactory({
+    onInit: (factory) => {
+      console.log(`SDK loaded successfully, version: ${factory.info.ver}`);
+      // Create and initialize actual SDK instance
+      const sdk = factory.newInst('my-app', config);
+      sdk.initialize();
+    },
+    onError: (error) => {
+      console.error('Failed to load SDK:', error.message);
     }
-  })();
+  });
 </script>
 ```
 
-**Multiple CDN Versions (Protection Active):**
+**Direct Loader Placement (Inline - No Global Registration):**
 ```html
-<!-- First version loads successfully -->
-<script src="https://cdn.jsdelivr.net/npm/@microsoft/otel-web-sdk@1.5.0/dist/browser/otel-web-sdk.min.js"></script>
-
-<!-- Second version detects existing and stops -->
-<script src="https://cdn.jsdelivr.net/npm/@microsoft/otel-web-sdk@1.5.2/dist/browser/otel-web-sdk.min.js"></script>
-
 <script>
-  // Both scripts return the same v1.5.0 factory (first one loaded)
-  const factory = window.createSdkFactory(); 
-  console.log(`Using version: ${factory.version}`); // "1.5.0" (not 1.5.2)
+  // Loader code can be placed directly inline - does NOT register globally
+  // This avoids any global state pollution while providing factory creation
   
-  // Version info shows which version was actually loaded
-  console.log(`Build info:`, factory.buildInfo);
-</script>
-```
-
-**Version-Aware CDN Loading:**
-```html
-<script>
-  // Request specific version with fallback strategy
-  (async function() {
-    const factory = await createSdkFactoryAsync({
-      version: '1.5.2',
-      versionStrategy: 'compatible',
-      allowFallback: true,
-      onVersionMismatch: (requested, resolved) => {
-        console.log(`Requested ${requested}, using ${resolved}`);
-      }
-    });
-    
-    // Check if we got the exact version we wanted
-    if (factory.version === '1.5.2') {
-      console.log('Got exact version');
-    } else {
-      console.log(`Using compatible version ${factory.version}`);
+  // Inline loader implementation here...
+  // Note: Must use callback pattern since createSdkFactory() returns null/undefined until SDK loads
+  createSdkFactory({
+    src: 'https://js.monitor.azure.com/scripts/otel/otel-web-sdk.min.js', // SDK URL
+    onInit: (factory) => {
+      console.log(`SDK loaded successfully, version: ${factory.info.ver}`);
+      // Create and initialize SDK instance
+      const sdk = factory.newInst('my-app', config);
+      sdk.initialize();
+    },
+    onError: (error) => {
+      console.error('Failed to load SDK:', error.message);
     }
-  })();
+  });
 </script>
 ```
 
-#### **CDN Version Detection Interface**
-
-```typescript
-interface ICDNVersionInfo {
-  version: string;
-  loadTime: number;
-  source: 'cdn' | 'npm' | 'custom';
-  factory: IOTelWebSDKManager;
-}
-
-// Access version information
-const versionInfo: ICDNVersionInfo = window.__OTEL_WEB_SDK_FACTORY__;
-
-// Check if factory was loaded via CDN
-if (versionInfo.source === 'cdn') {
-  console.log(`Using CDN version ${versionInfo.version} loaded at ${new Date(versionInfo.loadTime)}`);
-}
+**Explicit Version Loading:**
+```html
+<!-- Teams specify exact loader versions - registers window.createSdkFactory -->
+<script src="https://js.monitor.azure.com/scripts/otel/v1.5.0/sdkldr.min.js"></script>
+<script>
+  // Even with versioned loader, use callback pattern for reliability
+  window.createSdkFactory({
+    onInit: (factory) => {
+      console.log(`SDK loaded successfully, version: ${factory.info.ver}`);
+      // Create and initialize actual SDK instance
+      const sdk = factory.newInst('my-app', config);
+      sdk.initialize();
+      console.log(`SDK instance created with loader:`, factory.info);
+    },
+    onError: (error) => {
+      console.error('Failed to load SDK:', error.message);
+    }
+  });
+</script>
 ```
+
+#### **Global Registration Rules**
+
+**The ONLY case where global state is modified:**
+- **Script Tag Loading**: When the loader is loaded via `<script src="...">`, it registers `window.createSdkFactory`
+- **Purpose**: Provides convenient global access for script-tag based loading scenarios
+
+**No Global Registration:**
+- **Inline Placement**: Loader code placed directly returns factory function without global registration
+- **All SDK Instances**: Actual SDK instances never register anything globally
 
 ### **Hybrid Loading: NPM + CDN Coordination**
 
-In complex applications where some teams use NPM and others use CDN loading, the SDK provides coordination mechanisms.
+In complex applications where some teams use NPM and others use CDN loading, teams should coordinate their factory strategy explicitly.
 
-#### **CDN-First Strategy**
+#### **Explicit Factory Strategy**
 
 ```typescript
-// Check if CDN version exists before creating NPM factory
-import { createSdkFactory, hasCDNFactory } from '@microsoft/otel-web-sdk';
+// Option 1: Teams agree to use CDN loading with callbacks
+// <script src="https://js.monitor.azure.com/scripts/otel/sdkldr.min.js"></script>
+// All teams use: window.createSdkFactory({ onInit: (factory) => { ... } })
 
-let factory: IOTelWebSDKManager;
+// Option 2: Teams agree to use NPM with shared factory (valid for NPM)
+import { createSdkFactory } from '@microsoft/otel-web-sdk';
+const sharedFactory = createSdkFactory(); // Valid: NPM ensures immediate availability
+export { sharedFactory };
 
-if (hasCDNFactory()) {
-  // Use existing CDN factory
-  factory = window.createSdkFactory();
-  console.log('Using existing CDN factory');
-} else {
-  // Create NPM factory
-  factory = createSdkFactory();
-  console.log('Created new NPM factory');
-}
+// Option 3: Teams use isolated NPM factories (default behavior for npm package)
+import { createSdkFactory } from '@microsoft/otel-web-sdk';
+const teamFactory = createSdkFactory(); // Valid: NPM ensures immediate availability
 ```
-
-#### **Version Compatibility Checks**
-
-```typescript
-import { createSdkFactory, checkVersionCompatibility } from '@microsoft/otel-web-sdk';
-
-const factory = createSdkFactory();
-
-// Verify compatibility if mixing NPM/CDN
-const compatibility = checkVersionCompatibility();
-if (!compatibility.isCompatible) {
-  console.warn(`Version mismatch: NPM v${compatibility.npmVersion} vs CDN v${compatibility.cdnVersion}`);
-}
 ```
 
 ### **Factory Distribution Best Practices**
@@ -1304,43 +1075,50 @@ if (!compatibility.isCompatible) {
 #### **For Library Authors**
 
 ```typescript
-// Good: Check for existing factory first
-export function initializeMyLibrary() {
-  let factory: IOTelWebSDKManager;
-  
-  // Try global factory first (CDN or shared NPM)
-  if (typeof window !== 'undefined' && window.__OTEL_WEB_SDK_FACTORY__) {
-    factory = window.__OTEL_WEB_SDK_FACTORY__.factory;
-  } else {
-    // Fallback to isolated NPM factory
-    factory = createSdkFactory();
-  }
-  
-  return factory.newInst('my-library', myConfig);
+// Good: Use SDK factory provided by application
+export function initializeMyLibrary(factory?: any) {
+  // Use provided factory or create isolated one (only valid for NPM usage)
+  const libFactory = factory || createSdkFactory(); // Valid: assumes NPM package import
+  return libFactory.createSDKInstance('my-library', myConfig);
 }
 
-// Bad: Always create new factory
+// Alternative: Let application decide factory strategy
 export function initializeMyLibrary() {
-  const factory = createSdkFactory(); // Might create duplicate
-  return factory.newInst('my-library', myConfig);
+  // Create isolated factory for this library (only valid for NPM usage)
+  const factory = createSdkFactory(); // Valid: assumes NPM package import
+  return factory.createSDKInstance('my-library', myConfig);
+}
+
+// CDN-aware library pattern (handles both NPM and CDN scenarios)
+export function initializeMyLibrary(options?: { factory?: any }) {
+  if (options?.factory) {
+    // Use provided factory
+    return options.factory.createSDKInstance('my-library', myConfig);
+  }
+  
+  // For CDN scenarios, require application to provide factory
+  throw new Error('Factory required - use initializeMyLibrary({ factory })');
 }
 ```
 
 #### **For Application Developers**
 
 ```typescript
-// Good: Explicit factory strategy
-// 1. Decide on factory strategy early
-enableGlobalRegistry('my-app-v1'); // For NPM coordination
+// Good: Explicit factory strategy decision
 
-// 2. Initialize shared factory once
-const appFactory = createSdkFactory();
+// Strategy 1: CDN sharing - load once, all teams share (use callbacks)
+// <script src="https://js.monitor.azure.com/scripts/otel/sdkldr.min.js"></script>
+// All teams use: window.createSdkFactory({ onInit: (factory) => { ... } })
 
-// 3. Export factory for teams to use
+// Strategy 2: NPM sharing - create once, export for teams
+import { createSdkFactory } from '@microsoft/otel-web-sdk';
+const appFactory = createSdkFactory(); // Valid: NPM ensures immediate availability
 export { appFactory as sharedTelemetryFactory };
 
-// Bad: Let each team create their own
-// Teams randomly calling createSdkFactory() without coordination
+// Strategy 3: NPM isolation - each team creates own factory
+// Teams call: createSdkFactory() independently (valid for NPM usage)
+
+// Good: Document the chosen strategy for your application
 ```
 
 ### **Debugging Factory Issues**
@@ -1348,16 +1126,31 @@ export { appFactory as sharedTelemetryFactory };
 #### **Factory Inspection Tools**
 
 ```typescript
-// Built-in debugging utilities
-const debug = getOTelFactoryDebugInfo();
+// NPM usage - synchronous access is valid
+import { createSdkFactory } from '@microsoft/otel-web-sdk';
+const factory = createSdkFactory(); // Valid: NPM ensures immediate availability
+const info = factory.info;
 
 console.log({
-  factoryCount: debug.factoryCount,        // How many factories exist
-  instances: debug.instanceCount,          // Total SDK instances
-  loadMethod: debug.loadMethod,            // 'npm', 'cdn', 'hybrid'
-  versions: debug.versions,                // All detected versions
-  globalRegistry: debug.globalRegistry,    // Registry status
-  memoryUsage: debug.estimatedMemoryKB     // Approximate memory usage
+  id: info.id,                           // Unique factory instance ID
+  ver: info.ver,                         // SDK version
+  loadMethod: info.loadMethod            // 'npm', 'cdn', 'dynamic'
+});
+
+// For multiple NPM factories, inspect each one individually
+const productionFactory = createSdkFactory('production'); // Valid: NPM usage
+const stagingFactory = createSdkFactory('staging');       // Valid: NPM usage
+
+console.log('Production factory:', {
+  id: productionFactory.info.id,
+  version: productionFactory.info.ver,
+  loadMethod: productionFactory.info.loadMethod
+});
+
+console.log('Staging factory:', {
+  id: stagingFactory.info.id,
+  version: stagingFactory.info.ver,
+  loadMethod: stagingFactory.info.loadMethod
 });
 ```
 
@@ -1365,10 +1158,10 @@ console.log({
 
 | Issue | Symptom | Solution |
 |-------|---------|----------|
-| **Multiple Factories** | Duplicate telemetry, high memory usage | Enable global registry or use CDN |
-| **Version Conflicts** | Console warnings, inconsistent behavior | Coordinate on single version across teams |
-| **Missing Telemetry** | Some teams not sending data | Check factory sharing configuration |
-| **Memory Leaks** | Growing memory usage | Ensure proper instance cleanup |
+| **Multiple Factories** | Potential duplicate telemetry, high resource usage | Compare factory IDs via `factory.info.id` to identify duplicates |
+| **Version Conflicts** | Console warnings, inconsistent behavior | Check each factory's version via `factory.info.ver` |
+| **Missing Telemetry** | Some teams not sending data | Verify factory configuration and SDK instance creation |
+| **Load Method Issues** | Unexpected factory behavior | Check `factory.info.loadMethod` to understand how factory was created |
 
 This distribution strategy ensures teams can work independently when needed while providing clear paths for coordination and resource sharing when beneficial.
 
@@ -1410,25 +1203,20 @@ For comprehensive multi-instance usage examples including multi-team patterns, a
 - Privacy-compliant data collection
 
 
-
-
-
-
-
 ## SDK Lifecycle Flow
 
 ```
 Application Startup                Manager Coordination             SDK Instance Management
         │                               │                               │
         │ 1. Import SDK                 │                               │
-        │ import { createSdkFactory }      │                               │
+        │ import { createSdkFactory }   │                               │
         │                               │                               │
         │                               │                               │
         │ 2. Get SDK Factory            │                               │
         │ const factory =               │                               │
-        │   createSdkFactory('default')    │                               │
+        │   createSdkFactory('default') │                               │
         ├─────────────────────────────▶│                               │
-        │                               │ 3. Create/Get Factory          │
+        │                               │ 3. Create/Get Factory         │
         │                               │ - Initialize shared resources │
         │                               │ - Setup resource pools        │
         │                               │ - Configure timer management  │
@@ -1466,10 +1254,9 @@ Application Startup                Manager Coordination             SDK Instance
         │                               │                               │ - Batch with other instances
         │                               │                               │
         │ 13. Manager Operations        │                               │
-        │ count = manager.              │                               │
-        │         getInstanceCount()    │                               │
-        │ instance = manager.           │                               │
-        │            getInstance('x')   │                               │
+        │ info = factory.info           │                               │
+        │ instance = factory.           │                               │
+        │            getInst('x')       │                               │
         │                               │ 14. Coordinate Queries        │
         │                               │ - Query instance registry     │
         │                               │ - Return instance references  │

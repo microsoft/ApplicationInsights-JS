@@ -20,7 +20,7 @@ The SDK architecture strictly adheres to the Inversion of Control (IoC) pattern 
 
 ```typescript
 // Example: TraceProvider with explicit dependency injection
-export function createTraceProvider(config: ITraceProviderConfig): ITraceProvider {
+export function createTraceProvider(config: ITraceProviderConfig): IOTelTraceProvider {
   // All dependencies explicitly provided in configuration
   const {
     resource,              // Injected resource information
@@ -47,13 +47,13 @@ export function createTraceProvider(config: ITraceProviderConfig): ITraceProvide
 
   // Private closure variables - no global state
   let _config = { ...config };
-  let _tracers = new Map<string, ITracer>();
+  let _tracers = new Map<string, IOTelTracer>();
   let _isShutdown = false;
 
-  let _self = {} as ITraceProvider;
+  let _self = {} as IOTelTraceProvider;
 
   // Define methods directly on the interface instance
-  _self.getTracer = (name: string, version?: string, options?: ITracerOptions): ITracer => {
+  _self.getTracer = (name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer => {
     if (_isShutdown) {
       logger.warn("TraceProvider is shutdown, returning no-op tracer");
       return createNoOpTracer();
@@ -125,13 +125,13 @@ class BadTraceProvider {
 
 // WRONG: Static state access
 class BadSpanProcessor {
-  process(span: ISpan) {
+  process(span: IOTelSpan) {
     GlobalConfig.exportUrl;  // Static access - forbidden
   }
 }
 
 // CORRECT: Dependency injection
-export function createSpanProcessor(config: ISpanProcessorConfig): ISpanProcessor {
+export function createSpanProcessor(config: ISpanProcessorConfig): IOTelSpanProcessor {
   // All dependencies accessed directly from injected config
   config.exporter;      // Injected exporter
   config.batchSize;     // Injected batch size
@@ -150,13 +150,14 @@ The following principles are listed in **priority order**, with #1 being the hig
 The OTelWebSDK must strictly adhere to an interface-first design pattern to ensure optimal API design, type safety, and maintainability:
 
 #### **Public Interface Design**
-- **All public components must have dedicated interfaces** with proper `I` prefix (e.g., `ITracerProvider`, `ILogger`, `IMeterProvider`)
+- **All public components must have dedicated interfaces** with proper `I` prefix (e.g., `IUnloadResult`)
+- **All OpenTelemetry compatible interfaces must be prefixed** with proper `IOTel` prefix (e.g., `IOTelTraceProvider`, `IOTelLogger`, `IOTelMeterProvider`)
 - **Public interfaces must include comprehensive TypeDoc documentation** with detailed descriptions, examples, and default values
 - **All properties and methods in interfaces must have explicit return types** to ensure type safety
 - **Public interfaces are the only exports in the public API** - implementation classes SHOULD never directly exposed
 
 #### **Internal Interface Design**
-- **Internal interfaces must use `_I` prefix** and be marked with `@internal` JSDoc tags to exclude them from public API documentation
+- **Internal interfaces must use `_I` prefix** and be marked with `@internal` TypeDoc tags to exclude them from public API documentation
 - **Internal interfaces extend public interfaces when appropriate** to provide additional implementation-specific functionality
 - **Internal interfaces are not exported in public API** and provide access to implementation details for internal components only
 
@@ -172,7 +173,7 @@ The OTelWebSDK must strictly adhere to an interface-first design pattern to ensu
 - **Implementation classes are never exposed directly** - only through their corresponding interfaces
 
 #### **Enhanced Configuration Interfaces**
-- **Configuration interfaces must have detailed JSDoc documentation** with descriptions, examples, and default values for all properties
+- **Configuration interfaces must have detailed TypeDoc documentation** with descriptions, examples, and default values for all properties
 - **Dedicated interfaces for specific component types** (e.g., metric types, span options, logger configurations)
 - **Nested interfaces for configuration options** to organize related settings and improve readability
 - **Proper typing for all configuration options** with backward compatibility for existing configurations
@@ -185,8 +186,9 @@ The OTelWebSDK must strictly adhere to an interface-first design pattern to ensu
 - **Enhanced IDE support with better IntelliSense** through detailed interface documentation
 
 #### **Naming Conventions**
-- **Public interfaces**: `I` prefix (e.g., `ITracerProvider`, `ISpan`, `ILogger`)
-- **Internal interfaces**: `_I` prefix with `@internal` JSDoc tags (e.g., `_ISpanProcessor`, `_IExporter`)
+- **Public interfaces**: `I` prefix (e.g., `ISdkLoader`)
+- **Open Telemetry Compatible interfaces**: `IOTel` prefix (e.g., `IOTelTraceProvider`, `IOTelSpan`, `IOTelLogger`)
+- **Internal interfaces**: `_I` prefix with `@internal` TypeDoc tags (e.g., `_ISpanProcessor`, `_IExporter`)
 - **Factory functions**: `create*` pattern (e.g., `createOTelWebSdk`, `createBatchSpanProcessor`)
 - **Const enums**: lowercase `e` prefix for internal use (e.g., `eSpanKind`, `eLogSeverity`, `eSpanStatusCode`)
 - **Public enum types**: corresponding types without `e` prefix using `createEnumStyle` pattern (e.g., `SpanKind`, `LogSeverity`, `SpanStatusCode`)
@@ -272,7 +274,7 @@ export type LogSeverity = number | eLogSeverity;
 6. **Developer Experience**: Multiple usage patterns accommodate different developer preferences
 
 #### **Documentation Standards**
-- **Comprehensive JSDoc comments for all public interfaces** with purpose, usage examples, and implementation notes
+- **Comprehensive TypeDoc comments for all public interfaces** with purpose, usage examples, and implementation notes
 - **Interface relationship diagrams** showing inheritance hierarchies and component relationships
 - **Mapping interfaces to OpenTelemetry specification concepts** for standards compliance
 - **Complete usage examples** demonstrating proper interface usage patterns
@@ -624,14 +626,6 @@ sdk.onConfigChange((newConfig: IOTelWebSdkConfig) => {
 - **Graceful Shutdown**: Coordinated shutdown ensuring in-flight telemetry is properly handled
 
 ```typescript
-interface IUnloadManager {
-  unload(): Promise<IUnloadResult>;
-  unloadWithTimeout(timeoutMs: number): Promise<IUnloadResult>;
-  onUnloadComplete(callback: (result: IUnloadResult) => void): IDisposable;
-  getUnloadStatus(): IUnloadStatus;
-  forceUnload(): Promise<IUnloadResult>; // Emergency cleanup
-}
-
 interface IUnloadResult {
   success: boolean;
   cleanupItems: string[];
@@ -646,51 +640,28 @@ await sdk.initialize();
 
 // ... application usage ...
 
-// Clean shutdown
-const unloadResult = await sdk.unload();
-if (!unloadResult.success) {
-  console.warn('Some cleanup items failed:', unloadResult.failedCleanup);
-}
+// Clean shutdown with optional callback and timeout
+const unloadResult = await sdk.unload(
+  (result: IUnloadResult) => {
+    if (!result.success) {
+      console.warn('Some cleanup items failed:', result.failedCleanup);
+    }
+  },
+  5000 // 5 second timeout
+);
+
+// Or simple shutdown without callback/timeout
+const simpleResult = await sdk.unload();
 ```
 
 ### 9. Enterprise Multi-Tenant Support
+
+Features provided by the Sdk Factory model
 - **Tenant Isolation**: Independent SDK instances per team with isolated configuration and telemetry contexts
 - **Resource Sharing**: Efficient sharing of connections, timers, and processing resources across tenant instances
 - **Namespace Management**: Automatic namespacing of telemetry data to prevent team conflicts
 - **Configuration Inheritance**: Team-specific configuration overrides with enterprise-wide default policies
 - **Coordinated Management**: Central management capabilities for monitoring and controlling team instances
-
-```typescript
-interface IEnterpriseManager {
-  createTeamInstance(teamId: string, config?: Partial<IOTelWebSdkConfig>): IOTelWebSdk;
-  getTeamInstance(teamId: string): IOTelWebSdk | undefined;
-  getAllTeamInstances(): Map<string, IOTelWebSdk>;
-  setEnterprisePolicy(policy: IEnterprisePolicy): void;
-  unloadTeamInstance(teamId: string): Promise<void>;
-  unloadAllTeams(): Promise<IEnterpriseUnloadResult>;
-}
-
-interface IEnterprisePolicy {
-  defaultSamplingRate: number;
-  allowedConnectionStrings: string[];
-  requiredTelemetryProcessors: string[];
-  dataRetentionPolicy: IDataRetentionPolicy;
-  complianceSettings: IComplianceSettings;
-}
-
-// Example enterprise usage
-const enterpriseManager = createEnterpriseManager(enterpriseConfig);
-
-// Team A - E-commerce
-const ecommerceSDK = enterpriseManager.createTeamInstance('ecommerce', {
-  customProperties: { 'team.name': 'ecommerce', 'cost.center': 'retail' }
-});
-
-// Team B - Analytics
-const analyticsSDK = enterpriseManager.createTeamInstance('analytics', {
-  customProperties: { 'team.name': 'analytics', 'cost.center': 'insights' }
-});
-```
 
 ### 10. Bundle Size Optimization
 - **Tree-Shaking Friendly**: Full support for dead code elimination with no side effects
@@ -801,7 +772,7 @@ This dual approach provides OpenTelemetry standard compliance while delivering t
 │  ┌─────────────────────────────────▼─────────────────────────────────┐      │
 │  │                     IOTelWebSDK Interface                         │      │
 │  │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐  │      │
-│  │  │ITraceProvider│ │ILogProvider │ │IMeterProvider│ │IContextMgr │  │      │
+│  │  │IOTelTraceProv│ │IOTelLogProv │ │IOTelMeterProv│ │IOTelCtxMgr │  │      │
 │  │  │             │ │             │ │  (Basic)    │ │             │  │      │
 │  │  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘  │      │
 │  └─────────────────────────────────┬─────────────────────────────────┘      │
@@ -883,11 +854,11 @@ For most interface implementations, the SDK uses closures with direct object pro
 ### Implementation Pattern
 
 ```typescript
-export function createTraceProvider(config: ITraceProviderConfig): ITraceProvider {
+export function createTraceProvider(config: ITraceProviderConfig): IOTelTraceProvider {
   // Private closure variables - completely encapsulated
   let _config = { ...defaultConfig, ...config };
-  let _tracers = new Map<string, ITracer>();
-  let _processors: ISpanProcessor[] = [];
+  let _tracers = new Map<string, IOTelTracer>();
+  let _processors: IOTelSpanProcessor[] = [];
   let _isShutdown = false;
   let _logger = createLogger("TraceProvider");
 
@@ -895,11 +866,11 @@ export function createTraceProvider(config: ITraceProviderConfig): ITraceProvide
   validateConfiguration(_config);
   
   // Create the interface instance
-  let _self = {} as ITraceProvider;
+  let _self = {} as IOTelTraceProvider;
 
   // Define methods directly on the interface instance
   // Public method implementations with closure access
-  _self.getTracer = (name: string, version?: string, options?: ITracerOptions): ITracer => {
+  _self.getTracer = (name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer => {
     if (_isShutdown) {
       _logger.warn("TraceProvider is shutdown, returning no-op tracer");
       return createNoOpTracer();
@@ -960,25 +931,25 @@ When class inheritance or complex prototype chains are required, use DynamicProt
 ```typescript
 import { dynamicProto } from "@microsoft/dynamicproto-js";
 
-export function createComplexProcessor(config: IProcessorConfig): ISpanProcessor {
+export function createComplexProcessor(config: IProcessorConfig): IOTelSpanProcessor {
   // Private closure variables
   let _config = { ...config };
   let _isShutdown = false;
   
   // Create class instance
-  let _self = {} as ISpanProcessor;
+  let _self = {} as IOTelSpanProcessor;
   
   // Use DynamicProto for complex inheritance scenarios
   dynamicProto(BaseProcessor, _self, (_self) => {
     
-    _self.onStart = (span: ISpan): void => {
+    _self.onStart = (span: IOTelSpan): void => {
       // Implementation with access to closure variables
       if (!_isShutdown) {
         // Process span using _config
       }
     };
     
-    _self.onEnd = (span: ISpan): void => {
+    _self.onEnd = (span: IOTelSpan): void => {
       // Implementation
     };
     
@@ -994,11 +965,11 @@ function BaseProcessor() {
   // Stub for DynamicProto
 }
 ```
-  let _self = {} as ITraceProvider;
+  let _self = {} as IOTelTraceProvider;
 
   // Define methods directly on the interface instance
   // Public method implementations with closure access
-  _self.getTracer = (name: string, version?: string, options?: ITracerOptions): ITracer => {
+  _self.getTracer = (name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer => {
     if (_isShutdown) {
       _logger.warn("TraceProvider is shutdown, returning no-op tracer");
       return createNoOpTracer();
@@ -1068,28 +1039,31 @@ The SDK follows strict architectural patterns for interface design to ensure con
 ```typescript
 // Core SDK Interfaces
 export interface IOTelWebSdk extends IOTelSdk {
-  readonly traceProvider: ITraceProvider;
-  readonly loggerProvider: ILoggerProvider;
-  readonly meterProvider: IMeterProvider;
-  readonly contextManager: IContextManager;
+  readonly traceProvider: IOTelTraceProvider;
+  readonly loggerProvider: IOTelLogProvider;
+  readonly meterProvider: IOTelMeterProvider;
+  readonly contextManager: IOTelContextManager;
+  
+  // Lifecycle Management
+  unload(onDone?: (result: IUnloadResult) => void, timeoutMs?: number): Promise<IUnloadResult>;
 }
 
 // Provider Interfaces
-export interface ITraceProvider extends IProvider {
-  getTracer(name: string, version?: string, options?: ITracerOptions): ITracer;
+export interface IOTelTraceProvider extends IProvider {
+  getTracer(name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer;
   addSpanProcessor(processor: ISpanProcessor): void;
   getActiveSpanProcessors(): ISpanProcessor[];
 }
 
-export interface ILoggerProvider extends IProvider {
-  getLogger(name: string, version?: string, options?: ILoggerOptions): ILogger;
+export interface IOTelLoggerProvider extends IProvider {
+  getLogger(name: string, version?: string, options?: IOTelLoggerOptions): IOTelLogger;
   addLogRecordProcessor(processor: ILogRecordProcessor): void;
   getActiveLogRecordProcessors(): ILogRecordProcessor[];
 }
 
 // Basic Metrics Provider - focused on simple metric generation only
-export interface IMeterProvider extends IProvider {
-  getMeter(name: string, version?: string, options?: IMeterOptions): IMeter;
+export interface IOTelMeterProvider extends IProvider {
+  getMeter(name: string, version?: string, options?: IOTelMeterOptions): IOTelMeter;
   addMetricReader(reader: IMetricReader): void;
   getActiveMetricReaders(): IMetricReader[];
   // Note: Advanced features like metric views, complex aggregations, and 
@@ -1099,8 +1073,9 @@ export interface IMeterProvider extends IProvider {
 
 ### Naming Convention Standards
 
-- **Public Interfaces**: `I` prefix (e.g., `ITraceProvider`, `ISpan`, `ILogger`)
-- **Internal Interfaces**: `_I` prefix with `@internal` JSDoc tags (e.g., `_ISpanProcessor`, `_IExporter`)
+- **Public Interfaces**: `I` prefix (e.g., `IUnloadResult`, `ISdkLoader`)
+- **OpenTelemetry Compatible Interfaces**: `IOTel` prefix (e.g., `IOTelTraceProvider`, `IOTelSpan`, `IOTelLogger`)
+- **Internal Interfaces**: `_I` prefix with `@internal` TypeDoc tags (e.g., `_ISpanProcessor`, `_IExporter`)
 - **Configuration Interfaces**: Descriptive names with `Config` suffix (e.g., `ITraceProviderConfig`, `ISpanOptions`)
 - **Factory Functions**: `create*` pattern (e.g., `createOTelWebSdk`, `createBatchSpanProcessor`)
 - **Const Enums**: lowercase `e` prefix for internal use (e.g., `eSpanKind`, `eLogSeverity`)
@@ -1392,8 +1367,8 @@ interface ISDKPlugin {
   shutdown(): Promise<void>;
   
   // Optional extension points
-  onBeforeSpanStart?(span: ISpan): ISpan;
-  onAfterSpanEnd?(span: ISpan): void;
+  onBeforeSpanStart?(span: IOTelSpan): IOTelSpan;
+  onAfterSpanEnd?(span: IOTelSpan): void;
   onBeforeLogEmit?(logRecord: ILogRecord): ILogRecord;
 }
 
