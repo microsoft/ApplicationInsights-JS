@@ -50,7 +50,9 @@ const _eventActionMap: any = {
     [EventBatchNotificationReason.RequeueEvents]: STR_REQUEUE,
     [EventBatchNotificationReason.Complete]: "sent",
     [EventBatchNotificationReason.KillSwitch]: STR_DROPPED,
-    [EventBatchNotificationReason.SizeLimitExceeded]: STR_DROPPED
+    [EventBatchNotificationReason.SizeLimitExceeded]: STR_DROPPED,
+    [EventBatchNotificationReason.BeaconSendFailure]: STR_DROPPED,
+    [EventBatchNotificationReason.BeaconSizeLimitExceeded]: STR_DROPPED
 };
 
 const _collectorQsHeaders = { };
@@ -577,7 +579,10 @@ export class HttpManager {
                         }
                         
                         if (!persistStorage) {
-                            _sendBatchesNotification(droppedBatches, EventBatchNotificationReason.SizeLimitExceeded, thePayload.sendType, true);
+                            // Events passed Serializer size validation, log BeaconSendFailure
+                            // because it could still be size related but we did not exceed the
+                            // configured limit, and sendBeacon could fail for other reasons
+                            _sendBatchesNotification(droppedBatches, EventBatchNotificationReason.BeaconSendFailure, thePayload.sendType, true);
                         }
                     } else {
                         status = 0;
@@ -1057,7 +1062,8 @@ export class HttpManager {
 
                 if (thePayload.sizeExceed && thePayload.sizeExceed.length > 0) {
                     // Ensure that we send any discard events for oversize events even when there was no payload to send
-                    _sendBatchesNotification(thePayload.sizeExceed, EventBatchNotificationReason.SizeLimitExceeded, thePayload.sendType);
+                    let sizeExceededReason = thePayload.isBeacon ? EventBatchNotificationReason.BeaconSizeLimitExceeded : EventBatchNotificationReason.SizeLimitExceeded;
+                    _sendBatchesNotification(thePayload.sizeExceed, sizeExceededReason, thePayload.sendType);
                 }
 
                 if (thePayload.failedEvts && thePayload.failedEvts.length > 0) {
