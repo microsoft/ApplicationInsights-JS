@@ -34,11 +34,7 @@ export const enum eEventsDiscardedReason {
      /**
       * The sendBeacon API call failed for reasons other than size limits.
       */
-     BeaconSendFailure = 6,
-     /**
-      * The sendBeacon API call failed due to size limit exceeded (64KB).
-      */
-     BeaconSizeLimitExceeded = 7
+     BeaconSendFailure = 6
  }
 
 /**
@@ -78,12 +74,7 @@ export const EventsDiscardedReason = (/* @__PURE__ */ createEnumStyle<typeof eEv
     /**
      * The sendBeacon API call failed for reasons other than size limits.
      */
-    BeaconSendFailure: eEventsDiscardedReason.BeaconSendFailure,
-
-    /**
-     * The sendBeacon API call failed due to size limit exceeded (64KB).
-     */
-    BeaconSizeLimitExceeded: eEventsDiscardedReason.BeaconSizeLimitExceeded
+    BeaconSendFailure: eEventsDiscardedReason.BeaconSendFailure
 }));
 
 export type EventsDiscardedReason = number | eEventsDiscardedReason;
