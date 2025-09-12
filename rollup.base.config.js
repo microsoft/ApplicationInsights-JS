@@ -317,11 +317,10 @@ const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetTyp
             sourcemap: true,
             sourcemapPathTransform: getSourceMapPathTransformer(`${outPath}/${targetType}`, rootNamespace),
             strict: false,
-            // Disable function name helpers to prevent conflicts with Angular 20.3.*
-            // Angular 20.3.* has stricter handling of function name property modifications
+            // Prevent generation of function name helpers for Angular 20.3.* compatibility
             generatedCode: {
-                constBindings: false,
-                objectShorthand: false
+                symbols: false,
+                preset: "es5"
             },
             intro: getIntro(format, theNameSpace, theNameSpace.ver ? `${targetType}.${outputName}${teamExt}-${theNameSpace.ver}` : "", theNameSpace.ver, useStrict),
             outro: getOutro(format, theNameSpace, theNameSpace.ver ? `${targetType}.${outputName}${teamExt}-${theNameSpace.ver}` : "", theNameSpace.ver)
@@ -356,18 +355,12 @@ const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetTyp
                 compress: {
                     ie: true,
                     passes:3,
-                    unsafe: true,
-                    // Disable function name preservation to prevent conflicts with Angular 20.3.*
-                    keep_fnames: false
+                    unsafe: true
                 },
                 output: {
                     ie: true,
                     preamble: banner,
                     webkit:true
-                },
-                mangle: {
-                    // Don't preserve function names to avoid __name helper generation
-                    keep_fnames: false
                 }
             })
         );
@@ -397,11 +390,10 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
             freeze: false,
             sourcemap: true,
             sourcemapPathTransform: getSourceMapPathTransformer(`dist/${targetType}`, rootNamespace),
-            // Disable function name helpers to prevent conflicts with Angular 20.3.*
-            // Angular 20.3.* has stricter handling of function name property modifications
+            // Prevent generation of function name helpers for Angular 20.3.* compatibility
             generatedCode: {
-                constBindings: false,
-                objectShorthand: false
+                symbols: false,
+                preset: "es5"
             }
         },
         treeshake: treeshakeCfg,
@@ -429,18 +421,12 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
                 compress: {
                     ie: true,
                     passes:3,
-                    unsafe: true,
-                    // Disable function name preservation to prevent conflicts with Angular 20.3.*
-                    keep_fnames: false
+                    unsafe: true
                 },
                 output: {
                     ie: true,
                     preamble: banner,
                     webkit:true
-                },
-                mangle: {
-                    // Don't preserve function names to avoid __name helper generation
-                    keep_fnames: false
                 }
             })
         );

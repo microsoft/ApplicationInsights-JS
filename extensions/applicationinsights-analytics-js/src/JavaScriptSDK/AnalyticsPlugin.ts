@@ -54,29 +54,19 @@ function _getReason(error: any) {
 
 const MinMilliSeconds = 60000;
 
+// Create wrapper functions to avoid Angular 20.3.* __name helper conflicts
+const chkConfigMilliseconds = _chkConfigMilliseconds;
+const chkSampling = _chkSampling;
+
 const defaultValues: IConfigDefaults<IAnalyticsConfig> = objDeepFreeze({
-    sessionRenewalMs: cfgDfSet(function(value: number, defValue: number): number {
-        value = value || defValue;
-        if (value < MinMilliSeconds) {
-            value = MinMilliSeconds;
-        }
-        return +value;
-    }, 30 * 60 * 1000),
-    sessionExpirationMs: cfgDfSet(function(value: number, defValue: number): number {
-        value = value || defValue;
-        if (value < MinMilliSeconds) {
-            value = MinMilliSeconds;
-        }
-        return +value;
-    }, 24 * 60 * 60 * 1000),
+    sessionRenewalMs: cfgDfSet(chkConfigMilliseconds, 30 * 60 * 1000),
+    sessionExpirationMs: cfgDfSet(chkConfigMilliseconds, 24 * 60 * 60 * 1000),
     disableExceptionTracking: cfgDfBoolean(),
     autoTrackPageVisitTime: cfgDfBoolean(),
     overridePageViewDuration: cfgDfBoolean(),
     enableUnhandledPromiseRejectionTracking: cfgDfBoolean(),
     autoUnhandledPromiseInstrumented: false,
-    samplingPercentage: cfgDfValidate(function(value: number) {
-        return !isNaN(value) && value > 0 && value <= 100;
-    }, 100),
+    samplingPercentage: cfgDfValidate(chkSampling, 100),
     isStorageUseDisabled: cfgDfBoolean(),
     isBrowserLinkTrackingEnabled: cfgDfBoolean(),
     enableAutoRouteTracking: cfgDfBoolean(),
@@ -86,6 +76,19 @@ const defaultValues: IConfigDefaults<IAnalyticsConfig> = objDeepFreeze({
     disableFlushOnUnload: cfgDfBoolean(false, "disableFlushOnBeforeUnload"),
     expCfg: cfgDfMerge<IExceptionConfig>({inclScripts: false, expLog: undefined, maxLogs: 50})
 });
+
+function _chkConfigMilliseconds(value: number, defValue: number): number {
+    value = value || defValue;
+    if (value < MinMilliSeconds) {
+        value = MinMilliSeconds;
+    }
+
+    return +value;
+}
+
+function _chkSampling(value: number) {
+    return !isNaN(value) && value > 0 && value <= 100;
+}
 
 function _updateStorageUsage(extConfig: IAnalyticsConfig) {
     // Not resetting the storage usage as someone may have manually called utlDisableStorage, so this will only
