@@ -44,6 +44,7 @@ ES3 support has been removed from the latest version (v3.x), if required [see fo
 - [Performance Monitoring](./PerformanceMonitoring.md)
 - [Dependency Listeners](./Dependency.md)
 - [SDK Load Failure](./SdkLoadFailure.md)
+- [Angular Compatibility Guide](./AngularCompatibility.md)
 
 ### FAQ
 

@@ -46,6 +46,7 @@
   - [Nightly Builds](#nightly-builds)
   - [Release Notes](#release-notes)
   - [Browser Support](#browser-support)
+  - [Framework Compatibility](#framework-compatibility)
   - [Contributing](#contributing)
   - [Data Collection](#data-collection)
   - [Trademarks](#trademarks)
@@ -851,6 +852,12 @@ It is expected that most users will be using the `Public` URL, however, it is al
 Latest ✔ | Latest ✔ | 9+ Full ✔ | Latest ✔ | Latest ✔ |
 
 > v3.x removed ES3 / IE8, if you need to retain ES3 (IE8) compatibility you will need to remain on the v2.x versions of the SDK. Which is now maintained on the old [master branch](https://github.com/Microsoft/ApplicationInsights-JS/tree/master)
+
+## Framework Compatibility
+
+### Angular
+
+For Angular applications, especially with Angular 20.3.* and later, you may encounter bundling compatibility issues. See our [Angular Compatibility Guide](./docs/AngularCompatibility.md) for detailed workarounds and configuration options.
 
 ### Submitting a Change to this Project
 
