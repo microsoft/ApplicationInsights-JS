@@ -116,3 +116,4 @@ export interface IAnalyticsConfig {
      */
     expCfg?: IExceptionConfig;
 }
+
