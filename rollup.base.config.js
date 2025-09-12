@@ -317,11 +317,6 @@ const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetTyp
             sourcemap: true,
             sourcemapPathTransform: getSourceMapPathTransformer(`${outPath}/${targetType}`, rootNamespace),
             strict: false,
-            // Prevent generation of function name helpers for Angular 20.3.* compatibility
-            generatedCode: {
-                symbols: false,
-                preset: "es5"
-            },
             intro: getIntro(format, theNameSpace, theNameSpace.ver ? `${targetType}.${outputName}${teamExt}-${theNameSpace.ver}` : "", theNameSpace.ver, useStrict),
             outro: getOutro(format, theNameSpace, theNameSpace.ver ? `${targetType}.${outputName}${teamExt}-${theNameSpace.ver}` : "", theNameSpace.ver)
         },
@@ -390,11 +385,6 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
             freeze: false,
             sourcemap: true,
             sourcemapPathTransform: getSourceMapPathTransformer(`dist/${targetType}`, rootNamespace),
-            // Prevent generation of function name helpers for Angular 20.3.* compatibility
-            generatedCode: {
-                symbols: false,
-                preset: "es5"
-            }
         },
         treeshake: treeshakeCfg,
         plugins: [

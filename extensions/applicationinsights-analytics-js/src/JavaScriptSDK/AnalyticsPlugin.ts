@@ -54,19 +54,15 @@ function _getReason(error: any) {
 
 const MinMilliSeconds = 60000;
 
-// Create wrapper functions to avoid Angular 20.3.* __name helper conflicts
-const chkConfigMilliseconds = _chkConfigMilliseconds;
-const chkSampling = _chkSampling;
-
 const defaultValues: IConfigDefaults<IAnalyticsConfig> = objDeepFreeze({
-    sessionRenewalMs: cfgDfSet(chkConfigMilliseconds, 30 * 60 * 1000),
-    sessionExpirationMs: cfgDfSet(chkConfigMilliseconds, 24 * 60 * 60 * 1000),
+    sessionRenewalMs: cfgDfSet(_chkConfigMilliseconds, 30 * 60 * 1000),
+    sessionExpirationMs: cfgDfSet(_chkConfigMilliseconds, 24 * 60 * 60 * 1000),
     disableExceptionTracking: cfgDfBoolean(),
     autoTrackPageVisitTime: cfgDfBoolean(),
     overridePageViewDuration: cfgDfBoolean(),
     enableUnhandledPromiseRejectionTracking: cfgDfBoolean(),
     autoUnhandledPromiseInstrumented: false,
-    samplingPercentage: cfgDfValidate(chkSampling, 100),
+    samplingPercentage: cfgDfValidate(_chkSampling, 100),
     isStorageUseDisabled: cfgDfBoolean(),
     isBrowserLinkTrackingEnabled: cfgDfBoolean(),
     enableAutoRouteTracking: cfgDfBoolean(),
