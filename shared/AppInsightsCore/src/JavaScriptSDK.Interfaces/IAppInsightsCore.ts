@@ -7,6 +7,7 @@ import { WatcherFunction } from "../Config/IDynamicWatcher";
 import { eActiveStatus } from "../JavaScriptSDK.Enums/InitActiveStatusEnum";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
+import { IOTelContextManager } from "../OpenTelemetry/interfaces/context/IOTelContextManager";
 import { IChannelControls } from "./IChannelControls";
 import { IConfiguration } from "./IConfiguration";
 import { ICookieMgr } from "./ICookieMgr";
@@ -66,6 +67,11 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
      * The formatted string of the installed plugins that contain a version number
      */
     readonly pluginVersionString: string;
+
+    /**
+     * The root {@link IOTelContextManager} for this instance of the Core.
+     */
+    readonly context: IOTelContextManager;
  
     /**
      * Returns a value that indicates whether the instance has already been previously initialized.

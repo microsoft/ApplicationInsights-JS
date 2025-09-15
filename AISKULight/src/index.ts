@@ -282,7 +282,12 @@ export {
     throwError,
     proxyFunctions,
     IPlugin,
-    ITelemetryPlugin
+    ITelemetryPlugin,
+    IOTelContextManager,
+    IOTelContext,
+    IOTelSpan,
+    IOTelSpanContext,
+    IOTelSpanOptions
 } from "@microsoft/applicationinsights-core-js";
 
 export {

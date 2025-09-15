@@ -23,7 +23,7 @@
 //     constructor(emulateIe: boolean) {
 //         super("StatsBeatTests", emulateIe);
 //     }
-
+        
 //     public testInitialize() {
 //         let _self = this;
 //         super.testInitialize();
@@ -57,7 +57,7 @@
 //         //         return cfg?._sdk?.stats;
 //         //     }
 //         // });
-        
+
 //         // Create spy for tracking telemetry
 //         _self._trackSpy = this.sandbox.spy(_self._core, "track");
 //     }
@@ -69,13 +69,13 @@
 //     }
 
 //     public registerTests() {
-
+                
 //         this.testCase({
 //             name: "StatsBeat: Initialization",
 //             test: () => {
 //                 // Test with no initialization
 //                 Assert.equal(false, this._statsMgr.enabled, "StatsBeat should not be initialized by default");
-                
+
 //                 let statsBeatState: IStatsBeatState = {
 //                     cKey: "Test-iKey",
 //                     endpoint: "https://example.endpoint.com",
@@ -83,7 +83,7 @@
 //                     type: eStatsType.SDK
 //                 };
 //                 Assert.equal(null, this._statsMgr.newInst(statsBeatState), "StatsBeat should not be created before initialization");
-
+                
 //                 // Initialize
 //                 this._statsMgr.init(this._core, {
 //                     feature: "StatsBeat",
@@ -92,7 +92,7 @@
 //                     }
 //                 });
 //                 Assert.equal(true, this._statsMgr.enabled, "StatsBeat should be initialized after initialization");
-
+                
 //                 let newInst = this._statsMgr.newInst(statsBeatState);
 //                 Assert.ok(!!newInst, "StatsBeat should be created after initialization");
 //                 Assert.equal(true, newInst.enabled, "StatsBeat should be enabled after initialization");
@@ -100,7 +100,7 @@
 //                 Assert.equal(0, newInst.type);
 //             }
 //         });
-
+                
 //         this.testCase({
 //             name: "StatsBeat: count method tracks request metrics",
 //             useFakeTimers: true,
@@ -132,13 +132,13 @@
 //                     type: eStatsType.SDK
 //                 };                
 //                 let statsBeat = this._statsMgr.newInst(statsBeatState);
-
+                
 //                 // Test successful request
 //                 statsBeat.count(200, payloadData, "https://example.endpoint.com");
                 
 //                 // Test failed request
 //                 statsBeat.count(500, payloadData, "https://example.endpoint.com");
-                
+
 //                 // Test throttled request
 //                 statsBeat.count(429, payloadData, "https://example.endpoint.com");
                 
@@ -198,7 +198,7 @@
 //                 Assert.ok(foundExceptionMetric, "Exception metrics should be tracked");
 //             }
 //         });
-
+                
 //         this.testCase({
 //             name: "StatsBeat: does not send metrics for different endpoints",
 //             useFakeTimers: true,
@@ -222,7 +222,7 @@
 //                         startTime: Date.now()
 //                     }
 //                 } as IPayloadData;
-                
+
 //                 let statsBeatState: IStatsBeatState = {
 //                     cKey: "Test-iKey",
 //                     endpoint: "https://example.endpoint.com",
@@ -230,13 +230,13 @@
 //                     type: eStatsType.SDK
 //                 };                
 //                 let statsBeat = this._statsMgr.newInst(statsBeatState);      
-
+                
 //                 // Set up spies to check internal calls
 //                 const countSpy = this.sandbox.spy(statsBeat, "count");
                 
 //                 // Count metrics for a different endpoint
 //                 statsBeat.count(200, payloadData, "https://different.endpoint.com");
-
+                
 //                 // Verify that trackStatsbeats is called when the timer fires
 //                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL + 1);
 //                 // The count method was called, but it should return early
@@ -266,7 +266,7 @@
 //                     sdkVer: "1.0.0",
 //                     type: eStatsType.SDK
 //                 };   
-
+                
 //                 // Verify that statsbeat is created
 //                 const statsbeat = this._core.getStatsBeat(statsBeatState);
 //                 Assert.ok(!!statsbeat, "Statsbeat should be created");

@@ -130,6 +130,7 @@ export const enum _eInternalMessageId {
     InitPromiseException = 112,
     StatsBeatManagerException = 113,
     StatsBeatException = 114,
+    VersionMismatch = 115,
 }
 
 export type _InternalMessageId = number | _eInternalMessageId;

@@ -32,4 +32,4 @@ export default createConfig(banner,
       outputName: browserOutputName
     }
   },
-  [ "applicationinsights-debugplugin-js" ]);
+  [ "applicationinsights-debugplugin-js", "index" ]);

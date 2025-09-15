@@ -32,4 +32,4 @@ export default createConfig(banner,
       outputName: browserOutputName
     }
   },
-  [ outputName ]);
+  [ outputName, "index" ]);

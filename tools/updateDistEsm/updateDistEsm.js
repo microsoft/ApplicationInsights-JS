@@ -1,4 +1,5 @@
 import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup";
+import { objForEachKey, strLeft, strRight } from "@nevware21/ts-utils";
 import MagicString from "magic-string";
 
 const fs = require("fs");
@@ -22,6 +23,18 @@ const remapTsLibFuncs = {
     __exportStar: "__exportStarFn",
     __makeTemplateObject: "__makeTemplateObjectFn"
 };
+
+/**
+ * A selection of functions that are used by OpenTelemetry that are not supported in ES5
+ * These functions are remapped to the @nevware21/ts-utils module versions to ensure
+ * compatibility with ES5
+ */
+const remapEs5Funcs = {
+    "Symbol.for": "symbolFor",
+    "Symbol.keyFor": "symbolKeyFor",
+    "new Symbol": "newSymbol",
+    "Object.entries": "objEntries"
+}
 
 // You can use the following site to validate the resulting map file is valid
 // http://sokra.github.io/source-map-visualization/#custom
@@ -168,9 +181,86 @@ function replaceTsLibStarImports(orgSrc, src, theString) {
     return src;
 }
 
+function rewriteOtelNonEs5Usage(orgSrc, src, theString) {
+    let symbolUsages = [];
+    // find / replace all Symbol usage with the shim versions
+    objForEachKey(remapEs5Funcs, (key, value) => {
+        let idx = orgSrc.indexOf(key);
+        while (idx !== -1) {
+            if (symbolUsages.indexOf(value) === -1) {
+                symbolUsages.push(value);
+            }
+
+            console.log("Detected Usage of [" + key + "] replacing with [" + value + "]");
+
+            // Replace the usage
+            theString.overwrite(idx, idx + key.length, value);
+
+            idx = orgSrc.indexOf(key, idx + value.length);
+        }
+
+        // replace all original Symbol usage with the shim versions
+        idx = src.indexOf(key);
+        while (idx !== -1) {
+            src = src.replace(key, value);
+            idx = src.indexOf(key);
+        }
+    });
+
+    if (symbolUsages.length > 0) {
+        let newImport = "import { " + symbolUsages.join(", ") + ' } from "@nevware21/ts-utils";';
+        let idx = orgSrc.indexOf("import ");
+        if (idx !== -1) {
+            console.log(`Adding new import [${newImport}]`);
+            theString.overwrite(idx, idx + 7, newImport + "\nimport ");
+
+            let srcIdx = src.indexOf("import ");
+            if (srcIdx !== -1) {
+                src = strLeft(src, srcIdx) + newImport + "\n" + strRight(src, srcIdx);
+            }
+        }
+    }
+
+    return src;
+}
+
+function _removeEs6DynamicProto(code, id) {
+    if (id.endsWith(".js") && id.indexOf("node_modules") === -1) {
+        console.log("Processing [" + id + "]");
+        const rEs6DynamicProto = /([\t ]*)(\w+)\([^\)]*\)\s*{(?:\r|\n)+([^\}]*@DynamicProtoStub[^\}]*)(?:\r|\n)+\s*}/gi;
+        let modifiedCode = code;
+        let changed = false;
+        let match;
+        while ((match = rEs6DynamicProto.exec(code)) !== null) {
+            let prefix = match[1];
+            let funcName = match[2];
+            console.log(" -- Removing [" + funcName + "]");
+            modifiedCode = modifiedCode.replace(match[0], prefix + "// Removed Stub for " + funcName + ".");
+            changed = true;
+        }
+
+        if (changed) {
+            return {
+                code: modifiedCode
+            };
+        } else {
+            console.log("No changes made to " + id);
+        }
+    } else {
+        console.log("Skipping " + id);
+    }
+
+    return null;
+}
+
 function removeDynamicProtoStubs(orgSrc, src, theString, inputFile) {
     const dynRemove = dynamicRemove();
-    var result = dynRemove.transform(orgSrc, inputFile);
+    var result = _removeEs6DynamicProto(orgSrc, inputFile);
+    if (result !== null && result.code) {
+        result = dynRemove.transform(result.code, inputFile) || result;
+    } else {
+        result = dynRemove.transform(orgSrc, inputFile);
+    }
     if (result !== null && result.code) {
         src = result.code;
         console.log("Prototypes removed...");
@@ -290,7 +380,8 @@ const updateDistEsmFiles = (
     banner,
     replaceTsLib = true,
     removeDynamic = true,
-    buildPath = "dist-es5"
+    buildPath = "dist-es5",
+    repalceOtelEs5Usage = true
 ) => {
     console.log(`UpdateDistEsmFiles: ./${buildPath}/**/*.js`);
     if (!fs.existsSync(`./${buildPath}`)) {
@@ -320,7 +411,14 @@ const updateDistEsmFiles = (
             src = replaceTsLibStarImports(orgSrc, src, theString);
         }
 
-        src = fixIEDynamicProtoUsage(orgSrc, src, theString);
+        // if (repalceOtelEs5Usage) {
+        //     src = rewriteOtelNonEs5Usage(orgSrc, src, theString);
+        // }
+
+        if (buildPath.indexOf("es5")) {
+            // Remap the tslib functions to the shims
+            src = fixIEDynamicProtoUsage(orgSrc, src, theString);
+        }
 
         // Replace the header
         Object.keys(replaceValues).forEach((value) => {

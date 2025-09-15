@@ -26,7 +26,7 @@ function loadFetchModule(moduleLoader, name) {
     };
 }
 
-function loadCommonModules(moduleLoader, onDone, includeShims) {
+function loadCommonModules(moduleLoader, onDone, includeShims, resolveDependencies) {
 
     // Load and define the app insights test framework module
     moduleLoader.add("@microsoft/ai-test-framework");
@@ -34,7 +34,11 @@ function loadCommonModules(moduleLoader, onDone, includeShims) {
         moduleLoader.add("@microsoft/applicationinsights-shims");
     }
 
-    moduleLoader.addModuleDependencies(onDone);
+    if (resolveDependencies) {
+        moduleLoader.addModuleDependencies(onDone);
+    } else {
+        onDone();
+    }
 }
 
 function ModuleLoader(config) {
@@ -211,7 +215,12 @@ function ModuleLoader(config) {
         modulePath = modulePath || moduleDef.path;
 
         console.info(prefix + " +-Require - " + moduleDef.name + ":" + moduleDef.path);
-        require([moduleDef.path], function (theModule) {
+        window.exports = {};
+        var theMod = require([moduleDef.path, "exports"], function (theModule, exports) {
+            if (!theModule) {
+                return;
+            }
+
             try {
                 if (moduleDef.run) {
                     doModuleCb(moduleDef, theModule, function(theModule) {
@@ -252,9 +261,7 @@ function ModuleLoader(config) {
 
             onSuccess && onSuccess();
         },
-        function (err) {
-            onFailure(err);
-        });
+        onFailure);
     }
 
     function addModuleDependencies(onDone) {

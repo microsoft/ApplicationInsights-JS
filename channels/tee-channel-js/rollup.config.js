@@ -34,5 +34,5 @@ export default createConfig(banner,
       outputName: browserOutputName
     }
   },
-  [ "applicationinsights-teechannel-js" ]
+  [ "applicationinsights-teechannel-js", "index" ]
 );

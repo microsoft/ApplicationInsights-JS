@@ -1,4 +1,4 @@
-import { ApplicationInsights, IApplicationInsights } from '../../../src/applicationinsights-web'
+import { ApplicationInsights, IApplicationInsights } from '../../../src/index'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { SinonSpy } from 'sinon';
 import { AITestClass, Assert, PollingAssert } from '@microsoft/ai-test-framework';

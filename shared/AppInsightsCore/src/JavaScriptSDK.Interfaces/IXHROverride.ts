@@ -20,9 +20,7 @@ export interface IPayloadData {
 */
 export type SendPOSTFunction = (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => void | IPromise<boolean>;
 
-export type OnCompleteCallback = (status: number, headers: { [headerName: string]: string; }, response?: string) => void;
-
-
+export type OnCompleteCallback = (status: number, headers: { [headerName: string]: string; }, response?: string, payload?: IPayloadData) => void;
 
 /**
 * The IXHROverride interface overrides the way HTTP requests are sent.

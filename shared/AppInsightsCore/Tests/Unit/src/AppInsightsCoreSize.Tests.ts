@@ -51,10 +51,10 @@ function _checkSize(checkType: string, maxSize: number, size: number, isNightly:
 }    
 
 export class AppInsightsCoreSizeCheck extends AITestClass {
-    private readonly MAX_RAW_SIZE = 74;
-    private readonly MAX_BUNDLE_SIZE = 74;
-    private readonly MAX_RAW_DEFLATE_SIZE = 32;
-    private readonly MAX_BUNDLE_DEFLATE_SIZE = 32;
+    private readonly MAX_RAW_SIZE = 90;
+    private readonly MAX_BUNDLE_SIZE = 90;
+    private readonly MAX_RAW_DEFLATE_SIZE = 35;
+    private readonly MAX_BUNDLE_DEFLATE_SIZE = 35;
     private readonly rawFilePath = "../dist/es5/applicationinsights-core-js.min.js";
     private readonly prodFilePath = "../browser/es5/applicationinsights-core-js.min.js";
 
