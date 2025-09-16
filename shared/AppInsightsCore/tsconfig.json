@@ -25,7 +25,8 @@
     "./src/Config/**/*.ts",
     "./src/JavaScriptSDK/**/*.ts",
     "./src/JavaScriptSDK.Enums/**/*.ts",
-    "./src/JavaScriptSDK.Interfaces/**/*.ts"
+    "./src/JavaScriptSDK.Interfaces/**/*.ts",
+    "./src/OpenTelemetry/**/*.ts"
   ],
   "exclude": ["node_modules/"]
 }

@@ -34,5 +34,5 @@ export default createConfig(banner,
       outputName: browserOutputName
     }
   },
-  [ "applicationinsights-channel-js" ]
+  [ "applicationinsights-channel-js", "index" ]
 );

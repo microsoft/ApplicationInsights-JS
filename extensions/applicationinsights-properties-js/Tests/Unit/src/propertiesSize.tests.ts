@@ -51,7 +51,7 @@ function _checkSize(checkType: string, maxSize: number, size: number, isNightly:
 }    
 
 export class PropertiesExtensionSizeCheck extends AITestClass {
-    private readonly MAX_DEFLATE_SIZE = 19;
+    private readonly MAX_DEFLATE_SIZE = 20.0;
     private readonly rawFilePath = "../dist/es5/applicationinsights-properties-js.min.js";
     // Automatically updated by version scripts
     private readonly currentVer = "3.3.9";

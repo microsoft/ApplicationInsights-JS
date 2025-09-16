@@ -1,0 +1,61 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "entryPoints": [ "./src/otel-core-js.ts" ],
+    "exclude": [ "**/internal/**/*.ts", "node_modules/**" ],
+    "externalPattern": [
+        "**/node_modules/**",
+        "node_modules/**"
+    ],
+    "sort": [
+        "alphabetical",
+        "kind",
+        "instance-first"
+    ],
+    "basePath": "./src",
+    "sourceLinkTemplate": "https://github.com/microsoft/ApplicationInsights-JS/blob/main/{path}#L{line}",
+    "cleanOutputDir": true,
+    "excludeExternals": false,
+    "excludeInternal": true,
+    "excludePrivate": true,
+    "includeVersion": true,
+    "groupOrder": [
+        "Entrypoint",
+        "Modules",
+        "Namespaces",
+        "Enumerations",
+        "Enumeration Members",
+        "Classes",
+        "Interfaces",
+        "Type Aliases",
+        "Constructors",
+        "Properties",
+        "Variables",
+        "Functions",
+        "Accessors",
+        "Methods",
+        "References",
+        "*"
+    ],
+    "tsconfig": "./tsconfig.json",
+    "out": "../../docs/webSdk/otel-core-js",
+    "readme": "none",
+    "githubPages": true,
+    "gitRevision": "main",
+    "compilerOptions": {
+        "stripInternal": true
+    },
+    "sidebarLinks": {
+        "Changelog": "https://github.com/microsoft/ApplicationInsights-JS/blob/main/RELEASES.md",
+        "Readme": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/shared/OpenTelemetry"
+    },
+    "navigationLinks": {
+        "GitHub": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/shared/OpenTelemetry",
+        "npm": "https://www.npmjs.com/package/@microsoft/otel-core-js"
+    },
+    "visibilityFilters": {
+        "protected": false,
+        "private": false,
+        "inherited": true,
+        "external": true
+    }
+}

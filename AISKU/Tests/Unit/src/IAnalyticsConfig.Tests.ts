@@ -1,4 +1,4 @@
-import { ApplicationInsights, IAnalyticsConfig, IAppInsights, IConfig, ApplicationAnalytics } from "../../../src/applicationinsights-web";
+import { ApplicationInsights, IAnalyticsConfig, IAppInsights, IConfig, ApplicationAnalytics } from "../../../src/index";
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { AnalyticsPluginIdentifier, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
 import { AppInsightsCore, IConfiguration, isFunction, onConfigChange } from "@microsoft/applicationinsights-core-js";

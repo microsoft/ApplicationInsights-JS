@@ -7,6 +7,7 @@ import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger
 import { IBackendResponse } from "../JavaScriptSDK.Interfaces/IXDomainRequest";
 import { _throwInternal } from "./DiagnosticLogger";
 import { getJSON } from "./EnvUtils";
+import { STR_EMPTY } from "./InternalConstants";
 
 /**
  * Parses the response from the backend.
@@ -14,7 +15,7 @@ import { getJSON } from "./EnvUtils";
  */
 export function parseResponse(response: any, diagLog?: IDiagnosticLogger): IBackendResponse {
     try {
-        if (response && response !== "") {
+        if (response && response !== STR_EMPTY) {
             const result = getJSON().parse(response);
 
             if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&

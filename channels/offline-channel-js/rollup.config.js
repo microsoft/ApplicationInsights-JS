@@ -31,7 +31,7 @@ export default createConfig(banner,
             outputName: outputName
         }
     },
-    ["applicationinsights-offlinechannel-js"]
+    ["applicationinsights-offlinechannel-js", "index"]
 );
 
 

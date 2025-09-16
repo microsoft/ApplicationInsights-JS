@@ -17,7 +17,10 @@
             paths: {
                 qunit: "../../common/Tests/External/qunit-2.9.3",
                 "whatwg-fetch": "../../common/Tests/External/whatwg-fetch.3.6.2"
-            }
+            },
+            packages: [
+                // { name: "@opentelemetry/api", location: "node_modules/@opentelemetry/api/build/src/index" }
+            ]
         });
 
         // Load qunit here instead of with tests, otherwise will not work

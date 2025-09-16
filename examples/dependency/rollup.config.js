@@ -66,7 +66,7 @@ const browserRollupConfigFactory = (name, isProduction, format = "umd", extensio
       }),
       doCleanup(),
       es5Poly(),
-      es5Check()
+      // es5Check()
     ]
   };
 

@@ -72,7 +72,75 @@ export {
     TransportType,
 
     // Test Hooks
-    _testHookMaxUnloadHooksCb
+    _testHookMaxUnloadHooksCb,
+
+    // ==========================================================================
+    // OpenTelemetry exports
+    // ==========================================================================
+
+    // Context
+    createContextManager, createContext,
+
+    eOTelSamplingDecision, OTelSamplingDecision,
+    eOTelSpanKind, OTelSpanKind,
+    eOTelSpanStatusCode, OTelSpanStatusCode,
+
+    // ---------------------------------------------------------------------------
+    // Interfaces
+    // ---------------------------------------------------------------------------
+
+    // Config
+    IOTelAttributeLimits,
+    IOTelConfig,
+    IOTelErrorHandlers,
+    IOTelTraceCfg,
+
+    // Context
+    IOTelContextManager,
+    IOTelContext,
+
+    // Noop Support
+    INoopProxyConfig,
+
+    // Resources
+    IOTelResource, OTelMaybePromise, OTelRawResourceAttribute,
+
+    // Trace
+    IOTelIdGenerator,
+    IOTelInstrumentationScope,
+    IOTelLink,
+    IOTelTracerCtx,
+    IOTelTraceState,
+    IReadableSpan,
+    IOTelSampler,
+    IOTelSamplingResult,
+    IOTelSpan,
+    IOTelSpanContext,
+    IOTelSpanOptions,
+    IOTelSpanStatus,
+    IOTelTimedEvent,
+    IOTelTracerProvider,
+    IOTelTracer,
+    IOTelTracerOptions,
+
+    // Noop
+    createNoopContextMgr,
+    _noopThis, _noopVoid,
+    createNoopProxy,
+    createNoopTracerProvider,
+
+    // Trace
+    createNonRecordingSpan,
+    isSpanContext, wrapDistributedTrace,
+    createTracer,
+    createOTelTraceState, isOTelTraceState,
+    deleteContextSpan, getContextSpan, setContextSpan, setContextSpanContext, getContextActiveSpanContext, isSpanContextValid, wrapSpanContext,
+    isReadableSpan, isTracingSuppressed, suppressTracing, unsuppressTracing,
+
+    IOTelAttributes, OTelAttributeValue, ExtendedOTelAttributeValue,
+    OTelException, IOTelExceptionWithCode, IOTelExceptionWithMessage, IOTelExceptionWithName,
+    IOTelHrTime, OTelTimeInput
+
 } from "@microsoft/applicationinsights-core-js";
 
 export {

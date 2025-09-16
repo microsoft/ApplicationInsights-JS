@@ -4,7 +4,7 @@ import { updateDistEsmFiles } from "../tools/updateDistEsm/updateDistEsm";
 const version = require("./package.json").version;
 const browserEntryPointName = "Init";
 const browserOutputName = "ai";
-const entryPointName = "applicationinsights-web";
+const entryPointName = "index";
 const outputName = "applicationinsights-web"; 
 
 const banner = [
@@ -34,4 +34,4 @@ export default createConfig(banner,
       outputName: browserOutputName
     }
   },
-  [ "applicationinsights-web" ]);
+  [ "applicationinsights-web", "index" ]);

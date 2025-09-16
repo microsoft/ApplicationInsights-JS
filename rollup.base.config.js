@@ -7,7 +7,8 @@ import sourcemaps from 'rollup-plugin-sourcemaps';
 import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup";
 import { es5Poly, es5Check, importCheck } from "@microsoft/applicationinsights-rollup-es5";
 import { resolve } from 'path';
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
+import { exists } from "grunt";
 
 const rootVersion = require("./package.json").version;
 
@@ -127,8 +128,8 @@ const getOutro = (format, theNameSpace, moduleName, version) => {
     return theOutro;
 }
 
-let rNodeModule = /(.*[\\\/]node_modules[\\\/])((@\w+[\\\/]){0,1}([^\\\/]+))(.*)$/;
-let tLocalPackage = /^((\.\.\/)+)(\w+\/\w+)(\/.*\.ts)$/;
+let rNodeModule = /(.*[\\\/]node_modules[\\\/])((@[\w.\-]+[\\\/]){0,1}([^\\\/]+))(.*)$/;
+let tLocalPackage = /^((\.\.\/)+)([\w.\-_]+\/[\w.\-_]+)(\/.*\.ts)$/;
 let packageVerCache = { };
 
 function getPackageVer(source) {
@@ -155,27 +156,48 @@ function getPackageVer(source) {
 }
 
 function getLocalPackageVer(source, absPath) {
+    console.log(" ** getLocalPackageVer: [" + source + "], absPath: [" + absPath + "]");
     let grps = tLocalPackage.exec(source);
     if (grps && grps.length > 4) {
-        if (!packageVerCache["local:" + grps[3]]) {
-            let idx = absPath.indexOf(grps[3] + "/");
-            if (idx != -1) {
-                let basePath = absPath.substring(0, idx + grps[3].length);
-                let pkg = readFileSync(basePath + "/package.json");
-                if (pkg) {
-                    let ver = JSON.parse(pkg).version;
+        let thePath = grps[3];
+        if (thePath.endsWith("/src") || thePath.endsWith("\\src")) {
+            thePath = thePath.substring(0, thePath.length - 4);
+        }
+        if (!packageVerCache["local:" + thePath]) {
+            let idx = absPath.indexOf(thePath + "/");
+            if (idx === -1) {
+                idx = absPath.indexOf(thePath + "\\");
+            }
 
-                    packageVerCache["local:" + grps[3]] = {
-                        name: grps[3],
-                        ver: ver,
-                        src: source,
-                        path: grps[4]
-                    };
+            if (idx != -1) {
+                let basePath = absPath.substring(0, idx + thePath.length);
+                if (!existsSync(basePath + "/package.json")) {
+                    console.log(" ==> getLocalPackageVer: " + source + ", " + absPath);
+                    if (!existsSync(basePath + "/../package.json")) {
+                        basePath += "/..";
+                    }
+                }
+                try {
+                    let pkg = readFileSync(basePath + "/package.json");
+                    if (pkg) {
+                        let ver = JSON.parse(pkg).version;
+
+                        packageVerCache["local:" + thePath] = {
+                            name: thePath,
+                            ver: ver,
+                            src: source,
+                            path: grps[4]
+                        };
+                    }
+                } catch (e) {
+                    console.log(" ==> getLocalPackageVer: " + source + ", " + absPath + " -- " + JSON.stringify(grps));
+                    console.log("Error: " + e);
+                    throw e;
                 }
             }
         }
 
-        return packageVerCache["local:" + grps[3]];
+        return packageVerCache["local:" + thePath];
     }
 
     return null;
@@ -293,6 +315,46 @@ function getSourceMapPathTransformer(distPath, theNameSpace, isDebug) {
     };
 }
 
+function _removeEs6DynamicProto(code, id) {
+    if (id.endsWith(".js") && id.indexOf("node_modules") === -1) {
+        console.log("Processing [" + id + "]");
+        const rEs6DynamicProto = /([\t ]*)(\w+)\([^\)]*\)\s*{(?:\r|\n)+([^\}]*@DynamicProtoStub[^\}]*)(?:\r|\n)+\s*}\s*(?:\r|\n)+/gi;
+        let modifiedCode = code;
+        let changed = false;
+        let match;
+        while ((match = rEs6DynamicProto.exec(code)) !== null) {
+            let prefix = match[1];
+            let funcName = match[2];
+            console.log(" -- Removing [" + funcName + "]");
+            modifiedCode = modifiedCode.replace(match[0], prefix + "// Removed Stub for " + funcName + "\n");
+            changed = true;
+        }
+
+        if (changed) {
+            return {
+                code: modifiedCode,
+                map: null
+            };
+        } else {
+            console.log("No changes made to " + id);
+        }
+    } else {
+        console.log("Skipping " + id);
+    }
+
+    return null;
+}
+
+function removeEs6DynamicProto() {
+    return {
+        name: 'remove-es6-dynamicproto',
+        renderChunk: (code, chunk) => {
+            return _removeEs6DynamicProto(code, chunk.fileName);
+        },
+        transform: _removeEs6DynamicProto
+    };
+}
+
 const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetType, theNameSpace, entryInputName, outputName, theVersion, libVersion, isProduction, format = 'umd', postfix = '', teamExt = '', useStrict = true, topLevel = false) => {
     var outPath = isOneDs ? "bundle" : "browser";
     var thePostfix = `${postfix}`;
@@ -305,6 +367,10 @@ const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetTyp
     var inputPath = `${entryInputName}.js`;
     var rootNamespace = outputName + (theVersion ? ("@" + theVersion) : "");
 
+    // console.log("**** InputPath: " + inputPath);
+    // console.log("**** OutputPath: " + outputPath);
+    // console.log("**** ProdOutputPath: " + prodOutputPath);
+    // console.log("**** Namespace: " + rootNamespace);
     const browserRollupConfig = {
         input: inputPath,
         output: {
@@ -323,6 +389,7 @@ const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetTyp
         treeshake: treeshakeCfg,
         plugins: [
             sourcemaps(),
+            removeEs6DynamicProto(),
             dynamicRemove(),
             replace({
                 preventAssignment: true
@@ -335,10 +402,13 @@ const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetTyp
             }),
             commonjs(),
             doCleanup(),
-            es5Poly(),
-            es5Check()
+            es5Poly()
         ]
     };
+
+    if (targetType === "es5") {
+        browserRollupConfig.plugins.push(es5Check());
+    }
 
     if (isProduction) {
         browserRollupConfig.output.file = prodOutputPath;
@@ -389,6 +459,7 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
         treeshake: treeshakeCfg,
         plugins: [
             sourcemaps(),
+            removeEs6DynamicProto(),
             dynamicRemove(),
             replace({
                 preventAssignment: true
@@ -396,10 +467,15 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
             importCheck({ exclude: importCheckNames }),
             nodeResolve(),
             doCleanup(),
-            es5Poly(),
-            es5Check()
+            es5Poly()
         ]
     };
+
+
+    if (targetType === "es5") {
+        nodeRollupConfig.plugins.push(es5Check());
+    }
+
 
     if (isProduction) {
         nodeRollupConfig.output.file = prodOutputPath;
@@ -427,7 +503,7 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
 
 export function createConfig(banner, cfg, importCheckNames, isOneDs) {
     const majorVersion = isOneDs ? "" : cfg.version.split('.')[0];
-    const targetType = "es5";
+    const targetType = cfg.targetType || "es5";
     
     var tasks = [ ];
 
@@ -509,7 +585,7 @@ export function createConfig(banner, cfg, importCheckNames, isOneDs) {
 
 export function createUnVersionedConfig(banner, cfg, importCheckName, isOneDs) {
     const noVersion = "";
-    const targetType = "es5";
+    const targetType = cfg.targetType || "es5";
 
     let tasks = [ ];
 

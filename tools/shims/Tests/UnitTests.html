@@ -22,7 +22,7 @@
         modules.add("qunit");
 
         loadCommonModules(modules, function() {
-            var testModule = modules.add("Tests/Unit/src/shims.tests", "./Unit/dist/shimstests.js")
+            var testModule = modules.add("Tests/Unit/src/shims.tests", "./Unit/dist/shims.tests.js")
             testModule.run = function (tests) {
                 console && console.log("Starting tests");
                 QUnit.start();

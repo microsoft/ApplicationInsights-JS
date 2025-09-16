@@ -19,7 +19,11 @@
                 "TelemetryUnloadReason",
                 "TelemetryUpdateReason",
                 "eTraceHeadersMode",
-                "eW3CTraceFlags"
+                "eW3CTraceFlags",
+                "eAttributeChangeOp",
+                "eOTelSamplingDecision",
+                "eOTelSpanKind",
+                "eOTelSpanStatusCode"
             ]
         },
         "@microsoft/applicationinsights-perfmarkmeasure-js": {
@@ -111,6 +115,14 @@
         },
         "@microsoft/applicationinsights-osplugin-js": {
             "constEnums": []
+        },
+        "@microsoft/otel-core-js": {
+            "constEnums": [
+                "eAttributeSource",
+                "AddAttributeResult",
+                "eAttributeFilter",
+                "eValueType"
+            ]
         }
     }
 }
