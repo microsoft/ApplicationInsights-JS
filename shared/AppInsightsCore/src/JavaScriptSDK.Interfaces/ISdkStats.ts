@@ -4,12 +4,51 @@
 import { StatsType } from "../JavaScriptSDK.Enums/StatsType";
 import { IPayloadData } from "./IXHROverride";
 
+export interface ISdkBaseStat {
+    /**
+     * Returns the StatsType for this instance of the stats beat.
+     * @returns The current stats type.
+     */
+    type: StatsType;
+
+    /**
+     * The current instrumentation key.
+     */
+    cKey: string;
+
+    /**
+     * The optional number of "events" to count for this sdk stat.
+     * @default 1
+     */
+    cnt?: number;
+}
+
+export interface ISdkNetworkStat extends ISdkBaseStat {
+    /**
+     * Return the current endpoint where the stats beat is sending events.
+     * @returns The current endpoint URL.
+     */
+    endpoint: string;
+
+    /**
+     * The Status code of the event.
+     */
+    status: number;
+}
+
+export interface ISdkExceptionStat extends ISdkBaseStat {
+    /**
+     * The type of the exception.
+     */
+    exceptionType: string;
+}
+
 /**
  * The interface for the stats beat plugin, which is responsible for collecting and sending statistics about the SDK.
  * It is used to track the performance and usage of the SDK, and to identify any issues or errors that may occur.
  * @since 3.3.7
  */
-export interface IStatsBeat {
+export interface ISdkStats {
     /**
      * Returns whether this instance of the stats beat is enabled or not.
      * @returns True if the stats beat is enabled, false otherwise.
@@ -48,7 +87,7 @@ export interface IStatsBeat {
  * The configuration passed to the stats beat plugin to record statistics about the SDK
  * @since 3.3.7
  */
-export interface IStatsBeatState {
+export interface ISdkStatsState {
     /**
      * The current instrumentation key.
      */

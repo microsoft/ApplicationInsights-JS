@@ -17,7 +17,7 @@ export { IPayloadData, SendPOSTFunction, IXHROverride, OnCompleteCallback } from
 export { IUnloadHook, ILegacyUnloadHook } from "./JavaScriptSDK.Interfaces/IUnloadHook";
 export { eEventsDiscardedReason, EventsDiscardedReason, eBatchDiscardedReason, BatchDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
 export { SendRequestReason, TransportType } from "./JavaScriptSDK.Enums/SendRequestReason";
-//export { StatsType, eStatsType } from "./JavaScriptSDK.Enums/StatsType";
+export { StatsType, eStatsType } from "./JavaScriptSDK.Enums/StatsType";
 export { TelemetryUpdateReason } from "./JavaScriptSDK.Enums/TelemetryUpdateReason";
 export { TelemetryUnloadReason } from "./JavaScriptSDK.Enums/TelemetryUnloadReason";
 export { eActiveStatus, ActiveStatus } from "./JavaScriptSDK.Enums/InitActiveStatusEnum"
@@ -37,10 +37,10 @@ export { parseResponse } from "./JavaScriptSDK/ResponseHelpers";
 export { IXDomainRequest, IBackendResponse } from "./JavaScriptSDK.Interfaces/IXDomainRequest";
 export { _ISenderOnComplete, _ISendPostMgrConfig, _ITimeoutOverrideWrapper, _IInternalXhrOverride } from "./JavaScriptSDK.Interfaces/ISenderPostManager";
 export { SenderPostManager } from "./JavaScriptSDK/SenderPostManager";
-//export { IStatsBeat, IStatsBeatConfig, IStatsBeatKeyMap as IStatsBeatEndpoints, IStatsBeatState} from "./JavaScriptSDK.Interfaces/IStatsBeat";
-//export { IStatsEventData } from "./JavaScriptSDK.Interfaces/IStatsEventData";
-//export { IStatsMgr, IStatsMgrConfig } from "./JavaScriptSDK.Interfaces/IStatsMgr";
-//export { createStatsMgr } from "./JavaScriptSDK/StatsBeat";
+export { ISdkStats, IStatsBeatConfig, IStatsBeatKeyMap, ISdkStatsState } from "./JavaScriptSDK.Interfaces/ISdkStats";
+export { IStatsEventData } from "./JavaScriptSDK.Interfaces/IStatsEventData";
+export { IStatsMgr, IStatsMgrConfig } from "./JavaScriptSDK.Interfaces/IStatsMgr";
+export { createStatsMgr } from "./JavaScriptSDK/SdkStats";
 export {
     isArray, isTypeof, isUndefined, isNullOrUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,
     strEndsWith, strStartsWith, isDate, isError, isString, isNumber, isBoolean, arrForEach, arrIndexOf,
