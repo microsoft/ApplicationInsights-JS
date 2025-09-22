@@ -31,7 +31,7 @@ export {
     normalizeJsName, toISOString, getExceptionName, strContains, setValue, getSetValue,
     proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
     isNotUndefined, isNotNullOrUndefined, objExtend, isFeatureEnabled, getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports,
-    openXhr, _appendHeader, _getAllResponseHeaders, convertAllHeadersToMap
+    openXhr, _appendHeader, _getAllResponseHeaders, convertAllHeadersToMap, setObjStringTag, setProtoTypeName
 } from "./JavaScriptSDK/HelperFuncs";
 export { parseResponse } from "./JavaScriptSDK/ResponseHelpers";
 export { IXDomainRequest, IBackendResponse } from "./JavaScriptSDK.Interfaces/IXDomainRequest";
@@ -117,15 +117,67 @@ export { eW3CTraceFlags } from "./JavaScriptSDK.Enums/W3CTraceFlags";
 export { IW3cTraceState } from "./JavaScriptSDK.Interfaces/IW3cTraceState";
 export { createW3cTraceState, findW3cTraceState, isW3cTraceState, snapshotW3cTraceState } from "./JavaScriptSDK/W3cTraceState";
 
-// ==========================================================================
-// OpenTelemetry exports
-// ==========================================================================
-
-
-// ---------------------------------------------------------------------------
-// Interfaces
-// ---------------------------------------------------------------------------
-
-// Trace
+// OpenTelemetry Trace support
 export { IOTelTraceState } from "./OpenTelemetry/interfaces/trace/IOTelTraceState";
-export { IOTelSpanContext } from "./OpenTelemetry/interfaces/trace/IOTelSpanContext";
+export { IOTelSpan } from "./OpenTelemetry/interfaces/trace/IOTelSpan";
+export { IOTelTracer } from "./OpenTelemetry/interfaces/trace/IOTelTracer";
+export { IOTelTracerProvider, IOTelTracerOptions } from "./OpenTelemetry/interfaces/trace/IOTelTracerProvider";
+export { ITraceProvider } from "./JavaScriptSDK.Interfaces/ITraceProvider";
+export { OTelSpanKind, IOTelSpanOptions } from "./OpenTelemetry/interfaces/trace/IOTelSpanOptions";
+export { createOTelTraceState } from "./OpenTelemetry/trace/traceState";
+export { createSpan } from "./OpenTelemetry/trace/span";
+export { createTracerProvider } from "./OpenTelemetry/trace/tracerProvider";
+export { createTracer } from "./OpenTelemetry/trace/tracer";
+export { isSpanContextValid, wrapSpanContext, isReadableSpan, suppressTracing, unsuppressTracing, isTracingSuppressed, withSpan } from "./OpenTelemetry/trace/utils";
+
+// Additional exports for backward compatibility
+export { OTelSpanKind as SpanKind } from "./OpenTelemetry/interfaces/trace/IOTelSpanOptions";
+export { IOTelSpanOptions as SpanOptions } from "./OpenTelemetry/interfaces/trace/IOTelSpanOptions";
+
+// OpenTelemetry Core API Interfaces
+export { IOTelApi } from "./OpenTelemetry/interfaces/IOTelApi";
+export { IOTelApiCtx } from "./OpenTelemetry/interfaces/IOTelApiCtx";
+export { IOTelAttributes, OTelAttributeValue, ExtendedOTelAttributeValue } from "./OpenTelemetry/interfaces/IOTelAttributes";
+export { OTelException } from "./OpenTelemetry/interfaces/IOTelException";
+export { IOTelHrTime, OTelTimeInput } from "./OpenTelemetry/interfaces/IOTelHrTime";
+export { createOTelApi } from "./OpenTelemetry/otelApi";
+
+// OpenTelemetry Trace Interfaces
+export { ITraceApi } from "./OpenTelemetry/interfaces/trace/ITraceApi";
+export { IOTelSpanCtx } from "./OpenTelemetry/interfaces/trace/IOTelSpanCtx";
+export { IOTelSpanStatus } from "./OpenTelemetry/interfaces/trace/IOTelSpanStatus";
+export { IReadableSpan } from "./OpenTelemetry/interfaces/trace/IReadableSpan";
+
+// OpenTelemetry Configuration Interfaces
+export { IOTelConfig } from "./OpenTelemetry/interfaces/config/IOTelConfig";
+export { IOTelAttributeLimits } from "./OpenTelemetry/interfaces/config/IOTelAttributeLimits";
+export { IOTelErrorHandlers } from "./OpenTelemetry/interfaces/config/IOTelErrorHandlers";
+export { IOTelSpanLimits } from "./OpenTelemetry/interfaces/config/IOTelSpanLimits";
+export { ITraceCfg } from "./OpenTelemetry/interfaces/config/ITraceCfg";
+
+// OpenTelemetry Attribute Support
+export { IAttributeContainer, IAttributeChangeInfo } from "./OpenTelemetry/attribute/IAttributeContainer";
+export { eAttributeChangeOp, AttributeChangeOp } from "./OpenTelemetry/enums/eAttributeChangeOp";
+export { createAttributeContainer, addAttributes, isAttributeContainer, createAttributeSnapshot } from "./OpenTelemetry/attribute/attributeContainer";
+
+// OpenTelemetry Enums
+export { eOTelSpanKind } from "./OpenTelemetry/enums/trace/OTelSpanKind";
+export { eOTelSpanStatusCode, OTelSpanStatusCode } from "./OpenTelemetry/enums/trace/OTelSpanStatus";
+
+// OpenTelemetry Internal Utilities
+export {
+    hrTime, hrTimeToTimeStamp, hrTimeDuration, hrTimeToMilliseconds, timeInputToHrTime, millisToHrTime, hrTimeToNanoseconds,
+    addHrTimes, hrTimeToMicroseconds, hrTimeToUnixNanos, zeroHrTime, nanosToHrTime, isTimeInput, isTimeInputHrTime
+} from "./OpenTelemetry/internal/timeHelpers";
+export { isAttributeValue } from "./OpenTelemetry/internal/attributeHelpers";
+
+// OpenTelemetry Error Handlers
+export {
+    handleAttribError, handleSpanError, handleDebug, handleWarn, handleError, handleNotImplemented
+} from "./OpenTelemetry/internal/commonUtils";
+
+// OpenTelemetry Error Classes
+export { OpenTelemetryError, OpenTelemetryErrorConstructor, getOpenTelemetryError, throwOTelError } from "./OpenTelemetry/errors/OTelError";
+export { OTelInvalidAttributeError, throwOTelInvalidAttributeError } from "./OpenTelemetry/errors/OTelInvalidAttributeError";
+export { OTelNotImplementedError, throwOTelNotImplementedError } from "./OpenTelemetry/errors/OTelNotImplementedError";
+export { OTelSpanError, throwOTelSpanError } from "./OpenTelemetry/errors/OTelSpanError";
