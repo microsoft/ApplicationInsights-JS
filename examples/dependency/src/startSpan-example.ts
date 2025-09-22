@@ -4,7 +4,7 @@
 import { IReadableSpan } from "@microsoft/applicationinsights-core-js";
 import {
     ApplicationInsights,
-    IOTelSpan, SpanKind, SpanOptions
+    SpanKind
 } from "@microsoft/applicationinsights-web";
 
 /**

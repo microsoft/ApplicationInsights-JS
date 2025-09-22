@@ -4,7 +4,7 @@
 import {
     ApplicationInsights, IConfiguration,
     DependencyListenerFunction, DependencyInitializerFunction, IDependencyInitializerHandler, IDependencyListenerHandler,
-    IOTelSpan, SpanKind, SpanOptions
+    SpanKind
 } from "@microsoft/applicationinsights-web";
 import { generateNewConfig } from "./utils";
 
