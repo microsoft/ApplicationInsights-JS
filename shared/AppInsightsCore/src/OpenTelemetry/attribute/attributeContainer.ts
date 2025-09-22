@@ -344,7 +344,7 @@ function _iterator<V, T>(target: IAttributeBranch<V>, cb: (prefix: string, key: 
     let ctx: CreateIteratorContext<T> | null = {
         v: undefined,
         n: _moveNext
-    }
+    };
 
     if (parentAttribs) {
         if (isAttributeContainer(parentAttribs)) {
@@ -678,7 +678,7 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
     let theDropped: ICachedValue<number> | null = null;
     let limits: IOTelAttributeLimits = traceCfg.generalLimits || {};
     let maxAttribs: number = limits.attributeCountLimit || 128;
-    let maxValueLen: number = limits.attributeValueLengthLimit;
+    // let maxValueLen: number = limits.attributeValueLengthLimit;
     let theAttributes: ICachedValue<IOTelAttributes>;
     let localAttributes: ICachedValue<IOTelAttributes>;
     let droppedAttribs = 0;
@@ -690,7 +690,7 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
     
     if (attribLimits) {
         maxAttribs = attribLimits.attributeCountLimit || maxAttribs;
-        maxValueLen = attribLimits.attributeValueLengthLimit || maxValueLen;
+        // maxValueLen = attribLimits.attributeValueLengthLimit || maxValueLen;
     }
 
     // Determine if inheritAttrib is a container or plain attributes object
@@ -874,7 +874,7 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
 
             return _createUnloadHook(listeners, callback);
         }
-    }
+    };
 
     function _listener(changeInfo: IAttributeChangeInfo<V>) {
         // Invalidate caches when parent changes

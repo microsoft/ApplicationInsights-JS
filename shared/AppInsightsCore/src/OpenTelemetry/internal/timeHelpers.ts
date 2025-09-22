@@ -6,7 +6,6 @@ import { setObjStringTag, toISOString } from "../../JavaScriptSDK/HelperFuncs";
 import { IOTelHrTime, OTelTimeInput } from "../interfaces/IOTelHrTime";
 
 const NANOSECOND_DIGITS = 9;
-const NANOSECOND_DIGITS_IN_MILLIS = 6;
 
 // Constants for time unit conversions and manipulation
 const NANOS_IN_MILLIS = /*#__PURE__*/ 1000000; // Number of nanoseconds in a millisecond
@@ -20,7 +19,6 @@ interface IOriginHrTime {
     hr: IOTelHrTime
 }
 
-let cMillisToNanos: ICachedValue<number>;
 let cSecondsToNanos: ICachedValue<number>;
 let cTimeOrigin: ICachedValue<IOriginHrTime>;
 let cNanoPadding: ICachedValue<string>;
