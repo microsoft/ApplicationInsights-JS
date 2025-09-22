@@ -77,14 +77,6 @@ This release includes:
 - #2549 Redacting urls before sending to telemetry data
 - #2622 Suppressed credentials inline to avoid credscan false positive
 
-## Web Snippet Release 1.2.2 (June 2nd, 2025)
-
-This release adds support for Trusted Types in the Application Insights JavaScript SDK snippet loader. See more details [here](https://github.com/microsoft/ApplicationInsights-JS/blob/main/tools/applicationinsights-web-snippet/trustedTypeSupport.md).
-
-### Changelog
-- #2407 Custom Trusted Type Policy Support for Snippet Script Injection
-
-
 ## 3.3.9 (June 25th, 2025)
 
 This release contains an important fix for a change introduced in v3.3.7 that caused the `autoCaptureHandler` to incorrectly evaluate elements within `trackElementsType`, resulting in some click events not being auto-captured. See more details [here](https://github.com/microsoft/ApplicationInsights-JS/issues/2589).
