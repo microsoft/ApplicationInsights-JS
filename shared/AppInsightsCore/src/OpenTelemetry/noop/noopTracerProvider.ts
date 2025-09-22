@@ -23,7 +23,7 @@
 //  */
 // export function createNoopTracerProvider(): IOTelTracerProvider {
 
-//     function _startSpan(name: string, options?: IOTelSpanOptions, context?: IOTelContext): IOTelSpan {
+//     function _startSpan(name: string, options?: IOTelSpanOptions, context?: IOTelContext): IReadableSpan {
 //         let opts = options || {};
 //         if (!opts.root) {
 //             let parentContext = context || getContextActiveSpanContext(context);

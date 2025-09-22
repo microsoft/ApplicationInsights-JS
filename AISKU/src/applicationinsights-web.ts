@@ -35,7 +35,6 @@ export {
     Tags,
     ILoadedPlugin,
     IOTelSpan,
-    IOTelSpanContext,
     SpanKind,
     SpanOptions
 } from "@microsoft/applicationinsights-core-js";

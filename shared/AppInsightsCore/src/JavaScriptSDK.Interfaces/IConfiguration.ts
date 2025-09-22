@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { IPromise } from "@nevware21/ts-async";
 import { eTraceHeadersMode } from "../JavaScriptSDK.Enums/TraceHeadersMode";
-import { IOTelTraceCfg } from "../OpenTelemetry/interfaces/config/IOTelTraceCfg";
+import { ITraceCfg } from "../OpenTelemetry/interfaces/config/ITraceCfg";
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IChannelControls } from "./IChannelControls";
 import { ICookieMgrConfig } from "./ICookieMgr";
@@ -266,7 +266,7 @@ export interface IConfiguration {
      *
      * @example
      * ```typescript
-     * const traceCfg: IOTelTraceCfg = {
+     * const traceCfg: ITraceCfg = {
      *   serviceName: "my-service",
      *   generalLimits: {
      *     attributeCountLimit: 128,
@@ -282,7 +282,7 @@ export interface IConfiguration {
      *
      * @since 3.4.0
      */
-    readonly traceCfg?: IOTelTraceCfg;
+    readonly traceCfg?: ITraceCfg;
 }
 
 ///**

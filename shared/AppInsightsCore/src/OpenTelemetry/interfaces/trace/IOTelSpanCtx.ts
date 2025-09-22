@@ -2,8 +2,6 @@ import { IDistributedTraceContext } from "../../../JavaScriptSDK.Interfaces/IDis
 import { IOTelApi } from "../IOTelApi";
 import { IOTelAttributes } from "../IOTelAttributes";
 import { OTelTimeInput } from "../IOTelHrTime";
-import { IOTelContext } from "../context/IOTelContext";
-import { IOTelSpanContext } from "./IOTelSpanContext";
 import { IReadableSpan } from "./IReadableSpan";
 
 /**
@@ -26,23 +24,23 @@ export interface IOTelSpanCtx {
     //  */
     // instrumentationScope: IOTelInstrumentationScope;
 
-    /**
-     * The context for the current instance (not currently used)
-     */
-    context?: IOTelContext;
+    // /**
+    //  * The context for the current instance (not currently used)
+    //  */
+    // context?: IOTelContext;
     
     /*
-     * The current {@link IOTelSpanContext} instance to associated with the span
+     * The current {@link IDistributedTraceContext} instance to associated with the span
      * used to create the span.
      */
-    spanContext: IDistributedTraceContext |IOTelSpanContext;
+    spanContext: IDistributedTraceContext;
 
     /**
      * Identifies the user provided start time of the span
      */
     startTime?: OTelTimeInput;
 
-    parentSpanContext?: IDistributedTraceContext |IOTelSpanContext;
+    parentSpanContext?: IDistributedTraceContext;
     
     attributes?: IOTelAttributes;
 

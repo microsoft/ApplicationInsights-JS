@@ -1,7 +1,7 @@
 import { AITestClass, Assert } from '@microsoft/ai-test-framework';
 import { ApplicationInsights } from '../../../src/applicationinsights-web';
 import { 
-    IOTelSpan, IOTelSpanOptions, eOTelSpanKind, eOTelSpanStatusCode, newId, IDistributedTraceContext
+    IReadableSpan, IOTelSpanOptions, eOTelSpanKind, eOTelSpanStatusCode, newId, IDistributedTraceContext
 } from "@microsoft/applicationinsights-core-js";
 import { 
     ITraceTelemetry, eSeverityLevel

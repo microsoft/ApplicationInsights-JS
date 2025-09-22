@@ -8,7 +8,7 @@ import { eAttributeChangeOp } from "../enums/eAttributeChangeOp";
 import { IOTelAttributes, OTelAttributeValue } from "../interfaces/IOTelAttributes";
 import { IOTelAttributeLimits } from "../interfaces/config/IOTelAttributeLimits";
 import { IOTelConfig } from "../interfaces/config/IOTelConfig";
-import { IOTelTraceCfg } from "../interfaces/config/IOTelTraceCfg";
+import { ITraceCfg } from "../interfaces/config/ITraceCfg";
 import { handleAttribError } from "../internal/commonUtils";
 import { IAttributeChangeInfo, IAttributeContainer, eAttributeFilter } from "./IAttributeContainer";
 
@@ -672,7 +672,7 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
  * ```
  */
 export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: IOTelConfig, name?: string | null | undefined, inheritAttrib?: IOTelAttributes | IAttributeContainer, attribLimits?: IOTelAttributeLimits): IAttributeContainer<V> {
-    let traceCfg: IOTelTraceCfg = otelCfg.traceCfg || {};
+    let traceCfg: ITraceCfg = otelCfg.traceCfg || {};
     let nodes: { [key: string]: IAttributeNode<V> } | null = null;
     let theSize: ICachedValue<number> | null = null;
     let theDropped: ICachedValue<number> | null = null;

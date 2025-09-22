@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IOTelContext } from "../context/IOTelContext";
-import { IOTelSpan } from "./IOTelSpan";
 import { IOTelSpanOptions } from "./IOTelSpanOptions";
+import { IReadableSpan } from "./IReadableSpan";
 
 /**
  * OpenTelemetry tracer interface for creating and managing spans within a trace.
@@ -33,9 +32,8 @@ import { IOTelSpanOptions } from "./IOTelSpanOptions";
  * });
  * ```
  * 
- * @see {@link IOTelSpan} - Interface for individual spans
+ * @see {@link IReadableSpan} - Interface for individual spans
  * @see {@link IOTelSpanOptions} - Configuration options for span creation
- * @see {@link IOTelContext} - Context management for span propagation
  * 
  * @since 3.4.0
  */
@@ -85,7 +83,7 @@ export interface IOTelTracer {
      * }
      * ```
      */
-    startSpan(name: string, options?: IOTelSpanOptions, context?: IOTelContext): IOTelSpan | null;
+    startSpan(name: string, options?: IOTelSpanOptions): IReadableSpan | null;
 
     /**
      * Creates and starts a new span, sets it as the active span in the current context,
@@ -97,7 +95,6 @@ export interface IOTelTracer {
      * 
      * @param name - The name of the span, should be descriptive of the operation being traced
      * @param options - Optional configuration for span creation (parent context, attributes, etc.)
-     * @param context - Optional context to use for extracting the parent span; if not provided, uses current context  
      * @param fn - The function to execute within the span's active context
      * 
      * @returns The result of executing the provided function
@@ -146,8 +143,6 @@ export interface IOTelTracer {
      * );
      * ```
      */
-    startActiveSpan<F extends (span: IOTelSpan) => unknown>(name: string, fn: F): ReturnType<F>;
-    startActiveSpan<F extends (span: IOTelSpan) => unknown>(name: string, options: IOTelSpanOptions,fn: F ): ReturnType<F>;
-    startActiveSpan<F extends (span: IOTelSpan) => unknown>(name: string,options: IOTelSpanOptions, context: IOTelContext, fn: F): ReturnType<F>;
+    startActiveSpan<F extends (span: IReadableSpan) => unknown>(name: string, fn: F): ReturnType<F>;
+    startActiveSpan<F extends (span: IReadableSpan) => unknown>(name: string, options: IOTelSpanOptions,fn: F ): ReturnType<F>;
   }
-  

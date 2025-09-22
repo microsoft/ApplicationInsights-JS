@@ -15,12 +15,12 @@ import {
 import {
     AppInsightsCore, FeatureOptInMode, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties,
     IDiagnosticLogger, IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, INotificationManager, IOTelApi, IOTelApiCtx,
-    IOTelSpan, IOTelSpanOptions, IOTelTraceApi, IOTelTraceCfg, IPlugin, IReadableSpan, ITelemetryInitializerHandler, ITelemetryItem,
-    ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal,
-    addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate, createDynamicConfig, createOTelApi,
-    createProcessTelemetryContext, createUniqueNamespace, doPerf, eLoggingSeverity, eOTelSpanStatusCode, hasDocument, hasWindow,
-    hrTimeToMilliseconds, hrTimeToTimeStamp, isArray, isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString,
-    mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener
+    IOTelSpanOptions, IPlugin, IReadableSpan, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState,
+    ITraceApi, ITraceCfg, IUnloadHook, UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal, addPageHideEventListener,
+    addPageUnloadEventListener, cfgDfMerge, cfgDfValidate, createDynamicConfig, createOTelApi, createProcessTelemetryContext,
+    createUniqueNamespace, doPerf, eLoggingSeverity, eOTelSpanStatusCode, hasDocument, hasWindow, hrTimeToMilliseconds, hrTimeToTimeStamp,
+    isArray, isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, proxyAssign,
+    proxyFunctions, removePageHideEventListener, removePageUnloadEventListener
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
@@ -137,7 +137,7 @@ function _parseCs(config: IConfiguration & IConfig, configCs: string | IPromise<
     });
 }
 
-function _initOTel(core: IAppInsightsCore, traceName: string, traceCfg: IOTelTraceCfg, onEnd: (span: IReadableSpan) => void): ILazyValue<IOTelApi> {
+function _initOTel(core: IAppInsightsCore, traceName: string, traceCfg: ITraceCfg, onEnd: (span: IReadableSpan) => void): ILazyValue<IOTelApi> {
     let otelApi = createDeferredCachedValue(() => {
         let otelCfg = {
             traceCfg: traceCfg,
@@ -213,7 +213,7 @@ export class AppInsightsSku implements IApplicationInsights {
      */
     public readonly pluginVersionString: string;
 
-    public readonly trace: IOTelTraceApi;
+    public readonly trace: ITraceApi;
 
     public readonly otelApi: IOTelApi;
 
@@ -234,7 +234,7 @@ export class AppInsightsSku implements IApplicationInsights {
         let _cdnSentMessage: boolean;
         let _sdkVerSentMessage: boolean;
         let _otelApi: ILazyValue<IOTelApi>;
-        let _lazyTraceApi: ILazyValue<IOTelTraceApi>;
+        let _lazyTraceApi: ILazyValue<ITraceApi>;
 
         dynamicProto(AppInsightsSku, this, (_self) => {
             _initDefaults();
@@ -671,7 +671,7 @@ export class AppInsightsSku implements IApplicationInsights {
             // Handle span end event - create telemetry from span data
             function _onEnd(span: IReadableSpan) {
                 const name = span ? span.name : STR_EMPTY;
-                if (span.isRecording() && name) {
+                if (span.isRecording() && name && !_otelApi.v.cfg.traceCfg.suppressTracing) {
                     try {
                         // Generate a trace message from the span
                         const message = "Span " + name;
@@ -1111,7 +1111,7 @@ export class AppInsightsSku implements IApplicationInsights {
      * @returns A new span instance, or null if no trace provider is available
      * @since 3.4.0
      */
-    public startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IOTelSpan | null {
+    public startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan | null {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }

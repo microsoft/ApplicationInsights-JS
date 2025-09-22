@@ -5,10 +5,9 @@ import { fnApply, isFunction } from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { setProtoTypeName } from "../../JavaScriptSDK/HelperFuncs";
 import { STR_EMPTY } from "../../JavaScriptSDK/InternalConstants";
-import { IOTelContext } from "../interfaces/context/IOTelContext";
-import { IOTelSpan } from "../interfaces/trace/IOTelSpan";
 import { IOTelSpanOptions } from "../interfaces/trace/IOTelSpanOptions";
 import { IOTelTracer } from "../interfaces/trace/IOTelTracer";
+import { IReadableSpan } from "../interfaces/trace/IReadableSpan";
 
 /**
  * Create a tracer implementation.
@@ -18,7 +17,7 @@ import { IOTelTracer } from "../interfaces/trace/IOTelTracer";
  */
 export function createTracer(core: IAppInsightsCore, name?: string): IOTelTracer {
     let tracer: IOTelTracer = setProtoTypeName({
-        startSpan(spanName: string, options?: IOTelSpanOptions, _context?: IOTelContext): IOTelSpan | null {
+        startSpan(spanName: string, options?: IOTelSpanOptions): IReadableSpan | null {
             // Note: context is not used / needed for Application Insights / 1DS
             if (core) {
                 return core.startSpan(spanName, options);
@@ -26,30 +25,22 @@ export function createTracer(core: IAppInsightsCore, name?: string): IOTelTracer
 
             return null;
         },
-        startActiveSpan<F extends (span: IOTelSpan) => unknown>(name: string, fnOrOptions?: F | IOTelSpanOptions, optionsOrContext?: IOTelSpanOptions | IOTelContext | F, fn?: F): ReturnType<F> {
+        startActiveSpan<F extends (span: IReadableSpan) => unknown>(name: string, fnOrOptions?: F | IOTelSpanOptions, fn?: F): ReturnType<F> {
             // Figure out which parameter order was passed
             let theFn: F | null = null;
             let opts: IOTelSpanOptions | null = null;
-            let ctx: IOTelContext | null = null; // Note: context is not used / needed for Application Insights / 1DS
-
 
             if (isFunction(fnOrOptions)) {
-                // startActiveSpan<F extends (span: IOTelSpan) => unknown>(name: string, fn: F): ReturnType<F>;
+                // startActiveSpan<F extends (span: IReadableSpan) => unknown>(name: string, fn: F): ReturnType<F>;
                 theFn = fnOrOptions;
             } else {
+                // startActiveSpan<F extends (span: IReadableSpan) => unknown>(name: string, options: IOTelSpanOptions, fn: F): ReturnType<F>; or
                 opts = fnOrOptions as IOTelSpanOptions;
-                if (isFunction(optionsOrContext)) {
-                    // startActiveSpan<F extends (span: IOTelSpan) => unknown>(name: string, options: IOTelSpanOptions, fn: F): ReturnType<F>; or
-                    theFn = optionsOrContext as F;
-                } else {
-                    // startActiveSpan<F extends (span: IOTelSpan) => unknown>(name: string, options: IOTelSpanOptions, context: IOTelContext, fn: F): ReturnType<F>;
-                    ctx = optionsOrContext as IOTelContext;
-                    theFn = fn;
-                }
+                theFn = fn;
             }
 
             if (theFn) {
-                const span = tracer.startSpan(name, opts, ctx);
+                const span = tracer.startSpan(name, opts);
                 if (span) {
                     try {
                         return fnApply(theFn, [span]);

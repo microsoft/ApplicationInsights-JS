@@ -6,8 +6,8 @@ import { AnalyticsPlugin } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { IAppInsights, IPropertiesPlugin, IRequestHeaders } from "@microsoft/applicationinsights-common";
 import {
-    IConfiguration, IDistributedTraceContext, ILoadedPlugin, IOTelApi, IOTelSpan, IOTelSpanOptions, IOTelTraceApi, IPlugin, ITelemetryPlugin,
-    ITelemetryUnloadState, UnloadHandler
+    IConfiguration, IDistributedTraceContext, ILoadedPlugin, IOTelApi, IOTelSpanOptions, IPlugin, IReadableSpan, ITelemetryPlugin,
+    ITelemetryUnloadState, ITraceApi, UnloadHandler
 } from "@microsoft/applicationinsights-core-js";
 import { IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import { IPromise } from "@nevware21/ts-async";
@@ -29,7 +29,7 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
      * Unlike OpenTelemetry, this API does not return a No-Op implementation and returns null if the SDK has been torn
      * down or not yet initialized.
      */
-    readonly trace: IOTelTraceApi | null;
+    readonly trace: ITraceApi | null;
 
     /**
      * Attempt to flush data immediately; If executing asynchronously (the default) and
@@ -118,5 +118,5 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
      * @returns A new span instance, or null if no trace provider is available
      * @since 3.4.0
      */
-    startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IOTelSpan | null;
+    startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan | null;
 }
