@@ -1,4 +1,4 @@
-import { ILazyValue, arrSlice, createDeferredCachedValue, fnApply, isFunction, symbolFor } from "@nevware21/ts-utils";
+import { arrSlice, fnApply, isFunction } from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDistributedTraceContext } from "../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
@@ -10,10 +10,25 @@ import { IOTelSpanCtx } from "../interfaces/trace/IOTelSpanCtx";
 import { IReadableSpan } from "../interfaces/trace/IReadableSpan";
 import { createSpan } from "./span";
 
-const OTEL_SUPPRESS_TRACING_KEY = "OpenTelemetry SDK Context Key SUPPRESS_TRACING";
-const SUPPRESS_TRACING_CONTEXT_KEY: ILazyValue<symbol> = (/* @__PURE__ */ createDeferredCachedValue<symbol>(() => symbolFor(OTEL_SUPPRESS_TRACING_KEY)));
+/**
+ * Execute the callback `fn` function with the passed span as the active span
+ * @param core - The current core
+ * @param span - The span to set as the active span during the execution of the callback
+ * @param fn - the callback function
+ * @param thisArg - the `this` argument for the callback
+ * @param _args - Additional arguments to be passed to the function
+ */
+export function withSpan<C extends IAppInsightsCore, A extends unknown[], F extends (...args: A) => ReturnType<F>>(core: C, span: IReadableSpan, fn: F, thisArg?: ThisParameterType<F>, ..._args: A) : ReturnType<F>;
 
-export function withSpan<C extends IAppInsightsCore, A extends unknown[], F extends (...args: A) => ReturnType<F>>(core: C, span: IReadableSpan, fn: F, thisArg?: ThisParameterType<F>, ..._args: A) {
+/**
+ * Execute the callback `fn` function with the passed span as the active span
+ * @param core - The current core
+ * @param span - The span to set as the active span during the execution of the callback
+ * @param fn - the callback function
+ * @param thisArg - the `this` argument for the callback
+ * @returns 
+ */
+export function withSpan<C extends IAppInsightsCore, A extends unknown[], F extends (...args: A) => ReturnType<F>>(core: C, span: IReadableSpan, fn: F, thisArg?: ThisParameterType<F>): ReturnType<F> {
     let currentSpan = core.activeSpan();
     try {
         core.setActiveSpan(span);
