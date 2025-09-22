@@ -1,15 +1,14 @@
-import { IOTelContextManager } from "../context/IOTelContextManager";
 import { IOTelAttributeLimits } from "./IOTelAttributeLimits";
 import { IOTelSpanLimits } from "./IOTelSpanLimits";
 
 /**
- * Configuration interface for OpenTelemetry tracing functionality.
+ * Configuration interface for OpenTelemetry compatible tracing functionality.
  * This interface contains all the settings that control how traces are created,
  * processed, and managed within the OpenTelemetry system.
  * 
  * @example
  * ```typescript
- * const traceCfg: IOTelTraceCfg = {
+ * const traceCfg: ITraceCfg = {
  *   serviceName: "my-service",
  *   generalLimits: {
  *     attributeCountLimit: 128,
@@ -25,22 +24,7 @@ import { IOTelSpanLimits } from "./IOTelSpanLimits";
  * 
  * @since 3.4.0
  */
-export interface IOTelTraceCfg {
-    /**
-     * The context manager instance responsible for managing trace context propagation.
-     * If not provided, a default context manager implementation will be used.
-     * 
-     * @remarks
-     * The context manager handles the storage and retrieval of active spans and
-     * other contextual information as execution flows through different parts of
-     * the application, including across asynchronous boundaries.
-     */
-    // contextManager?: IOTelContextManager;
-
-    // textMapPropagator?: TextMapPropagator;
-
-    // sampler?: IOTelSampler;
-    
+export interface ITraceCfg {
     /**
      * Global attribute limits that apply to all telemetry items.
      * These limits help prevent excessive memory usage and ensure consistent
@@ -89,4 +73,11 @@ export interface IOTelTraceCfg {
     
     // spanProcessors?: SpanProcessor[];
     // traceExporter: SpanExporter;
+
+    /**
+     * A flag that indicates whether the tracing (creating of a "trace" event) should be suppressed
+     * when a {@link IOTelSpan} ends and the span {@link IOTelSpan#isRecording | isRecording} is true.
+     * This value is also inherited by spans when they are created.
+     */
+    suppressTracing?: boolean;
 }

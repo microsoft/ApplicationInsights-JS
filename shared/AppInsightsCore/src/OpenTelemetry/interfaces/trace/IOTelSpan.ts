@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IDistributedTraceContext } from "../../../applicationinsights-core-js";
 import { IOTelAttributes, OTelAttributeValue } from "../IOTelAttributes";
 import { OTelException } from "../IOTelException";
 import { OTelTimeInput } from "../IOTelHrTime";
-import { IOTelLink } from "./IOTelLink";
-import { IOTelSpanContext } from "./IOTelSpanContext";
 import { IOTelSpanStatus } from "./IOTelSpanStatus";
 
 /**
@@ -82,7 +81,7 @@ export interface IOTelSpan {
      * const spanId = spanContext.spanId;
      * ```
      */
-    spanContext(): IOTelSpanContext;
+    spanContext(): IDistributedTraceContext;
   
     /**
      * Sets a single attribute on the span with the specified key and value.
@@ -149,121 +148,121 @@ export interface IOTelSpan {
      */
     setAttributes(attributes: IOTelAttributes): this;
   
-    /**
-     * Adds an event to the span with optional attributes and timestamp.
-     * 
-     * **Note: This method is currently not implemented and events will be dropped.**
-     * 
-     * Events represent significant points in time during the span's execution.
-     * They provide additional context about what happened during the operation,
-     * such as cache hits/misses, validation steps, or other notable occurrences.
-     * 
-     * @param name - The name of the event, should be descriptive of what occurred
-     * @param attributesOrStartTime - Event attributes object, or start time if third parameter is undefined
-     * @param startTime - Optional start time of the event; if not provided, current time is used
-     * 
-     * @returns This span instance for method chaining
-     * 
-     * @remarks
-     * - **Current implementation drops events - not yet supported**
-     * - Events are timestamped occurrences within a span's lifecycle
-     * - Useful for marking significant points like cache hits, retries, or validation steps
-     * - Should not be used for high-frequency events due to performance impact
-     * 
-     * @example
-     * ```typescript
-     * const span = tracer.startSpan('user-registration');
-     * 
-     * // Add events to mark significant points
-     * span.addEvent('validation.started')
-     *     .addEvent('validation.completed', { 
-     *       'validation.result': 'success',
-     *       'validation.duration_ms': 23 
-     *     })
-     *     .addEvent('database.save.started')
-     *     .addEvent('database.save.completed', {
-     *       'db.rows_affected': 1
-     *     });
-     * ```
-     */
-    addEvent(name: string, attributesOrStartTime?: IOTelAttributes | OTelTimeInput, startTime?: OTelTimeInput): this;
+    // /**
+    //  * Adds an event to the span with optional attributes and timestamp.
+    //  * 
+    //  * **Note: This method is currently not implemented and events will be dropped.**
+    //  * 
+    //  * Events represent significant points in time during the span's execution.
+    //  * They provide additional context about what happened during the operation,
+    //  * such as cache hits/misses, validation steps, or other notable occurrences.
+    //  * 
+    //  * @param name - The name of the event, should be descriptive of what occurred
+    //  * @param attributesOrStartTime - Event attributes object, or start time if third parameter is undefined
+    //  * @param startTime - Optional start time of the event; if not provided, current time is used
+    //  * 
+    //  * @returns This span instance for method chaining
+    //  * 
+    //  * @remarks
+    //  * - **Current implementation drops events - not yet supported**
+    //  * - Events are timestamped occurrences within a span's lifecycle
+    //  * - Useful for marking significant points like cache hits, retries, or validation steps
+    //  * - Should not be used for high-frequency events due to performance impact
+    //  * 
+    //  * @example
+    //  * ```typescript
+    //  * const span = tracer.startSpan('user-registration');
+    //  * 
+    //  * // Add events to mark significant points
+    //  * span.addEvent('validation.started')
+    //  *     .addEvent('validation.completed', { 
+    //  *       'validation.result': 'success',
+    //  *       'validation.duration_ms': 23 
+    //  *     })
+    //  *     .addEvent('database.save.started')
+    //  *     .addEvent('database.save.completed', {
+    //  *       'db.rows_affected': 1
+    //  *     });
+    //  * ```
+    //  */
+    // addEvent(name: string, attributesOrStartTime?: IOTelAttributes | OTelTimeInput, startTime?: OTelTimeInput): this;
   
-    /**
-     * Adds a single link to the span connecting it to another span.
-     * 
-     * **Note: This method is currently not implemented and links will be dropped.**
-     * 
-     * Links establish relationships between spans that are not in a typical parent-child
-     * relationship. They are useful for connecting spans across different traces or
-     * for representing batch operations where multiple spans are related but not nested.
-     * 
-     * @param link - The link object containing span context and optional attributes
-     * 
-     * @returns This span instance for method chaining
-     * 
-     * @remarks
-     * - **Current implementation drops links - not yet supported**
-     * - Links added after span creation do not affect sampling decisions
-     * - Prefer adding links during span creation when possible
-     * - Useful for batch operations, fan-out scenarios, or cross-trace relationships
-     * 
-     * @example
-     * ```typescript
-     * const span = tracer.startSpan('batch-processor');
-     * 
-     * // Link to related spans from a batch operation
-     * span.addLink({
-     *   context: relatedSpan.spanContext(),
-     *   attributes: {
-     *     'link.type': 'batch_item',
-     *     'batch.index': 1
-     *   }
-     * });
-     * ```
-     */
-    addLink(link: IOTelLink): this;
+    // /**
+    //  * Adds a single link to the span connecting it to another span.
+    //  * 
+    //  * **Note: This method is currently not implemented and links will be dropped.**
+    //  * 
+    //  * Links establish relationships between spans that are not in a typical parent-child
+    //  * relationship. They are useful for connecting spans across different traces or
+    //  * for representing batch operations where multiple spans are related but not nested.
+    //  * 
+    //  * @param link - The link object containing span context and optional attributes
+    //  * 
+    //  * @returns This span instance for method chaining
+    //  * 
+    //  * @remarks
+    //  * - **Current implementation drops links - not yet supported**
+    //  * - Links added after span creation do not affect sampling decisions
+    //  * - Prefer adding links during span creation when possible
+    //  * - Useful for batch operations, fan-out scenarios, or cross-trace relationships
+    //  * 
+    //  * @example
+    //  * ```typescript
+    //  * const span = tracer.startSpan('batch-processor');
+    //  * 
+    //  * // Link to related spans from a batch operation
+    //  * span.addLink({
+    //  *   context: relatedSpan.spanContext(),
+    //  *   attributes: {
+    //  *     'link.type': 'batch_item',
+    //  *     'batch.index': 1
+    //  *   }
+    //  * });
+    //  * ```
+    //  */
+    // addLink(link: IOTelLink): this;
 
-    /**
-     * Adds multiple links to the span in a single operation.
-     * 
-     * **Note: This method is currently not implemented and links will be dropped.**
-     * 
-     * This is an efficient way to establish multiple relationships between this span
-     * and other spans. Particularly useful for batch operations, fan-out scenarios,
-     * or when a single operation needs to reference multiple related operations.
-     * 
-     * @param links - An array of link objects to add to the span
-     * 
-     * @returns This span instance for method chaining
-     * 
-     * @remarks
-     * - **Current implementation drops links - not yet supported**
-     * - More efficient than multiple `addLink` calls for bulk operations
-     * - Links added after span creation do not affect sampling decisions
-     * - Consider span creation time linking for sampling-sensitive scenarios
-     * 
-     * @example
-     * ```typescript
-     * const span = tracer.startSpan('aggregate-results');
-     * 
-     * // Link to multiple related spans from parallel operations
-     * span.addLinks([
-     *   {
-     *     context: span1.spanContext(),
-     *     attributes: { 'operation.type': 'data_fetch', 'source': 'database' }
-     *   },
-     *   {
-     *     context: span2.spanContext(), 
-     *     attributes: { 'operation.type': 'data_fetch', 'source': 'cache' }
-     *   },
-     *   {
-     *     context: span3.spanContext(),
-     *     attributes: { 'operation.type': 'data_transform', 'stage': 'preprocessing' }
-     *   }
-     * ]);
-     * ```
-     */
-    addLinks(links: IOTelLink[]): this;
+    // /**
+    //  * Adds multiple links to the span in a single operation.
+    //  * 
+    //  * **Note: This method is currently not implemented and links will be dropped.**
+    //  * 
+    //  * This is an efficient way to establish multiple relationships between this span
+    //  * and other spans. Particularly useful for batch operations, fan-out scenarios,
+    //  * or when a single operation needs to reference multiple related operations.
+    //  * 
+    //  * @param links - An array of link objects to add to the span
+    //  * 
+    //  * @returns This span instance for method chaining
+    //  * 
+    //  * @remarks
+    //  * - **Current implementation drops links - not yet supported**
+    //  * - More efficient than multiple `addLink` calls for bulk operations
+    //  * - Links added after span creation do not affect sampling decisions
+    //  * - Consider span creation time linking for sampling-sensitive scenarios
+    //  * 
+    //  * @example
+    //  * ```typescript
+    //  * const span = tracer.startSpan('aggregate-results');
+    //  * 
+    //  * // Link to multiple related spans from parallel operations
+    //  * span.addLinks([
+    //  *   {
+    //  *     context: span1.spanContext(),
+    //  *     attributes: { 'operation.type': 'data_fetch', 'source': 'database' }
+    //  *   },
+    //  *   {
+    //  *     context: span2.spanContext(), 
+    //  *     attributes: { 'operation.type': 'data_fetch', 'source': 'cache' }
+    //  *   },
+    //  *   {
+    //  *     context: span3.spanContext(),
+    //  *     attributes: { 'operation.type': 'data_transform', 'stage': 'preprocessing' }
+    //  *   }
+    //  * ]);
+    //  * ```
+    //  */
+    // addLinks(links: IOTelLink[]): this;
 
     /**
      * Sets the status of the span to indicate the success or failure of the operation.

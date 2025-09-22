@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IOTelSpan } from "../OpenTelemetry/interfaces/trace/IOTelSpan";
 import { IOTelSpanOptions } from "../OpenTelemetry/interfaces/trace/IOTelSpanOptions";
+import { IReadableSpan } from "../OpenTelemetry/interfaces/trace/IReadableSpan";
 import { IDistributedTraceContext } from "./IDistributedTraceContext";
 
 /**
@@ -21,7 +21,18 @@ export interface ITraceProvider {
      * @param parent - Optional parent context. If not provided, uses the current active trace context
      * @returns A new span instance specific to this provider's implementation
      */
-    createSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IOTelSpan;
+    createSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan;
+
+    /**
+     * Return the current active span
+     */
+    activeSpan(): IReadableSpan | null;
+
+    /**
+     * Set the current Active Span
+     * @param span - The span to set as the active span
+     */
+    setActiveSpan(span: IReadableSpan): void
 
     /**
      * Gets the provider identifier for debugging and logging purposes.

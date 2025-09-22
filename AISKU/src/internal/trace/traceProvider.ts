@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import {
-    IAppInsightsCore, IConfiguration, IDistributedTraceContext, IOTelApi, IOTelSpan, IOTelSpanContext, IOTelSpanCtx, IOTelSpanOptions,
-    IReadableSpan, ITraceProvider, createDistributedTraceContext, createSpan, eOTelSpanKind, generateW3CId, setProtoTypeName
+    IAppInsightsCore, IConfiguration, IDistributedTraceContext, IOTelApi, IOTelSpanCtx, IOTelSpanOptions, IReadableSpan, ITraceProvider,
+    createDistributedTraceContext, createSpan, eOTelSpanKind, generateW3CId, setProtoTypeName
 } from "@microsoft/applicationinsights-core-js";
 import { ILazyValue, objDefine, strSubstr } from "@nevware21/ts-utils";
 import { UNDEFINED_VALUE } from "../../InternalConstants";
@@ -20,9 +20,9 @@ import { UNDEFINED_VALUE } from "../../InternalConstants";
  */
 export function _createTraceProvider<CfgType extends IConfiguration = IConfiguration>(core: IAppInsightsCore<CfgType>, traceName: string, api: ILazyValue<IOTelApi>, onEnd?: (span: IReadableSpan) => void): ITraceProvider {
     return setProtoTypeName({
-        createSpan: (name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IOTelSpan => {
+        createSpan: (name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan => {
             let newCtx: IDistributedTraceContext;
-            let parentCtx: IDistributedTraceContext | IOTelSpanContext | undefined;
+            let parentCtx: IDistributedTraceContext | undefined;
 
             if (options && options.root) {
                 newCtx = createDistributedTraceContext();
@@ -38,7 +38,6 @@ export function _createTraceProvider<CfgType extends IConfiguration = IConfigura
 
             let spanCtx: IOTelSpanCtx = {
                 api: api.v,
-                context: api.v.context.active(),
                 spanContext: newCtx,
                 attributes: options ? options.attributes : UNDEFINED_VALUE,
                 startTime: options ? options.startTime : UNDEFINED_VALUE,
@@ -54,6 +53,12 @@ export function _createTraceProvider<CfgType extends IConfiguration = IConfigura
             }
 
             return createSpan(spanCtx, name, options?.kind || eOTelSpanKind.INTERNAL);
+        },
+        activeSpan: (): IReadableSpan | null => {
+            return api.v.trace.getActiveSpan();
+        },
+        setActiveSpan: (span: IReadableSpan) => {
+            api.v.trace.setActiveSpan(span);
         },
         getProviderId: () => traceName,
         isAvailable: () => !!onEnd

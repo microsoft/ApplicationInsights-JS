@@ -23,7 +23,7 @@
 //     });
 // }
 
-// export function createNonRecordingSpan(spanContext?: IOTelSpanContext, name?: string): IOTelSpan {
+// export function createNonRecordingSpan(spanContext?: IOTelSpanContext, name?: string): IReadableSpan {
 //     function _spanSontext() {
 //         return spanContext || _createNoopSpanContext();
 //     }

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IReadableSpan } from "@microsoft/applicationinsights-core-js";
 import {
     ApplicationInsights,
     IOTelSpan, SpanKind, SpanOptions
@@ -33,7 +34,7 @@ export class StartSpanExample {
     /**
      * Basic span creation example showing simplified interface
      */
-    public basicSpanExample(): IOTelSpan | null {
+    public basicSpanExample(): IReadableSpan | null {
         if (!this._appInsights) {
             return null;
         }
@@ -90,7 +91,7 @@ export class StartSpanExample {
     /**
      * Example showing child span creation for nested operations
      */
-    public nestedSpanExample(): { parent: IOTelSpan, child: IOTelSpan } | null {
+    public nestedSpanExample(): { parent: IReadableSpan, child: IReadableSpan } | null {
         if (!this._appInsights) {
             return null;
         }
@@ -158,7 +159,7 @@ export class StartSpanExample {
     /**
      * Example showing HTTP request tracking with spans
      */
-    public httpRequestSpanExample(): IOTelSpan | null {
+    public httpRequestSpanExample(): IReadableSpan | null {
         if (!this._appInsights) {
             return null;
         }
@@ -263,7 +264,7 @@ export class StartSpanExample {
     /**
      * Example showing span attribute best practices for ApplicationInsights
      */
-    public attributeBestPracticesExample(): IOTelSpan | null {
+    public attributeBestPracticesExample(): IReadableSpan | null {
         if (!this._appInsights) {
             return null;
         }

@@ -38,12 +38,9 @@ import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnl
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { ITraceProvider } from "../JavaScriptSDK.Interfaces/ITraceProvider";
 import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
-import { IOTelTraceCfg } from "../OpenTelemetry/interfaces/config/IOTelTraceCfg";
-import { IOTelSpan } from "../OpenTelemetry/interfaces/trace/IOTelSpan";
-import { IOTelSpanContext } from "../OpenTelemetry/interfaces/trace/IOTelSpanContext";
+import { ITraceCfg } from "../OpenTelemetry/interfaces/config/ITraceCfg";
 import { IOTelSpanOptions } from "../OpenTelemetry/interfaces/trace/IOTelSpanOptions";
-import { createOTelSpanContext } from "../OpenTelemetry/trace/spanContext";
-import { createOTelTraceState } from "../OpenTelemetry/trace/traceState";
+import { IReadableSpan } from "../OpenTelemetry/interfaces/trace/IReadableSpan";
 import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
 import { ChannelControllerPriority } from "./Constants";
 import { createCookieMgr } from "./CookieMgr";
@@ -108,7 +105,7 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     loggingLevelConsole: eLoggingSeverity.DISABLED,
     diagnosticLogInterval: UNDEFINED_VALUE,
     traceHdrMode: eTraceHeadersMode.All,
-    traceCfg: cfgDfMerge<IOTelTraceCfg>({
+    traceCfg: cfgDfMerge<ITraceCfg>({
         generalLimits: cfgDfMerge({
             attributeValueLengthLimit: undefined,
             attributeCountLimit: maxAttributeCount
@@ -122,7 +119,8 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
             attributePerLinkCountLimit: maxAttributeCount
         }),
         // idGenerator: null,
-        serviceName: null
+        serviceName: null,
+        suppressTracing: false
     })
     // _sdk: { rdOnly: true, ref: true, v: defaultSdkConfig }
 });
@@ -288,18 +286,18 @@ function _createUnloadHook(unloadHook: IUnloadHook): IUnloadHook {
     }, "toJSON", { v: () => "aicore::onCfgChange<" + JSON.stringify(unloadHook) + ">" });
 }
 
-function _getParentTraceCtx(mode: eTraceHeadersMode): IOTelSpanContext | null {
-    let spanContext: IOTelSpanContext | null = null;
+function _getParentTraceCtx(mode: eTraceHeadersMode): IDistributedTraceContext | null {
+    let spanContext: IDistributedTraceContext | null = null;
     const parentTrace = (mode & eTraceHeadersMode.TraceParent) ? findW3cTraceParent() : null;
     const parentTraceState = (mode & eTraceHeadersMode.TraceState) ? findW3cTraceState() : null;
     
     if (parentTrace || parentTraceState) {
-        spanContext = createOTelSpanContext({
+        spanContext = createDistributedTraceContext({
             traceId: parentTrace ? parentTrace.traceId : null,
             spanId: parentTrace ? parentTrace.spanId : null,
             traceFlags: parentTrace ? parentTrace.traceFlags : UNDEFINED_VALUE,
             isRemote: true,  // Mark as remote since it's from an external source
-            traceState: parentTraceState ? createOTelTraceState(parentTraceState) : null
+            traceState: parentTraceState
         });
     }
 
@@ -352,7 +350,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _channels: IChannelControls[] | null;
         let _isUnloading: boolean;
         let _telemetryInitializerPlugin: TelemetryInitializerPlugin;
-        let _serverOTelCtx: IOTelSpanContext | null;
+        let _serverOTelCtx: IDistributedTraceContext | null;
         let _serverTraceHdrMode: eTraceHeadersMode;
         let _internalLogsEventName: string | null;
         let _evtNamespace: string;
@@ -1026,13 +1024,36 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _traceCtx = traceCtx || null;
             };
 
-            _self.startSpan = (name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IOTelSpan | null => {
+            _self.startSpan = (name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan | null => {
                 if (!_traceProvider || !_traceProvider.isAvailable()) {
                     // No trace provider available or provider is not ready
                     return null;
                 }
 
                 return _traceProvider.createSpan(name, options, parent || _self.getTraceCtx());
+            };
+
+            /**
+             * Return the current active span
+             */
+            _self.activeSpan = (): IReadableSpan | null => {
+                if (!_traceProvider || !_traceProvider.isAvailable()) {
+                    // No trace provider available or provider is not ready
+                    return null;
+                }
+
+                return _traceProvider.activeSpan();
+            };
+
+            /**
+             * Set the current Active Span
+             * @param span - The span to set as the active span
+             */
+            _self.setActiveSpan = (span: IReadableSpan): void => {
+                if (_traceProvider && _traceProvider.isAvailable()) {
+                    // No trace provider available or provider is not ready
+                    _traceProvider.setActiveSpan(span);
+                }
             };
 
             _self.setTraceProvider = (traceProvider: ITraceProvider): void => {
@@ -1739,9 +1760,25 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
      * @returns A new span instance, or null if no trace provider is available
      * @since 3.4.0
      */
-    public startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IOTelSpan | null {
+    public startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan | null {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
+    }
+
+    /**
+     * Return the current active span
+     */
+    public activeSpan?(): IReadableSpan | null {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Set the current Active Span
+     * @param span - The span to set as the active span
+     */
+    public setActiveSpan?(span: IReadableSpan): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
