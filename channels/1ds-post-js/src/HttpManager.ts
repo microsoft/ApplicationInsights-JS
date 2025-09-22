@@ -50,7 +50,8 @@ const _eventActionMap: any = {
     [EventBatchNotificationReason.RequeueEvents]: STR_REQUEUE,
     [EventBatchNotificationReason.Complete]: "sent",
     [EventBatchNotificationReason.KillSwitch]: STR_DROPPED,
-    [EventBatchNotificationReason.SizeLimitExceeded]: STR_DROPPED
+    [EventBatchNotificationReason.SizeLimitExceeded]: STR_DROPPED,
+    [EventBatchNotificationReason.BeaconSendFailure]: STR_DROPPED
 };
 
 const _collectorQsHeaders = { };
@@ -577,7 +578,10 @@ export class HttpManager {
                         }
                         
                         if (!persistStorage) {
-                            _sendBatchesNotification(droppedBatches, EventBatchNotificationReason.SizeLimitExceeded, thePayload.sendType, true);
+                            // Events passed Serializer size validation, log BeaconSendFailure
+                            // because it could still be size related but we did not exceed the
+                            // configured limit, and sendBeacon could fail for other reasons
+                            _sendBatchesNotification(droppedBatches, EventBatchNotificationReason.BeaconSendFailure, thePayload.sendType, true);
                         }
                     } else {
                         status = 0;

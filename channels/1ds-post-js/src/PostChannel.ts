@@ -861,7 +861,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                                 _queueSize -= droppedCount;
                             }
 
-                            _notifyBatchEvents(strEventsDiscarded, [droppedEvents], EventsDiscardedReason.QueueFull);
+                            _notifyBatchEvents(strEventsDiscarded, [droppedEvents], EventsDiscardedReason.QueueFull, undefined);
                             return true;
                         }
                     }
@@ -1120,24 +1120,25 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                 _scheduleTimer();
             }
 
-            function _eventsDropped(batches: EventBatch[], reason?: number) {
+            function _eventsDropped(batches: EventBatch[], reason?: number, isSyncRequest?: boolean, sendType?: EventSendType) {
                 _notifyBatchEvents(
                     strEventsDiscarded,
                     batches,
                     (reason >= EventBatchNotificationReason.EventsDropped && reason <= EventBatchNotificationReason.EventsDroppedMax ?
                         reason - EventBatchNotificationReason.EventsDropped :
-                        EventsDiscardedReason.Unknown));
+                        EventsDiscardedReason.Unknown),
+                    sendType);
             }
 
-            function _eventsResponseFail(batches: EventBatch[]) {
-                _notifyBatchEvents(strEventsDiscarded, batches, EventsDiscardedReason.NonRetryableStatus);
+            function _eventsResponseFail(batches: EventBatch[], reason?: number, isSyncRequest?: boolean, sendType?: EventSendType) {
+                _notifyBatchEvents(strEventsDiscarded, batches, EventsDiscardedReason.NonRetryableStatus, sendType);
 
                 // Try and schedule the processing timer if we have events
                 _scheduleTimer();
             }
 
-            function _otherEvent(batches: EventBatch[], reason?: number) {
-                _notifyBatchEvents(strEventsDiscarded, batches, EventsDiscardedReason.Unknown);
+            function _otherEvent(batches: EventBatch[], reason?: number, isSyncRequest?: boolean, sendType?: EventSendType) {
+                _notifyBatchEvents(strEventsDiscarded, batches, EventsDiscardedReason.Unknown, sendType);
 
                 // Try and schedule the processing timer if we have events
                 _scheduleTimer();

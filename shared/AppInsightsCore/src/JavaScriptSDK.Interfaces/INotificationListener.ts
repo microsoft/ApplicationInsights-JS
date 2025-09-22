@@ -22,8 +22,9 @@ export interface INotificationListener {
      * @param events - The array of events that have been discarded.
      * @param reason - The reason for discarding the events. The EventsDiscardedReason
      * constant should be used to check the different values.
+     * @param sendType - [Optional] The send type used when the events were discarded.
      */
-    eventsDiscarded?: (events: ITelemetryItem[], reason: number) => void;
+    eventsDiscarded?: (events: ITelemetryItem[], reason: number, sendType?: number) => void;
 
     /**
      * [Optional] A function called when the events have been requested to be sent to the sever.
