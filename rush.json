@@ -135,6 +135,11 @@
       "shouldPublish": false
     },
     {
+      "packageName": "@microsoft/applicationinsights-example-startspan",
+      "projectFolder": "examples/startSpan",
+      "shouldPublish": false
+    },
+    {
       "packageName": "@microsoft/applicationinsights-test-module-type-check",
       "projectFolder": "AISKU/Tests/es6-module-type-check",
       "shouldPublish": false

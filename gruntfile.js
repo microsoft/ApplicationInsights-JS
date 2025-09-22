@@ -573,6 +573,12 @@ module.exports = function (grunt) {
                                         path: "./examples/cfgSync",
                                         testHttp: false
                                     },
+
+            "example-startspan":      {
+                                        autoMinify: false,
+                                        path: "./examples/startSpan",
+                                        testHttp: false
+                                    },
     
             // Tools
             "rollupuglify":         {
@@ -981,6 +987,7 @@ module.exports = function (grunt) {
          grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
          grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
          grunt.registerTask("example-cfgsync", tsBuildActions("example-cfgsync"));
+         grunt.registerTask("example-startspan", tsBuildActions("example-startspan"));
 
         // Register the lint-fix task to run ESLint fix on all packages
         grunt.registerTask("lint-fix", getLintFixTasks());
