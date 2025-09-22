@@ -40,9 +40,14 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
     // let links: IOTelLink[] = [];
     // let events: IOTelTimedEvent[] = [];
     let localDroppedAttributes = 0;
-    let droppedEvents = 0;
-    let droppedLinks = 0;
+    // let droppedEvents = 0;
+    // let droppedLinks = 0;
     let isRecording = spanCtx.isRecording !== false;
+    if (otelCfg.traceCfg && otelCfg.traceCfg.suppressTracing) {
+        // Automatically disable the span from recording
+        isRecording = false;
+    }
+
     let spanName = orgName || STR_EMPTY;
     if (isRecording) {
         attributes = createDeferredCachedValue(() => createAttributeContainer(otelCfg, spanName, spanCtx.attributes));
@@ -92,30 +97,30 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
 
             return theSpan;
         },
-        addEvent: (name: string, attributesOrStartTime?: IOTelAttributes | OTelTimeInput, startTime?: OTelTimeInput) => {
-            droppedEvents++;
-            if(!_handleIsEnded("addEvent") && isRecording) {
-                handleWarn(errorHandlers, "Span.addEvent: " + name + " not added - No events allowed");
-            }
+        // addEvent: (name: string, attributesOrStartTime?: IOTelAttributes | OTelTimeInput, startTime?: OTelTimeInput) => {
+        //     droppedEvents++;
+        //     if(!_handleIsEnded("addEvent") && isRecording) {
+        //         handleWarn(errorHandlers, "Span.addEvent: " + name + " not added - No events allowed");
+        //     }
 
-            return theSpan;
-        },
-        addLink: (link: any) => {
-            droppedLinks++;
-            if(!_handleIsEnded("addEvent") && isRecording) {
-                handleWarn(errorHandlers, "Span.addLink: " + link + " not added - No links allowed");
-            }
+        //     return theSpan;
+        // },
+        // addLink: (link: any) => {
+        //     droppedLinks++;
+        //     if(!_handleIsEnded("addEvent") && isRecording) {
+        //         handleWarn(errorHandlers, "Span.addLink: " + link + " not added - No links allowed");
+        //     }
 
-            return theSpan;
-        },
-        addLinks: (links: any[]) => {
-            droppedLinks += links.length;
-            if (!_handleIsEnded("addLinks") && isRecording) {
-                handleWarn(errorHandlers, "Span.addLinks: " + links + " not added - No links allowed");
-            }
+        //     return theSpan;
+        // },
+        // addLinks: (links: any[]) => {
+        //     droppedLinks += links.length;
+        //     if (!_handleIsEnded("addLinks") && isRecording) {
+        //         handleWarn(errorHandlers, "Span.addLinks: " + links + " not added - No links allowed");
+        //     }
 
-            return theSpan;
-        },
+        //     return theSpan;
+        // },
         setStatus: (newStatus: IOTelSpanStatus) => {
             if (!_handleIsEnded("setStatus")) {
                 spanStatus = newStatus;
@@ -156,9 +161,9 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                         spanEndTime = spanStartTime.v;
                     }
 
-                    if (droppedEvents > 0) {
-                        handleWarn(errorHandlers, "Droped " + droppedEvents + " events");
-                    }
+                    // if (droppedEvents > 0) {
+                    //     handleWarn(errorHandlers, "Droped " + droppedEvents + " events");
+                    // }
                     
                     // We don't mark as ended until after the onEnd callback to ensure that it can
                     // still read / change the span if required as well as ensuring that the returned
@@ -233,16 +238,16 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                 return attributes ? attributes.v.droppedAttributes : localDroppedAttributes;
             }
         },
-        droppedEventsCount: {
-            g: () => {
-                return droppedEvents;
-            }
-        },
-        droppedLinksCount: {
-            g: () => {
-                return droppedLinks;
-            }
-        },
+        // droppedEventsCount: {
+        //     g: () => {
+        //         return droppedEvents;
+        //     }
+        // },
+        // droppedLinksCount: {
+        //     g: () => {
+        //         return droppedLinks;
+        //     }
+        // },
         parentSpanContext: {
             l: createDeferredCachedValue(() => {
                 return spanCtx ? spanCtx.parentSpanContext : UNDEFINED_VALUE;

@@ -1,7 +1,7 @@
+import { IAppInsightsCore } from "../../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IOTelConfig } from "./config/IOTelConfig";
-import { IOTelContextManager } from "./context/IOTelContextManager";
-import { IOTelTraceApi } from "./trace/IOTelTraceApi";
 import { IOTelTracerProvider } from "./trace/IOTelTracerProvider";
+import { ITraceApi } from "./trace/ITraceApi";
 
 /**
  * The main OpenTelemetry API interface that provides access to all OpenTelemetry functionality.
@@ -36,18 +36,18 @@ export interface IOTelApi extends IOTelTracerProvider {
     cfg: IOTelConfig;
 
     /**
-     * The current ContextManager instance for this IOTelApi instance, this is effectively
+     * The current {@link IAppInsightsCore} instance for this IOTelApi instance, this is effectively
      * the OpenTelemetry ContextAPI instance without the static methods.
      * @returns The ContextManager instance
      */
-    context: IOTelContextManager;
+    core: IAppInsightsCore;
     
     /**
-     * The current {@link IOTelTraceApi} instance for this IOTelApi instance, this is
+     * The current {@link ITraceApi} instance for this IOTelApi instance, this is
      * effectively the OpenTelemetry TraceAPI instance without the static methods.
-     * @returns The current {@link IOTelTraceApi} instance
+     * @returns The current {@link ITraceApi} instance
      */
-    trace: IOTelTraceApi;
+    trace: ITraceApi;
 
     // propagation?: IOTelPropagationApi;
 

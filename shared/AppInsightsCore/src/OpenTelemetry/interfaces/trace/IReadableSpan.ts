@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IDistributedTraceContext } from "../../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
 import { IOTelAttributes } from "../IOTelAttributes";
 import { IOTelHrTime } from "../IOTelHrTime";
 import { IOTelSpan } from "./IOTelSpan";
-import { IOTelSpanContext } from "./IOTelSpanContext";
 import { OTelSpanKind } from "./IOTelSpanOptions";
 import { IOTelSpanStatus } from "./IOTelSpanStatus";
 
@@ -29,9 +29,9 @@ export interface IReadableSpan extends IOTelSpan {
      * Identifies the type (or kind) that this span is representing.
      */
     readonly kind: OTelSpanKind;
-    readonly spanContext: () => IOTelSpanContext;
+    readonly spanContext: () => IDistributedTraceContext;
     readonly parentSpanId?: string;
-    readonly parentSpanContext?: IOTelSpanContext;
+    readonly parentSpanContext?: IDistributedTraceContext;
     readonly startTime: IOTelHrTime;
     readonly endTime: IOTelHrTime;
     readonly status: IOTelSpanStatus;
@@ -43,6 +43,6 @@ export interface IReadableSpan extends IOTelSpan {
     // readonly resource: IOTelResource;
     // readonly instrumentationScope: IOTelInstrumentationScope;
     readonly droppedAttributesCount: number;
-    readonly droppedEventsCount: number;
-    readonly droppedLinksCount: number;
+    // readonly droppedEventsCount: number;
+    // readonly droppedLinksCount: number;
   }

@@ -3,7 +3,7 @@
 
 import { AppInsightsCore } from "../../shared/AppInsightsCore/src/JavaScriptSDK/AppInsightsCore";
 import { OTelSpanKind } from "../../shared/AppInsightsCore/src/OpenTelemetry/interfaces/trace/IOTelSpanOptions";
-import { SpanStatusCode } from "../../shared/AppInsightsCore/src/OpenTelemetry/interfaces/trace/IOTelSpan";
+import { eOTelSpanStatusCode } from "../../shared/AppInsightsCore/src/OpenTelemetry/enums/trace/OTelSpanStatus";
 
 // Example 1: Basic span creation
 function exampleBasicSpanUsage() {
@@ -24,8 +24,10 @@ function exampleBasicSpanUsage() {
     });
     
     // Do some work...
-    span.setAttribute("result", "success");
-    span.addEvent("Processing started");
+    if (span) {
+        span.setAttribute("result", "success");
+        // span.addEvent("Processing started"); // Not implemented yet
+    }
     
     // Create a child span that will inherit the trace context
     const childSpan = core.startSpan("child-operation", {
@@ -38,14 +40,18 @@ function exampleBasicSpanUsage() {
     
     // Simulate some async work
     setTimeout(() => {
-        childSpan.addEvent("API call completed");
-        childSpan.setStatus({ code: SpanStatusCode.OK });
-        childSpan.end();
+        if (childSpan) {
+            // childSpan.addEvent("API call completed"); // Not implemented yet
+            childSpan.setStatus({ code: eOTelSpanStatusCode.OK });
+            childSpan.end();
+        }
         
-        // Parent span completes
-        span.addEvent("Processing completed");
-        span.setStatus({ code: SpanStatusCode.OK });
-        span.end();
+        if (span) {
+            // Parent span completes
+            // span.addEvent("Processing completed"); // Not implemented yet
+            span.setStatus({ code: eOTelSpanStatusCode.OK });
+            span.end();
+        }
     }, 100);
 }
 
@@ -65,14 +71,16 @@ function exampleManualParentContext() {
             }
         }, currentTraceCtx);
         
-        // This span is now active and will propagate to HTTP requests, etc.
-        span.addEvent("Task started");
-        
-        // Do some work...
-        setTimeout(() => {
-            span.addEvent("Task completed");
-            span.end();
-        }, 500);
+        if (span) {
+            // This span is now active and will propagate to HTTP requests, etc.
+            // span.addEvent("Task started"); // Not implemented yet
+            
+            // Do some work...
+            setTimeout(() => {
+                // span.addEvent("Task completed"); // Not implemented yet
+                span.end();
+            }, 500);
+        }
     }
 }
 
@@ -90,11 +98,12 @@ function exampleWithTelemetry() {
         }
     });
     
-    // Now all subsequent telemetry will inherit this trace context
-    // including dependency calls, custom events, etc.
-    
-    // Simulate processing steps
-    userActionSpan.addEvent("Validating cart");
+    if (userActionSpan) {
+        // Now all subsequent telemetry will inherit this trace context
+        // including dependency calls, custom events, etc.
+        
+        // Simulate processing steps
+        // userActionSpan.addEvent("Validating cart"); // Not implemented yet
     
     // Create child span for payment processing
     const paymentSpan = core.startSpan("process-payment", {
@@ -107,14 +116,19 @@ function exampleWithTelemetry() {
     
     // Simulate payment processing
     setTimeout(() => {
-        paymentSpan.addEvent("Payment authorized");
-        paymentSpan.setStatus({ code: SpanStatusCode.OK });
-        paymentSpan.end();
+        if (paymentSpan) {
+            // paymentSpan.addEvent("Payment authorized"); // Not implemented yet
+            paymentSpan.setStatus({ code: eOTelSpanStatusCode.OK });
+            paymentSpan.end();
+        }
         
-        userActionSpan.addEvent("Checkout completed");
-        userActionSpan.setStatus({ code: SpanStatusCode.OK });
-        userActionSpan.end();
+        if (userActionSpan) {
+            // userActionSpan.addEvent("Checkout completed"); // Not implemented yet
+            userActionSpan.setStatus({ code: eOTelSpanStatusCode.OK });
+            userActionSpan.end();
+        }
     }, 200);
+    }
 }
 
 export {

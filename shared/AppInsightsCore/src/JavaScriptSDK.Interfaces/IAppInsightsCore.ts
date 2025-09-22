@@ -7,8 +7,8 @@ import { WatcherFunction } from "../Config/IDynamicWatcher";
 import { eActiveStatus } from "../JavaScriptSDK.Enums/InitActiveStatusEnum";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
-import { IOTelSpan } from "../OpenTelemetry/interfaces/trace/IOTelSpan";
 import { IOTelSpanOptions } from "../OpenTelemetry/interfaces/trace/IOTelSpanOptions";
+import { IReadableSpan } from "../OpenTelemetry/interfaces/trace/IReadableSpan";
 import { IChannelControls } from "./IChannelControls";
 import { IConfiguration } from "./IConfiguration";
 import { ICookieMgr } from "./ICookieMgr";
@@ -248,7 +248,18 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
      * @returns A new span instance, or null if no trace provider is available
      * @since 3.4.0
      */
-    startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IOTelSpan | null;
+    startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan | null;
+
+    /**
+     * Return the current active span
+     */
+    activeSpan?(): IReadableSpan | null;
+
+    /**
+     * Set the current Active Span
+     * @param span - The span to set as the active span
+     */
+    setActiveSpan?(span: IReadableSpan): void
 
     /**
      * Set the trace provider for creating spans.
