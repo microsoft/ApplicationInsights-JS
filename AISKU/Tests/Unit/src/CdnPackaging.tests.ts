@@ -16,7 +16,7 @@ const enum CdnFormat {
 
 export class CdnPackagingChecks extends AITestClass {
     // Automatically updated by version scripts
-    private readonly currentVer = "3.3.9";
+    private readonly currentVer = "3.3.10";
 
     public testInitialize() {
     }

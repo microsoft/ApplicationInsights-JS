@@ -49,6 +49,42 @@ This release enhances the cookie management behavior when cookies are disabled. 
   - **Behavior change**: `cookieMgr.set()` now returns `true` when disabled (cached) instead of `false`
   - **Behavior change**: `cookieMgr.get()` now returns cached values when disabled instead of empty strings
 
+## 3.3.10 (Sept 22nd, 2025)
+
+### Interface changes
+
+This release includes:
+- Support for custom providers for Offline Channel which has added `customProvider` and `customUnloadProvider` interfaces to the `IOfflineChannelConfiguration`.
+- `IAnalyticsConfig` is exported for Analytics extension.
+- `redactUrls` and `redactQueryParams` are added to `IConfiguration` to support URL redaction.
+
+### Changelog
+
+- #2649 [Main][Task] 27922617: Provide Custom Provider Under Web Worker for Offline Channel
+- #2638 [Main][Task] 34470593: Update Async Tests Under Dependencies Extension To Use the Modern AsyncQueue Pattern 
+- #2637 [Main][Task] 34470593: Update AISKU Async Tests To Use the Modern AsyncQueue Pattern
+- #2636 Fix TypeError in Click Analytics Data Collector
+- #2633 Fix flush method root cause - handle async callbacks in _doSend with proper error handling
+- #2632 [Feature] Implement cookie caching when disabled and automatic flushing when enabled with backward compatibility option
+- #2625 Add Azure API Management proxy documentation to FAQ sections
+- #2607 Update Async Tests Under AISKULight to Use the Modern AsyncQueue Pattern
+- #2597 Fix TypeScript compatibility issue with ITelemetryPlugin interface
+- #2595 Fix trackPageView not resetting maxAjaxCallsPerView counter
+- #2583 Create IAnalyticsConfig interface to properly define AnalyticsPlugin configuration subset
+- #2625 Add Azure API Management proxy documentation to FAQ sections
+- #2627 Add weekly GitHub action to delete closed and merged branches
+- #2635 Fix issue #2634 moving the conditional check for filtering
+- #2549 Redacting urls before sending to telemetry data
+- #2622 Suppressed credentials inline to avoid credscan false positive
+
+## Web Snippet Release 1.2.2 (June 2nd, 2025)
+
+This release adds support for Trusted Types in the Application Insights JavaScript SDK snippet loader. See more details [here](https://github.com/microsoft/ApplicationInsights-JS/blob/main/tools/applicationinsights-web-snippet/trustedTypeSupport.md).
+
+### Changelog
+- #2407 Custom Trusted Type Policy Support for Snippet Script Injection
+
+
 ## 3.3.9 (June 25th, 2025)
 
 This release contains an important fix for a change introduced in v3.3.7 that caused the `autoCaptureHandler` to incorrectly evaluate elements within `trackElementsType`, resulting in some click events not being auto-captured. See more details [here](https://github.com/microsoft/ApplicationInsights-JS/issues/2589).
