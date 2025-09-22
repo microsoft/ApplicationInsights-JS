@@ -158,7 +158,7 @@ export interface IOfflineChannelConfiguration {
 
 
     /**
-     * [Optional] Custom provider that can be used instead of the provided LocalStorage, SessionStorage, IndexedD.
+     * [Optional] Custom provider that can be used instead of the provided LocalStorage, SessionStorage, IndexedDB.
      * Default: null
      * @since 3.9.10
      */
@@ -167,7 +167,7 @@ export interface IOfflineChannelConfiguration {
     /**
      * [Optional] Custom unload provider should be used for handling unload scenarios.
      * This provider should support synchronous operations (supportsSyncRequests should return true)
-     * If the unload provider is not provider, the provided customProvider will be used if it supports sync requests,
+     * If the unload provider is not provided, the provided customProvider will be used if it supports sync requests,
      * otherwise localStorage will be used by default.
      * Default: null
      * @since 3.9.10

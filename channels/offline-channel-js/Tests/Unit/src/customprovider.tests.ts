@@ -85,7 +85,7 @@ export class OfflineCustomProviderTests extends AITestClass {
         });
 
         this.testCase({
-            name: "initProvider: with custom provider(suppots sync) and unload(supports sync) provider provided",
+            name: "initProvider: with custom provider(supports sync) and unload(supports sync) provider provided",
             test: () => {
                 // Arrange
                 let mockCustomProvider = this._createMockProvider(true, true);
