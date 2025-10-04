@@ -7,7 +7,6 @@ import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProces
 import { IPropTelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { createAsyncResolvedPromise } from '@nevware21/ts-async';
 import { CONFIG_ENDPOINT_URL } from '../../../src/InternalConstants';
-import { OfflineChannel } from '@microsoft/applicationinsights-offlinechannel-js';
 import { IStackFrame } from '@microsoft/applicationinsights-common/src/Interfaces/Contracts/IStackFrame';
 import { utcNow } from '@nevware21/ts-utils';
 

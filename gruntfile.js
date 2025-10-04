@@ -729,10 +729,6 @@ module.exports = function (grunt) {
                                         path: "./shared/AppInsightsCommon",
                                         unitTestName: "aicommon.tests.js"
                                     },
-            "1dsCore":                 { 
-                                        path: "./shared/1ds-core-js",
-                                        unitTestName: "core.unittests.js"
-                                    },
             "otelCore":                 {
                                         path: "./shared/OpenTelemetry",
                                         unitTestName: "otel.unittests.js"
@@ -761,25 +757,13 @@ module.exports = function (grunt) {
     
             // Channels
             "aichannel":            { path: "./channels/applicationinsights-channel-js" },
-            "offlinechannel":       {
-                                        path: "./channels/offline-channel-js"
-                                    },
             "teechannel":           { path: "./channels/tee-channel-js" },
-            "1dsPost":              {
-                                        path: "./channels/1ds-post-js",
-                                        unitTestName: "post.unittests.js"
-                                    },
 
             // Extensions
             "appinsights":          { 
                                         path: "./extensions/applicationinsights-analytics-js",
                                         unitTestName: "appinsights-analytics.tests.js"
                                     },
-            "clickanalytics":       { 
-                                        path: "./extensions/applicationinsights-clickanalytics-js",
-                                        unitTestName: "appinsights-clickanalytics.tests.js"
-                                    },
-            "debugplugin":          { path: "./extensions/applicationinsights-debugplugin-js" },
             "deps":                 { 
                                         path: "./extensions/applicationinsights-dependencies-js",
                                         unitTestName: "dependencies.tests.js"
@@ -799,30 +783,6 @@ module.exports = function (grunt) {
             "cfgsync":               { 
                                         path: "./extensions/applicationinsights-cfgsync-js",
                                         unitTestName: "cfgsync.tests.js"
-                                    },
-
-            // Examples
-            "example-shared-worker": {
-                                        autoMinify: false,
-                                        path: "./examples/shared-worker",
-                                        testHttp: false
-                                    },
-
-            "example-aisku":        {
-                                        autoMinify: false,
-                                        path: "./examples/AISKU",
-                                        testHttp: false
-                                    },
-
-            "example-dependency":   {
-                                        autoMinify: false,
-                                        path: "./examples/dependency",
-                                        testHttp: false
-                                    },
-            "example-cfgsync":        {
-                                        autoMinify: false,
-                                        path: "./examples/cfgSync",
-                                        testHttp: false
                                     },
     
             // Tools
@@ -847,16 +807,6 @@ module.exports = function (grunt) {
                                                 ]
                                             },
                                             unitTestName: "index.tests.js"
-                                    },
-            "shims":                {
-                                        autoMinify: false,
-                                        path: "./tools/shims",
-                                        cfg: {
-                                            src: [
-                                                "./tools/shims/src/*.ts"
-                                            ]
-                                        },
-                                        unitTestName: "shims.tests.js"
                                     },
             "chrome-debug-extension": {
                                         autoMinify: false,
@@ -1074,7 +1024,7 @@ module.exports = function (grunt) {
             let packages = [
                 "core", "common", "appinsights", "aisku", "aiskulite", "perfmarkmeasure", "properties",
                 "cfgsync", "deps", "debugplugin", "aichannel", "offlinechannel", "teechannel", 
-                "1dsCore", "1dsPost", "rollupuglify", "rollupes5", "shims", "chrome-debug-extension", 
+                "rollupuglify", "rollupes5", "shims", "chrome-debug-extension", 
                 "applicationinsights-web-snippet", "clickanalytics", "osplugin"
             ];
             

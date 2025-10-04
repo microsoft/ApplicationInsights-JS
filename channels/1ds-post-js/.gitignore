@@ -1,8 +1,0 @@
-/node_modules
-*.user
-/bundle
-/.vs
-/docs
-/dist-es5
-/dist
-test/debug.log

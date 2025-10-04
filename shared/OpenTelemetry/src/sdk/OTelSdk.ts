@@ -110,8 +110,10 @@ export class OTelSdk extends BaseTelemetryPlugin implements IOTelSdk {
                 }
 
                 if (!tracer) {
+                    // Ensure otelApi is available before accessing its properties
+                    let otelApi = _otelApi.v;
                     let tracerCtx: IOTelTracerCtx = {
-                        ctxMgr: _otelApi.v.context,
+                        ctxMgr: otelApi?.context,
                         //context: _otelSdkCtx.v.context,
                         startSpan: _startSpan
                     };
@@ -122,6 +124,7 @@ export class OTelSdk extends BaseTelemetryPlugin implements IOTelSdk {
                         schemaUrl: options ? options.schemaUrl : null
                     });
 
+                    // tracerList is guaranteed to be defined by the logic above
                     tracerList.push({ name, version: tracerVer, schemaUrl: tracerSchema, tracer });
                 }
                 
