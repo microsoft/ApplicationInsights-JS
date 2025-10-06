@@ -675,7 +675,6 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
     let theDropped: ICachedValue<number> | null = null;
     let limits: IOTelAttributeLimits = traceCfg.generalLimits || {};
     let maxAttribs: number = limits.attributeCountLimit || 128;
-    let maxValueLen: number = limits.attributeValueLengthLimit;
     let theAttributes: ICachedValue<IOTelAttributes>;
     let localAttributes: ICachedValue<IOTelAttributes>;
     let droppedAttribs = 0;
@@ -687,7 +686,6 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
     
     if (attribLimits) {
         maxAttribs = attribLimits.attributeCountLimit || maxAttribs;
-        maxValueLen = attribLimits.attributeValueLengthLimit || maxValueLen;
     }
 
     // Determine if inheritAttrib is a container or plain attributes object

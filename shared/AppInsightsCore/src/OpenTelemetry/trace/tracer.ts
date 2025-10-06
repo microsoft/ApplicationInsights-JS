@@ -37,18 +37,18 @@ export function createTracer(tracerCtx: IOTelTracerCtx, tracerOptions: ITracerOp
         let fn: F;
         let ctxMgr: IOTelContextManager = tracerCtx.ctxMgr;
     
-        if (cnt > 2) {
-            if (cnt == 2) {
-                fn = arg2 as F;
-            } else if (cnt == 3) {
-                opts = arg2 as IOTelSpanOptions | undefined;
-                fn = arg3 as F;
-            } else {
-                opts = arg2 as IOTelSpanOptions | undefined;
-                ctx = arg3 as IOTelContext | undefined;
-                fn = arg4 as F;
-            }
+        if (cnt == 2) {
+            fn = arg2 as F;
+        } else if (cnt == 3) {
+            opts = arg2 as IOTelSpanOptions | undefined;
+            fn = arg3 as F;
+        } else if (cnt >= 4) {
+            opts = arg2 as IOTelSpanOptions | undefined;
+            ctx = arg3 as IOTelContext | undefined;
+            fn = arg4 as F;
+        }
 
+        if (fn) {
             let theCtx = ctx || ctxMgr.active();
             let span = _startSpan(name, opts, theCtx);
             let theContext = setContextSpan(theCtx, span);
