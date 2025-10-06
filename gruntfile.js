@@ -1024,7 +1024,7 @@ module.exports = function (grunt) {
             let packages = [
                 "core", "common", "appinsights", "aisku", "aiskulite", "perfmarkmeasure", "properties",
                 "cfgsync", "deps", "debugplugin", "aichannel", "offlinechannel", "teechannel", 
-                "rollupuglify", "rollupes5", "shims", "chrome-debug-extension", 
+                "rollupuglify", "rollupes5", "shims", // "chrome-debug-extension", -- Removed due to missing file-saver dependency
                 "applicationinsights-web-snippet", "clickanalytics", "osplugin"
             ];
             

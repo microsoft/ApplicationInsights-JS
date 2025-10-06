@@ -6,12 +6,11 @@ import { SinonSpy } from "sinon";
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { createSnippetV5 } from "./testSnippetV5";
 import { createSnippetV6 } from "./testSnippetV6";
-import { BaseTelemetryPlugin, IProcessTelemetryContext, isNotNullOrUndefined, ITelemetryItem, newId, objForEachKey } from "@microsoft/applicationinsights-core-js";
+import { BaseTelemetryPlugin, IProcessTelemetryContext, isNotNullOrUndefined, ITelemetryItem, newId, objForEachKey, getGlobal } from "@microsoft/applicationinsights-core-js";
 import {
     BreezeChannelIdentifier, ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders,
     utlRemoveSessionStorage, utlSetSessionStorage
 } from "@microsoft/applicationinsights-common";
-import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { IPropTelemetryContext } from "@microsoft/applicationinsights-properties-js";
 import { dumpObj, objHasOwnProperty, strSubstring } from "@nevware21/ts-utils";
 import { AppInsightsSku } from "../../../src/AISku";

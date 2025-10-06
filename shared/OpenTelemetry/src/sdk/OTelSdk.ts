@@ -134,7 +134,8 @@ export class OTelSdk extends BaseTelemetryPlugin implements IOTelSdk {
             function _startSpan(name: string, options?: SpanOptions, pContext?: Context): IOTelSpan | IReadableSpan {
                 let spanOpts = options || {};
                 let kind = spanOpts.kind || SpanKind.INTERNAL;
-                let theContext = pContext || _otelApi.v.context.active();
+                let otelApi = _otelApi.v;
+                let theContext = pContext || otelApi?.context?.active();
                 let parentSpanContext: SpanContext | null = null;
 
                 if (spanOpts.root) {
@@ -157,7 +158,7 @@ export class OTelSdk extends BaseTelemetryPlugin implements IOTelSdk {
                     if (!_isSampledOut(sampler, theContext, spanContext, kind, attributes, links)) {
         
                         let spanCtx: IOTelSpanCtx = {
-                            api: _otelApi.v,
+                            api: otelApi,
                             resource: null,
                             instrumentationScope: null,
                             context: theContext,
