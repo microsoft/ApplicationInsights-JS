@@ -96,7 +96,7 @@ export class OTelSdk extends BaseTelemetryPlugin implements IOTelSdk {
                 let tracerVer = version || STR_EMPTY;
                 let tracerSchema = options ? options.schemaUrl : null;
                 let keyName = normalizeJsName(name + "@" + tracerVer);
-                let tracerList = _tracers[keyName];
+                let tracerList = _tracers?.[keyName];
                 
                 if (tracerList) {
                     arrForEach(tracerList, (item) => {
@@ -106,6 +106,10 @@ export class OTelSdk extends BaseTelemetryPlugin implements IOTelSdk {
                         }
                     });
                 } else {
+                    // Ensure _tracers is initialized before accessing it
+                    if (!_tracers) {
+                        _tracers = {};
+                    }
                     tracerList = _tracers[keyName] = [];
                 }
 
@@ -194,6 +198,7 @@ export class OTelSdk extends BaseTelemetryPlugin implements IOTelSdk {
                 // Use a default logger so initialization errors are not dropped on the floor with full logging
                 _configHandler = createDynamicConfig({} as IOTelConfig, traceApiDefaultConfigValues as any, _self.diagLog());
                 let otelConfig = _configHandler.cfg;
+                _tracers = {};
 
                 _otelApi = createDeferredCachedValue(() => {
                     let otelApiCtx: IOTelApiCtx = {
