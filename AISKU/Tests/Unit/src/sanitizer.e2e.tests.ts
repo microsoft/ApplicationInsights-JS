@@ -1,4 +1,4 @@
-import { ApplicationInsights, IApplicationInsights, LoggingSeverity, _eInternalMessageId } from '../../../src/applicationinsights-web'
+import { ApplicationInsights, IApplicationInsights, LoggingSeverity, _eInternalMessageId } from '../../../src/index'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { AITestClass, Assert, PollingAssert } from '@microsoft/ai-test-framework';
 import { SinonSpy } from 'sinon';

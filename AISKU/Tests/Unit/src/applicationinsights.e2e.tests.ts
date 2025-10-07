@@ -1,13 +1,12 @@
 import { AITestClass, Assert, PollingAssert, EventValidator, TraceValidator, ExceptionValidator, MetricValidator, PageViewValidator, PageViewPerformanceValidator, RemoteDepdencyValidator } from '@microsoft/ai-test-framework';
 import { SinonSpy } from 'sinon';
-import { ApplicationInsights } from '../../../src/applicationinsights-web'
+import { ApplicationInsights } from '../../../src/index'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig, EventPersistence } from '@microsoft/applicationinsights-common';
 import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus, FeatureOptInMode } from "@microsoft/applicationinsights-core-js";
 import { IPropTelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { createAsyncResolvedPromise } from '@nevware21/ts-async';
 import { CONFIG_ENDPOINT_URL } from '../../../src/InternalConstants';
-import { OfflineChannel } from '@microsoft/applicationinsights-offlinechannel-js';
 import { IStackFrame } from '@microsoft/applicationinsights-common/src/Interfaces/Contracts/IStackFrame';
 import { utcNow } from '@nevware21/ts-utils';
 
@@ -404,8 +403,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._config = this._getTestConfig(this._sessionPrefix);
                 let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
                 this._config.connectionString = csPromise;
-                let offlineChannel = new OfflineChannel();
-                this._config.channels = [[offlineChannel]];
+                // Note: OfflineChannel was removed, commenting out for now
+                // let offlineChannel = new OfflineChannel();
+                // this._config.channels = [[offlineChannel]];
                 this._config.initTimeOut= 80000;
 
 
@@ -435,11 +435,12 @@ export class ApplicationInsightsTests extends AITestClass {
                     Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
                     Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
                     let sendChannel = this._ai.getPlugin(BreezeChannelIdentifier);
-                    let offlineChannelPlugin = this._ai.getPlugin("OfflineChannel").plugin;
+                    // Note: OfflineChannel was removed, commenting out for now
+                    // let offlineChannelPlugin = this._ai.getPlugin("OfflineChannel").plugin;
                     Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
-                    Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
-                    let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
-                    Assert.ok(urlConfig, "offline url config is initialized");
+                    // Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                    // let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+                    // Assert.ok(urlConfig, "offline url config is initialized");
                     return true;
                 }
                 return false;
@@ -592,7 +593,8 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 this.clock.tick(1);
                 // if fake timer is turned on, session data will return 0 and will throw sesson not renew error
-                let offlineChannel = new OfflineChannel();
+                // Note: OfflineChannel was removed, commenting out for now
+                // let offlineChannel = new OfflineChannel();
                 let config = {
                     instrumentationKey: "testIKey",
                     endpointUrl: "testUrl",
@@ -602,18 +604,19 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
 
                     },
-                    extensions:[offlineChannel]
+                    // extensions:[offlineChannel]
                 } as IConfiguration & IConfig;
                 let ai = new ApplicationInsights({config: config});
                 ai.loadAppInsights();
                 this.clock.tick(1);
 
                 let sendChannel = ai.getPlugin(BreezeChannelIdentifier);
-                let offlineChannelPlugin = ai.getPlugin("OfflineChannel").plugin;
+                // Note: OfflineChannel was removed, commenting out for now
+                // let offlineChannelPlugin = ai.getPlugin("OfflineChannel").plugin;
                 Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
-                Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
-                let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
-                Assert.ok(urlConfig, "offline url config is initialized");
+                // Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                // let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+                // Assert.ok(urlConfig, "offline url config is initialized");
 
                 ai.unload(false);
                 if (ai && ai["dependencies"]) {
@@ -629,7 +632,8 @@ export class ApplicationInsightsTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 this.clock.tick(1);
-                let offlineChannel = new OfflineChannel();
+                // Note: OfflineChannel was removed, commenting out for now
+                // let offlineChannel = new OfflineChannel();
                 let config = {
                     instrumentationKey: "testIKey",
                     endpointUrl: "testUrl",
@@ -639,18 +643,19 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
 
                     },
-                    channels:[[offlineChannel]]
+                    // channels:[[offlineChannel]]
                 } as IConfiguration & IConfig;
                 let ai = new ApplicationInsights({config: config});
                 ai.loadAppInsights();
                 this.clock.tick(1);
 
                 let sendChannel = ai.getPlugin(BreezeChannelIdentifier);
-                let offlineChannelPlugin = ai.getPlugin("OfflineChannel").plugin;
+                // Note: OfflineChannel was removed, commenting out for now
+                // let offlineChannelPlugin = ai.getPlugin("OfflineChannel").plugin;
                 Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
-                Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
-                let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
-                Assert.ok(urlConfig, "offline url config is initialized");
+                // Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                // let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+                // Assert.ok(urlConfig, "offline url config is initialized");
              
 
                 ai.unload(false);
@@ -666,7 +671,8 @@ export class ApplicationInsightsTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 this.clock.tick(1);
-                let offlineChannel = new OfflineChannel();
+                // Note: OfflineChannel was removed, commenting out for now
+                // let offlineChannel = new OfflineChannel();
                 let config = {
                     connectionString: "InstrumentationKey=testIKey",
                     extensionConfig:{
@@ -675,20 +681,21 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
 
                     },
-                    channels:[[offlineChannel]]
+                    // channels:[[offlineChannel]]
                 } as IConfiguration & IConfig;
                 let ai = new ApplicationInsights({config: config});
                 ai.loadAppInsights();
                 this.clock.tick(1);
 
                 let sendChannel = ai.getPlugin(BreezeChannelIdentifier);
-                let offlineChannelPlugin = ai.getPlugin("OfflineChannel").plugin;
+                // Note: OfflineChannel was removed, commenting out for now
+                // let offlineChannelPlugin = ai.getPlugin("OfflineChannel").plugin;
                 Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
-                Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
-                let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
+                // Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
+                // let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
 
                 this.clock.tick(1);
-                Assert.ok(urlConfig, "offline url config is initialized");
+                // Assert.ok(urlConfig, "offline url config is initialized");
 
                 ai.unload(false);
                 if (ai && ai["dependencies"]) {
@@ -876,52 +883,49 @@ export class ApplicationInsightsTests extends AITestClass {
     }
 
     public addAsyncTests(): void {
-        this.testCaseAsync({
-            name: "E2E.GenericTests: Send events with offline support",
-            stepDelay: 1,
-            steps: [() => {
-                let offlineChannel = new OfflineChannel();
-                this._ai.addPlugin(offlineChannel);
-                this._ctx.offlineChannel = offlineChannel;
-
-            }].concat(PollingAssert.createPollingAssert(() => {
-                let offlineChannel = this._ctx.offlineChannel;
-                if (offlineChannel && offlineChannel.isInitialized()) {
-                    let urlConfig = offlineChannel["_getDbgPlgTargets"]()[0];
-                    Assert.ok(urlConfig, "offline url config is initialized");
-
-                    let offlineListener = offlineChannel.getOfflineListener() as any;
-                    Assert.ok(offlineListener, "offlineListener should be initialized");
-
-                    // online
-                    offlineListener.setOnlineState(1);
-                    let inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
-                    Assert.ok(!inMemoTimer, "offline in memo timer should be null");
-                    this._ai.trackEvent({ name: "online event", properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
-
-                    // set to offline status right way
-                    offlineListener.setOnlineState(2);
-                    this._ai.trackEvent({ name: "offline event", properties: { "prop2": "value2" }, measurements: { "measurement2": 200 } });
-                    inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
-                    Assert.ok(inMemoTimer, "in memo timer should not be null");
-                    let inMemoBatch = offlineChannel["_getDbgPlgTargets"]()[1][EventPersistence.Normal];
-                    Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one event");
-
-                    return true
-                }
-                return false
-            }, "Wait for init" + new Date().toISOString(), 60) as any).concat(this.asserts(1)).concat(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok( payload && payload.iKey);
-                    Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
-                    Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
-                    Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
-                }
-            })
-        });
+        // NOTE: OfflineChannel functionality was removed - this test is disabled
+        // this.testCaseAsync({
+        //     name: "E2E.GenericTests: Send events with offline support",
+        //     stepDelay: 1,
+        //     steps: [() => {
+        //         // Note: OfflineChannel was removed, commenting out for now
+        //         // let offlineChannel = new OfflineChannel();
+        //         // this._ai.addPlugin(offlineChannel);
+        //         // this._ctx.offlineChannel = offlineChannel;
+        //     }].concat(PollingAssert.createPollingAssert(() => {
+        //         let offlineChannel = this._ctx.offlineChannel;
+        //         if (offlineChannel && offlineChannel.isInitialized()) {
+        //             let urlConfig = offlineChannel["_getDbgPlgTargets"]()[0];
+        //             Assert.ok(urlConfig, "offline url config is initialized");
+        //             let offlineListener = offlineChannel.getOfflineListener() as any;
+        //             Assert.ok(offlineListener, "offlineListener should be initialized");
+        //             // online
+        //             offlineListener.setOnlineState(1);
+        //             let inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
+        //             Assert.ok(!inMemoTimer, "offline in memo timer should be null");
+        //             this._ai.trackEvent({ name: "online event", properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
+        //             // set to offline status right way
+        //             offlineListener.setOnlineState(2);
+        //             this._ai.trackEvent({ name: "offline event", properties: { "prop2": "value2" }, measurements: { "measurement2": 200 } });
+        //             inMemoTimer = offlineChannel["_getDbgPlgTargets"]()[3];
+        //             Assert.ok(inMemoTimer, "in memo timer should not be null");
+        //             let inMemoBatch = offlineChannel["_getDbgPlgTargets"]()[1][EventPersistence.Normal];
+        //             Assert.equal(inMemoBatch && inMemoBatch.count(), 1, "should have one event");
+        //             return true
+        //         }
+        //         return false
+        //     }, "Wait for init" + new Date().toISOString(), 60) as any).concat(this.asserts(1)).concat(() => {
+        //         const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+        //         if (payloadStr.length > 0) {
+        //             const payload = JSON.parse(payloadStr[0]);
+        //             const data = payload.data;
+        //             Assert.ok( payload && payload.iKey);
+        //             Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
+        //             Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
+        //             Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
+        //         }
+        //     })
+        // });
         this.testCaseAsync({
             name: 'E2E.GenericTests: trackEvent sends to backend',
             stepDelay: 1,

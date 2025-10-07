@@ -1,4 +1,4 @@
-import { ApplicationInsights, IApplicationInsights } from '../../../src/applicationinsights-web'
+import { ApplicationInsights, IApplicationInsights } from '../../../src/index'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { BreezeChannelIdentifier, utlGetSessionStorage, utlRemoveSessionStorage } from '@microsoft/applicationinsights-common';
 import { ActiveStatus, dumpObj, getJSON, isArray } from '@microsoft/applicationinsights-core-js';

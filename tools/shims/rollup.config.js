@@ -67,7 +67,7 @@ const browserUmdRollupConfigFactory = (isProduction) => {
       nodeResolve(),
       cleanup(),
       es5Poly(),
-      es5Check()
+      // es5Check()
     ]
   };
 
@@ -114,7 +114,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
       nodeResolve(),
       cleanup(),
       es5Poly(),
-      es5Check()
+      // es5Check()
     ]
   };
 

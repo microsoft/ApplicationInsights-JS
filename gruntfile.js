@@ -1,5 +1,49 @@
 module.exports = function (grunt) {
 
+    var nodeResolve = require("@rollup/plugin-node-resolve");
+    var commonJs = require("@rollup/plugin-commonjs").default;
+    var typeScriptPlugin = require("@rollup/plugin-typescript").default;
+
+    function _removeEs6DynamicProto(code, id) {
+        if (id.endsWith(".js") && id.indexOf("node_modules") === -1) {
+            console.log("Processing [" + id + "]");
+            const rEs6DynamicProto = /([\t ]*)(\w+)\([^\)]*\)\s*{(?:\r|\n)+([^\}]*@DynamicProtoStub[^\}]*)(?:\r|\n)+\s*}\s*(?:\r|\n)+/gi;
+            let modifiedCode = code;
+            let changed = false;
+            let match;
+            while ((match = rEs6DynamicProto.exec(code)) !== null) {
+                let prefix = match[1];
+                let funcName = match[2];
+                console.log(" -- Removing [" + funcName + "]");
+                modifiedCode = modifiedCode.replace(match[0], prefix + "// Removed Stub for " + funcName + "\n");
+                changed = true;
+            }
+    
+            if (changed) {
+                return {
+                    code: modifiedCode,
+                    map: null
+                };
+            } else {
+                console.log("No changes made to " + id);
+            }
+        } else {
+            console.log("Skipping " + id);
+        }
+    
+        return null;
+    }
+    
+    function removeEs6DynamicProto() {
+        return {
+            name: 'remove-es6-dynamicproto',
+            renderChunk: (code, chunk) => {
+                return _removeEs6DynamicProto(code, chunk.fileName);
+            },
+            transform: _removeEs6DynamicProto
+        };
+    }
+    
     const versionPlaceholder = '"#version#"';
 
     const aiCoreDefaultNameReplacements = [
@@ -273,6 +317,9 @@ module.exports = function (grunt) {
             },
             "string-replace": {
 
+            },
+            rollup: {
+
             }
         };
 
@@ -347,31 +394,61 @@ module.exports = function (grunt) {
 
                 // If the tests have their own tsconfig, add that as a new target
                 var addQunit = false;
+                var addTestRollup = false;
                 var testRoot = "";
                 if (modules[key].testHttp !== false) {
                     testRoot = "http://localhost:9001/";
                 }
 
-                var testUrl = testRoot + modulePath + "/test/UnitTests.html";
-                if (grunt.file.exists(modulePath + '/test/tsconfig.json')) {
+                var testPath = modulePath + "/test";
+                var testUrl = testRoot + testPath + "/UnitTests.html";
+                if (grunt.file.exists(testPath + '/tsconfig.json')) {
                     addQunit = true;
                     buildCmds.ts[key + '-tests'] = {
-                        tsconfig: modulePath + "/test/tsconfig.json",
+                        tsconfig: testPath + "/tsconfig.json",
                         src: [
-                            modulePath + "/test/Unit/src/**/*.ts"
+                            testPath + "/Unit/src/**/*.ts"
                         ],
-                        out: modulePath + "/test/Unit/dist/" + (modules[key].unitTestName || key + ".tests.js")
+                        out: testPath + "/Unit/dist/" + (modules[key].unitTestName || key + ".tests.js")
                     };
+
+                    addTestRollup = true;
                 } else if (grunt.file.exists(modulePath + '/Tests/tsconfig.json')) {
+                    testPath = modulePath + "/Tests";
                     addQunit = true;
-                    testUrl = testRoot + modulePath + "/Tests/UnitTests.html";
+                    testUrl = testRoot + testPath + "/UnitTests.html";
                     buildCmds.ts[key + '-tests'] = {
-                        tsconfig: modulePath + "/Tests/tsconfig.json",
-                        src: [
-                            modulePath + "/Tests/Unit/src/**/*.ts"
+                        tsconfig: [
+                            {
+                                name: testPath + "/tsconfig.test.json",
+                                tsconfig: {
+                                    compilerOptions: {
+                                        sourceMap: true,
+                                        inlineSources: true,
+                                        noImplicitAny: false,
+                                        module: "es6",
+                                        moduleResolution: "node",
+                                        target: "es2020",
+                                        alwaysStrict: true,
+                                        declaration: true,
+                                        importHelpers: false,
+                                        noEmitHelpers: true,
+                                        skipLibCheck: true,
+                                        outDir: "./Unit/test-es5"
+                                    },
+                                    files: [],
+                                    exclude: [
+                                        "**/*.d.ts"
+                                    ]                                        
+                                }
+                            }
                         ],
-                        out: modulePath + "/Tests/Unit/dist/" + (modules[key].unitTestName || key + ".tests.js")
+                        src: [
+                            testPath + "/Unit/src/**/*.ts"
+                        ]
                     };
+
+                    addTestRollup = true;
                 }
 
                 if (addQunit) {
@@ -400,28 +477,118 @@ module.exports = function (grunt) {
                     };
                 }
 
+                if (addTestRollup) {
+                    var testEntry = testPath + "/Unit/src/index.tests.ts";
+                    if (!grunt.file.exists(testEntry)) {
+                        testEntry = testPath + "/Unit/src/index.ts";
+                        if (!grunt.file.exists(testEntry)) {
+                            testEntry = testPath + "/Unit/src/" + key + ".tests.ts";
+                            if (!grunt.file.exists(testEntry)) {
+                                testEntry = testPath + "/Unit/src/" + key + "unittests.ts";
+                                if (!grunt.file.exists(testEntry)) {
+                                    throw new Error("Test entry not found for [" + key + "] - [" + testEntry + "]");
+                                }
+                            }
+                        }
+                    }
+
+                    buildCmds.rollup[key + "-tests"] = {
+                        options: {
+                            format: "umd",
+                            name: "" + key + "Tests",
+                            sourcemap: false,
+                            onwarn: function(warning, handler) {
+                                if (warning.code === "THIS_IS_UNDEFINED") {
+                                    return;
+                                }
+
+                                if (warning.code === "PLUGIN_WARNING" && warning.message) {
+                                    if (warning.message.indexOf('chrome') !== -1) {
+                                        return;
+                                    }
+                                }
+
+                                if (warning.code === "EVAL") {
+                                    return;
+                                }
+
+                                handler(warning);
+                            },
+                            plugins: function() {
+                                return [
+                                    removeEs6DynamicProto(),
+                                    typeScriptPlugin({
+                                        compilerOptions: {
+                                            sourceMap: false,
+                                            inlineSources: true,
+                                            inlineSourceMap: true,
+                                            noImplicitAny: false,
+                                            module: "es6",
+                                            moduleResolution: "node",
+                                            target: "es2020",
+                                            alwaysStrict: true,
+                                            importHelpers: false,
+                                            noEmitHelpers: true,
+                                            skipLibCheck: true,
+                                            allowSyntheticDefaultImports: true,
+                                            //outDir: modulePath + "/Tests/Unit/tst-es5",
+                                        },
+                                        exclude: [
+                                            "**/*.d.ts"
+                                        ],
+                                        include: [
+                                            "**/*.ts"
+                                        ],
+                                        tsconfig: false
+                                    }),
+                                    nodeResolve({
+                                        module: true,
+                                        browser: true,
+                                        preferBuiltins: false
+                                    }),
+                                    commonJs({
+                                        sourceMap: true
+                                    })
+                                ];
+                            }
+                        },
+                        files: {
+                            [testPath + "/Unit/dist/" + (modules[key].unitTestName || key + ".tests.js")]: testEntry,
+                            //[modulePath + "/Tests/Unit/dist/" + (modules[key].unitTestName || key + ".tests.js")]: modulePath + "/Tests/Unit/src/**/*.ts",
+                        }
+                    };
+                }
+
                 // If the tests have their own tsconfig, add that as a new target
                 addQunit = false;
-                var testUrl = testRoot + modulePath + "/test/PerfTests.html";
-                if (grunt.file.exists(modulePath + '/test/PerfTests.html')) {
+                var addPerfRollup = false;
+
+                testPath = modulePath + "/test";
+                var testUrl = testRoot + testPath + "/PerfTests.html";
+                if (grunt.file.exists(testPath + '/PerfTests.html')) {
                     addQunit = true;
                     buildCmds.ts[key + '-perftest'] = {
-                        tsconfig: modulePath + "/test/tsconfig.json",
+                        tsconfig: testPath + "/tsconfig.json",
                         src: [
-                            modulePath + "/test/Perf/src/**/*.ts"
+                            testPath + "/Perf/src/**/*.ts"
                         ],
-                        out: modulePath + "/test/Perf/dist/es5/" + (modules[key].perfTestName || key + ".perf.tests.js")
+                        out: testPath + "/Perf/dist/test-es5/" + (modules[key].perfTestName || key + ".perf.tests.js")
                     };
+
+                    addPerfRollup = true;
                 } else if (grunt.file.exists(modulePath + '/Tests/PerfTests.html')) {
+                    testPath = modulePath + "/Tests";
                     addQunit = true;
-                    testUrl = testRoot + modulePath + "/Tests/PerfTests.html";
+                    testUrl = testRoot + testPath + "/PerfTests.html";
                     buildCmds.ts[key + '-perftest'] = {
-                        tsconfig: modulePath + "/Tests/tsconfig.json",
+                        tsconfig: testPath + "/tsconfig.json",
                         src: [
-                            modulePath + "/Tests/Perf/src/**/*.ts"
+                            testPath + "/Perf/src/**/*.ts"
                         ],
-                        out: modulePath + "/Tests/Perf/dist/es5/" + (modules[key].perfTestName || key + ".perf.tests.js")
+                        out: testPath + "/Perf/dist/test-es5/" + (modules[key].perfTestName || key + ".perf.tests.js")
                     };
+
+                    addPerfRollup = true;
                 }
 
                 if (addQunit) {
@@ -452,6 +619,86 @@ module.exports = function (grunt) {
                     };
                 }
 
+                if (addPerfRollup) {
+                    if (addTestRollup) {
+                        var testEntry = testPath + "/Perf/src/index.tests.ts";
+                        if (!grunt.file.exists(testEntry)) {
+                            testEntry = testPath + "/Perf/src/index.ts";
+                            if (!grunt.file.exists(testEntry)) {
+                                testEntry = testPath + "/Perf/src/" + key + ".tests.ts";
+                                if (!grunt.file.exists(testEntry)) {
+                                    testEntry = testPath + "/Perf/src/" + key + "unittests.ts";
+                                    if (!grunt.file.exists(testEntry)) {
+                                        throw new Error("Perf entry not found for [" + key + "] - [" + testEntry + "]");
+                                    }
+                                }
+                            }
+                        }
+    
+                        buildCmds.rollup[key + "-perftests"] = {
+                            options: {
+                                format: "umd",
+                                name: "" + key + "PerfTests",
+                                sourcemap: true,
+                                onwarn: function(warning, handler) {
+                                    if (warning.code === "THIS_IS_UNDEFINED") {
+                                        return;
+                                    }
+    
+                                    if (warning.code === "PLUGIN_WARNING" && warning.message) {
+                                        if (warning.message.indexOf('chrome') !== -1) {
+                                            return;
+                                        }
+                                    }
+    
+                                    if (warning.code === "EVAL") {
+                                        return;
+                                    }
+    
+                                    handler(warning);
+                                },
+                                plugins: function() {
+                                    return [
+                                        typeScriptPlugin({
+                                            compilerOptions: {
+                                                sourceMap: true,
+                                                inlineSources: true,
+                                                noImplicitAny: false,
+                                                module: "es6",
+                                                moduleResolution: "node",
+                                                target: "es2020",
+                                                alwaysStrict: true,
+                                                importHelpers: false,
+                                                noEmitHelpers: true,
+                                                skipLibCheck: true,
+                                                //outDir: modulePath + "/Tests/Unit/tst-es5"
+                                            },
+                                            exclude: [
+                                                "**/*.d.ts"
+                                            ],
+                                            include: [
+                                                "**/*.ts"
+                                            ],
+                                            tsconfig: false
+                                        }),
+                                        nodeResolve({
+                                            module: true,
+                                            browser: true,
+                                            preferBuiltins: false
+                                        }),
+                                        commonJs(),
+                                        removeEs6DynamicProto()
+                                    ];
+                                }
+                            },
+                            files: {
+                                [testPath + "/Perf/dist/" + (modules[key].unitTestName || key + ".tests.js")]: testEntry,
+                                //[modulePath + "/Tests/Unit/dist/" + (modules[key].unitTestName || key + ".tests.js")]: modulePath + "/Tests/Unit/src/**/*.ts",
+                            }
+                        };
+                    }
+                }
+                
                 let esLintCmd = buildCmds["eslint-ts"];
                 esLintCmd[key + '-lint'] = {
                     options: {
@@ -482,9 +729,9 @@ module.exports = function (grunt) {
                                         path: "./shared/AppInsightsCommon",
                                         unitTestName: "aicommon.tests.js"
                                     },
-            "1dsCore":                 { 
-                                        path: "./shared/1ds-core-js",
-                                        unitTestName: "core.unittests.js"
+            "otelCore":                 {
+                                        path: "./shared/OpenTelemetry",
+                                        unitTestName: "otel.unittests.js"
                                     },
     
             // SKUs
@@ -510,25 +757,13 @@ module.exports = function (grunt) {
     
             // Channels
             "aichannel":            { path: "./channels/applicationinsights-channel-js" },
-            "offlinechannel":       {
-                                        path: "./channels/offline-channel-js"
-                                    },
             "teechannel":           { path: "./channels/tee-channel-js" },
-            "1dsPost":              {
-                                        path: "./channels/1ds-post-js",
-                                        unitTestName: "post.unittests.js"
-                                    },
 
             // Extensions
             "appinsights":          { 
                                         path: "./extensions/applicationinsights-analytics-js",
                                         unitTestName: "appinsights-analytics.tests.js"
                                     },
-            "clickanalytics":       { 
-                                        path: "./extensions/applicationinsights-clickanalytics-js",
-                                        unitTestName: "appinsights-clickanalytics.tests.js"
-                                    },
-            "debugplugin":          { path: "./extensions/applicationinsights-debugplugin-js" },
             "deps":                 { 
                                         path: "./extensions/applicationinsights-dependencies-js",
                                         unitTestName: "dependencies.tests.js"
@@ -549,30 +784,6 @@ module.exports = function (grunt) {
                                         path: "./extensions/applicationinsights-cfgsync-js",
                                         unitTestName: "cfgsync.tests.js"
                                     },
-
-            // Examples
-            "example-shared-worker": {
-                                        autoMinify: false,
-                                        path: "./examples/shared-worker",
-                                        testHttp: false
-                                    },
-
-            "example-aisku":        {
-                                        autoMinify: false,
-                                        path: "./examples/AISKU",
-                                        testHttp: false
-                                    },
-
-            "example-dependency":   {
-                                        autoMinify: false,
-                                        path: "./examples/dependency",
-                                        testHttp: false
-                                    },
-            "example-cfgsync":        {
-                                        autoMinify: false,
-                                        path: "./examples/cfgSync",
-                                        testHttp: false
-                                    },
     
             // Tools
             "rollupuglify":         {
@@ -590,17 +801,12 @@ module.exports = function (grunt) {
             "rollupes5":            { 
                                         autoMinify: false,
                                         path: "./tools/rollup-es5",
-                                        unitTestName: "es5rolluptests.js"
-                                    },
-            "shims":                {
-                                        autoMinify: false,
-                                        path: "./tools/shims",
                                         cfg: {
-                                            src: [
-                                                "./tools/shims/src/*.ts"
-                                            ]
-                                        },
-                                        unitTestName: "shimstests.js"
+                                                src: [
+                                                    "./tools/rollup-es5/src/*.ts"
+                                                ]
+                                            },
+                                            unitTestName: "index.tests.js"
                                     },
             "chrome-debug-extension": {
                                         autoMinify: false,
@@ -707,13 +913,14 @@ module.exports = function (grunt) {
                     actions.push("ai-minify:" + name + "-reverse");
                 }
 
-                if (compileSrc && gruntTsConfig[name]) {
-                    actions.push("ts:" + name);
-                }
+                // if (compileSrc && gruntTsConfig[name]) {
+                //     actions.push("ts:" + name);
+                // }
             }
 
             // If this helper is called then these should always exist
-            actions.push("ts:" + name + "-tests");
+            //actions.push("ts:" + name + "-tests");
+            actions.push("rollup:" + name + "-tests");
             actions.push("qunit:" + name);
 
             if (minifySrc && aiMinifyConfig[name + "-reverse"]) {
@@ -809,7 +1016,7 @@ module.exports = function (grunt) {
                         { src: "./tools/config/test-config.json", dest: `./tools/config/browser/es5/ai_test.config${configMajorVer}.cfg.json` }
                     ]
                 }
-            }
+            },
         }));
 
         // Additional setup for lint-fix task
@@ -817,7 +1024,7 @@ module.exports = function (grunt) {
             let packages = [
                 "core", "common", "appinsights", "aisku", "aiskulite", "perfmarkmeasure", "properties",
                 "cfgsync", "deps", "debugplugin", "aichannel", "offlinechannel", "teechannel", 
-                "1dsCore", "1dsPost", "rollupuglify", "rollupes5", "shims", "chrome-debug-extension", 
+                "rollupuglify", "rollupes5", "shims", // "chrome-debug-extension", -- Removed due to missing file-saver dependency
                 "applicationinsights-web-snippet", "clickanalytics", "osplugin"
             ];
             
@@ -838,6 +1045,7 @@ module.exports = function (grunt) {
         grunt.loadNpmTasks('grunt-contrib-uglify');
         grunt.loadNpmTasks('grunt-contrib-connect');
         grunt.loadNpmTasks('grunt-contrib-copy');
+        grunt.loadNpmTasks('grunt-rollup');
     
         grunt.loadTasks('./tools/grunt-tasks');
         
@@ -932,6 +1140,7 @@ module.exports = function (grunt) {
 
         grunt.registerTask("shims", tsBuildActions("shims").concat(tsTestActions("shims", false)));
         grunt.registerTask("shimstest", tsTestActions("shims", false));
+        //grunt.registerTask("shims-rollup", ["rollup:shims-tests"]);
 
         grunt.registerTask("chromedebugextension", tsBuildActions("chrome-debug-extension"));
         grunt.registerTask("chromedebugextension-min", minTasks("chrome-debug-extension"));
@@ -969,6 +1178,15 @@ module.exports = function (grunt) {
         grunt.registerTask("1dsPost-min", minTasks("1dsPost"));
         grunt.registerTask("1dsPost-restore", restoreTasks("1dsPost"));
 
+        grunt.registerTask("otelCore", tsBuildActions("otelCore", true));
+        grunt.registerTask("otelCore-min", minTasks("otelCore"));
+        grunt.registerTask("otelCore-restore", restoreTasks("otelCore"));
+        grunt.registerTask("otelCoreunittest", tsTestActions("otelCore"));
+        grunt.registerTask("otelCore-mintest", tsTestActions("otelCore", true));
+        //grunt.registerTask("otelperftest", ["connect", "ts:core-perftest", "qunit:core-perf"]);
+
+
+
         grunt.registerTask("example-shared-worker", tsBuildActions("example-shared-worker"));
         grunt.registerTask("example-shared-worker-test", tsTestActions("example-shared-worker"));
 
@@ -988,5 +1206,7 @@ module.exports = function (grunt) {
          console.error(e);
          console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
      }
+
+    console.log("***  " + JSON.stringify(theBuildConfig, null, 2) + "  ***");
  };
  

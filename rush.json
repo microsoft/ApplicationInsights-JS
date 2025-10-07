@@ -10,11 +10,6 @@
       "shouldPublish": false
     },
     {
-      "packageName": "@microsoft/applicationinsights-chrome-debug-extension",
-      "projectFolder": "tools/chrome-debug-extension",
-      "shouldPublish": false
-    },
-    {
       "packageName": "@microsoft/ai-test-framework",
       "projectFolder": "common/Tests/Framework",
       "shouldPublish": true
@@ -27,16 +22,6 @@
     {
       "packageName": "@microsoft/applicationinsights-rollup-es5",
       "projectFolder": "tools/rollup-es5",
-      "shouldPublish": true
-    },
-    {
-      "packageName": "@microsoft/applicationinsights-shims",
-      "projectFolder": "tools/shims",
-      "shouldPublish": true
-    },
-    {
-      "packageName": "@microsoft/applicationinsights-web-snippet",
-      "projectFolder": "tools/applicationinsights-web-snippet",
       "shouldPublish": true
     },
     {
@@ -65,18 +50,8 @@
       "shouldPublish": true
     },
     {
-      "packageName": "@microsoft/applicationinsights-debugplugin-js",
-      "projectFolder": "extensions/applicationinsights-debugplugin-js",
-      "shouldPublish": true
-    },
-    {
       "packageName": "@microsoft/applicationinsights-analytics-js",
       "projectFolder": "extensions/applicationinsights-analytics-js",
-      "shouldPublish": true
-    },
-    {
-      "packageName": "@microsoft/applicationinsights-clickanalytics-js",
-      "projectFolder": "extensions/applicationinsights-clickanalytics-js",
       "shouldPublish": true
     },
     {
@@ -87,11 +62,6 @@
     {
       "packageName": "@microsoft/applicationinsights-channel-js",
       "projectFolder": "channels/applicationinsights-channel-js",
-      "shouldPublish": true
-    },
-    {
-      "packageName": "@microsoft/applicationinsights-offlinechannel-js",
-      "projectFolder": "channels/offline-channel-js",
       "shouldPublish": true
     },
     {
@@ -115,26 +85,6 @@
       "shouldPublish": false
     },
     {
-      "packageName": "@microsoft/applicationinsights-example-aisku",
-      "projectFolder": "examples/AISKU",
-      "shouldPublish": false
-    },
-    {
-      "packageName": "@microsoft/applicationinsights-example-cfgsync",
-      "projectFolder": "examples/cfgSync",
-      "shouldPublish": false
-    },
-    {
-      "packageName": "@microsoft/applicationinsights-example-dependencies",
-      "projectFolder": "examples/dependency",
-      "shouldPublish": false
-    },
-    {
-      "packageName": "@microsoft/applicationinsights-example-shared-worker",
-      "projectFolder": "examples/shared-worker",
-      "shouldPublish": false
-    },
-    {
       "packageName": "@microsoft/applicationinsights-test-module-type-check",
       "projectFolder": "AISKU/Tests/es6-module-type-check",
       "shouldPublish": false
@@ -145,13 +95,8 @@
       "shouldPublish": false
     },
     {
-      "packageName": "@microsoft/1ds-core-js",
-      "projectFolder": "shared/1ds-core-js",
-      "shouldPublish": true
-    },
-    {
-      "packageName": "@microsoft/1ds-post-js",
-      "projectFolder": "channels/1ds-post-js",
+      "packageName": "@microsoft/otel-core-js",
+      "projectFolder": "shared/OpenTelemetry",
       "shouldPublish": true
     }
   ]

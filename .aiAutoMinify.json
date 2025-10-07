@@ -19,7 +19,11 @@
                 "TelemetryUnloadReason",
                 "TelemetryUpdateReason",
                 "eTraceHeadersMode",
-                "eW3CTraceFlags"
+                "eW3CTraceFlags",
+                "eAttributeChangeOp",
+                "eOTelSamplingDecision",
+                "eOTelSpanKind",
+                "eOTelSpanStatusCode"
             ]
         },
         "@microsoft/applicationinsights-perfmarkmeasure-js": {
@@ -46,19 +50,8 @@
         "@microsoft/applicationinsights-dependencies-js": {
             "constEnums": []
         },
-        "@microsoft/applicationinsights-debugplugin-js": {
-            "constEnums": []
-        },
         "@microsoft/applicationinsights-channel-js": {
             "constEnums": []
-        },
-        "@microsoft/applicationinsights-react-native": {
-            "constEnums": []
-        },
-        "@microsoft/applicationinsights-clickanalytics-js": {
-            "constEnums": [
-                "_eExtendedInternalMessageId"
-            ]
         },
         "@microsoft/applicationinsights-web-basic": {
             "constEnums": []
@@ -69,9 +62,6 @@
         "@microsoft/applicationinsights-web": {
             "constEnums": []
         },
-        "@microsoft/applicationinsights-react-js": {
-            "constEnums": []
-        },
         "@microsoft/applicationinsights-teechannel-js": {
             "constEnums": []
         },
@@ -80,37 +70,16 @@
                 "ICfgSyncMode"
             ]
         },
-        "@microsoft/1ds-core-js": {
-            "constEnums": [
-                "eValueKind",
-                "EventLatencyValue",
-                "eEventPropertyType",
-                "EventPersistenceValue",
-                "EventSendType",
-                "eTraceLevel",
-                "_eExtendedInternalMessageId",
-                "GuidStyle",
-                "FieldValueSanitizerType",
-                "TransportType"
-            ]
-        },
-        "@microsoft/1ds-post-js": {
-            "constEnums": [
-                "EventBatchNotificationReason"
-            ]
-        },
-        "@microsoft/applicationinsights-offlinechannel-js": {
-            "constEnums": [
-                "eStorageType",
-                "eBatchSendStatus",
-                "eBatchStoreStatus",
-                "CursorProcessResult",
-                "eStorageProviders",
-                "ValueQueryType"
-            ]
-        },
         "@microsoft/applicationinsights-osplugin-js": {
             "constEnums": []
+        },
+        "@microsoft/otel-core-js": {
+            "constEnums": [
+                "eAttributeSource",
+                "AddAttributeResult",
+                "eAttributeFilter",
+                "eValueType"
+            ]
         }
     }
 }
