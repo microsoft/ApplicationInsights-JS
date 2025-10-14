@@ -36,5 +36,5 @@ export function getSdkLoaderScript(config: SdkLoaderConfig): string {
     }
 
     let configString: string = JSON.stringify(snippetConfig);
-    return "!(function (cfg){" + originSnippet + "}})(\n" + configString + "\n);";
+    return "!(function (cfg){" + originSnippet + "})(\n" + configString + "\n);";
 }
