@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { getDocument, isFunction } from "@microsoft/applicationinsights-core-js";
+
+import { getDocument, isFunction } from "@nevware21/ts-utils";
 
 export function createDomEvent(eventName: string): Event {
     let event: Event = null;

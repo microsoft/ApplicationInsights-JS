@@ -7,6 +7,7 @@ import { IAutoExceptionTelemetry, IExceptionTelemetry } from "./IExceptionTeleme
 import { IMetricTelemetry } from "./IMetricTelemetry";
 import { IPageViewPerformanceTelemetry } from "./IPageViewPerformanceTelemetry";
 import { IPageViewTelemetry } from "./IPageViewTelemetry";
+import { ITelemetryItem } from "./ITelemetryItem";
 import { ITraceTelemetry } from "./ITraceTelemetry";
 
 export interface IAppInsights {

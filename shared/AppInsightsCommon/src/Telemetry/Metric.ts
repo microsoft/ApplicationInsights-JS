@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
 import { strNotSpecified } from "../Constants";
 import { FieldType } from "../Enums/Enums";
 import { IMetricData } from "../Interfaces/Contracts/IMetricData";
+import { IDiagnosticLogger } from "../Interfaces/IDiagnosticLogger";
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import { DataPoint } from "./Common/DataPoint";
 import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString } from "./Common/DataSanitizer";

@@ -6,11 +6,11 @@ import {
     isNumber, isObject, isPlainObject, isString, isUndefined, objCreate, objDeepFreeze, objDefine, objForEachKey, objHasOwn,
     objSetPrototypeOf, safe, strIndexOf, strTrim
 } from "@nevware21/ts-utils";
-import { FeatureOptInMode } from "../JavaScriptSDK.Enums/FeatureOptInEnums";
-import { TransportType } from "../JavaScriptSDK.Enums/SendRequestReason";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IXDomainRequest } from "../JavaScriptSDK.Interfaces/IXDomainRequest";
-import { STR_EMPTY } from "./InternalConstants";
+import { FeatureOptInMode } from "../Enums/FeatureOptInEnums";
+import { TransportType } from "../Enums/SendRequestReason";
+import { IConfiguration } from "../Interfaces/IConfiguration";
+import { IXDomainRequest } from "../Interfaces/IXDomainRequest";
+import { STR_EMPTY } from "../InternalConstants";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
 

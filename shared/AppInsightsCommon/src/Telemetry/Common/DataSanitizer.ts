@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    IConfiguration, IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, fieldRedaction, getJSON, hasJSON, isObject,
-    objForEachKey, strTrim
-} from "@microsoft/applicationinsights-core-js";
-import { asString, isString, strSubstr, strSubstring } from "@nevware21/ts-utils";
+import { asString, isObject, isString, objForEachKey, strSubstr, strSubstring, strTrim } from "@nevware21/ts-utils";
+import { _eInternalMessageId, eLoggingSeverity } from "../../Enums/LoggingEnums";
+import { IConfiguration } from "../../Interfaces/IConfiguration";
+import { IDiagnosticLogger } from "../../Interfaces/IDiagnosticLogger";
+import { fieldRedaction, getJSON, hasJSON } from "../../Utils/EnvUtils";
 
 export const enum DataSanitizerValues {
     /**
@@ -70,11 +70,11 @@ export function dataSanitizeKey(logger: IDiagnosticLogger, name: any) {
         // truncate the string to 150 chars
         if (name.length > DataSanitizerValues.MAX_NAME_LENGTH) {
             nameTrunc = strSubstring(name, 0, DataSanitizerValues.MAX_NAME_LENGTH);
-            _throwInternal(logger,
+            logger.throwInternal(
                 eLoggingSeverity.WARNING,
                 _eInternalMessageId.NameTooLong,
                 "name is too long.  It has been truncated to " + DataSanitizerValues.MAX_NAME_LENGTH + " characters.",
-                { name }, true);
+                { name });
         }
     }
 
@@ -88,11 +88,11 @@ export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLen
         value = strTrim(asString(value));
         if (value.length > maxLength) {
             valueTrunc = strSubstring(value, 0, maxLength);
-            _throwInternal(logger,
+            logger.throwInternal(
                 eLoggingSeverity.WARNING,
                 _eInternalMessageId.StringValueTooLong,
                 "string value is too long. It has been truncated to " + maxLength + " characters.",
-                { value }, true);
+                { value });
         }
     }
 
@@ -111,11 +111,10 @@ export function dataSanitizeMessage(logger: IDiagnosticLogger, message: any) {
     if (message) {
         if (message.length > DataSanitizerValues.MAX_MESSAGE_LENGTH) {
             messageTrunc = strSubstring(message, 0, DataSanitizerValues.MAX_MESSAGE_LENGTH);
-            _throwInternal(logger,
+            logger.throwInternal(
                 eLoggingSeverity.WARNING, _eInternalMessageId.MessageTruncated,
                 "message is too long, it has been truncated to " + DataSanitizerValues.MAX_MESSAGE_LENGTH + " characters.",
-                { message },
-                true);
+                { message });
         }
     }
 
@@ -129,9 +128,9 @@ export function dataSanitizeException(logger: IDiagnosticLogger, exception: any)
         let value:string = "" + exception;
         if (value.length > DataSanitizerValues.MAX_EXCEPTION_LENGTH) {
             exceptionTrunc = strSubstring(value, 0, DataSanitizerValues.MAX_EXCEPTION_LENGTH);
-            _throwInternal(logger,
+            logger.throwInternal(
                 eLoggingSeverity.WARNING, _eInternalMessageId.ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizerValues.MAX_EXCEPTION_LENGTH + " characters.",
-                { exception }, true);
+                { exception });
         }
     }
 
@@ -140,14 +139,14 @@ export function dataSanitizeException(logger: IDiagnosticLogger, exception: any)
 
 export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: any) {
     if (properties) {
-        const tempProps = {};
+        const tempProps: any = {};
         objForEachKey(properties, (prop, value) => {
             if (isObject(value) && hasJSON()) {
                 // Stringify any part C properties
                 try {
                     value = getJSON().stringify(value);
                 } catch (e) {
-                    _throwInternal(logger,eLoggingSeverity.WARNING, _eInternalMessageId.CannotSerializeObjectNonSerializable, "custom property is not valid", { exception: e}, true);
+                    logger.throwInternal(eLoggingSeverity.WARNING, _eInternalMessageId.CannotSerializeObjectNonSerializable, "custom property is not valid", { exception: e });
                 }
             }
             value = dataSanitizeString(logger, value, DataSanitizerValues.MAX_PROPERTY_LENGTH);
@@ -162,7 +161,7 @@ export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: an
 
 export function dataSanitizeMeasurements(logger: IDiagnosticLogger, measurements: any) {
     if (measurements) {
-        const tempMeasurements = {};
+        const tempMeasurements: any = {};
         objForEachKey(measurements, (measure, value) => {
             measure = dataSanitizeKeyAndAddUniqueness(logger, measure, tempMeasurements);
             tempMeasurements[measure] = value;
@@ -184,7 +183,7 @@ export function dataSanitizeInput(logger: IDiagnosticLogger, input: any, maxLeng
         input = strTrim(asString(input));
         if (input.length > maxLength) {
             inputTrunc = strSubstring(input, 0, maxLength);
-            _throwInternal(logger,
+            logger.throwInternal(
                 eLoggingSeverity.WARNING,
                 _msgId,
                 "input is too long, it has been truncated to " + maxLength + " characters.",

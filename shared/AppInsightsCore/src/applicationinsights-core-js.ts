@@ -76,7 +76,7 @@ export { IPerfManager, IPerfManagerProvider } from "./JavaScriptSDK.Interfaces/I
 export { PerfEvent, PerfManager, doPerf, getGblPerfMgr, setGblPerfMgr } from "./JavaScriptSDK/PerfManager";
 export { IFeatureOptInDetails, IFeatureOptIn } from "./JavaScriptSDK.Interfaces/IFeatureOptIn";
 export { FeatureOptInMode, CdnFeatureMode } from "./JavaScriptSDK.Enums/FeatureOptInEnums"
-export { safeGetLogger, DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole, _logInternalMessage } from "./Diagnostics/DiagnosticLogger";
+export { safeGetLogger, DiagnosticLogger, _InternalLogMessage, _warnToConsole, _logInternalMessage } from "./Diagnostics/DiagnosticLogger";
 export {
     ProcessTelemetryContext, createProcessTelemetryContext
     // Explicitly NOT exporting createProcessTelemetryUnloadContext() and createProcessTelemetryUpdateContext() as these should only be created internally

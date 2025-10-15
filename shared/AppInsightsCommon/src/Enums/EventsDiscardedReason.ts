@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { createEnumStyle } from "./EnumHelperFuncs";
+
 /**
  * The eEventsDiscardedReason enumeration contains a set of values that specify the reason for discarding an event.
  */

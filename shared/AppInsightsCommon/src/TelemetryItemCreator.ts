@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    IDiagnosticLogger, ITelemetryItem, isNullOrUndefined, objForEachKey, throwError, toISOString
-} from "@microsoft/applicationinsights-core-js";
+import { isNullOrUndefined, objForEachKey, throwError } from "@nevware21/ts-utils";
 import { strIkey, strNotSpecified } from "./Constants";
+import { IDiagnosticLogger } from "./Interfaces/IDiagnosticLogger";
+import { ITelemetryItem } from "./Interfaces/ITelemetryItem";
 import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
+import { toISOString } from "./Utils/HelperFuncsCore";
 
 /**
  * Create a telemetry item that the 1DS channel understands
@@ -33,9 +34,9 @@ export function createTelemetryItem<T>(item: T,
     }
     
     let iKey = "";
-    if (item[strIkey]) {
-        iKey = item[strIkey];
-        delete item[strIkey];
+    if ((item as any)[strIkey]) {
+        iKey = (item as any)[strIkey];
+        delete (item as any)[strIkey];
     }
 
     const telemetryItem: ITelemetryItem = {

@@ -2,10 +2,8 @@
 // Licensed under the
 export {
     correlationIdSetPrefix, correlationIdGetPrefix, correlationIdCanIncludeCorrelationHeader, correlationIdGetCorrelationContext,
-    correlationIdGetCorrelationContextValue, dateTimeUtilsNow, dateTimeUtilsDuration, isInternalApplicationInsightsEndpoint,
-    createDistributedTraceContextFromTrace
-} from "./Util";
-export { ThrottleMgr } from "../../AppInsightsCore/src/Diagnostics/ThrottleMgr";
+    correlationIdGetCorrelationContextValue, dateTimeUtilsNow, dateTimeUtilsDuration, isInternalApplicationInsightsEndpoint
+} from "./Utils/Util";
 export { parseConnectionString, ConnectionStringParser } from "./ConnectionStringParser";
 export { ConnectionString } from "./Interfaces/ConnectionString";
 export { FieldType } from "./Enums/Enums";
@@ -61,17 +59,13 @@ export { IUser, IUserContext } from "./Interfaces/Context/IUser";
 export { ITelemetryTrace } from "./Interfaces/Context/ITelemetryTrace";
 export { IRequestContext } from "./Interfaces/IRequestContext";
 export { eDistributedTracingModes, DistributedTracingModes, EventPersistence } from "./Enums/Enums";
-export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./HelperFuncs";
-export {
-    isBeaconsSupported as isBeaconApiSupported,
-    ITraceParent, createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent, findAllScripts
-} from "@microsoft/applicationinsights-core-js";
-export { createDomEvent } from "./DomHelperFuncs";
+export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./Utils/HelperFuncs";
+export { createDomEvent } from "./Utils/DomHelperFuncs";
 export {
     utlDisableStorage, utlEnableStorage, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage, utlRemoveStorage,
     utlCanUseSessionStorage, utlGetSessionStorageKeys, utlGetSessionStorage, utlSetSessionStorage, utlRemoveSessionStorage, utlSetStoragePrefix
-} from "./StorageHelperFuncs";
-export { urlParseUrl, urlGetAbsoluteUrl, urlGetPathName, urlGetCompleteUrl, urlParseHost, urlParseFullHost } from "./UrlHelperFuncs";
+} from "./Utils/StorageHelperFuncs";
+export { urlParseUrl, urlGetAbsoluteUrl, urlGetPathName, urlGetCompleteUrl, urlParseHost, urlParseFullHost } from "./Utils/UrlHelperFuncs";
 export { IThrottleLimit, IThrottleInterval, IThrottleMgrConfig, IThrottleLocalStorageObj, IThrottleResult } from "./Interfaces/IThrottleMgr";
 export { IOfflineListener, createOfflineListener, IOfflineState, eOfflineValue, OfflineCallback } from "./Offline";
 

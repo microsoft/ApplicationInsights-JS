@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { TelemetryUpdateReason } from "../Enums/TelemetryUpdateReason";
 import { IConfiguration } from "./IConfiguration";
 import { IPlugin } from "./ITelemetryPlugin";
 

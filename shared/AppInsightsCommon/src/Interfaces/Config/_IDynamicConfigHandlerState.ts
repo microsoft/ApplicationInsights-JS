@@ -3,7 +3,7 @@
 
 import { IDynamicConfigHandler } from "./IDynamicConfigHandler";
 import { IDynamicPropertyHandler } from "./IDynamicPropertyHandler";
-import { _IDynamicDetail, IWatcherHandler, WatcherFunction } from "./IDynamicWatcher";
+import { IWatcherHandler, WatcherFunction, _IDynamicDetail } from "./IDynamicWatcher";
 
 /**
  * @internal

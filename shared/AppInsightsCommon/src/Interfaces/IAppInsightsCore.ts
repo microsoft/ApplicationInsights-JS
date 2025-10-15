@@ -3,6 +3,11 @@
 
 import { IPromise } from "@nevware21/ts-async";
 import { ITimerHandler } from "@nevware21/ts-utils";
+import { eActiveStatus } from "../Enums/InitActiveStatusEnum";
+import { SendRequestReason } from "../Enums/SendRequestReason";
+import { UnloadHandler } from "../UnloadHandlerContainer";
+import { WatcherFunction } from "./Config/IDynamicWatcher";
+import { IChannelControls } from "./IChannelControls";
 import { IConfiguration } from "./IConfiguration";
 import { ICookieMgr } from "./ICookieMgr";
 import { IDiagnosticLogger } from "./IDiagnosticLogger";
@@ -62,10 +67,11 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
      */
     readonly pluginVersionString: string;
 
+    // TODO: Add IOTelContextManager type
     /**
      * The root {@link IOTelContextManager} for this instance of the Core.
      */
-    readonly context: IOTelContextManager;
+    readonly context: any;
  
     /**
      * Returns a value that indicates whether the instance has already been previously initialized.

@@ -1,16 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    IDiagnosticLogger, IDistributedTraceContext, arrForEach, arrIndexOf, createDistributedTraceContext, dateNow, getPerformance,
-    isNullOrUndefined
-} from "@microsoft/applicationinsights-core-js";
-import { strIndexOf } from "@nevware21/ts-utils";
-import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "./Constants";
-import { ITelemetryTrace } from "./Interfaces/Context/ITelemetryTrace";
-import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
-import { RequestHeaders, eRequestHeaders } from "./RequestResponseHeaders";
-import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
+import { arrForEach, arrIndexOf, getPerformance, isNullOrUndefined, strIndexOf, utcNow as dateNow } from "@nevware21/ts-utils";
+import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "../Constants";
+import { ICorrelationConfig } from "../Interfaces/ICorrelationConfig";
+import { IDiagnosticLogger } from "../Interfaces/IDiagnosticLogger";
+import { RequestHeaders, eRequestHeaders } from "../RequestResponseHeaders";
+import { dataSanitizeString } from "../Telemetry/Common/DataSanitizer";
 import { urlParseFullHost, urlParseUrl } from "./UrlHelperFuncs";
 
 // listing only non-geo specific locations
@@ -173,24 +169,4 @@ export function dateTimeUtilsDuration(start: number, end: number): number {
     }
 
     return result;
-}
-
-/**
- * Creates a IDistributedTraceContext from an optional telemetryTrace
- * @param telemetryTrace - The telemetryTrace instance that is being wrapped
- * @param parentCtx - An optional parent distributed trace instance, almost always undefined as this scenario is only used in the case of multiple property handlers.
- * @returns A new IDistributedTraceContext instance that is backed by the telemetryTrace or temporary object
- * @deprecated This function is deprecated and will be removed in a future version. Use the createDistributedTraceContext function instead and set the necessary properties
- * on the context object directly.
- */
-export function createDistributedTraceContextFromTrace(telemetryTrace?: ITelemetryTrace, parentCtx?: IDistributedTraceContext): IDistributedTraceContext {
-    let traceCtx: IDistributedTraceContext = createDistributedTraceContext(parentCtx);
-    if (telemetryTrace) {
-        traceCtx.pageName = telemetryTrace.name || traceCtx.pageName || ""; // The name of the page
-        traceCtx.traceId = telemetryTrace.traceID || traceCtx.traceId || ""; // 16 byte hex string
-        traceCtx.spanId = telemetryTrace.parentID || traceCtx.spanId || ""; // 8 byte hex string
-        traceCtx.traceFlags = (!isNullOrUndefined(telemetryTrace.traceFlags) ? telemetryTrace.traceFlags : traceCtx.traceFlags) || 0; // 1 byte hex string
-    }
-
-    return traceCtx
 }

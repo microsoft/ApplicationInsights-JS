@@ -2,15 +2,16 @@
 // Licensed under the MIT License.
 
 import {
-    IDiagnosticLogger, arrForEach, arrMap, isArray, isError, isFunction, isNullOrUndefined, isObject, isString, strTrim
-} from "@microsoft/applicationinsights-core-js";
-import { asString, getWindow, objFreeze, strIndexOf } from "@nevware21/ts-utils";
+    arrForEach, arrMap, asString, getWindow, isArray, isError, isFunction, isNullOrUndefined, isObject, isString, objFreeze, strIndexOf,
+    strTrim
+} from "@nevware21/ts-utils";
 import { strNotSpecified } from "../Constants";
 import { FieldType } from "../Enums/Enums";
 import { IExceptionData } from "../Interfaces/Contracts/IExceptionData";
 import { IExceptionDetails } from "../Interfaces/Contracts/IExceptionDetails";
 import { IStackFrame } from "../Interfaces/Contracts/IStackFrame";
 import { SeverityLevel } from "../Interfaces/Contracts/SeverityLevel";
+import { IDiagnosticLogger } from "../Interfaces/IDiagnosticLogger";
 import { IAutoExceptionTelemetry, IExceptionDetailsInternal, IExceptionInternal, IStackDetails } from "../Interfaces/IExceptionTelemetry";
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import {
@@ -368,7 +369,7 @@ function _getStackFromErrorObj(errorObj:any): IStackDetails {
                 details = errorObj;
             } else if (_isStackDetails(errorObj[strStackDetails])) {
                 details = errorObj[strStackDetails];
-            } else if (getWindow() && getWindow()["opera"] && errorObj[strMessage]) {
+            } else if (getWindow() && (getWindow() as any)["opera"] && errorObj[strMessage]) {
                 // Opera
                 details = _getOperaStack(errorObj.message);
             } else if (errorObj["reason"] && errorObj.reason[strStack]) {
@@ -745,7 +746,7 @@ export function _createExceptionDetails(logger: IDiagnosticLogger, exception: Er
 
         typeName = dataSanitizeString(logger, _getErrorType(error)) || strNotSpecified;
         message = dataSanitizeMessage(logger, _formatMessage(exception || error, typeName)) || strNotSpecified;
-        const stack = exception[strStackDetails] || _getStackFromErrorObj(exception);
+        const stack = (exception as any)[strStackDetails] || _getStackFromErrorObj(exception);
         parsedStack = _parseStack(stack);
 
         // after parsedStack is inited, iterate over each frame object, sanitize its assembly field
