@@ -3,7 +3,7 @@
 
 import { IDiagnosticLogger, toISOString } from "@microsoft/applicationinsights-core-js";
 import { strNotSpecified } from "../../Constants";
-import { FieldType } from "../../Enums";
+import { FieldType } from "../../Enums/Enums";
 import { IBase } from "../../Interfaces/Contracts/IBase";
 import { IEnvelope } from "../../Interfaces/Telemetry/IEnvelope";
 import { dataSanitizeString } from "./DataSanitizer";

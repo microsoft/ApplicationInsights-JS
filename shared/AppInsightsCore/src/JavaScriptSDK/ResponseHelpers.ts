@@ -5,7 +5,7 @@ import { dumpObj } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { IBackendResponse } from "../JavaScriptSDK.Interfaces/IXDomainRequest";
-import { _throwInternal } from "./DiagnosticLogger";
+import { _throwInternal } from "../Diagnostics/DiagnosticLogger";
 import { getJSON } from "./EnvUtils";
 import { STR_EMPTY } from "./InternalConstants";
 

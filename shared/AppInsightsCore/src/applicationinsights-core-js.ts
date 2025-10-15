@@ -76,7 +76,7 @@ export { IPerfManager, IPerfManagerProvider } from "./JavaScriptSDK.Interfaces/I
 export { PerfEvent, PerfManager, doPerf, getGblPerfMgr, setGblPerfMgr } from "./JavaScriptSDK/PerfManager";
 export { IFeatureOptInDetails, IFeatureOptIn } from "./JavaScriptSDK.Interfaces/IFeatureOptIn";
 export { FeatureOptInMode, CdnFeatureMode } from "./JavaScriptSDK.Enums/FeatureOptInEnums"
-export { safeGetLogger, DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole, _logInternalMessage } from "./JavaScriptSDK/DiagnosticLogger";
+export { safeGetLogger, DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole, _logInternalMessage } from "./Diagnostics/DiagnosticLogger";
 export {
     ProcessTelemetryContext, createProcessTelemetryContext
     // Explicitly NOT exporting createProcessTelemetryUnloadContext() and createProcessTelemetryUpdateContext() as these should only be created internally
@@ -104,10 +104,10 @@ export {
 } from "./JavaScriptSDK/W3cTraceParent";
 
 // Dynamic Config definitions
-export { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "./Config/IConfigDefaults";
-export { IDynamicConfigHandler } from "./Config/IDynamicConfigHandler";
-export { IDynamicPropertyHandler } from "./Config/IDynamicPropertyHandler";
-export { IWatchDetails, IWatcherHandler, WatcherFunction } from "./Config/IDynamicWatcher";
+export { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "../../AppInsightsCommon/src/Interfaces/Config/IConfigDefaults";
+export { IDynamicConfigHandler } from "../../AppInsightsCommon/src/Interfaces/Config/IDynamicConfigHandler";
+export { IDynamicPropertyHandler } from "../../AppInsightsCommon/src/Interfaces/Config/IDynamicPropertyHandler";
+export { IWatchDetails, IWatcherHandler, WatcherFunction } from "../../AppInsightsCommon/src/Interfaces/Config/IDynamicWatcher";
 export { createDynamicConfig, onConfigChange } from "./Config/DynamicConfig";
 export { getDynamicConfigHandler, blockDynamicConversion, forceDynamicConversion } from "./Config/DynamicSupport";
 export { cfgDfValidate, cfgDfMerge, cfgDfBoolean, cfgDfFunc, cfgDfString, cfgDfSet, cfgDfBlockPropValue } from "./Config/ConfigDefaultHelpers";

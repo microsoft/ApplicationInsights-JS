@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IWatcherHandler } from "./IDynamicWatcher";
+import { IWatcherHandler } from "../../../../AppInsightsCore/src/Config/IDynamicWatcher";
 
 export interface IDynamicPropertyHandler<T = IConfiguration> {
     /**

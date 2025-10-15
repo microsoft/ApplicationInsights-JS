@@ -10,9 +10,9 @@ import {
 } from "@nevware21/ts-utils";
 import { cfgDfMerge } from "../Config/ConfigDefaultHelpers";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
-import { IConfigDefaults } from "../Config/IConfigDefaults";
-import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "../Config/IDynamicConfigHandler";
-import { IWatchDetails, WatcherFunction } from "../Config/IDynamicWatcher";
+import { IConfigDefaults } from "../../../AppInsightsCommon/src/Interfaces/Config/IConfigDefaults";
+import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "../../../AppInsightsCommon/src/Interfaces/Config/IDynamicConfigHandler";
+import { IWatchDetails, WatcherFunction } from "../../../AppInsightsCommon/src/Interfaces/Config/IDynamicWatcher";
 import { eEventsDiscardedReason } from "../JavaScriptSDK.Enums/EventsDiscardedReason";
 import { ActiveStatus, eActiveStatus } from "../JavaScriptSDK.Enums/InitActiveStatusEnum";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
@@ -51,7 +51,7 @@ import { ChannelControllerPriority } from "./Constants";
 import { createCookieMgr } from "./CookieMgr";
 import { createUniqueNamespace } from "./DataCacheHelper";
 import { getDebugListener } from "./DbgExtensionUtils";
-import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "./DiagnosticLogger";
+import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "../Diagnostics/DiagnosticLogger";
 import { getSetValue, isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString } from "./HelperFuncs";
 import {
     STR_CHANNELS, STR_CREATE_PERF_MGR, STR_DISABLED, STR_EMPTY, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE

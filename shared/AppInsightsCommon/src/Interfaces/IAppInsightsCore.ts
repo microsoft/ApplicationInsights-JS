@@ -3,12 +3,6 @@
 
 import { IPromise } from "@nevware21/ts-async";
 import { ITimerHandler } from "@nevware21/ts-utils";
-import { WatcherFunction } from "../Config/IDynamicWatcher";
-import { eActiveStatus } from "../JavaScriptSDK.Enums/InitActiveStatusEnum";
-import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
-import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
-import { IOTelContextManager } from "../OpenTelemetry/interfaces/context/IOTelContextManager";
-import { IChannelControls } from "./IChannelControls";
 import { IConfiguration } from "./IConfiguration";
 import { ICookieMgr } from "./ICookieMgr";
 import { IDiagnosticLogger } from "./IDiagnosticLogger";

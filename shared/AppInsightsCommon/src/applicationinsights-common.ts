@@ -5,10 +5,10 @@ export {
     correlationIdGetCorrelationContextValue, dateTimeUtilsNow, dateTimeUtilsDuration, isInternalApplicationInsightsEndpoint,
     createDistributedTraceContextFromTrace
 } from "./Util";
-export { ThrottleMgr } from "./ThrottleMgr";
+export { ThrottleMgr } from "../../AppInsightsCore/src/Diagnostics/ThrottleMgr";
 export { parseConnectionString, ConnectionStringParser } from "./ConnectionStringParser";
 export { ConnectionString } from "./Interfaces/ConnectionString";
-export { FieldType } from "./Enums";
+export { FieldType } from "./Enums/Enums";
 export { IRequestHeaders, RequestHeaders, eRequestHeaders } from "./RequestResponseHeaders";
 export { DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, strNotSpecified } from "./Constants";
 export { IData as AIData } from "./Interfaces/Contracts/IData";
@@ -60,7 +60,7 @@ export { IPropertiesPlugin } from "./Interfaces/IPropertiesPlugin";
 export { IUser, IUserContext } from "./Interfaces/Context/IUser";
 export { ITelemetryTrace } from "./Interfaces/Context/ITelemetryTrace";
 export { IRequestContext } from "./Interfaces/IRequestContext";
-export { eDistributedTracingModes, DistributedTracingModes, EventPersistence } from "./Enums";
+export { eDistributedTracingModes, DistributedTracingModes, EventPersistence } from "./Enums/Enums";
 export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./HelperFuncs";
 export {
     isBeaconsSupported as isBeaconApiSupported,

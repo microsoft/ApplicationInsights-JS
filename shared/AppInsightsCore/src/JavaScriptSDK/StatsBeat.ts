@@ -14,7 +14,7 @@ import { IStatsBeat, IStatsBeatConfig, IStatsBeatState, IStatsEndpointConfig } f
 import { IStatsMgr, IStatsMgrConfig } from "../JavaScriptSDK.Interfaces/IStatsMgr";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPayloadData } from "../JavaScriptSDK.Interfaces/IXHROverride";
-import { _throwInternal, safeGetLogger } from "./DiagnosticLogger";
+import { _throwInternal, safeGetLogger } from "../Diagnostics/DiagnosticLogger";
 import { isFeatureEnabled } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";
 

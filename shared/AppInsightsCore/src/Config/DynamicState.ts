@@ -4,9 +4,9 @@
 import { ITimerHandler, arrForEach, arrIndexOf, dumpObj, newSymbol, scheduleTimeout } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { throwAggregationError } from "../JavaScriptSDK/AggregationError";
-import { _IInternalDynamicConfigHandler } from "./IDynamicConfigHandler";
-import { IWatcherHandler, WatcherFunction, _IDynamicDetail } from "./IDynamicWatcher";
-import { _IDynamicConfigHandlerState } from "./_IDynamicConfigHandlerState";
+import { _IInternalDynamicConfigHandler } from "../../../AppInsightsCommon/src/Interfaces/Config/IDynamicConfigHandler";
+import { IWatcherHandler, WatcherFunction, _IDynamicDetail } from "../../../AppInsightsCommon/src/Interfaces/Config/IDynamicWatcher";
+import { _IDynamicConfigHandlerState } from "../../../AppInsightsCommon/src/Interfaces/Config/_IDynamicConfigHandlerState";
 
 const symPrefix = "[[ai_";
 const symPostfix = "]]";

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { IPromise } from "@nevware21/ts-async";
-import { eTraceHeadersMode } from "../JavaScriptSDK.Enums/TraceHeadersMode";
-import { IOTelConfig } from "../OpenTelemetry/interfaces/config/IOTelConfig";
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IChannelControls } from "./IChannelControls";
 import { ICookieMgrConfig } from "./ICookieMgr";
@@ -11,6 +9,7 @@ import { IFeatureOptIn } from "./IFeatureOptIn";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManager } from "./IPerfManager";
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
+import { eTraceHeadersMode } from "../Enums/TraceHeadersMode";
 
 /**
  * Configuration provided to SDK core
@@ -259,11 +258,12 @@ export interface IConfiguration {
      */
     traceHdrMode?: eTraceHeadersMode;
 
+    // TODO: Add IOTelConfig type back
     /**
      * [Optional] OpenTelemetry specific configuration
      * @since 4.0.0
      */
-    otelCfg?: IOTelConfig;
+    otelCfg?: any
 }
 
 ///**

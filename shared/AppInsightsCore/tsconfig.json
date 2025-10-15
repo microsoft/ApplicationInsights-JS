@@ -27,6 +27,6 @@
     "./src/JavaScriptSDK.Enums/**/*.ts",
     "./src/JavaScriptSDK.Interfaces/**/*.ts",
     "./src/OpenTelemetry/**/*.ts"
-  ],
+, "src/Diagnostics/DiagnosticLogger.ts", "../AppInsightsCommon/src/Interfaces/Config/_IDynamicConfigHandlerState.ts", "../AppInsightsCommon/src/Interfaces/Config/IDynamicConfigHandler.ts", "../AppInsightsCommon/src/Interfaces/Config/IConfigDefaults.ts", "../AppInsightsCommon/src/Interfaces/Config/IDynamicPropertyHandler.ts", "../AppInsightsCommon/src/Interfaces/Config/IDynamicWatcher.ts"  ],
   "exclude": ["node_modules/"]
 }

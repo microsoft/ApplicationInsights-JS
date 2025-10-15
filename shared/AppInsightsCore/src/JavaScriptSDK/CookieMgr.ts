@@ -7,14 +7,14 @@ import {
 } from "@nevware21/ts-utils";
 import { cfgDfMerge } from "../Config/ConfigDefaultHelpers";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
-import { IConfigDefaults } from "../Config/IConfigDefaults";
+import { IConfigDefaults } from "../../../AppInsightsCommon/src/Interfaces/Config/IConfigDefaults";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
-import { _throwInternal } from "./DiagnosticLogger";
+import { _throwInternal } from "../Diagnostics/DiagnosticLogger";
 import { getLocation, isIE } from "./EnvUtils";
 import { getExceptionName, isNotNullOrUndefined, setValue, strContains } from "./HelperFuncs";
 import { STR_DOMAIN, STR_EMPTY, STR_PATH, UNDEFINED_VALUE } from "./InternalConstants";

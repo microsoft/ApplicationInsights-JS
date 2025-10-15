@@ -3,9 +3,9 @@ import {
     isNotNullOrUndefined, isNullOrUndefined, onConfigChange, randomValue, safeGetLogger, strTrim
 } from "@microsoft/applicationinsights-core-js";
 import { arrForEach, mathFloor, mathMin, objForEachKey } from "@nevware21/ts-utils";
-import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "./Interfaces/IThrottleMgr";
+import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "../../../AppInsightsCommon/src/Interfaces/IThrottleMgr";
 import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
-import { IConfig } from "./applicationinsights-common";
+import { IConfig } from "../../../AppInsightsCommon/src/applicationinsights-common";
 
 const THROTTLE_STORAGE_PREFIX = "appInsightsThrottle";
 

@@ -5,7 +5,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { isFunction, objDefine } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../Config/DynamicConfig";
-import { IConfigDefaults } from "../Config/IConfigDefaults";
+import { IConfigDefaults } from "../../../AppInsightsCommon/src/Interfaces/Config/IConfigDefaults";
 import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
 import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
@@ -20,7 +20,7 @@ import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPlu
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
-import { safeGetLogger } from "./DiagnosticLogger";
+import { safeGetLogger } from "../Diagnostics/DiagnosticLogger";
 import { isNotNullOrUndefined, proxyFunctionAs } from "./HelperFuncs";
 import { STR_EXTENSION_CONFIG } from "./InternalConstants";
 import {

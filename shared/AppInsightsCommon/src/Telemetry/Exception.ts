@@ -6,7 +6,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { asString, getWindow, objFreeze, strIndexOf } from "@nevware21/ts-utils";
 import { strNotSpecified } from "../Constants";
-import { FieldType } from "../Enums";
+import { FieldType } from "../Enums/Enums";
 import { IExceptionData } from "../Interfaces/Contracts/IExceptionData";
 import { IExceptionDetails } from "../Interfaces/Contracts/IExceptionDetails";
 import { IStackFrame } from "../Interfaces/Contracts/IStackFrame";

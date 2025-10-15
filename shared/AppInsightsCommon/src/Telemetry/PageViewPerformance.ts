@@ -3,7 +3,7 @@
 
 import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
 import { strNotSpecified } from "../Constants";
-import { FieldType } from "../Enums";
+import { FieldType } from "../Enums/Enums";
 import { IPageViewPerfData } from "../Interfaces/Contracts/IPageViewPerfData";
 import { IPageViewPerformanceTelemetry } from "../Interfaces/IPageViewPerformanceTelemetry";
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";

@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
+import { TelemetryUnloadReason } from "../Enums/TelemetryUnloadReason";
+
 
 export interface ITelemetryUnloadState {
     reason: TelemetryUnloadReason;

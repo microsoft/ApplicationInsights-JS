@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { FieldType } from "../../Enums";
+import { FieldType } from "../../Enums/Enums";
 import { DataPointType } from "../../Interfaces/Contracts/DataPointType";
 import { IDataPoint } from "../../Interfaces/Contracts/IDataPoint";
 import { ISerializable } from "../../Interfaces/Telemetry/ISerializable";

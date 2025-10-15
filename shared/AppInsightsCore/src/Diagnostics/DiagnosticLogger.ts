@@ -10,9 +10,9 @@ import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { IConfigDefaults, IUnloadHook } from "../applicationinsights-core-js";
-import { getDebugExt } from "./DbgExtensionUtils";
-import { getConsole, getJSON, hasJSON } from "./EnvUtils";
-import { STR_EMPTY } from "./InternalConstants";
+import { getDebugExt } from "../JavaScriptSDK/DbgExtensionUtils";
+import { getConsole, getJSON, hasJSON } from "../JavaScriptSDK/EnvUtils";
+import { STR_EMPTY } from "../JavaScriptSDK/InternalConstants";
 
 const STR_WARN_TO_CONSOLE = "warnToConsole";
 

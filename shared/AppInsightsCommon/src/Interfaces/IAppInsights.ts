@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ICookieMgr, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { ICookieMgr } from "./ICookieMgr";
 import { IEventTelemetry } from "./IEventTelemetry";
 import { IAutoExceptionTelemetry, IExceptionTelemetry } from "./IExceptionTelemetry";
 import { IMetricTelemetry } from "./IMetricTelemetry";

@@ -15,7 +15,7 @@ import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnl
 import { IXDomainRequest } from "../JavaScriptSDK.Interfaces/IXDomainRequest";
 import { IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction } from "../JavaScriptSDK.Interfaces/IXHROverride";
 import { DisabledPropertyName } from "./Constants";
-import { _throwInternal, _warnToConsole } from "./DiagnosticLogger";
+import { _throwInternal, _warnToConsole } from "../Diagnostics/DiagnosticLogger";
 import { getLocation, isBeaconsSupported, isFetchSupported, isXhrSupported, useXDomainRequest } from "./EnvUtils";
 import { _getAllResponseHeaders, formatErrorMessageXdr, formatErrorMessageXhr, getResponseText, openXhr } from "./HelperFuncs";
 import { STR_EMPTY } from "./InternalConstants";

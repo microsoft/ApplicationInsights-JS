@@ -7,8 +7,8 @@ import {
 } from "@nevware21/ts-utils";
 import { _applyDefaultValue } from "../Config/ConfigDefaults";
 import { createDynamicConfig } from "../Config/DynamicConfig";
-import { IConfigDefaults } from "../Config/IConfigDefaults";
-import { IDynamicConfigHandler } from "../Config/IDynamicConfigHandler";
+import { IConfigDefaults } from "../../../AppInsightsCommon/src/Interfaces/Config/IConfigDefaults";
+import { IDynamicConfigHandler } from "../../../AppInsightsCommon/src/Interfaces/Config/IDynamicConfigHandler";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
@@ -21,7 +21,7 @@ import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetr
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
-import { _throwInternal, safeGetLogger } from "./DiagnosticLogger";
+import { _throwInternal, safeGetLogger } from "../Diagnostics/DiagnosticLogger";
 import { proxyFunctions } from "./HelperFuncs";
 import { STR_CORE, STR_DISABLED, STR_EMPTY } from "./InternalConstants";
 import { doPerf } from "./PerfManager";

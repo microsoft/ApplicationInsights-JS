@@ -13,10 +13,10 @@ import {
 } from "./DynamicProperty";
 import { _createState } from "./DynamicState";
 import { CFG_HANDLER_LINK, _cfgDeepCopy, getDynamicConfigHandler, throwInvalidAccess } from "./DynamicSupport";
-import { IConfigDefaults } from "./IConfigDefaults";
-import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "./IDynamicConfigHandler";
-import { IWatcherHandler, WatcherFunction } from "./IDynamicWatcher";
-import { _IDynamicConfigHandlerState } from "./_IDynamicConfigHandlerState";
+import { IConfigDefaults } from "../../../AppInsightsCommon/src/Interfaces/Config/IConfigDefaults";
+import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "../../../AppInsightsCommon/src/Interfaces/Config/IDynamicConfigHandler";
+import { IWatcherHandler, WatcherFunction } from "../../../AppInsightsCommon/src/Interfaces/Config/IDynamicWatcher";
+import { _IDynamicConfigHandlerState } from "../../../AppInsightsCommon/src/Interfaces/Config/_IDynamicConfigHandlerState";
 
 /**
  * Identifies a function which will be re-called whenever any of it's accessed configuration values

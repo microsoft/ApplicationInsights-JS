@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
-import { FieldType } from "../Enums";
+import { FieldType } from "../Enums/Enums";
 import { msToTimeSpan } from "../HelperFuncs";
 import { IRemoteDependencyData } from "../Interfaces/Contracts/IRemoteDependencyData";
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";

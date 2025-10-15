@@ -4,7 +4,7 @@
 import { asString, isBoolean, isFunction, isNullOrUndefined, isString } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "../JavaScriptSDK/InternalConstants";
 import { IConfiguration } from "../applicationinsights-core-js";
-import { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "./IConfigDefaults";
+import { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "../../../AppInsightsCommon/src/Interfaces/Config/IConfigDefaults";
 
 /**
  * @internal

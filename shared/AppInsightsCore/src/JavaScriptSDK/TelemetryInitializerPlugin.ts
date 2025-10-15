@@ -11,7 +11,7 @@ import {
 } from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { BaseTelemetryPlugin } from "./BaseTelemetryPlugin";
-import { _throwInternal } from "./DiagnosticLogger";
+import { _throwInternal } from "../Diagnostics/DiagnosticLogger";
 import { getExceptionName } from "./HelperFuncs";
 
 interface _IInternalTelemetryInitializerHandler {

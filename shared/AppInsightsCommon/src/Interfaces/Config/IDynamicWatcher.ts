@@ -3,8 +3,8 @@
 
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
-import { IConfigDefaults } from "../../../AppInsightsCommon/src/Interfaces/Config/IConfigDefaults";
-import { IDynamicPropertyHandler } from "../../../AppInsightsCommon/src/Interfaces/Config/IDynamicPropertyHandler";
+import { IConfigDefaults } from "./IConfigDefaults";
+import { IDynamicPropertyHandler } from "../IDynamicPropertyHandler";
 
 export interface IWatchDetails<T = IConfiguration> {
     /**

@@ -3,8 +3,8 @@
 
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IConfigDefaults } from "./IConfigDefaults";
-import { IWatcherHandler, WatcherFunction } from "./IDynamicWatcher";
+import { IConfigDefaults } from "../../../AppInsightsCore/src/Config/IConfigDefaults";
+import { IWatcherHandler, WatcherFunction } from "../../../../AppInsightsCore/src/Config/IDynamicWatcher";
 
 /**
  * This interface identifies the config which can track changes
