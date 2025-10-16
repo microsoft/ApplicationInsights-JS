@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IDistributedTraceContext, eW3CTraceFlags } from "@microsoft/applicationinsights-common";
 import { isNullOrUndefined, isNumber, isObject, isString, objDefineProps } from "@nevware21/ts-utils";
-import { eW3CTraceFlags } from "../../JavaScriptSDK.Enums/W3CTraceFlags";
-import { IDistributedTraceContext } from "../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
 import { INVALID_SPAN_ID, INVALID_TRACE_ID, isValidSpanId, isValidTraceId } from "../../JavaScriptSDK/W3cTraceParent";
 import { IOTelSpanContext } from "../interfaces/trace/IOTelSpanContext";
 import { IOTelTraceState } from "../interfaces/trace/IOTelTraceState";

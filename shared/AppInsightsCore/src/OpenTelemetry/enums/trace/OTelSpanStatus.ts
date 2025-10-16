@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createEnumStyle } from "../../../JavaScriptSDK.Enums/EnumHelperFuncs";
+import { createEnumStyle } from "@microsoft/applicationinsights-common";
 
 /**
  * An enumeration of status codes, matching the OpenTelemetry specification.

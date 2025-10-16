@@ -1,6 +1,5 @@
+import { UNDEFINED_VALUE, eW3CTraceFlags } from "@microsoft/applicationinsights-common";
 import { createDeferredCachedValue, objDefineProps, objFreeze } from "@nevware21/ts-utils";
-import { eW3CTraceFlags } from "../../JavaScriptSDK.Enums/W3CTraceFlags";
-import { UNDEFINED_VALUE } from "../../JavaScriptSDK/InternalConstants";
 import { INVALID_SPAN_ID, INVALID_TRACE_ID } from "../../JavaScriptSDK/W3cTraceParent";
 import { eOTelSpanKind } from "../enums/trace/OTelSpanKind";
 import { eOTelSpanStatusCode } from "../enums/trace/OTelSpanStatus";

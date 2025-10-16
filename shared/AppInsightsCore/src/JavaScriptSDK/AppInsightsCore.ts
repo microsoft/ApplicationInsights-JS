@@ -2,6 +2,16 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
+import {
+    ActiveStatus, IAppInsightsCore, IChannelControls, IChannelControlsHost, IConfigDefaults, IConfiguration, ICookieMgr, IDiagnosticLogger,
+    IDistributedTraceContext, IDynamicConfigHandler, ILegacyUnloadHook, ILoadedPlugin, INotificationListener, INotificationManager,
+    IPerfManager, IPlugin, IProcessTelemetryContext, IProcessTelemetryUpdateContext, ITelemetryInitializerHandler, ITelemetryItem,
+    ITelemetryPlugin, ITelemetryPluginChain, ITelemetryUnloadState, ITelemetryUpdateState, IUnloadHook, IWatchDetails, STR_CHANNELS,
+    STR_CREATE_PERF_MGR, STR_DISABLED, STR_EMPTY, STR_EXTENSIONS, STR_EXTENSION_CONFIG, SendRequestReason, TelemetryInitializerFunction,
+    TelemetryUnloadReason, TelemetryUpdateReason, UNDEFINED_VALUE, WatcherFunction, _IInternalDynamicConfigHandler, _eInternalMessageId,
+    createUniqueNamespace, eActiveStatus, eEventsDiscardedReason, eLoggingSeverity, eTraceHeadersMode, getSetValue, isNotNullOrUndefined,
+    proxyFunctionAs, proxyFunctions, toISOString
+} from "@microsoft/applicationinsights-common";
 import { IPromise, createPromise, createSyncAllSettledPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
     ILazyValue, ITimerHandler, arrAppend, arrForEach, arrIndexOf, createDeferredCachedValue, createTimeout, deepExtend, hasDocument,
@@ -10,34 +20,7 @@ import {
 } from "@nevware21/ts-utils";
 import { cfgDfMerge } from "../Config/ConfigDefaultHelpers";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
-import { IConfigDefaults } from "../../../AppInsightsCommon/src/Interfaces/Config/IConfigDefaults";
-import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "../../../AppInsightsCommon/src/Interfaces/Config/IDynamicConfigHandler";
-import { IWatchDetails, WatcherFunction } from "../../../AppInsightsCommon/src/Interfaces/Config/IDynamicWatcher";
-import { eEventsDiscardedReason } from "../JavaScriptSDK.Enums/EventsDiscardedReason";
-import { ActiveStatus, eActiveStatus } from "../JavaScriptSDK.Enums/InitActiveStatusEnum";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
-import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
-import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
-import { eTraceHeadersMode } from "../JavaScriptSDK.Enums/TraceHeadersMode";
-import { IAppInsightsCore, ILoadedPlugin } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
-import { IChannelControlsHost } from "../JavaScriptSDK.Interfaces/IChannelControlsHost";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
-import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
-import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
-import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
-import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
-import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
+import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "../Diagnostics/DiagnosticLogger";
 import { createContextManager } from "../OpenTelemetry/context/contextManager";
 import { IOTelContextManager } from "../OpenTelemetry/interfaces/context/IOTelContextManager";
 import { IOTelSpanContext } from "../OpenTelemetry/interfaces/trace/IOTelSpanContext";
@@ -49,13 +32,7 @@ import { createOTelTraceState } from "../OpenTelemetry/trace/traceState";
 import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
 import { ChannelControllerPriority } from "./Constants";
 import { createCookieMgr } from "./CookieMgr";
-import { createUniqueNamespace } from "./DataCacheHelper";
 import { getDebugListener } from "./DbgExtensionUtils";
-import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "../Diagnostics/DiagnosticLogger";
-import { getSetValue, isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString } from "./HelperFuncs";
-import {
-    STR_CHANNELS, STR_CREATE_PERF_MGR, STR_DISABLED, STR_EMPTY, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE
-} from "./InternalConstants";
 import { NotificationManager } from "./NotificationManager";
 import { PerfManager, doPerf, getGblPerfMgr } from "./PerfManager";
 import {

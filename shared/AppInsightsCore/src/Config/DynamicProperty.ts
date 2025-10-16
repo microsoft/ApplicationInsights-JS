@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IWatcherHandler, _IDynamicConfigHandlerState, _IDynamicDetail, _IDynamicGetter } from "@microsoft/applicationinsights-common";
 import {
     arrForEach, arrIndexOf, dumpObj, isArray, objDefine, objDefineProp, objForEachKey, objGetOwnPropertyDescriptor
 } from "@nevware21/ts-utils";
@@ -8,8 +9,6 @@ import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/Lo
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { UNDEFINED_VALUE } from "../JavaScriptSDK/InternalConstants";
 import { CFG_HANDLER_LINK, _canMakeDynamic, blockDynamicConversion, throwInvalidAccess } from "./DynamicSupport";
-import { IWatcherHandler, _IDynamicDetail } from "../../../AppInsightsCommon/src/Interfaces/Config/IDynamicWatcher";
-import { _IDynamicConfigHandlerState, _IDynamicGetter } from "../../../AppInsightsCommon/src/Interfaces/Config/_IDynamicConfigHandlerState";
 
 export const enum _eSetDynamicPropertyFlags {
     inPlace = 0,

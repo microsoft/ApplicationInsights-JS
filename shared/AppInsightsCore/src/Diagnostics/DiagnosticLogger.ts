@@ -9,10 +9,10 @@ import { LoggingSeverity, _InternalMessageId, _eInternalMessageId, eLoggingSever
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IConfigDefaults, IUnloadHook } from "../applicationinsights-core-js";
 import { getDebugExt } from "../JavaScriptSDK/DbgExtensionUtils";
 import { getConsole, getJSON, hasJSON } from "../JavaScriptSDK/EnvUtils";
 import { STR_EMPTY } from "../JavaScriptSDK/InternalConstants";
+import { IConfigDefaults, IUnloadHook } from "../applicationinsights-core-js";
 
 const STR_WARN_TO_CONSOLE = "warnToConsole";
 

@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import dynamicProto from "@microsoft/dynamicproto-js";
+import {
+    INotificationManager, IPerfEvent, IPerfManager, IPerfManagerProvider, STR_GET_PERF_MGR
+} from "@microsoft/applicationinsights-common";
 import { isArray, isFunction, objDefine, utcNow } from "@nevware21/ts-utils";
-import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
-import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
-import { IPerfManager, IPerfManagerProvider } from "../JavaScriptSDK.Interfaces/IPerfManager";
-import { STR_GET_PERF_MGR } from "./InternalConstants";
 
 const strExecutionContextKey = "ctx";
 const strParentContextKey = "ParentContextKey";

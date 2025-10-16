@@ -1,11 +1,10 @@
 import {
-    IAppInsightsCore, IConfiguration, IDiagnosticLogger, _eInternalMessageId, _throwInternal, arrIndexOf, eLoggingSeverity,
-    isNotNullOrUndefined, isNullOrUndefined, onConfigChange, randomValue, safeGetLogger, strTrim
-} from "@microsoft/applicationinsights-core-js";
+    IAppInsightsCore, IConfig, IConfiguration, IDiagnosticLogger, IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig,
+    IThrottleResult, _eInternalMessageId, _throwInternal, arrIndexOf, eLoggingSeverity, isNotNullOrUndefined, isNullOrUndefined, randomValue,
+    safeGetLogger, strTrim, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage
+} from "@microsoft/applicationinsights-common";
 import { arrForEach, mathFloor, mathMin, objForEachKey } from "@nevware21/ts-utils";
-import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "../../../AppInsightsCommon/src/Interfaces/IThrottleMgr";
-import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
-import { IConfig } from "../../../AppInsightsCommon/src/applicationinsights-common";
+import { onConfigChange } from "../Config/DynamicConfig";
 
 const THROTTLE_STORAGE_PREFIX = "appInsightsThrottle";
 

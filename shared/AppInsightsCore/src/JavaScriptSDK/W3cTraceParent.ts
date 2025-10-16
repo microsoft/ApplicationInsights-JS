@@ -1,9 +1,6 @@
+import { ITraceParent, STR_EMPTY, eW3CTraceFlags, findMetaTag, findNamedServerTiming } from "@microsoft/applicationinsights-common";
 import { arrForEach, isArray, isNullOrUndefined, isString, strLeft, strTrim } from "@nevware21/ts-utils";
-import { eW3CTraceFlags } from "../JavaScriptSDK.Enums/W3CTraceFlags";
-import { ITraceParent } from "../JavaScriptSDK.Interfaces/ITraceParent";
 import { generateW3CId } from "./CoreUtils";
-import { findMetaTag, findNamedServerTiming } from "./EnvUtils";
-import { STR_EMPTY } from "./InternalConstants";
 
 // using {0,16} for leading and trailing whitespace just to constrain the possible runtime of a random string
 const TRACE_PARENT_REGEX = /^([\da-f]{2})-([\da-f]{32})-([\da-f]{16})-([\da-f]{2})(-[^\s]{1,64})?$/i;

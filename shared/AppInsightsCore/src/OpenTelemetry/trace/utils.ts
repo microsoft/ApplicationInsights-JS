@@ -1,5 +1,5 @@
+import { UNDEFINED_VALUE } from "@microsoft/applicationinsights-common";
 import { ILazyValue, createDeferredCachedValue, isFunction, symbolFor } from "@nevware21/ts-utils";
-import { UNDEFINED_VALUE } from "../../JavaScriptSDK/InternalConstants";
 import { isValidSpanId, isValidTraceId } from "../../JavaScriptSDK/W3cTraceParent";
 import { IOTelContext } from "../interfaces/context/IOTelContext";
 import { IOTelSpan } from "../interfaces/trace/IOTelSpan";

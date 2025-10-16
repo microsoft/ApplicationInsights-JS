@@ -25,13 +25,13 @@
       "shouldPublish": true
     },
     {
-      "packageName": "@microsoft/applicationinsights-core-js",
-      "projectFolder": "shared/AppInsightsCore",
+      "packageName": "@microsoft/applicationinsights-common",
+      "projectFolder": "shared/AppInsightsCommon",
       "shouldPublish": true
     },
     {
-      "packageName": "@microsoft/applicationinsights-common",
-      "projectFolder": "shared/AppInsightsCommon",
+      "packageName": "@microsoft/applicationinsights-core-js",
+      "projectFolder": "shared/AppInsightsCore",
       "shouldPublish": true
     },
     {

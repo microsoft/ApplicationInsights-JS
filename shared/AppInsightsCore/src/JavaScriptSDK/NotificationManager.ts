@@ -1,18 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import dynamicProto from "@microsoft/dynamicproto-js";
+import {
+    IConfiguration, INotificationListener, INotificationManager, IPerfEvent, ITelemetryItem, STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST,
+    STR_EVENTS_SENT, STR_OFFLINE_DROP, STR_OFFLINE_SENT, STR_OFFLINE_STORE, STR_PERF_EVENT
+} from "@microsoft/applicationinsights-common";
 import { IPromise, createAllPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { ITimerHandler, arrForEach, arrIndexOf, objDefine, safe, scheduleTimeout } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../Config/DynamicConfig";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
-import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
-import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IPayloadData, IUnloadHook } from "../applicationinsights-core-js";
-import {
-    STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_OFFLINE_DROP, STR_OFFLINE_SENT, STR_OFFLINE_STORE, STR_PERF_EVENT
-} from "./InternalConstants";
 
 const defaultValues = {
     perfEvtsSendAll: false

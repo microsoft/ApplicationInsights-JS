@@ -2,23 +2,16 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
+import {
+    IDiagnosticLogger, IPayloadData, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IXDomainRequest, IXHROverride,
+    OnCompleteCallback, STR_EMPTY, SendPOSTFunction, SendRequestReason, TransportType, _IInternalXhrOverride, _ISendPostMgrConfig,
+    _ISenderOnComplete, _ITimeoutOverrideWrapper, _eInternalMessageId, _getAllResponseHeaders, eLoggingSeverity, formatErrorMessageXdr,
+    formatErrorMessageXhr, getLocation, getResponseText, isBeaconsSupported, isFetchSupported, isXhrSupported, openXhr, useXDomainRequest
+} from "@microsoft/applicationinsights-common";
 import { AwaitResponse, IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { arrForEach, dumpObj, getInst, getNavigator, getWindow, isFunction, isString, objKeys } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { SendRequestReason, TransportType } from "../JavaScriptSDK.Enums/SendRequestReason";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import {
-    _IInternalXhrOverride, _ISendPostMgrConfig, _ISenderOnComplete, _ITimeoutOverrideWrapper
-} from "../JavaScriptSDK.Interfaces/ISenderPostManager";
-import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-import { IXDomainRequest } from "../JavaScriptSDK.Interfaces/IXDomainRequest";
-import { IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction } from "../JavaScriptSDK.Interfaces/IXHROverride";
-import { DisabledPropertyName } from "./Constants";
 import { _throwInternal, _warnToConsole } from "../Diagnostics/DiagnosticLogger";
-import { getLocation, isBeaconsSupported, isFetchSupported, isXhrSupported, useXDomainRequest } from "./EnvUtils";
-import { _getAllResponseHeaders, formatErrorMessageXdr, formatErrorMessageXhr, getResponseText, openXhr } from "./HelperFuncs";
-import { STR_EMPTY } from "./InternalConstants";
+import { DisabledPropertyName } from "./Constants";
 
 const STR_NO_RESPONSE_BODY = "NoResponseBody";
 const _noResponseQs =  "&" + STR_NO_RESPONSE_BODY + "=true";

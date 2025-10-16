@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import {
+    IConfigDefaults, IDynamicConfigHandler, IWatcherHandler, WatcherFunction, _IDynamicConfigHandlerState, _IInternalDynamicConfigHandler
+} from "@microsoft/applicationinsights-common";
 import { dumpObj, isUndefined, objDefine, objForEachKey } from "@nevware21/ts-utils";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
@@ -13,10 +16,6 @@ import {
 } from "./DynamicProperty";
 import { _createState } from "./DynamicState";
 import { CFG_HANDLER_LINK, _cfgDeepCopy, getDynamicConfigHandler, throwInvalidAccess } from "./DynamicSupport";
-import { IConfigDefaults } from "../../../AppInsightsCommon/src/Interfaces/Config/IConfigDefaults";
-import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "../../../AppInsightsCommon/src/Interfaces/Config/IDynamicConfigHandler";
-import { IWatcherHandler, WatcherFunction } from "../../../AppInsightsCommon/src/Interfaces/Config/IDynamicWatcher";
-import { _IDynamicConfigHandlerState } from "../../../AppInsightsCommon/src/Interfaces/Config/_IDynamicConfigHandlerState";
 
 /**
  * Identifies a function which will be re-called whenever any of it's accessed configuration values

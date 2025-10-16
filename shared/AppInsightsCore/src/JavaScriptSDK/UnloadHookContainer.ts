@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import {
+    IDiagnosticLogger, ILegacyUnloadHook, IUnloadHook, _eInternalMessageId, eLoggingSeverity
+} from "@microsoft/applicationinsights-common";
 import { arrAppend, arrForEach, dumpObj } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
 import { _throwInternal } from "../Diagnostics/DiagnosticLogger";
 
 let _maxHooks: number | undefined;
