@@ -22,7 +22,7 @@ export {
     eActiveStatus, ActiveStatus,
     IXDomainRequest, IBackendResponse,
     _ISenderOnComplete, _ISendPostMgrConfig, _ITimeoutOverrideWrapper, _IInternalXhrOverride,
-    EnumValue, createEnumStyle, createValueMap,
+    createEnumStyle,
     INotificationManager,
     IPerfEvent,
     IPerfManager, IPerfManagerProvider,
@@ -58,10 +58,6 @@ export {
 } from "@microsoft/applicationinsights-common";
 export { parseResponse } from "./JavaScriptSDK/ResponseHelpers";
 export { SenderPostManager } from "./JavaScriptSDK/SenderPostManager";
-//export { IStatsBeat, IStatsBeatConfig, IStatsBeatKeyMap as IStatsBeatEndpoints, IStatsBeatState} from "./JavaScriptSDK.Interfaces/IStatsBeat";
-//export { IStatsEventData } from "./JavaScriptSDK.Interfaces/IStatsEventData";
-//export { IStatsMgr, IStatsMgrConfig } from "./JavaScriptSDK.Interfaces/IStatsMgr";
-//export { createStatsMgr } from "./JavaScriptSDK/StatsBeat";
 export {
     isArray, isTypeof, isUndefined, isNullOrUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,
     strEndsWith, strStartsWith, isDate, isError, isString, isNumber, isBoolean, arrForEach, arrIndexOf,

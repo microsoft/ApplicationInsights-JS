@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 import {
-    IBackendResponse, IDiagnosticLogger, STR_EMPTY, _eInternalMessageId, eLoggingSeverity, getJSON
+    IBackendResponse, IDiagnosticLogger, _eInternalMessageId, eLoggingSeverity, getJSON
 } from "@microsoft/applicationinsights-common";
 import { dumpObj } from "@nevware21/ts-utils";
 import { _throwInternal } from "../Diagnostics/DiagnosticLogger";
+import { STR_EMPTY } from "../InternalConstants";
 
 /**
  * Parses the response from the backend.

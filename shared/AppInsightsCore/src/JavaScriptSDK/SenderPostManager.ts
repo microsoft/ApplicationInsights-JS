@@ -4,13 +4,14 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     IDiagnosticLogger, IPayloadData, IProcessTelemetryUnloadContext, ITelemetryUnloadState, IXDomainRequest, IXHROverride,
-    OnCompleteCallback, STR_EMPTY, SendPOSTFunction, SendRequestReason, TransportType, _IInternalXhrOverride, _ISendPostMgrConfig,
-    _ISenderOnComplete, _ITimeoutOverrideWrapper, _eInternalMessageId, _getAllResponseHeaders, eLoggingSeverity, formatErrorMessageXdr,
-    formatErrorMessageXhr, getLocation, getResponseText, isBeaconsSupported, isFetchSupported, isXhrSupported, openXhr, useXDomainRequest
+    OnCompleteCallback, SendPOSTFunction, SendRequestReason, TransportType, _IInternalXhrOverride, _ISendPostMgrConfig, _ISenderOnComplete,
+    _ITimeoutOverrideWrapper, _eInternalMessageId, _getAllResponseHeaders, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr,
+    getLocation, getResponseText, isBeaconsSupported, isFetchSupported, isXhrSupported, openXhr, useXDomainRequest
 } from "@microsoft/applicationinsights-common";
 import { AwaitResponse, IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { arrForEach, dumpObj, getInst, getNavigator, getWindow, isFunction, isString, objKeys } from "@nevware21/ts-utils";
 import { _throwInternal, _warnToConsole } from "../Diagnostics/DiagnosticLogger";
+import { STR_EMPTY } from "../InternalConstants";
 import { DisabledPropertyName } from "./Constants";
 
 const STR_NO_RESPONSE_BODY = "NoResponseBody";
@@ -463,7 +464,7 @@ export class SenderPostManager {
                    
                     _syncFetchPayload += batchLength;
                     if (_isOneDs) {
-                        if (payload["_sendReason"] === SendRequestReason.Unload) {
+                        if ((payload as any)["_sendReason"] === SendRequestReason.Unload) {
                             // As a sync request (during unload), it is unlikely that we will get a chance to process the response so
                             // just like beacon send assume that the events have been accepted and processed
                             ignoreResponse = true;
@@ -480,7 +481,7 @@ export class SenderPostManager {
                 const request = new Request(endPointUrl, init);
                 try {
                     // Also try and tag the request (just in case the value in init is not copied over)
-                    request[DisabledPropertyName] = true;
+                    (request as any)[DisabledPropertyName] = true;
                 } catch(e) {
                     // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
                     // cause the request to fail and we no telemetry would be sent

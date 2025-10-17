@@ -5,8 +5,7 @@
 import {
     IAppInsightsCore, IBaseProcessingContext, IConfigDefaults, IConfiguration, IDiagnosticLogger, IDynamicConfigHandler, IPlugin,
     IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext, ITelemetryItem, ITelemetryPlugin,
-    ITelemetryPluginChain, ITelemetryUnloadState, ITelemetryUpdateState, STR_CORE, STR_DISABLED, STR_EMPTY, _eInternalMessageId,
-    eLoggingSeverity, proxyFunctions
+    ITelemetryPluginChain, ITelemetryUnloadState, ITelemetryUpdateState, _eInternalMessageId, eLoggingSeverity, proxyFunctions
 } from "@microsoft/applicationinsights-common";
 import {
     arrForEach, dumpObj, isArray, isFunction, isNullOrUndefined, isUndefined, objForEachKey, objFreeze, objKeys
@@ -14,6 +13,7 @@ import {
 import { _applyDefaultValue } from "../Config/ConfigDefaults";
 import { createDynamicConfig } from "../Config/DynamicConfig";
 import { _throwInternal, safeGetLogger } from "../Diagnostics/DiagnosticLogger";
+import { STR_CORE, STR_DISABLED, STR_EMPTY } from "../InternalConstants";
 import { doPerf } from "./PerfManager";
 import { _getPluginState } from "./TelemetryHelpers";
 

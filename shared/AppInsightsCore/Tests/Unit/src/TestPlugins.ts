@@ -1,16 +1,15 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
-import { ITelemetryItem } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../../../src/JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { TelemetryUpdateReason } from "../../../src/JavaScriptSDK.Enums/TelemetryUpdateReason";
-import { IConfiguration } from "../../../src/JavaScriptSDK.Interfaces/IConfiguration";
-import { IPlugin, ITelemetryPlugin } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { BaseTelemetryPlugin } from "../../../src/JavaScriptSDK/BaseTelemetryPlugin";
-import { IAppInsightsCore } from "../../../src/JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { ITelemetryPluginChain } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { ITelemetryUpdateState } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryUpdateState";
-import { IChannelControls } from "../../../src/JavaScriptSDK.Interfaces/IChannelControls";
+import { _eInternalMessageId } from "@microsoft/applicationinsights-common";
+import { ITelemetryItem } from "@microsoft/applicationinsights-common";
+import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "@microsoft/applicationinsights-common";
+import { TelemetryUpdateReason } from "@microsoft/applicationinsights-common";
+import { IConfiguration } from "@microsoft/applicationinsights-common";
+import { IPlugin, ITelemetryPlugin } from "@microsoft/applicationinsights-common";
+import { IAppInsightsCore } from "@microsoft/applicationinsights-common";
+import { ITelemetryPluginChain } from "@microsoft/applicationinsights-common";
+import { ITelemetryUpdateState } from "@microsoft/applicationinsights-common";
+import { IChannelControls } from "@microsoft/applicationinsights-common";
+import { BaseTelemetryPlugin } from "../../../src/applicationinsights-core-js";
 
 
 export class TestPlugin implements IPlugin {

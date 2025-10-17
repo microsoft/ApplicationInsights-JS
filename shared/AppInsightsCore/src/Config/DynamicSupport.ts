@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDynamicConfigHandler, _IDynamicConfigHandlerState } from "@microsoft/applicationinsights-common";
+import { IConfiguration, IDynamicConfigHandler, _IDynamicConfigHandlerState } from "@microsoft/applicationinsights-common";
 import { isArray, isPlainObject, objForEachKey, symbolFor, throwTypeError } from "@nevware21/ts-utils";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 
 // Using Symbol.for so that if the same symbol was already created it would be returned
 // To handle multiple instances using potentially different versions we are not using

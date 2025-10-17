@@ -1,7 +1,6 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
-import { normalizeJsName, objExtend, _getObjProto, isFeatureEnabled } from "../../../src/JavaScriptSDK/HelperFuncs";
+import { _eInternalMessageId } from "@microsoft/applicationinsights-common";
+import { normalizeJsName, objExtend, _getObjProto, isFeatureEnabled } from "@microsoft/applicationinsights-common";
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
 import { isArray, isObject, objKeys, strEndsWith, strStartsWith, isPlainObject, utcNow } from "@nevware21/ts-utils";
 import { FeatureOptInMode, IConfiguration, IFeatureOptInDetails, dumpObj } from "../../../src/applicationinsights-core-js";

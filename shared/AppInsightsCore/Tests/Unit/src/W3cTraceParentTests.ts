@@ -1,6 +1,6 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { utcNow } from "@nevware21/ts-utils";
-import { ITraceParent } from "../../../src/JavaScriptSDK.Interfaces/ITraceParent";
+import { ITraceParent } from "@microsoft/applicationinsights-common";
 import { generateW3CId, newGuid } from "../../../src/JavaScriptSDK/CoreUtils";
 import { formatTraceParent, isSampledFlag, isValidSpanId, isValidTraceId, isValidTraceParent, parseTraceParent } from "../../../src/JavaScriptSDK/W3cTraceParent";
 

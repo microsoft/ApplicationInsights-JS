@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { STR_EMPTY, createElmNodeData, createUniqueNamespace } from "@microsoft/applicationinsights-common";
+import { createElmNodeData, createUniqueNamespace } from "@microsoft/applicationinsights-common";
 import { arrForEach, arrIndexOf, getDocument, getWindow, isArray, objForEachKey, objKeys } from "@nevware21/ts-utils";
+import { STR_EMPTY } from "../InternalConstants";
 
 // Added to help with minfication
 const strOnPrefix = "on";

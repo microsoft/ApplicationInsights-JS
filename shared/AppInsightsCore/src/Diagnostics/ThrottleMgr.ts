@@ -1,10 +1,11 @@
 import {
     IAppInsightsCore, IConfig, IConfiguration, IDiagnosticLogger, IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig,
-    IThrottleResult, _eInternalMessageId, _throwInternal, arrIndexOf, eLoggingSeverity, isNotNullOrUndefined, isNullOrUndefined, randomValue,
-    safeGetLogger, strTrim, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage
+    IThrottleResult, _eInternalMessageId, eLoggingSeverity, isNotNullOrUndefined, randomValue, utlCanUseLocalStorage, utlGetLocalStorage,
+    utlSetLocalStorage
 } from "@microsoft/applicationinsights-common";
-import { arrForEach, mathFloor, mathMin, objForEachKey } from "@nevware21/ts-utils";
+import { arrForEach, arrIndexOf, isNullOrUndefined, mathFloor, mathMin, objForEachKey, strTrim } from "@nevware21/ts-utils";
 import { onConfigChange } from "../Config/DynamicConfig";
+import { safeGetLogger } from "./DiagnosticLogger";
 
 const THROTTLE_STORAGE_PREFIX = "appInsightsThrottle";
 
@@ -368,7 +369,7 @@ export class ThrottleMgr {
         }
         
         function _sendMessage(msgID: _eInternalMessageId, logger: IDiagnosticLogger, message: string, severity?: eLoggingSeverity) {
-            _throwInternal(logger,
+            logger.throwInternal(
                 severity || eLoggingSeverity.CRITICAL,
                 msgID,
                 message);

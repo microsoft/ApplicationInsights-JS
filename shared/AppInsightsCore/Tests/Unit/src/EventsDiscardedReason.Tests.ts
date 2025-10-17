@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { eEventsDiscardedReason, EventsDiscardedReason } from "../../../src/JavaScriptSDK.Enums/EventsDiscardedReason";
+import { eEventsDiscardedReason, EventsDiscardedReason } from "@microsoft/applicationinsights-common";
 
 export class EventsDiscardedReasonTests extends AITestClass {
 

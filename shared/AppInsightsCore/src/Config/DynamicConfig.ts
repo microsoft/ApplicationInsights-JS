@@ -2,14 +2,11 @@
 // Licensed under the MIT License.
 
 import {
-    IConfigDefaults, IDynamicConfigHandler, IWatcherHandler, WatcherFunction, _IDynamicConfigHandlerState, _IInternalDynamicConfigHandler
+    IConfigDefaults, IConfiguration, IDiagnosticLogger, IDynamicConfigHandler, IWatcherHandler, WatcherFunction, _IDynamicConfigHandlerState,
+    _IInternalDynamicConfigHandler, _eInternalMessageId, createUniqueNamespace, eLoggingSeverity
 } from "@microsoft/applicationinsights-common";
 import { dumpObj, isUndefined, objDefine, objForEachKey } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { createUniqueNamespace } from "../JavaScriptSDK/DataCacheHelper";
-import { STR_EMPTY, STR_NOT_DYNAMIC_ERROR } from "../JavaScriptSDK/InternalConstants";
+import { STR_EMPTY, STR_NOT_DYNAMIC_ERROR } from "../InternalConstants";
 import { _applyDefaultValue } from "./ConfigDefaults";
 import {
     _eSetDynamicPropertyFlags, _makeDynamicObject, _setDynamicProperty, _setDynamicPropertyState, _throwDynamicError

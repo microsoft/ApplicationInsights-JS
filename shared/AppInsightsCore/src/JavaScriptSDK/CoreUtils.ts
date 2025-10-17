@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 "use strict";
-import { STR_EMPTY, random32 } from "@microsoft/applicationinsights-common";
+import { random32 } from "@microsoft/applicationinsights-common";
 import { strShimUndefined } from "@microsoft/applicationinsights-shims";
 import { strSubstr, strSubstring } from "@nevware21/ts-utils";
+import { STR_EMPTY } from "../InternalConstants";
 
 // Added to help with minfication
 export const Undefined = strShimUndefined;

@@ -6,11 +6,10 @@ import {
     ActiveStatus, IAppInsightsCore, IChannelControls, IChannelControlsHost, IConfigDefaults, IConfiguration, ICookieMgr, IDiagnosticLogger,
     IDistributedTraceContext, IDynamicConfigHandler, ILegacyUnloadHook, ILoadedPlugin, INotificationListener, INotificationManager,
     IPerfManager, IPlugin, IProcessTelemetryContext, IProcessTelemetryUpdateContext, ITelemetryInitializerHandler, ITelemetryItem,
-    ITelemetryPlugin, ITelemetryPluginChain, ITelemetryUnloadState, ITelemetryUpdateState, IUnloadHook, IWatchDetails, STR_CHANNELS,
-    STR_CREATE_PERF_MGR, STR_DISABLED, STR_EMPTY, STR_EXTENSIONS, STR_EXTENSION_CONFIG, SendRequestReason, TelemetryInitializerFunction,
-    TelemetryUnloadReason, TelemetryUpdateReason, UNDEFINED_VALUE, WatcherFunction, _IInternalDynamicConfigHandler, _eInternalMessageId,
-    createUniqueNamespace, eActiveStatus, eEventsDiscardedReason, eLoggingSeverity, eTraceHeadersMode, getSetValue, isNotNullOrUndefined,
-    proxyFunctionAs, proxyFunctions, toISOString
+    ITelemetryPlugin, ITelemetryPluginChain, ITelemetryUnloadState, ITelemetryUpdateState, IUnloadHook, IWatchDetails, SendRequestReason,
+    TelemetryInitializerFunction, TelemetryUnloadReason, TelemetryUpdateReason, WatcherFunction, _IInternalDynamicConfigHandler,
+    _eInternalMessageId, createUniqueNamespace, eActiveStatus, eEventsDiscardedReason, eLoggingSeverity, eTraceHeadersMode, getSetValue,
+    isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString
 } from "@microsoft/applicationinsights-common";
 import { IPromise, createPromise, createSyncAllSettledPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
@@ -21,6 +20,9 @@ import {
 import { cfgDfMerge } from "../Config/ConfigDefaultHelpers";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
 import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "../Diagnostics/DiagnosticLogger";
+import {
+    STR_CHANNELS, STR_CREATE_PERF_MGR, STR_DISABLED, STR_EMPTY, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE
+} from "../InternalConstants";
 import { createContextManager } from "../OpenTelemetry/context/contextManager";
 import { IOTelContextManager } from "../OpenTelemetry/interfaces/context/IOTelContextManager";
 import { IOTelSpanContext } from "../OpenTelemetry/interfaces/trace/IOTelSpanContext";
@@ -45,8 +47,6 @@ import { IUnloadHookContainer, createUnloadHookContainer } from "./UnloadHookCon
 import { findW3cTraceParent } from "./W3cTraceParent";
 import { findW3cTraceState } from "./W3cTraceState";
 
-// import { IStatsBeat, IStatsBeatConfig, IStatsBeatState } from "../JavaScriptSDK.Interfaces/IStatsBeat";
-// import { IStatsMgr } from "../JavaScriptSDK.Interfaces/IStatsMgr";
 const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";
 const strSdkUnloadingError = "SDK is still unloading...";

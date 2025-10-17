@@ -1,5 +1,6 @@
-import { ITraceParent, STR_EMPTY, eW3CTraceFlags, findMetaTag, findNamedServerTiming } from "@microsoft/applicationinsights-common";
+import { ITraceParent, eW3CTraceFlags, findMetaTag, findNamedServerTiming } from "@microsoft/applicationinsights-common";
 import { arrForEach, isArray, isNullOrUndefined, isString, strLeft, strTrim } from "@nevware21/ts-utils";
+import { STR_EMPTY } from "../InternalConstants";
 import { generateW3CId } from "./CoreUtils";
 
 // using {0,16} for leading and trailing whitespace just to constrain the possible runtime of a random string

@@ -8,7 +8,11 @@ export { parseConnectionString, ConnectionStringParser } from "./ConnectionStrin
 export { ConnectionString } from "./Interfaces/ConnectionString";
 export { FieldType } from "./Enums/Enums";
 export { IRequestHeaders, RequestHeaders, eRequestHeaders } from "./RequestResponseHeaders";
-export { DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, strNotSpecified } from "./Constants";
+export {
+    DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, strNotSpecified,
+    STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_PERF_EVENT, STR_OFFLINE_DROP, STR_OFFLINE_SENT,
+    STR_OFFLINE_STORE, STR_GET_PERF_MGR, STR_CORE, STR_DISABLED, STR_PRIORITY, STR_PROCESS_TELEMETRY
+} from "./Constants";
 export { IData as AIData } from "./Interfaces/Contracts/IData";
 export { IBase as AIBase } from "./Interfaces/Contracts/IBase";
 export { ISerializable } from "./Interfaces/Telemetry/ISerializable";
@@ -61,9 +65,6 @@ export { IDynamicPropertyHandler } from "./Interfaces/Config/IDynamicPropertyHan
 export { IWatchDetails, IWatcherHandler, WatcherFunction, _IDynamicDetail } from "./Interfaces/Config/IDynamicWatcher";
 export { _IDynamicConfigHandlerState, _IDynamicGetter } from "./Interfaces/Config/_IDynamicConfigHandlerState";
 
-// Constants that Core needs
-export { UNDEFINED_VALUE, STR_EMPTY } from "./InternalConstants";
-
 // Enum utilities
 export { createEnumStyle } from "./Enums/EnumHelperFuncs";
 
@@ -73,12 +74,21 @@ export { IDistributedTraceContext } from "./Interfaces/IDistributedTraceContext"
 export { ITraceParent } from "./Interfaces/ITraceParent";
 export { IW3cTraceState } from "./Interfaces/IW3cTraceState";
 
+export { eTraceHeadersMode } from "./Enums/TraceHeadersMode";
+
+// Stats and telemetry interfaces
+export { INetworkStatsbeat } from "./Interfaces/INetworkStatsbeat";
+export { IStatsBeat, IStatsBeatState, IStatsBeatKeyMap, IStatsBeatConfig, IStatsEndpointConfig } from "./Interfaces/IStatsBeat";
+export { IStatsMgr, IStatsMgrConfig } from "./Interfaces/IStatsMgr";
+export { eStatsType } from "./Enums/StatsType";
+
 // Utility functions that Core imports
 export {
     getCrypto, getMsCrypto, getLocation, hasJSON, getJSON,
     isReactNative, getConsole, isIE, getIEVersion, isSafari,
     setEnableEnvMocks, isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported,
-    findMetaTag, findNamedServerTiming, sendCustomEvent, dispatchEvent, createCustomDomEvent, fieldRedaction
+    findMetaTag, findNamedServerTiming, sendCustomEvent, dispatchEvent, createCustomDomEvent, fieldRedaction,
+    findMetaTags, findNamedServerTimings
 } from "./Utils/EnvUtils";
 
 // Core helper functions that various modules need
@@ -86,7 +96,7 @@ export {
     normalizeJsName, toISOString, getExceptionName, strContains, setValue, getSetValue,
     proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
     isNotUndefined, isNotNullOrUndefined, objExtend, isFeatureEnabled, getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports,
-    openXhr, _appendHeader, _getAllResponseHeaders, convertAllHeadersToMap, setObjStringTag, setProtoTypeName
+    openXhr, _appendHeader, _getAllResponseHeaders, convertAllHeadersToMap, setObjStringTag, setProtoTypeName, _getObjProto
 } from "./Utils/HelperFuncsCore";
 export { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "./Utils/RandomHelper";
 
@@ -131,7 +141,7 @@ export { _eInternalMessageId, _InternalMessageId, LoggingSeverity, eLoggingSever
 export { FeatureOptInMode, CdnFeatureMode } from "./Enums/FeatureOptInEnums";
 
 // DataCache helper that Core needs
-export { createUniqueNamespace } from "./Utils/DataCacheHelper";
+export { createUniqueNamespace, createElmNodeData } from "./Utils/DataCacheHelper";
 
 export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
 export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";

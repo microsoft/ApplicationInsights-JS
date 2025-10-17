@@ -1,8 +1,7 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
+import { _eInternalMessageId } from "@microsoft/applicationinsights-common";
 import { SenderPostManager } from "../../../src/JavaScriptSDK/SenderPostManager";
-import { IPayloadData } from "../../../src/JavaScriptSDK.Interfaces/IXHROverride";
+import { IPayloadData } from "@microsoft/applicationinsights-common";
 import { getInst, isFunction, mathRandom } from "@nevware21/ts-utils";
 import { createPromise, doAwaitResponse } from "@nevware21/ts-async";
 

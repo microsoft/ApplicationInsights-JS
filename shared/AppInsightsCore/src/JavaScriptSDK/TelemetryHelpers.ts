@@ -3,14 +3,12 @@
 
 import {
     IAppInsightsCore, IDistributedTraceContext, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryPlugin,
-    ITelemetryPluginChain, ITelemetryUnloadState, IUnloadableComponent, IW3cTraceState, STR_CORE, STR_EMPTY, STR_PRIORITY,
-    STR_PROCESS_TELEMETRY, UNDEFINED_VALUE
+    ITelemetryPluginChain, ITelemetryUnloadState, IUnloadableComponent, IW3cTraceState, createElmNodeData, getLocation
 } from "@microsoft/applicationinsights-common";
 import { arrForEach, isFunction, objDefineProps } from "@nevware21/ts-utils";
+import { STR_CORE, STR_EMPTY, STR_PRIORITY, STR_PROCESS_TELEMETRY, UNDEFINED_VALUE } from "../InternalConstants";
 import { IOTelSpanContext } from "../OpenTelemetry/interfaces/trace/IOTelSpanContext";
 import { generateW3CId } from "./CoreUtils";
-import { createElmNodeData } from "./DataCacheHelper";
-import { getLocation } from "./EnvUtils";
 import { isValidSpanId, isValidTraceId } from "./W3cTraceParent";
 import { createW3cTraceState } from "./W3cTraceState";
 

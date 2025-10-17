@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IW3cTraceState, STR_EMPTY } from "@microsoft/applicationinsights-common";
+import { IW3cTraceState, findMetaTags, findNamedServerTimings } from "@microsoft/applicationinsights-common";
 import {
     ICachedValue, WellKnownSymbols, arrForEach, arrIndexOf, createCachedValue, createDeferredCachedValue, getKnownSymbol, isArray,
     isFunction, isNullOrUndefined, isString, objDefine, objDefineProps, safe, strSplit
 } from "@nevware21/ts-utils";
-import { findMetaTags, findNamedServerTimings } from "./EnvUtils";
+import { STR_EMPTY } from "../InternalConstants";
 
 const MAX_TRACE_STATE_MEMBERS = 32;
 const MAX_TRACE_STATE_LEN = 512;

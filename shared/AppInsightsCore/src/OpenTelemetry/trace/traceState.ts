@@ -1,5 +1,6 @@
-import { IW3cTraceState, STR_EMPTY } from "@microsoft/applicationinsights-common";
+import { IW3cTraceState } from "@microsoft/applicationinsights-common";
 import { ICachedValue, createCachedValue, isFunction, isString, objDefine, symbolFor } from "@nevware21/ts-utils";
+import { STR_EMPTY } from "../../InternalConstants";
 import { createW3cTraceState, isW3cTraceState } from "../../JavaScriptSDK/W3cTraceState";
 import { IOTelTraceState } from "../interfaces/trace/IOTelTraceState";
 

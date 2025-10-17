@@ -1,5 +1,5 @@
-import { STR_EMPTY } from "@microsoft/applicationinsights-common";
 import { createCustomError } from "@nevware21/ts-utils";
+import { STR_EMPTY } from "../../InternalConstants";
 import { OpenTelemetryError, OpenTelemetryErrorConstructor, getOpenTelemetryError } from "./OTelError";
 
 let otelInvalidAttributeErrorType: OTelInvalidAttributeErrorConstructor;

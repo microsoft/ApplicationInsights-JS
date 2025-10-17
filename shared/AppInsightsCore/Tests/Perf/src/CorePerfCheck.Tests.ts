@@ -1,7 +1,7 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
-import { optimizeObject, setValue } from "../../../src/JavaScriptSDK/HelperFuncs";
+import { _eInternalMessageId } from "@microsoft/applicationinsights-common";
+import { _InternalLogMessage } from "@microsoft/applicationinsights-common";
+import { optimizeObject, setValue } from "@microsoft/applicationinsights-common";
 import { isObject, isPlainObject, isString, objForEachKey, objKeys } from "@nevware21/ts-utils";
 
 interface PerfMeasurements {

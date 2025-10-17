@@ -3,13 +3,14 @@
 
 import {
     IAppInsightsCore, IConfiguration, INetworkStatsbeat, IPayloadData, IStatsBeat, IStatsBeatConfig, IStatsBeatState, IStatsEndpointConfig,
-    IStatsMgr, IStatsMgrConfig, ITelemetryItem, STR_EMPTY, _eInternalMessageId, eLoggingSeverity, eStatsType, isFeatureEnabled
+    IStatsMgr, IStatsMgrConfig, ITelemetryItem, _eInternalMessageId, eLoggingSeverity, eStatsType, isFeatureEnabled
 } from "@microsoft/applicationinsights-common";
 import {
     ITimerHandler, arrForEach, isNumber, makeGlobRegex, objDefineProps, scheduleTimeout, strIndexOf, strLower, utcNow
 } from "@nevware21/ts-utils";
 import { onConfigChange } from "../Config/DynamicConfig";
 import { _throwInternal, safeGetLogger } from "../Diagnostics/DiagnosticLogger";
+import { STR_EMPTY } from "../InternalConstants";
 
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
 const STATS_MIN_INTERVAL_SECONDS = 60; // 1 minute

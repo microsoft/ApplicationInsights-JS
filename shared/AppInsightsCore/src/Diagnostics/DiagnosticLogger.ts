@@ -2,17 +2,15 @@
 // Licensed under the MIT License.
 "use strict"
 import dynamicProto from "@microsoft/dynamicproto-js";
+import {
+    IAppInsightsCore, IConfigDefaults, IConfiguration, IDiagnosticLogger, IUnloadHook, LoggingSeverity, _InternalMessageId,
+    _eInternalMessageId, eLoggingSeverity, getConsole, getJSON, hasJSON
+} from "@microsoft/applicationinsights-common";
 import { IPromise } from "@nevware21/ts-async";
 import { dumpObj, isFunction, isUndefined } from "@nevware21/ts-utils";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
-import { LoggingSeverity, _InternalMessageId, _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { STR_EMPTY } from "../InternalConstants";
 import { getDebugExt } from "../JavaScriptSDK/DbgExtensionUtils";
-import { getConsole, getJSON, hasJSON } from "../JavaScriptSDK/EnvUtils";
-import { STR_EMPTY } from "../JavaScriptSDK/InternalConstants";
-import { IConfigDefaults, IUnloadHook } from "../applicationinsights-core-js";
 
 const STR_WARN_TO_CONSOLE = "warnToConsole";
 
