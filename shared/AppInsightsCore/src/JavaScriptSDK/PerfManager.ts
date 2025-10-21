@@ -228,11 +228,15 @@ export function doPerf<T>(mgrSource: IPerfManagerProvider | IPerfManager, getSou
         let perfProvider: IPerfManagerProvider = mgrSource as IPerfManagerProvider;
         let thePerfMgr: any = mgrSource;
 
-        if (thePerfMgr && isFunction(thePerfMgr[STR_GET_PERF_MGR])) {
+        let internalGetPerfMgr = thePerfMgr[STR_GET_PERF_MGR];
+        if (isFunction(internalGetPerfMgr)) {
             // Looks like a perf manager provider object using the internal accessor
-            perfMgr = thePerfMgr[STR_GET_PERF_MGR]();
-        } else if (perfProvider && isFunction(perfProvider.getPerfMgr)) {
-            perfMgr = perfProvider.getPerfMgr();
+            perfMgr = internalGetPerfMgr.call(thePerfMgr);
+        } else {
+            let providerGetPerfMgr = perfProvider.getPerfMgr;
+            if (isFunction(providerGetPerfMgr)) {
+                perfMgr = providerGetPerfMgr.call(perfProvider);
+            }
         }
 
         if (perfMgr) {
