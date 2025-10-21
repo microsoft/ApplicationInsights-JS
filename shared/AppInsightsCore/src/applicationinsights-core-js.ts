@@ -87,7 +87,7 @@ export {
 } from "@microsoft/applicationinsights-shims";
 export { NotificationManager } from "./JavaScriptSDK/NotificationManager";
 export { PerfEvent, PerfManager, doPerf, getGblPerfMgr, setGblPerfMgr } from "./JavaScriptSDK/PerfManager";
-export { safeGetLogger, DiagnosticLogger, _InternalLogMessage, _warnToConsole, _logInternalMessage } from "./Diagnostics/DiagnosticLogger";
+export { safeGetLogger, DiagnosticLogger, _InternalLogMessage, _warnToConsole, _logInternalMessage, _throwInternal } from "./Diagnostics/DiagnosticLogger";
 export {
     ProcessTelemetryContext, createProcessTelemetryContext
     // Explicitly NOT exporting createProcessTelemetryUnloadContext() and createProcessTelemetryUpdateContext() as these should only be created internally
@@ -104,6 +104,7 @@ export {
     createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent,
     findAllScripts
 } from "./JavaScriptSDK/W3cTraceParent";
+export { ThrottleMgr } from "./Diagnostics/ThrottleMgr";
 
 // Dynamic Config definitions
 export { createDynamicConfig, onConfigChange } from "./Config/DynamicConfig";

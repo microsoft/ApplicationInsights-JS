@@ -1,10 +1,7 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, IAppInsightsCore, IConfiguration, IPlugin, _eInternalMessageId } from "../../../../AppInsightsCore/src/applicationinsights-core-js";
-import { SinonSpy } from "sinon";
-import { ThrottleMgr } from "../../../../AppInsightsCore/src/Diagnostics/ThrottleMgr";
-import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, IThrottleResult } from "../../../src/Interfaces/IThrottleMgr";
-import { utlCanUseLocalStorage } from "../../../src/Utils/StorageHelperFuncs";
-import { IConfig } from "../../../types/applicationinsights-common";
+import { AppInsightsCore, IAppInsightsCore, IConfiguration, IPlugin, _eInternalMessageId } from "../../../src/applicationinsights-core-js";
+import { ThrottleMgr } from "../../../src/Diagnostics/ThrottleMgr";
+import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, IThrottleResult, IConfig, utlCanUseLocalStorage } from "@microsoft/applicationinsights-common";
 
 const daysInMonth = [
     31, // Jan
@@ -40,13 +37,15 @@ const compareDates = (date1: Date, date: string | Date, expectedSame: boolean = 
     Assert.equal(isSame, expectedSame, "checking that the dates where as expected");
 }
 
+type ThrottleMgrConfigMap = { [msgKey: number]: IThrottleMgrConfig };
+
 export class ThrottleMgrTest extends AITestClass {
-    private _core: IAppInsightsCore<IConfiguration & IConfig>;
-    private _msgKey: number;
-    private _storageName: string;
-    private _msgId: _eInternalMessageId;
-    private loggingSpy: SinonSpy;
-    private _channel;
+    private _core!: IAppInsightsCore<IConfiguration & IConfig>;
+    private _msgKey!: number;
+    private _storageName!: string;
+    private _msgId!: _eInternalMessageId;
+    private loggingSpy: any;
+    private _channel!: ChannelPlugin;
 
     public testInitialize() {
         this._core = new AppInsightsCore();
@@ -92,7 +91,7 @@ export class ThrottleMgrTest extends AITestClass {
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(expectedconfig, actualConfig[_eInternalMessageId.DefaultThrottleMsgKey], "should get expected default config");
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
                 Assert.equal(isTriggered, false, "should not be triggered");
@@ -121,7 +120,7 @@ export class ThrottleMgrTest extends AITestClass {
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(expectedconfig, actualConfig[this._msgId], "should get expected default config");
                 Assert.deepEqual(expectedconfig, actualConfig[_eInternalMessageId.DefaultThrottleMsgKey], "should get expected default config");
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
@@ -151,7 +150,7 @@ export class ThrottleMgrTest extends AITestClass {
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(expectedconfig, actualConfig[this._msgId], "should get expected default config");
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
                 Assert.equal(isTriggered, false, "should not be triggered");
@@ -184,7 +183,7 @@ export class ThrottleMgrTest extends AITestClass {
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(expectedconfig, actualConfig[_eInternalMessageId.DefaultThrottleMsgKey], "should get expected default config");
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
                 Assert.equal(isTriggered, false, "should not be triggered");
@@ -217,7 +216,7 @@ export class ThrottleMgrTest extends AITestClass {
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(config, actualConfig[this._msgId], "should get expected config");
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
                 Assert.equal(isTriggered, false, "should not be triggered");
@@ -237,7 +236,7 @@ export class ThrottleMgrTest extends AITestClass {
                 this._core.config.throttleMgrCfg = this._core.config.throttleMgrCfg || {};
                 this._core.config.throttleMgrCfg[this._msgId] = config;
                 this.clock.tick(1);
-                actualConfig = throttleMgr.getConfig();
+                actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(config, actualConfig[this._msgId], "config should be updated dynamically");
                 canThrottle = throttleMgr.canThrottle(this._msgId);
                 Assert.deepEqual(canThrottle, false, "should not be able to throttle");
@@ -283,7 +282,7 @@ export class ThrottleMgrTest extends AITestClass {
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.ok(actualConfig[_eInternalMessageId.DefaultThrottleMsgKey]);
                 Assert.deepEqual(config, actualConfig[this._msgId], "should get expected config");
                 Assert.deepEqual(config1, actualConfig[msgId], "should get expected config1");
@@ -309,7 +308,7 @@ export class ThrottleMgrTest extends AITestClass {
                 this._core.config.throttleMgrCfg = this._core.config.throttleMgrCfg || {};
                 this._core.config.throttleMgrCfg[this._msgId] = config;
                 this.clock.tick(1);
-                actualConfig = throttleMgr.getConfig();
+                actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(config, actualConfig[this._msgId], "config should be updated dynamically");
                 Assert.deepEqual(config1, actualConfig[msgId], "config1 should not be updated dynamically");
                 canThrottle = throttleMgr.canThrottle(this._msgId);
@@ -345,7 +344,7 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let throttleMgr = new ThrottleMgr(this._core);
 
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(expectedconfig, actualConfig[this._msgId], "should get expected default config");
                 let isTriggered = throttleMgr.isTriggered(this._msgKey);
                 Assert.equal(isTriggered, false, "should not be triggered");
@@ -357,14 +356,14 @@ export class ThrottleMgrTest extends AITestClass {
                 let result = throttleMgr.sendMessage(this._msgId, "test");
                 Assert.equal(result, null, "should not be throttled");
                 // note: _getDbgPlgTargets returns array
-                let target = throttleMgr["_getDbgPlgTargets"]();
+                let target = (throttleMgr as any)["_getDbgPlgTargets"]();
                 Assert.ok(target && target.length === 1, "target should contain queue");
                 let queue = target[0][this._msgKey];
                 Assert.deepEqual(queue.length,1, "should have 1 item");
                 Assert.equal(queue[0].msgID, this._msgId, "should be correct msgId");
 
                 throttleMgr.onReadyState(true);
-                target = throttleMgr["_getDbgPlgTargets"]();
+                target = (throttleMgr as any)["_getDbgPlgTargets"]();
                 queue = target[0][this._msgKey];
                 Assert.equal(queue.length, 0, "queue should be empty");
                 let storage = window.localStorage[this._storageName];
@@ -401,7 +400,7 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let throttleMgr = new ThrottleMgr(this._core);
 
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(expectedconfig, actualConfig[this._msgId], "should get expected default config");
                 Assert.deepEqual(expectedconfig, actualConfig[msgId], "should get expected default config msgId");
                 let isTriggered = throttleMgr.isTriggered(this._msgKey);
@@ -420,7 +419,7 @@ export class ThrottleMgrTest extends AITestClass {
                 result = throttleMgr.sendMessage(msgId, "test1");
                 Assert.equal(result, null, "should not be throttled test1");
                 // note: _getDbgPlgTargets returns array
-                let target = throttleMgr["_getDbgPlgTargets"]();
+                let target = (throttleMgr as any)["_getDbgPlgTargets"]();
                 Assert.ok(target && target.length === 1, "target should contain queue");
                 let queue = target[0][this._msgKey];
                 Assert.deepEqual(queue.length,1, "should have 1 item");
@@ -430,7 +429,7 @@ export class ThrottleMgrTest extends AITestClass {
                 Assert.equal(queue[0].msgID, msgId, "should be correct msgId test1");
 
                 throttleMgr.onReadyState(true);
-                target = throttleMgr["_getDbgPlgTargets"]();
+                target = (throttleMgr as any)["_getDbgPlgTargets"]();
                 queue = target[0][this._msgKey];
                 Assert.equal(queue.length, 0, "queue should be empty");
                 let storage = window.localStorage[this._storageName];
@@ -438,7 +437,7 @@ export class ThrottleMgrTest extends AITestClass {
                 let prefix = dateNum < 10? "0":"";
                 Assert.ok(storage.indexOf(`${date.getUTCMonth() + 1}-${prefix + dateNum}`) > -1, "local storage should have correct date");
 
-                target = throttleMgr["_getDbgPlgTargets"]();
+                target = (throttleMgr as any)["_getDbgPlgTargets"]();
                 queue = target[0][msgId];
                 Assert.equal(queue.length, 0, "queue should be empty test1");
                 storage = window.localStorage[storageName];
@@ -471,7 +470,7 @@ export class ThrottleMgrTest extends AITestClass {
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(config, actualConfig[this._msgId]);
 
                 let isTriggered = throttleMgr.isTriggered(this._msgKey);
@@ -504,7 +503,7 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let throttleMgr = new ThrottleMgr(this._core);
 
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(expectedConfig, actualConfig[this._msgId]);
 
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
@@ -548,7 +547,7 @@ export class ThrottleMgrTest extends AITestClass {
 
                 let throttleMgr = new ThrottleMgr(this._core);
 
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(expectedConfig, actualConfig[this._msgId]);
 
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
@@ -591,7 +590,7 @@ export class ThrottleMgrTest extends AITestClass {
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(expectedConfig, actualConfig[this._msgId]);
 
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
@@ -634,7 +633,7 @@ export class ThrottleMgrTest extends AITestClass {
                 this._core.initialize(coreCfg, [this._channel]);
 
                 let throttleMgr = new ThrottleMgr(this._core);
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(expectedConfig, actualConfig[this._msgId]);
 
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
@@ -676,7 +675,7 @@ export class ThrottleMgrTest extends AITestClass {
                 this._core.initialize(coreCfg, [this._channel]);
                 let throttleMgr = new ThrottleMgr(this._core);
 
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(config, actualConfig[this._msgId]);
 
                 let isTriggered = throttleMgr.isTriggered(this._msgId);
@@ -714,7 +713,7 @@ export class ThrottleMgrTest extends AITestClass {
                 this._core.initialize(coreCfg, [this._channel]);
                 let throttleMgr = new ThrottleMgr(this._core);
 
-                let actualConfig = throttleMgr.getConfig();
+                let actualConfig = throttleMgr.getConfig() as ThrottleMgrConfigMap;
                 Assert.deepEqual(expectedConfig, actualConfig[this._msgId]);
 
                 let isTriggered = throttleMgr.isTriggered(this._msgId);

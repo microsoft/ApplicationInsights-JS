@@ -31,6 +31,7 @@ export { IDependencyTelemetry } from "./Interfaces/IDependencyTelemetry";
 export { IExceptionTelemetry, IAutoExceptionTelemetry, IExceptionInternal } from "./Interfaces/IExceptionTelemetry";
 export { IPageViewTelemetry, IPageViewTelemetryInternal } from "./Interfaces/IPageViewTelemetry";
 export { IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal } from "./Interfaces/IPageViewPerformanceTelemetry";
+export { ITelemetryContext } from "./Interfaces/ITelemetryContext";
 export { Trace } from "./Telemetry/Trace";
 export { PageViewPerformance } from "./Telemetry/PageViewPerformance";
 export { Data } from "./Telemetry/Common/Data";
@@ -38,6 +39,7 @@ export { eSeverityLevel, SeverityLevel } from "./Interfaces/Contracts/SeverityLe
 export { IConfig, ConfigurationManager } from "./Interfaces/IConfig";
 export { IStorageBuffer } from "./Interfaces/IStorageBuffer";
 export { IContextTagKeys, ContextTagKeys } from "./Interfaces/Contracts/ContextTagKeys";
+export { Extensions, CtxTagKeys } from "./Interfaces/PartAExtensions";
 export {
     DataSanitizerValues,
     dataSanitizeKeyAndAddUniqueness, dataSanitizeKey, dataSanitizeString, dataSanitizeUrl, dataSanitizeMessage,
@@ -57,6 +59,10 @@ export {
 export { urlParseUrl, urlGetAbsoluteUrl, urlGetPathName, urlGetCompleteUrl, urlParseHost, urlParseFullHost } from "./Utils/UrlHelperFuncs";
 export { IThrottleLimit, IThrottleInterval, IThrottleMgrConfig, IThrottleLocalStorageObj, IThrottleResult } from "./Interfaces/IThrottleMgr";
 export { IOfflineListener, createOfflineListener, IOfflineState, eOfflineValue, OfflineCallback } from "./Offline";
+export {
+    createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent,
+    findW3cTraceParent, findAllScripts, createDistributedTraceContextFromTrace, INVALID_TRACE_ID, INVALID_SPAN_ID, scriptsInfo
+} from "./Utils/TraceParent";
 
 // Config-related exports that Core needs
 export { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "./Interfaces/Config/IConfigDefaults";
@@ -90,6 +96,7 @@ export {
     findMetaTag, findNamedServerTiming, sendCustomEvent, dispatchEvent, createCustomDomEvent, fieldRedaction,
     findMetaTags, findNamedServerTimings
 } from "./Utils/EnvUtils";
+export { isBeaconsSupported as isBeaconApiSupported } from "./Utils/EnvUtils";
 
 // Core helper functions that various modules need
 export {
@@ -104,6 +111,18 @@ export { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "./Util
 export { IAppInsightsCore } from "./Interfaces/IAppInsightsCore";
 export { IConfiguration } from "./Interfaces/IConfiguration";
 export { IDiagnosticLogger } from "./Interfaces/IDiagnosticLogger";
+export { IApplication } from "./Interfaces/Context/IApplication";
+export { IDevice } from "./Interfaces/Context/IDevice";
+export { IInternal } from "./Interfaces/Context/IInternal";
+export { ILocation } from "./Interfaces/Context/ILocation";
+export { IOperatingSystem } from "./Interfaces/Context/IOperatingSystem";
+export { ISession } from "./Interfaces/Context/ISession";
+export { ISessionManager } from "./Interfaces/Context/ISessionManager";
+export { ISample } from "./Interfaces/Context/ISample";
+export { ITelemetryTrace } from "./Interfaces/Context/ITelemetryTrace";
+export { IUser, IUserContext } from "./Interfaces/Context/IUser";
+export { IWeb } from "./Interfaces/Context/IWeb";
+export { IPropertiesPlugin } from "./Interfaces/IPropertiesPlugin";
 
 // All the other Core interfaces and enums that moved to Common
 export { IChannelControls, MinChannelPriorty, IInternalOfflineSupport } from "./Interfaces/IChannelControls";
@@ -130,6 +149,7 @@ export { IDbgExtension } from "./Interfaces/IDbgExtension";
 export { TelemetryInitializerFunction, ITelemetryInitializerHandler, ITelemetryInitializerContainer } from "./Interfaces/ITelemetryInitializers";
 export { ITelemetryUpdateState } from "./Interfaces/ITelemetryUpdateState";
 export { ITelemetryUnloadState } from "./Interfaces/ITelemetryUnloadState";
+export { IRequestContext } from "./Interfaces/IRequestContext";
 
 // All the enums that moved to Common
 export { eEventsDiscardedReason, EventsDiscardedReason, eBatchDiscardedReason, BatchDiscardedReason } from "./Enums/EventsDiscardedReason";

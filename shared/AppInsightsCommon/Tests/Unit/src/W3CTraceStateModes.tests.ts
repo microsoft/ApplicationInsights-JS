@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { eDistributedTracingModes } from "../../../src/Enums";
+import { eDistributedTracingModes } from "../../../src/Enums/Enums";
 
 /**
  * Helper function to check if a mode should include tracestate header

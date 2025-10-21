@@ -1,9 +1,9 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { ICorrelationConfig } from "../../../src/Interfaces/ICorrelationConfig";
-import { getIEVersion, strStartsWith, uaDisallowsSameSiteNone } from "@microsoft/applicationinsights-core-js";
-import { correlationIdCanIncludeCorrelationHeader } from "../../../src/Util";
-import { createDomEvent } from "../../../src/DomHelperFuncs";
-import { urlParseFullHost, urlParseHost, urlParseUrl } from "../../../src/UrlHelperFuncs";
+import { getIEVersion, strStartsWith, uaDisallowsSameSiteNone } from "../../../../AppInsightsCore/src/applicationinsights-core-js";
+import { correlationIdCanIncludeCorrelationHeader } from "../../../src/Utils/Util";
+import { createDomEvent } from "../../../src/Utils/DomHelperFuncs";
+import { urlParseFullHost, urlParseHost, urlParseUrl } from "../../../src/Utils/UrlHelperFuncs";
 
 export class UtilTests extends AITestClass {
     private testRegexLists = (config: ICorrelationConfig, exp: boolean, host: string) => {

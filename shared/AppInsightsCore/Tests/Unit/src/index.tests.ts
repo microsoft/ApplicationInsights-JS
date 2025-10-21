@@ -16,6 +16,7 @@ import { SendPostManagerTests } from './SendPostManager.Tests';
 import { OTelTraceApiTests } from './OpenTelemetry/traceState.Tests';
 import { OpenTelemetryErrorsTests } from './OpenTelemetry/errors.Tests';
 import { W3cTraceStateTests } from './W3TraceState.Tests';
+import { ThrottleMgrTest } from "./ThrottleMgr.tests";
 
 export function runTests() {
     new GlobalTestHooks().registerTests();
@@ -37,4 +38,5 @@ export function runTests() {
     // new StatsBeatTests(false).registerTests();
     // new StatsBeatTests(true).registerTests();
     new SendPostManagerTests().registerTests();
+    new ThrottleMgrTest().registerTests();
 }
