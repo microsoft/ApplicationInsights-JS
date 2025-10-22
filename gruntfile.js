@@ -547,7 +547,7 @@ module.exports = function (grunt) {
                                         preferBuiltins: false
                                     }),
                                     commonJs({
-                                        sourceMap: true
+                                        sourceMap: false
                                     })
                                 ];
                             }
@@ -807,6 +807,17 @@ module.exports = function (grunt) {
                     ]
                 },
                 unitTestName: "index.tests.js"
+            },
+            "shims": {
+                autoMinify: false,
+                stringReplace: false,
+                path: "./tools/shims",
+                cfg: {
+                    src: [
+                        "./tools/shims/src/*.ts"
+                    ]
+                },
+                unitTestName: "shims.tests.js"
             },
             "chrome-debug-extension": {
                 autoMinify: false,
