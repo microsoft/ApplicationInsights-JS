@@ -496,7 +496,7 @@ module.exports = function (grunt) {
                         options: {
                             format: "umd",
                             name: "" + key + "Tests",
-                            sourcemap: false,
+                            sourcemap: true,
                             onwarn: function (warning, handler) {
                                 if (warning.code === "THIS_IS_UNDEFINED") {
                                     return;
