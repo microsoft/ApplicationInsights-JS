@@ -45,7 +45,7 @@ export function _ensureNumber(value: any): number {
 export function _getSourceMap(value: string): string[] {
     let rlt = "";
     let cleanedStr = value;
-    if (value){
+    if (value) {
         let matches = value.match(sourceMap);
         // process when there is only one source map
         if (matches && matches.length === 1) {
@@ -54,5 +54,5 @@ export function _getSourceMap(value: string): string[] {
         }
     }
 
-    return [rlt, cleanedStr]
+    return [rlt, cleanedStr];
 }
