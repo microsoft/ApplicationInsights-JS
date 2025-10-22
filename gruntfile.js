@@ -530,9 +530,7 @@ module.exports = function (grunt) {
                                             importHelpers: false,
                                             noEmitHelpers: true,
                                             skipLibCheck: true,
-                                            skipDefaultLibCheck: true,
                                             allowSyntheticDefaultImports: true,
-                                            declaration: false,
                                             //outDir: modulePath + "/Tests/Unit/tst-es5",
                                         },
                                         exclude: [
@@ -809,17 +807,6 @@ module.exports = function (grunt) {
                     ]
                 },
                 unitTestName: "index.tests.js"
-            },
-            "shims": {
-                autoMinify: false,
-                stringReplace: false,
-                path: "./tools/shims",
-                cfg: {
-                    src: [
-                        "./tools/shims/src/*.ts"
-                    ]
-                },
-                unitTestName: "shims.tests.js"
             },
             "chrome-debug-extension": {
                 autoMinify: false,
