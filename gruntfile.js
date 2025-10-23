@@ -539,7 +539,8 @@ module.exports = function (grunt) {
                                         include: [
                                             "**/*.ts"
                                         ],
-                                        tsconfig: false
+                                        tsconfig: false,
+                                        cacheDir: testPath + "/.rollup-cache"
                                     }),
                                     nodeResolve({
                                         module: true,

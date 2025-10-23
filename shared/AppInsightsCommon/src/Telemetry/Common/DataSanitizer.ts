@@ -70,11 +70,13 @@ export function dataSanitizeKey(logger: IDiagnosticLogger, name: any) {
         // truncate the string to 150 chars
         if (name.length > DataSanitizerValues.MAX_NAME_LENGTH) {
             nameTrunc = strSubstring(name, 0, DataSanitizerValues.MAX_NAME_LENGTH);
-            logger.throwInternal(
-                eLoggingSeverity.WARNING,
-                _eInternalMessageId.NameTooLong,
-                "name is too long.  It has been truncated to " + DataSanitizerValues.MAX_NAME_LENGTH + " characters.",
-                { name });
+            if (logger) {
+                logger.throwInternal(
+                    eLoggingSeverity.WARNING,
+                    _eInternalMessageId.NameTooLong,
+                    "name is too long.  It has been truncated to " + DataSanitizerValues.MAX_NAME_LENGTH + " characters.",
+                    { name });
+            }
         }
     }
 
@@ -88,11 +90,13 @@ export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLen
         value = strTrim(asString(value));
         if (value.length > maxLength) {
             valueTrunc = strSubstring(value, 0, maxLength);
-            logger.throwInternal(
-                eLoggingSeverity.WARNING,
-                _eInternalMessageId.StringValueTooLong,
-                "string value is too long. It has been truncated to " + maxLength + " characters.",
-                { value });
+            if (logger) {
+                logger.throwInternal(
+                    eLoggingSeverity.WARNING,
+                    _eInternalMessageId.StringValueTooLong,
+                    "string value is too long. It has been truncated to " + maxLength + " characters.",
+                    { value });
+            }
         }
     }
 
@@ -111,10 +115,12 @@ export function dataSanitizeMessage(logger: IDiagnosticLogger, message: any) {
     if (message) {
         if (message.length > DataSanitizerValues.MAX_MESSAGE_LENGTH) {
             messageTrunc = strSubstring(message, 0, DataSanitizerValues.MAX_MESSAGE_LENGTH);
-            logger.throwInternal(
-                eLoggingSeverity.WARNING, _eInternalMessageId.MessageTruncated,
-                "message is too long, it has been truncated to " + DataSanitizerValues.MAX_MESSAGE_LENGTH + " characters.",
-                { message });
+            if (logger) {
+                logger.throwInternal(
+                    eLoggingSeverity.WARNING, _eInternalMessageId.MessageTruncated,
+                    "message is too long, it has been truncated to " + DataSanitizerValues.MAX_MESSAGE_LENGTH + " characters.",
+                    { message });
+            }
         }
     }
 
@@ -128,9 +134,11 @@ export function dataSanitizeException(logger: IDiagnosticLogger, exception: any)
         let value:string = "" + exception;
         if (value.length > DataSanitizerValues.MAX_EXCEPTION_LENGTH) {
             exceptionTrunc = strSubstring(value, 0, DataSanitizerValues.MAX_EXCEPTION_LENGTH);
-            logger.throwInternal(
-                eLoggingSeverity.WARNING, _eInternalMessageId.ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizerValues.MAX_EXCEPTION_LENGTH + " characters.",
-                { exception });
+            if (logger) {
+                logger.throwInternal(
+                    eLoggingSeverity.WARNING, _eInternalMessageId.ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizerValues.MAX_EXCEPTION_LENGTH + " characters.",
+                    { exception });
+            }
         }
     }
 
@@ -146,7 +154,9 @@ export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: an
                 try {
                     value = getJSON().stringify(value);
                 } catch (e) {
-                    logger.throwInternal(eLoggingSeverity.WARNING, _eInternalMessageId.CannotSerializeObjectNonSerializable, "custom property is not valid", { exception: e });
+                    if (logger) {
+                        logger.throwInternal(eLoggingSeverity.WARNING, _eInternalMessageId.CannotSerializeObjectNonSerializable, "custom property is not valid", { exception: e });
+                    }
                 }
             }
             value = dataSanitizeString(logger, value, DataSanitizerValues.MAX_PROPERTY_LENGTH);
@@ -183,12 +193,14 @@ export function dataSanitizeInput(logger: IDiagnosticLogger, input: any, maxLeng
         input = strTrim(asString(input));
         if (input.length > maxLength) {
             inputTrunc = strSubstring(input, 0, maxLength);
-            logger.throwInternal(
-                eLoggingSeverity.WARNING,
-                _msgId,
-                "input is too long, it has been truncated to " + maxLength + " characters.",
-                { data: input },
-                true);
+            if (logger) {
+                logger.throwInternal(
+                    eLoggingSeverity.WARNING,
+                    _msgId,
+                    "input is too long, it has been truncated to " + maxLength + " characters.",
+                    { data: input },
+                    true);
+            }
         }
     }
 
