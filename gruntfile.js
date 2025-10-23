@@ -531,6 +531,7 @@ module.exports = function (grunt) {
                                             noEmitHelpers: true,
                                             skipLibCheck: true,
                                             allowSyntheticDefaultImports: true,
+                                            preserveSymlinks: false,
                                             //outDir: modulePath + "/Tests/Unit/tst-es5",
                                         },
                                         exclude: [
@@ -545,7 +546,8 @@ module.exports = function (grunt) {
                                     nodeResolve({
                                         module: true,
                                         browser: true,
-                                        preferBuiltins: false
+                                        preferBuiltins: false,
+                                        preserveSymlinks: false
                                     }),
                                     commonJs({
                                         sourceMap: true
