@@ -18,7 +18,7 @@ module.exports = function (grunt) {
                 modifiedCode = modifiedCode.replace(match[0], prefix + "// Removed Stub for " + funcName + "\n");
                 changed = true;
             }
-
+    
             if (changed) {
                 return {
                     code: modifiedCode,
@@ -30,10 +30,10 @@ module.exports = function (grunt) {
         } else {
             console.log("Skipping " + id);
         }
-
+    
         return null;
     }
-
+    
     function removeEs6DynamicProto() {
         return {
             name: 'remove-es6-dynamicproto',
@@ -43,7 +43,7 @@ module.exports = function (grunt) {
             transform: _removeEs6DynamicProto
         };
     }
-
+    
     const versionPlaceholder = '"#version#"';
 
     const aiCoreDefaultNameReplacements = [
@@ -61,13 +61,13 @@ module.exports = function (grunt) {
 
     function _encodeStr(str) {
         return str.replace(/\\/g, '\\\\').
-            replace(/"/g, '\\"').
-            replace(/'/g, '\\\'').
-            replace(/\u0008/g, '\\b').
-            replace(/\r/g, '\\r').
-            replace(/\t/g, '\\t').
-            replace(/\n/g, '\\n').
-            replace(/\f/g, '\\f');
+        replace(/"/g, '\\"').
+        replace(/'/g, '\\\'').
+        replace(/\u0008/g, '\\b').
+        replace(/\r/g, '\\r').
+        replace(/\t/g, '\\t').
+        replace(/\n/g, '\\n').
+        replace(/\f/g, '\\f');
 
     }
 
@@ -81,7 +81,7 @@ module.exports = function (grunt) {
                 src: "applicationinsights-web-snippet.js"
             }],
             options: {
-                replacements: function () {
+                replacements: function() {
                     var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.min.js");
                     if (prefix === "ConnString") {
                         snippetBuffer = snippetBuffer.replace(/connectionString:\s*".*?"/gms, "    connectionString: \"YOUR_CONNECTION_STRING\"");
@@ -111,12 +111,12 @@ module.exports = function (grunt) {
                 src: "snippet.min.js"
             }],
             options: {
-                replacements: function () {
-
+                replacements: function() {
+               
                     var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.min.js");
                     var snippetConfig = grunt.file.read("./tools/applicationinsights-web-snippet/src/snippet-config.jsonc").trim();
 
-                    while (snippetConfig.endsWith("\r") || snippetConfig.endsWith("\n")) {
+                    while(snippetConfig.endsWith("\r") || snippetConfig.endsWith("\n")) {
                         snippetConfig = snippetConfig.substring(0, snippetConfig.length - 1);
                     }
 
@@ -128,7 +128,7 @@ module.exports = function (grunt) {
 
                     let orgOverwrite = overWriteString;
                     overWriteString = overWriteString.replace(/\n\/\/# source.*\n/, "})(" + snippetConfig + ");\n");
-                    if (overWriteString === orgOverwrite) {
+                    if(overWriteString === orgOverwrite) {
                         throw "Snippet postfix input is invalid -- replace will fail";
                     }
 
@@ -151,22 +151,22 @@ module.exports = function (grunt) {
                 src: "snippet.js"
             }],
             options: {
-                replacements: function () {
-
+                replacements: function() {
+               
                     var snippetBuffer = grunt.file.read("./tools/applicationinsights-web-snippet/build/output/snippet.js");
                     var snippetConfig = grunt.file.read("./tools/applicationinsights-web-snippet/src/snippet-config.jsonc").trim();
-                    while (snippetConfig.endsWith("\r") || snippetConfig.endsWith("\n")) {
+                    while(snippetConfig.endsWith("\r") || snippetConfig.endsWith("\n")) {
                         snippetConfig = snippetConfig.substring(0, snippetConfig.length - 1);
                     }
 
                     var overWriteString = snippetBuffer.replace(/\(function \(win, doc\)/, "(function (win, doc, cfg)");
-                    if (overWriteString === snippetBuffer) {
+                    if(overWriteString === snippetBuffer) {
                         throw "Snippet prefix input is invalid -- replace will fail";
                     }
 
                     let orgOverwrite = overWriteString;
                     overWriteString = overWriteString.replace(/}\)\(window, document\);/, "})(window, document, " + snippetConfig + ");")
-                    if (overWriteString === orgOverwrite) {
+                    if(overWriteString === orgOverwrite) {
                         throw "Snippet postfix input is invalid -- replace will fail";
                     }
 
@@ -184,7 +184,7 @@ module.exports = function (grunt) {
         let version = "";
         try {
             let config = grunt.file.readJSON("./tools/config/package.json");
-            let configVer = config["version"];
+            let configVer= config["version"];
             version = "." + configVer;
             if (isMajorVer) {
                 version = "." + configVer.split(".")[0];
@@ -195,13 +195,13 @@ module.exports = function (grunt) {
         }
         return version;
     }
-
+   
 
     function _createRegEx(str) {
         // Converts a string into a global regex, escaping any special characters
         return new RegExp(str.replace(/([.+?^=!:${}()|\[\]\/\\])/g, '\\$1'), 'g');
     }
-
+    
     function setVersionNumber(path, packageVersion) {
         var expectedVersion = _createRegEx(versionPlaceholder);
         var replaceVersion = "'" + packageVersion + "'";
@@ -241,7 +241,7 @@ module.exports = function (grunt) {
                 replacements: [{
                     pattern: expectedVersion1,
                     replacement: versionPlaceholder
-                }, {
+                },{
                     pattern: expectedVersion2,
                     replacement: versionPlaceholder
                 }]
@@ -278,7 +278,7 @@ module.exports = function (grunt) {
     // const perfTestVersions = ["2.0.0","2.0.1","2.1.0","2.2.0","2.2.1","2.2.2","2.3.0","2.3.1",
     // "2.4.1","2.4.3","2.4.4","2.5.2","2.5.3","2.5.4","2.5.5","2.5.6","2.5.7","2.5.8","2.5.9","2.5.10","2.5.11",
     // "2.6.0","2.6.1","2.6.2","2.6.3","2.6.4","2.6.5","2.7.0"];
-    const perfTestVersions = ["3.3.9"];
+    const perfTestVersions=["3.3.9"];
 
     function buildConfig(modules) {
         var buildCmds = {
@@ -287,7 +287,7 @@ module.exports = function (grunt) {
                     comments: true,
                     debug: true,
                     logOutput: true
-                }
+                }            
             },
             "eslint-ts": {
                 options: {
@@ -300,7 +300,7 @@ module.exports = function (grunt) {
                     //testOnly: true,
                 }
             },
-            "qunit": {
+            "qunit" : {
                 all: {
                     options: {
                     }
@@ -310,10 +310,10 @@ module.exports = function (grunt) {
                 server: {
                     options: {
                         port: 9001,
-                        base: '.',
-                        debug: true
+                         base: '.',
+                         debug: true
                     }
-                }
+                }        
             },
             "string-replace": {
 
@@ -339,9 +339,9 @@ module.exports = function (grunt) {
                         var internalConstants = aiInternalConstants;
                         if (pkg['name'] === "@microsoft/applicationinsights-core-js") {
                             nameMaps = aiCoreDefaultNameReplacements;
-                            internalConstants = ["./src/JavaScriptSDK/InternalConstants.ts"];
+                            internalConstants = [ "./src/JavaScriptSDK/InternalConstants.ts" ];
                         }
-
+    
                         var aiMinify = buildCmds["ai-minify"];
                         aiMinify[key] = {
                             options: {
@@ -351,7 +351,7 @@ module.exports = function (grunt) {
                                 internalConstants: internalConstants
                             }
                         };
-
+    
                         aiMinify[key + "-reverse"] = {
                             options: {
                                 projectRoot: modulePath,
@@ -370,7 +370,7 @@ module.exports = function (grunt) {
                         var packageVersion = pkg['version'];
 
                         replaceCmds[key] = setVersionNumber(modulePath, packageVersion);
-                        replaceCmds[key + '-reverse'] = restoreVersionPlaceholder(modulePath, packageVersion);
+                        replaceCmds[key + '-reverse'] = restoreVersionPlaceholder(modulePath, packageVersion);                        
                     }
                 }
 
@@ -439,7 +439,7 @@ module.exports = function (grunt) {
                                     files: [],
                                     exclude: [
                                         "**/*.d.ts"
-                                    ]
+                                    ]                                        
                                 }
                             }
                         ],
@@ -496,8 +496,8 @@ module.exports = function (grunt) {
                         options: {
                             format: "umd",
                             name: "" + key + "Tests",
-                            sourcemap: true,
-                            onwarn: function (warning, handler) {
+                            sourcemap: false,
+                            onwarn: function(warning, handler) {
                                 if (warning.code === "THIS_IS_UNDEFINED") {
                                     return;
                                 }
@@ -514,7 +514,7 @@ module.exports = function (grunt) {
 
                                 handler(warning);
                             },
-                            plugins: function () {
+                            plugins: function() {
                                 return [
                                     removeEs6DynamicProto(),
                                     typeScriptPlugin({
@@ -547,7 +547,7 @@ module.exports = function (grunt) {
                                         preferBuiltins: false
                                     }),
                                     commonJs({
-                                        sourceMap: false
+                                        sourceMap: true
                                     })
                                 ];
                             }
@@ -592,7 +592,7 @@ module.exports = function (grunt) {
                 }
 
                 if (addQunit) {
-                    var testUrls = [testUrl];
+                    var testUrls = [ testUrl ];
                     if (key === "aisku") {
                         testUrls = perfTestVersions.map((version) => {
                             return testUrl + `?version=${version}`;
@@ -634,30 +634,30 @@ module.exports = function (grunt) {
                                 }
                             }
                         }
-
+    
                         buildCmds.rollup[key + "-perftests"] = {
                             options: {
                                 format: "umd",
                                 name: "" + key + "PerfTests",
                                 sourcemap: true,
-                                onwarn: function (warning, handler) {
+                                onwarn: function(warning, handler) {
                                     if (warning.code === "THIS_IS_UNDEFINED") {
                                         return;
                                     }
-
+    
                                     if (warning.code === "PLUGIN_WARNING" && warning.message) {
                                         if (warning.message.indexOf('chrome') !== -1) {
                                             return;
                                         }
                                     }
-
+    
                                     if (warning.code === "EVAL") {
                                         return;
                                     }
-
+    
                                     handler(warning);
                                 },
-                                plugins: function () {
+                                plugins: function() {
                                     return [
                                         typeScriptPlugin({
                                             compilerOptions: {
@@ -698,7 +698,7 @@ module.exports = function (grunt) {
                         };
                     }
                 }
-
+                
                 let esLintCmd = buildCmds["eslint-ts"];
                 esLintCmd[key + '-lint'] = {
                     options: {
@@ -720,136 +720,125 @@ module.exports = function (grunt) {
     try {
         var theBuildConfig = deepMerge(buildConfig({
             // Shared
-            "common": {
-                path: "./shared/AppInsightsCommon",
-                unitTestName: "aicommon.tests.js"
-            },
-            "core": {
-                path: "./shared/AppInsightsCore",
-                unitTestName: "aicoreunit.tests.js",
-                perfTestName: "aicoreperf.tests.js"
-            },
-            "otelCore": {
-                path: "./shared/OpenTelemetry",
-                unitTestName: "otel.unittests.js"
-            },
-
+            "core":                 { 
+                                        path: "./shared/AppInsightsCore",
+                                        unitTestName: "aicoreunit.tests.js",
+                                        perfTestName: "aicoreperf.tests.js"
+                                    },
+            "common":               { 
+                                        path: "./shared/AppInsightsCommon",
+                                        unitTestName: "aicommon.tests.js"
+                                    },
+            "otelCore":                 {
+                                        path: "./shared/OpenTelemetry",
+                                        unitTestName: "otel.unittests.js"
+                                    },
+    
             // SKUs
-            "aisku": {
-                path: "./AISKU",
-                cfg: {
-                    src: [
-                        "AISKU/src/*.ts"
-                    ]
-                },
-                unitTestName: "aiskuunittests.tests.js",
-                perfTestName: "aiskuperftests.tests.js"
-            },
-            "aiskulite": {
-                path: "./AISKULight",
-                cfg: {
-                    src: [
-                        "AISKULight/src/*.ts"
-                    ]
-                },
-                unitTestName: "aiskuliteunittests.tests.js"
-            },
-
+            "aisku":                { 
+                                        path: "./AISKU", 
+                                        cfg: { 
+                                            src: [ 
+                                                "AISKU/src/*.ts" 
+                                            ] 
+                                        },
+                                        unitTestName: "aiskuunittests.tests.js",
+                                        perfTestName: "aiskuperftests.tests.js"
+                                    },
+            "aiskulite":            { 
+                                        path: "./AISKULight", 
+                                        cfg: { 
+                                            src: [ 
+                                                "AISKULight/src/*.ts" 
+                                            ] 
+                                        },
+                                        unitTestName: "aiskuliteunittests.tests.js"
+                                    },
+    
             // Channels
-            "aichannel": { path: "./channels/applicationinsights-channel-js" },
-            "teechannel": { path: "./channels/tee-channel-js" },
+            "aichannel":            { path: "./channels/applicationinsights-channel-js" },
+            "teechannel":           { path: "./channels/tee-channel-js" },
 
             // Extensions
-            "appinsights": {
-                path: "./extensions/applicationinsights-analytics-js",
-                unitTestName: "appinsights-analytics.tests.js"
-            },
-            "deps": {
-                path: "./extensions/applicationinsights-dependencies-js",
-                unitTestName: "dependencies.tests.js"
-            },
-            "perfmarkmeasure": {
-                path: "./extensions/applicationinsights-perfmarkmeasure-js",
-                unitTestName: "appinsights-perfmarkmeasure.tests.js"
-            },
-            "properties": {
-                path: "./extensions/applicationinsights-properties-js",
-                unitTestName: "prop.tests.js"
-            },
-            "osplugin": {
-                path: "./extensions/applicationinsights-osplugin-js",
-                unitTestName: "applicationinsights-osplugin.tests.js"
-            },
-            "cfgsync": {
-                path: "./extensions/applicationinsights-cfgsync-js",
-                unitTestName: "cfgsync.tests.js"
-            },
-
+            "appinsights":          { 
+                                        path: "./extensions/applicationinsights-analytics-js",
+                                        unitTestName: "appinsights-analytics.tests.js"
+                                    },
+            "deps":                 { 
+                                        path: "./extensions/applicationinsights-dependencies-js",
+                                        unitTestName: "dependencies.tests.js"
+                                    },
+            "perfmarkmeasure":      { 
+                                        path: "./extensions/applicationinsights-perfmarkmeasure-js",
+                                        unitTestName: "appinsights-perfmarkmeasure.tests.js"
+                                    },
+            "properties":           { 
+                                        path: "./extensions/applicationinsights-properties-js",
+                                        unitTestName: "prop.tests.js"
+                                    },
+            "osplugin":             { 
+                                        path: "./extensions/applicationinsights-osplugin-js",
+                                        unitTestName: "applicationinsights-osplugin.tests.js"
+                                    },
+            "cfgsync":               { 
+                                        path: "./extensions/applicationinsights-cfgsync-js",
+                                        unitTestName: "cfgsync.tests.js"
+                                    },
+    
             // Tools
-            "rollupuglify": {
-                autoMinify: false,
-                path: "./tools/rollup-plugin-uglify3-js",
-                cfg: {
-                    src: [
-                        "./tools/rollup-plugin-uglify3-js/src/*.ts",
-                        "!node_modules/**"
-                    ],
-                    out: './tools/rollup-plugin-uglify3-js/out/src/uglify3-js.js'
-                },
-                testHttp: false
-            },
-            "rollupes5": {
-                autoMinify: false,
-                path: "./tools/rollup-es5",
-                cfg: {
-                    src: [
-                        "./tools/rollup-es5/src/*.ts"
-                    ]
-                },
-                unitTestName: "index.tests.js"
-            },
-            "shims": {
-                autoMinify: false,
-                stringReplace: false,
-                path: "./tools/shims",
-                cfg: {
-                    src: [
-                        "./tools/shims/src/*.ts"
-                    ]
-                },
-                unitTestName: "shims.tests.js"
-            },
+            "rollupuglify":         {
+                                        autoMinify: false,
+                                        path: "./tools/rollup-plugin-uglify3-js",
+                                        cfg: {
+                                            src: [
+                                                "./tools/rollup-plugin-uglify3-js/src/*.ts",
+                                                "!node_modules/**"
+                                            ],
+                                            out: './tools/rollup-plugin-uglify3-js/out/src/uglify3-js.js'
+                                        },
+                                        testHttp: false
+                                    },
+            "rollupes5":            { 
+                                        autoMinify: false,
+                                        path: "./tools/rollup-es5",
+                                        cfg: {
+                                                src: [
+                                                    "./tools/rollup-es5/src/*.ts"
+                                                ]
+                                            },
+                                            unitTestName: "index.tests.js"
+                                    },
             "chrome-debug-extension": {
-                autoMinify: false,
-                path: "./tools/chrome-debug-extension",
-                cfg: {
-                    src: [
-                        "./tools/chrome-debug-extension/src/**/*.tsx",
-                        "./tools/chrome-debug-extension/src/**/*.ts",
-                    ]
-                }
-            },
+                                        autoMinify: false,
+                                        path: "./tools/chrome-debug-extension",
+                                        cfg: {
+                                            src: [
+                                                "./tools/chrome-debug-extension/src/**/*.tsx",
+                                                "./tools/chrome-debug-extension/src/**/*.ts",
+                                            ]
+                                        }
+                                    },
             "applicationinsights-web-snippet": {
-                autoMinify: false,
-                path: "./tools/applicationinsights-web-snippet",
-                cfg: {
-                    src: [
-                        "./tools/applicationinsights-web-snippet/src/**/*.ts"
-                    ]
-                }
-            },
+                                        autoMinify: false,
+                                        path: "./tools/applicationinsights-web-snippet",
+                                        cfg: {
+                                            src: [
+                                                "./tools/applicationinsights-web-snippet/src/**/*.ts"
+                                            ]
+                                        }
+                                    },
             // Common
-            "tst-framework": {
-                autoMinify: false,
-                path: "./common/Tests/Framework",
-                cfg: {
-                    src: [
-                        "./common/Tests/Framework/src/*.ts"
-                    ]
-                }
-            },
+            "tst-framework":        {
+                                        autoMinify: false,
+                                        path: "./common/Tests/Framework",
+                                        cfg: {
+                                            src: [
+                                                "./common/Tests/Framework/src/*.ts"
+                                            ]
+                                        } 
+                                    },
         }));
-
+    
         function tsBuildActions(name, addTests, replaceName) {
             var actions = [
                 "eslint-ts:" + name + "-lint-fix"
@@ -870,14 +859,14 @@ module.exports = function (grunt) {
 
                 // Now perform the "real" final compile after minification
                 actions.push("ts:" + name);
-
+        
                 if (addTests && gruntTsConfig[name + "-tests"]) {
                     actions.push("ts:" + name + "-tests");
                 }
                 if (aiMinifyConfig[name + "-reverse"]) {
                     actions.push("ai-minify:" + name + "-reverse");
                 }
-
+    
                 actions.push("string-replace:" + name + "-reverse");
             } else {
                 if (aiMinifyConfig[name]) {
@@ -891,14 +880,14 @@ module.exports = function (grunt) {
                 if (addTests && gruntTsConfig[name + "-tests"]) {
                     actions.push("ts:" + name + "-tests");
                 }
-
+                
                 if (aiMinifyConfig[name + "-reverse"]) {
                     actions.push("ai-minify:" + name + "-reverse");
                 }
             }
-
+    
             actions.push("eslint-ts:" + name + "-lint");
-
+    
             return actions;
         }
 
@@ -919,7 +908,7 @@ module.exports = function (grunt) {
                 if (minifySrc) {
                     // Attempt to compile with translations (Validates that the original source code is fine before transforming it)
                     actions.push("ai-minify:" + name);
-                } else if (aiMinifyConfig[name + "-reverse"]) {
+                } else if (aiMinifyConfig[name + "-reverse"]){
                     // Attempt to compile without any translations (Validates that the original source code is fine before transforming it)
                     actions.push("ai-minify:" + name + "-reverse");
                 }
@@ -948,7 +937,7 @@ module.exports = function (grunt) {
         function minTasks(name) {
             var actions = [
             ];
-
+    
             var aiMinifyConfig = theBuildConfig["ai-minify"] || {};
             if (aiMinifyConfig[name]) {
                 actions.push("ai-minify:" + name);
@@ -960,7 +949,7 @@ module.exports = function (grunt) {
         function restoreTasks(name) {
             var actions = [
             ];
-
+    
             var aiMinifyConfig = theBuildConfig["ai-minify"] || {};
             if (aiMinifyConfig[name + "-reverse"]) {
                 actions.push("ai-minify:" + name + "-reverse");
@@ -980,11 +969,11 @@ module.exports = function (grunt) {
                         sourceMap: false,
                         ie8: false,
                         compress: {
-                            passes: 3,
-                            unsafe: true,
+                          passes:3,
+                          unsafe: true,
                         },
                         output: {
-                            webkit: true
+                          webkit:true
                         }
                     }
                 }
@@ -1000,17 +989,17 @@ module.exports = function (grunt) {
                 "originSnippet": {
                     files: [
                         { src: "./tools/applicationinsights-web-snippet/build/output/snippet.min.js", dest: `./tools/applicationinsights-web-snippet/build/output/originSnippet.min.js` }
-                    ]
+                       ]
                 },
                 "snippetToDistEs5": {
                     files: [
                         { expand: true, cwd: "./tools/applicationinsights-web-snippet/build/output/", src: "snippet.**", dest: "./tools/applicationinsights-web-snippet/dist-es5/" },
                         { expand: true, cwd: "./tools/applicationinsights-web-snippet/build/output/common/", src: "**", dest: "./tools/applicationinsights-web-snippet/dist-es5/common/" },
-                    ]
+                       ]
                 },
 
                 "web-snippet": {
-                    files: [
+                    files: [  
                         { src: "./tools/applicationinsights-web-snippet/build/output/applicationinsights-web-snippet.js", dest: `./tools/applicationinsights-web-snippet/dist-es5/applicationinsights-web-snippet.js` }
                     ]
                 },
@@ -1033,40 +1022,34 @@ module.exports = function (grunt) {
         // Additional setup for lint-fix task
         function getLintFixTasks() {
             let packages = [
-                "common", "core", "appinsights", "aisku", "aiskulite", "perfmarkmeasure", "properties",
-                "cfgsync", "deps", "debugplugin", "aichannel", "offlinechannel", "teechannel",
+                "core", "common", "appinsights", "aisku", "aiskulite", "perfmarkmeasure", "properties",
+                "cfgsync", "deps", "debugplugin", "aichannel", "offlinechannel", "teechannel", 
                 "rollupuglify", "rollupes5", "shims", // "chrome-debug-extension", -- Removed due to missing file-saver dependency
                 "applicationinsights-web-snippet", "clickanalytics", "osplugin"
             ];
-
+            
             let tasks = [];
-            packages.forEach(function (pkg) {
+            packages.forEach(function(pkg) {
                 tasks.push("eslint-ts:" + pkg + "-lint-fix");
             });
-
+            
             return tasks;
         }
-
+    
         grunt.event.on('qunit.testStart', function (name) {
             grunt.log.ok('Running test: ' + name);
         });
-
+    
         grunt.loadNpmTasks("@nevware21/grunt-ts-plugin");
         grunt.loadNpmTasks("@nevware21/grunt-eslint-ts");
         grunt.loadNpmTasks('grunt-contrib-uglify');
         grunt.loadNpmTasks('grunt-contrib-connect');
         grunt.loadNpmTasks('grunt-contrib-copy');
         grunt.loadNpmTasks('grunt-rollup');
-
+    
         grunt.loadTasks('./tools/grunt-tasks');
-
+        
         grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes5", "ts:rollupes5test", "qunit:rollupes5", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
-
-        grunt.registerTask("common", tsBuildActions("common"));
-        grunt.registerTask("common-min", minTasks("common"));
-        grunt.registerTask("common-restore", restoreTasks("common"));
-        grunt.registerTask("commontest", tsTestActions("common"));
-        grunt.registerTask("common-mintest", tsTestActions("common", true));
 
         grunt.registerTask("core", tsBuildActions("core", true));
         grunt.registerTask("core-min", minTasks("core"));
@@ -1074,6 +1057,12 @@ module.exports = function (grunt) {
         grunt.registerTask("coreunittest", tsTestActions("core"));
         grunt.registerTask("core-mintest", tsTestActions("core", true));
         grunt.registerTask("coreperftest", ["connect", "ts:core-perftest", "qunit:core-perf"]);
+
+        grunt.registerTask("common", tsBuildActions("common"));
+        grunt.registerTask("common-min", minTasks("common"));
+        grunt.registerTask("common-restore", restoreTasks("common"));
+        grunt.registerTask("commontest", tsTestActions("common"));
+        grunt.registerTask("common-mintest", tsTestActions("common", true));
 
         grunt.registerTask("ai", tsBuildActions("appinsights"));
         grunt.registerTask("ai-min", minTasks("appinsights"));
@@ -1182,7 +1171,7 @@ module.exports = function (grunt) {
         grunt.registerTask("1dsCore", tsTestActions("1dsCore", true));
         grunt.registerTask("1dsCore-min", minTasks("1dsCore"));
         grunt.registerTask("1dsCore-restore", restoreTasks("1dsCore"));
-
+        
         grunt.registerTask("1dsPostBuild", tsBuildActions("1dsPost"));
         grunt.registerTask("1dsPostTest", tsTestActions("1dsPost"));
         grunt.registerTask("1dsPostMinTest", tsTestActions("1dsPost", true));
@@ -1204,19 +1193,20 @@ module.exports = function (grunt) {
         grunt.registerTask("tst-framework", tsBuildActions("tst-framework"));
         grunt.registerTask("serve", ["connect:server:keepalive"]);
 
-        grunt.registerTask("copy-config", ["copy:config"]);
-        grunt.registerTask("copy-testConfig", ["copy:testConfig"]);
+         grunt.registerTask("copy-config", ["copy:config"]);
+         grunt.registerTask("copy-testConfig", ["copy:testConfig"]);
 
-        grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
-        grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
-        grunt.registerTask("example-cfgsync", tsBuildActions("example-cfgsync"));
+         grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
+         grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
+         grunt.registerTask("example-cfgsync", tsBuildActions("example-cfgsync"));
 
         // Register the lint-fix task to run ESLint fix on all packages
         grunt.registerTask("lint-fix", getLintFixTasks());
-    } catch (e) {
-        console.error(e);
-        console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
-    }
+     } catch (e) {
+         console.error(e);
+         console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
+     }
 
     console.log("***  " + JSON.stringify(theBuildConfig, null, 2) + "  ***");
-};
+ };
+ 
