@@ -808,6 +808,17 @@ module.exports = function (grunt) {
                 },
                 unitTestName: "index.tests.js"
             },
+            "shims": {
+                autoMinify: false,
+                stringReplace: false,
+                path: "./tools/shims",
+                cfg: {
+                    src: [
+                        "./tools/shims/src/*.ts"
+                    ]
+                },
+                unitTestName: "shims.tests.js"
+            },
             "chrome-debug-extension": {
                 autoMinify: false,
                 path: "./tools/chrome-debug-extension",
@@ -1049,7 +1060,7 @@ module.exports = function (grunt) {
 
         grunt.loadTasks('./tools/grunt-tasks');
 
-        grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes5", "ts:rollupes5test", "qunit:rollupes5", "ts:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
+        grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes5", "ts:rollupes5test", "qunit:rollupes5", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
 
         grunt.registerTask("common", tsBuildActions("common"));
         grunt.registerTask("common-min", minTasks("common"));
@@ -1138,7 +1149,8 @@ module.exports = function (grunt) {
         grunt.registerTask("rollupes5", tsBuildActions("rollupes5"));
         grunt.registerTask("rollupes5test", tsTestActions("rollupes5", false));
 
-        grunt.registerTask("shims", tsBuildActions("shims"));
+        grunt.registerTask("shims", tsBuildActions("shims").concat(tsTestActions("shims", false)));
+        grunt.registerTask("shimstest", tsTestActions("shims", false));
         //grunt.registerTask("shims-rollup", ["rollup:shims-tests"]);
 
         grunt.registerTask("chromedebugextension", tsBuildActions("chrome-debug-extension"));
