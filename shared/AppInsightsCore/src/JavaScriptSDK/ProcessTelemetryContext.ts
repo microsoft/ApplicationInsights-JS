@@ -3,27 +3,17 @@
 "use strict";
 
 import {
+    IAppInsightsCore, IBaseProcessingContext, IConfigDefaults, IConfiguration, IDiagnosticLogger, IDynamicConfigHandler, IPlugin,
+    IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext, ITelemetryItem, ITelemetryPlugin,
+    ITelemetryPluginChain, ITelemetryUnloadState, ITelemetryUpdateState, _eInternalMessageId, eLoggingSeverity, proxyFunctions
+} from "@microsoft/applicationinsights-common";
+import {
     arrForEach, dumpObj, isArray, isFunction, isNullOrUndefined, isUndefined, objForEachKey, objFreeze, objKeys
 } from "@nevware21/ts-utils";
 import { _applyDefaultValue } from "../Config/ConfigDefaults";
 import { createDynamicConfig } from "../Config/DynamicConfig";
-import { IConfigDefaults } from "../Config/IConfigDefaults";
-import { IDynamicConfigHandler } from "../Config/IDynamicConfigHandler";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import {
-    IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext
-} from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
-import { _throwInternal, safeGetLogger } from "./DiagnosticLogger";
-import { proxyFunctions } from "./HelperFuncs";
-import { STR_CORE, STR_DISABLED, STR_EMPTY } from "./InternalConstants";
+import { _throwInternal, safeGetLogger } from "../Diagnostics/DiagnosticLogger";
+import { STR_CORE, STR_DISABLED, STR_EMPTY } from "../InternalConstants";
 import { doPerf } from "./PerfManager";
 import { _getPluginState } from "./TelemetryHelpers";
 

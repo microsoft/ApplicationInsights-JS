@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDiagnosticLogger, toISOString } from "@microsoft/applicationinsights-core-js";
 import { strNotSpecified } from "../../Constants";
-import { FieldType } from "../../Enums";
+import { FieldType } from "../../Enums/Enums";
 import { IBase } from "../../Interfaces/Contracts/IBase";
+import { IDiagnosticLogger } from "../../Interfaces/IDiagnosticLogger";
 import { IEnvelope } from "../../Interfaces/Telemetry/IEnvelope";
+import { toISOString } from "../../Utils/HelperFuncsCore";
 import { dataSanitizeString } from "./DataSanitizer";
 
 export class Envelope implements IEnvelope {

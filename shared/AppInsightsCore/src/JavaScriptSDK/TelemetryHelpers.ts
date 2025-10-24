@@ -1,20 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import {
+    IAppInsightsCore, IDistributedTraceContext, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryPlugin,
+    ITelemetryPluginChain, ITelemetryUnloadState, IUnloadableComponent, IW3cTraceState, createElmNodeData, getLocation
+} from "@microsoft/applicationinsights-common";
 import { arrForEach, isFunction, objDefineProps } from "@nevware21/ts-utils";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
-import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-import { IUnloadableComponent } from "../JavaScriptSDK.Interfaces/IUnloadableComponent";
-import { IW3cTraceState } from "../JavaScriptSDK.Interfaces/IW3cTraceState";
+import { STR_CORE, STR_EMPTY, STR_PRIORITY, STR_PROCESS_TELEMETRY, UNDEFINED_VALUE } from "../InternalConstants";
 import { IOTelSpanContext } from "../OpenTelemetry/interfaces/trace/IOTelSpanContext";
 import { generateW3CId } from "./CoreUtils";
-import { createElmNodeData } from "./DataCacheHelper";
-import { getLocation } from "./EnvUtils";
-import { STR_CORE, STR_EMPTY, STR_PRIORITY, STR_PROCESS_TELEMETRY, UNDEFINED_VALUE } from "./InternalConstants";
 import { isValidSpanId, isValidTraceId } from "./W3cTraceParent";
 import { createW3cTraceState } from "./W3cTraceState";
 

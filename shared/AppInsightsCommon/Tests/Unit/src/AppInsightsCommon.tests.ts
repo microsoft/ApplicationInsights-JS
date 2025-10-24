@@ -1,11 +1,41 @@
 import { strRepeat } from "@nevware21/ts-utils";
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import {  DiagnosticLogger, IConfiguration } from "@microsoft/applicationinsights-core-js";
+import { LoggingSeverity, _InternalMessageId } from "../../../src/Enums/LoggingEnums";
+import { IConfiguration } from "../../../src/Interfaces/IConfiguration";
+import { IDiagnosticLogger, IInternalLogMessage } from "../../../src/Interfaces/IDiagnosticLogger";
 import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, DataSanitizerValues, dataSanitizeString, dataSanitizeUrl } from "../../../src/Telemetry/Common/DataSanitizer";
 
 
+class TestDiagnosticLogger implements IDiagnosticLogger {
+    public queue: IInternalLogMessage[];
+    private _consoleLevel: number;
+
+    constructor(consoleLevel?: number) {
+        this.queue = [];
+        this._consoleLevel = (consoleLevel !== undefined ? consoleLevel : 0);
+    }
+
+    // Minimal IDiagnosticLogger implementation to avoid importing core DiagnosticLogger
+    public consoleLoggingLevel(): number {
+        return this._consoleLevel;
+    }
+
+    public throwInternal(_severity: LoggingSeverity, msgId: _InternalMessageId, msg: string): void {
+        this.queue.push({ message: msg, messageId: msgId });
+    }
+
+    public warnToConsole(_message: string): void {
+        // No-op for tests
+    }
+
+    public resetInternalMessageCount(): void {
+        this.queue.length = 0;
+    }
+}
+
+
 export class ApplicationInsightsTests extends AITestClass {
-    logger = new DiagnosticLogger();
+    logger = new TestDiagnosticLogger();
 
 
     public testInitialize() {

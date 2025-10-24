@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import {
+    IConfiguration, IDbgExtension, INotificationListener, STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_PERF_EVENT
+} from "@microsoft/applicationinsights-common";
 import { getInst } from "@nevware21/ts-utils";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDbgExtension } from "../JavaScriptSDK.Interfaces/IDbgExtension";
-import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
-import { STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_PERF_EVENT } from "./InternalConstants";
 
 const listenerFuncs = [ STR_EVENTS_SENT, STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_PERF_EVENT ];
 

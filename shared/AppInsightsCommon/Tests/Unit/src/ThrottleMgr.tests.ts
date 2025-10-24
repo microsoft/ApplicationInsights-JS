@@ -1,9 +1,9 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, IAppInsightsCore, IConfiguration, IPlugin, _eInternalMessageId } from "@microsoft/applicationinsights-core-js";
-import { ThrottleMgr} from "../../../src/ThrottleMgr";
+import { AppInsightsCore, IAppInsightsCore, IConfiguration, IPlugin, _eInternalMessageId } from "../../../../AppInsightsCore/src/applicationinsights-core-js";
 import { SinonSpy } from "sinon";
-import { utlCanUseLocalStorage } from "../../../src/StorageHelperFuncs";
+import { ThrottleMgr } from "../../../../AppInsightsCore/src/Diagnostics/ThrottleMgr";
 import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, IThrottleResult } from "../../../src/Interfaces/IThrottleMgr";
+import { utlCanUseLocalStorage } from "../../../src/Utils/StorageHelperFuncs";
 import { IConfig } from "../../../types/applicationinsights-common";
 
 const daysInMonth = [

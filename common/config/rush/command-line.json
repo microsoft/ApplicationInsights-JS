@@ -45,14 +45,14 @@
             "summary": "Run all build for all packages",
             "name": "build",
             "allowWarningsInSuccessfulBuild": true,
-            "enableParallelism": true
+            "enableParallelism": false
         },
         {
             "commandKind": "bulk",
             "summary": "Run all build for all packages",
             "name": "rebuild",
             "allowWarningsInSuccessfulBuild": true,
-            "enableParallelism": true
+            "enableParallelism": false
         },
         {
             "commandKind": "bulk",

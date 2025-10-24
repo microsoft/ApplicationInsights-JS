@@ -10,13 +10,13 @@ import {
     AnalyticsPluginIdentifier, ConnectionString, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
     IEventTelemetry, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
     ITelemetryContext as Common_ITelemetryContext, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, ITraceTelemetry,
-    PropertiesPluginIdentifier, ThrottleMgr, parseConnectionString
+    PropertiesPluginIdentifier, parseConnectionString
 } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, FeatureOptInMode, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties,
     IDiagnosticLogger, IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, INotificationManager, IPlugin,
-    ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler, WatcherFunction,
-    _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate,
+    ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, ThrottleMgr, UnloadHandler,
+    WatcherFunction, _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate,
     createDynamicConfig, createProcessTelemetryContext, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray,
     isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions,
     removePageHideEventListener, removePageUnloadEventListener

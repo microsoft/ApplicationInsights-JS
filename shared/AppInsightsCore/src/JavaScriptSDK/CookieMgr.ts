@@ -1,5 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import {
+    IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICookieMgrConfig, IDiagnosticLogger, IUnloadHook, _eInternalMessageId,
+    eLoggingSeverity, getExceptionName, getLocation, isIE, isNotNullOrUndefined, setValue, strContains
+} from "@microsoft/applicationinsights-common";
 import { IPromise } from "@nevware21/ts-async";
 import {
     ILazyValue, arrForEach, arrIndexOf, dumpObj, getDocument, getLazy, getNavigator, isArray, isFunction, isNullOrUndefined, isString,
@@ -7,17 +11,8 @@ import {
 } from "@nevware21/ts-utils";
 import { cfgDfMerge } from "../Config/ConfigDefaultHelpers";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
-import { IConfigDefaults } from "../Config/IConfigDefaults";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICookieMgr";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
-import { _throwInternal } from "./DiagnosticLogger";
-import { getLocation, isIE } from "./EnvUtils";
-import { getExceptionName, isNotNullOrUndefined, setValue, strContains } from "./HelperFuncs";
-import { STR_DOMAIN, STR_EMPTY, STR_PATH, UNDEFINED_VALUE } from "./InternalConstants";
+import { _throwInternal } from "../Diagnostics/DiagnosticLogger";
+import { STR_DOMAIN, STR_EMPTY, STR_PATH, UNDEFINED_VALUE } from "../InternalConstants";
 
 const strToGMTString = "toGMTString";
 const strToUTCString = "toUTCString";
@@ -154,8 +149,8 @@ export function safeGetCookieMgr(core: IAppInsightsCore, config?: IConfiguration
         cookieMgr = core.getCookieMgr();
     } else if (config) {
         let cookieCfg = config.cookieCfg;
-        if (cookieCfg && cookieCfg[strConfigCookieMgr]) {
-            cookieMgr = cookieCfg[strConfigCookieMgr];
+        if (cookieCfg && (cookieCfg as any)[strConfigCookieMgr]) {
+            cookieMgr = (cookieCfg as any)[strConfigCookieMgr];
         } else {
             cookieMgr = createCookieMgr(config);
         }

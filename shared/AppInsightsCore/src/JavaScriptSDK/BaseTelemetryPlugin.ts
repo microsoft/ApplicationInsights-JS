@@ -3,26 +3,16 @@
 "use strict";
 
 import dynamicProto from "@microsoft/dynamicproto-js";
+import {
+    IAppInsightsCore, IConfigDefaults, IConfiguration, IDiagnosticLogger, ILegacyUnloadHook, IPlugin, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext, ITelemetryItem, ITelemetryPlugin, ITelemetryPluginChain,
+    ITelemetryUnloadState, ITelemetryUpdateState, IUnloadHook, TelemetryUnloadReason, TelemetryUpdateReason, isNotNullOrUndefined,
+    proxyFunctionAs
+} from "@microsoft/applicationinsights-common";
 import { isFunction, objDefine } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../Config/DynamicConfig";
-import { IConfigDefaults } from "../Config/IConfigDefaults";
-import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
-import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import {
-    IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext
-} from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
-import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
-import { safeGetLogger } from "./DiagnosticLogger";
-import { isNotNullOrUndefined, proxyFunctionAs } from "./HelperFuncs";
-import { STR_EXTENSION_CONFIG } from "./InternalConstants";
+import { safeGetLogger } from "../Diagnostics/DiagnosticLogger";
+import { STR_EXTENSION_CONFIG } from "../InternalConstants";
 import {
     createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext
 } from "./ProcessTelemetryContext";

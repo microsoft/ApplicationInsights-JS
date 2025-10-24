@@ -1,5 +1,5 @@
 import { createCustomError } from "@nevware21/ts-utils";
-import { STR_EMPTY } from "../../JavaScriptSDK/InternalConstants";
+import { STR_EMPTY } from "../../InternalConstants";
 import { OpenTelemetryError, OpenTelemetryErrorConstructor, getOpenTelemetryError } from "./OTelError";
 
 let otelSpanErrorType: OTelSpanErrorConstructor;

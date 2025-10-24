@@ -1,9 +1,8 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { dumpObj } from "@nevware21/ts-utils";
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
-import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
-import { IConfiguration } from "../../../src/JavaScriptSDK.Interfaces/IConfiguration";
+import { _eInternalMessageId } from "@microsoft/applicationinsights-common";
+import { IConfiguration } from "@microsoft/applicationinsights-common";
 import { OldTrackPlugin, TestChannelPlugin, TestPlugin, TestSamplingPlugin, TrackPlugin } from "./TestPlugins";
 
 const AIInternalMessagePrefix = "AITR_";

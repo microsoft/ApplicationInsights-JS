@@ -1,16 +1,15 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { dumpObj } from "@nevware21/ts-utils";
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
-import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
-import { IConfiguration } from "../../../src/JavaScriptSDK.Interfaces/IConfiguration";
-import { IPlugin, ITelemetryPlugin } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { ITelemetryItem } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryItem";
-import { BaseTelemetryPlugin } from "../../../src/JavaScriptSDK/BaseTelemetryPlugin";
-import { IAppInsightsCore } from "../../../src/JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { ITelemetryPluginChain } from "../../../src/JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { IProcessTelemetryContext } from "../../../src/JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { _eInternalMessageId } from "@microsoft/applicationinsights-common";
+import { IConfiguration } from "@microsoft/applicationinsights-common";
+import { IPlugin, ITelemetryPlugin } from "@microsoft/applicationinsights-common";
+import { ITelemetryItem } from "@microsoft/applicationinsights-common";
+import { IAppInsightsCore } from "@microsoft/applicationinsights-common";
+import { ITelemetryPluginChain } from "@microsoft/applicationinsights-common";
+import { IProcessTelemetryContext } from "@microsoft/applicationinsights-common";
 import { OldTrackPlugin, TestChannelPlugin, TestPlugin } from "./TestPlugins";
+import { BaseTelemetryPlugin } from "../../../src/applicationinsights-core-js";
 
 export class DynamicTests extends AITestClass {
 
@@ -478,7 +477,7 @@ export class DynamicTests extends AITestClass {
                     name: "MyCustomEvent2"
                 });
                 Assert.equal(3, channelPlugin.events.length, "We should have a track call");
-                Assert.equal(undefined, (channelPlugin.events[2].data ||{}).trackPlugin);
+                Assert.equal(undefined, (channelPlugin.events[2].data || {}).trackPlugin);
                 Assert.equal(null, appInsightsCore.getPlugin(trackPlugin.identifier), "trackPlugin Plugin");
                 Assert.equal(true, channelPlugin.events[2].data.sampled);
 

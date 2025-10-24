@@ -1,9 +1,41 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
+import { LoggingSeverity, _InternalMessageId } from "../../../src/Enums/LoggingEnums";
 import { DataSanitizerValues, Exception } from "../../../src/applicationinsights-common"
-import { DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, IInternalLogMessage } from "../../../src/Interfaces/IDiagnosticLogger";
 import { IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal } from "../../../src/Interfaces/IExceptionTelemetry";
 import { _createExceptionDetails, _createExDetailsFromInterface, _extractStackFrame, _parsedFrameToInterface, _IParsedStackFrame } from "../../../src/Telemetry/Exception";
 import { IStackFrame } from "../../../src/Interfaces/Contracts/IStackFrame";
+
+class TestDiagnosticLogger implements IDiagnosticLogger {
+    public queue: IInternalLogMessage[];
+    private _consoleLevel: number;
+
+    constructor(consoleLevel?: number) {
+        this.queue = [];
+        this._consoleLevel = (consoleLevel !== undefined ? consoleLevel : 0);
+    }
+
+    // Lightweight logger to satisfy IDiagnosticLogger contract for tests only
+    public consoleLoggingLevel(): number {
+        return this._consoleLevel;
+    }
+
+    public throwInternal(_severity: LoggingSeverity, messageId: _InternalMessageId, message: string): void {
+        this.queue.push({ message, messageId });
+    }
+
+    public warnToConsole(_message: string): void {
+        // Intentionally left blank for test usage
+    }
+
+    public resetInternalMessageCount(): void {
+        this.queue.length = 0;
+    }
+
+    public logInternalMessage(_severity: LoggingSeverity, message: IInternalLogMessage): void {
+        this.queue.push(message);
+    }
+}
 
 function _checkExpectedFrame(expectedFrame: IStackFrame, actualFrame: IStackFrame,  index: number) {
     Assert.equal(expectedFrame.assembly, actualFrame.assembly, index + ") Assembly is not as expected");
@@ -14,7 +46,7 @@ function _checkExpectedFrame(expectedFrame: IStackFrame, actualFrame: IStackFram
 }
 
 export class ExceptionTests extends AITestClass {
-    logger = new DiagnosticLogger();
+    logger = new TestDiagnosticLogger();
 
     public testInitialize() {
     }
@@ -62,7 +94,7 @@ export class ExceptionTests extends AITestClass {
     
                     const exceptionDetailsConverted = _createExDetailsFromInterface(this.logger, exceptionDetailsInterface);
                     Assert.deepEqual(exceptionDetails, exceptionDetailsConverted);
-                } catch (e) {
+                } catch (e: any) {
                     console.log(e.stack);
                     console.log(e.toString());
                     Assert.ok(false, e.toString());
@@ -99,7 +131,7 @@ export class ExceptionTests extends AITestClass {
                     for (let i = 0; i < exceptionDetails.parsedStack.length; i++) {
                         Assert.equal(MAX_STRING_LENGTH, exceptionDetails.parsedStack[i].assembly.length);
                     }
-                } catch (e) {
+                } catch (e: any) {
                     console.log(e.stack);
                     console.log(e.toString());
                     Assert.ok(false, e.toString());
@@ -136,7 +168,7 @@ export class ExceptionTests extends AITestClass {
                     for (let i = 0; i < exceptionDetails.parsedStack.length; i++) {
                         Assert.equal(MAX_STRING_LENGTH, exceptionDetails.parsedStack[i].fileName.length);
                     }
-                } catch (e) {
+                } catch (e: any) {
                     console.log(e.stack);
                     console.log(e.toString());
                     Assert.ok(false, e.toString());

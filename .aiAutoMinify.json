@@ -6,6 +6,23 @@
                 "ePendingOp",
                 "CallbackType",
                 "eTraceStateKeyType",
+                "eAttributeChangeOp",
+                "eOTelSamplingDecision",
+                "eOTelSpanKind",
+                "eOTelSpanStatusCode"
+            ]
+        },
+        "@microsoft/applicationinsights-perfmarkmeasure-js": {
+            "constEnums": []
+        },
+        "@microsoft/applicationinsights-common": {
+            "constEnums": [
+                "eOfflineValue",
+                "eRequestHeaders",
+                "eStorageType",
+                "FieldType",
+                "eDistributedTracingModes",
+                "EventPersistenceValue",
                 "eEventsDiscardedReason",
                 "eBatchDiscardedReason",
                 "FeatureOptInMode",
@@ -20,23 +37,6 @@
                 "TelemetryUpdateReason",
                 "eTraceHeadersMode",
                 "eW3CTraceFlags",
-                "eAttributeChangeOp",
-                "eOTelSamplingDecision",
-                "eOTelSpanKind",
-                "eOTelSpanStatusCode"
-            ]
-        },
-        "@microsoft/applicationinsights-perfmarkmeasure-js": {
-            "constEnums": []
-        },
-        "@microsoft/applicationinsights-common": {
-            "constEnums": [
-                "eStorageType",
-                "FieldType",
-                "eDistributedTracingModes",
-                "EventPersistenceValue",
-                "eOfflineValue",
-                "eRequestHeaders",
                 "DataPointType",
                 "DependencyKind",
                 "DependencySourceType",

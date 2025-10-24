@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "@microsoft/applicationinsights-common";
 import { asString, isBoolean, isFunction, isNullOrUndefined, isString } from "@nevware21/ts-utils";
-import { STR_EMPTY } from "../JavaScriptSDK/InternalConstants";
+import { STR_EMPTY } from "../InternalConstants";
 import { IConfiguration } from "../applicationinsights-core-js";
-import { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "./IConfigDefaults";
 
 /**
  * @internal

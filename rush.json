@@ -20,18 +20,13 @@
       "shouldPublish": true
     },
     {
-      "packageName": "@microsoft/applicationinsights-rollup-es5",
-      "projectFolder": "tools/rollup-es5",
+      "packageName": "@microsoft/applicationinsights-common",
+      "projectFolder": "shared/AppInsightsCommon",
       "shouldPublish": true
     },
     {
       "packageName": "@microsoft/applicationinsights-core-js",
       "projectFolder": "shared/AppInsightsCore",
-      "shouldPublish": true
-    },
-    {
-      "packageName": "@microsoft/applicationinsights-common",
-      "projectFolder": "shared/AppInsightsCommon",
       "shouldPublish": true
     },
     {
@@ -72,6 +67,11 @@
     {
       "packageName": "@microsoft/applicationinsights-web",
       "projectFolder": "AISKU",
+      "shouldPublish": true
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-rollup-es5",
+      "projectFolder": "tools/rollup-es5",
       "shouldPublish": true
     },
     {

@@ -1,7 +1,7 @@
-import {
-    IUnloadHook, arrForEach, createUniqueNamespace, eventOff, eventOn, getDocument, getNavigator, getWindow, isNullOrUndefined, isUndefined,
-    mergeEvtNamespace
-} from "@microsoft/applicationinsights-core-js";
+import { arrForEach, getDocument, getNavigator, getWindow, isNullOrUndefined, isUndefined } from "@nevware21/ts-utils";
+import { IUnloadHook } from "./Interfaces/IUnloadHook";
+import { createUniqueNamespace } from "./Utils/DataCacheHelper";
+import { eventOff, eventOn, mergeEvtNamespace } from "./Utils/EventHelpers";
 
 /**
  * this is the callback that will be called when the network status changes

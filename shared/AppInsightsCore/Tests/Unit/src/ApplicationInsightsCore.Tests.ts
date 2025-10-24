@@ -2,13 +2,14 @@ import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework
 import { 
     IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, IAppInsightsCore, normalizeJsName,
     random32, mwcRandomSeed, newId, randomValue, mwcRandom32, isNullOrUndefined, SenderPostManager,
-    OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig, fieldRedaction
+    OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig, fieldRedaction,
+    _InternalLogMessage,
+    DiagnosticLogger
 } from "../../../src/applicationinsights-core-js"
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
-import { IChannelControls } from "../../../src/JavaScriptSDK.Interfaces/IChannelControls";
-import { _eInternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage, DiagnosticLogger } from "../../../src/JavaScriptSDK/DiagnosticLogger";
-import { ActiveStatus } from "../../../src/JavaScriptSDK.Enums/InitActiveStatusEnum";
+import { IChannelControls } from "@microsoft/applicationinsights-common";
+import { _eInternalMessageId, LoggingSeverity } from "@microsoft/applicationinsights-common";
+import { ActiveStatus } from "@microsoft/applicationinsights-common";
 import { createAsyncPromise, createAsyncRejectedPromise, createAsyncResolvedPromise, createPromise, createTimeoutPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
 
 const AIInternalMessagePrefix = "AITR_";

@@ -2,21 +2,15 @@
 // Licensed under the MIT License.
 
 import {
+    IAppInsightsCore, IConfiguration, INetworkStatsbeat, IPayloadData, IStatsBeat, IStatsBeatConfig, IStatsBeatState, IStatsEndpointConfig,
+    IStatsMgr, IStatsMgrConfig, ITelemetryItem, _eInternalMessageId, eLoggingSeverity, eStatsType, isFeatureEnabled
+} from "@microsoft/applicationinsights-common";
+import {
     ITimerHandler, arrForEach, isNumber, makeGlobRegex, objDefineProps, scheduleTimeout, strIndexOf, strLower, utcNow
 } from "@nevware21/ts-utils";
 import { onConfigChange } from "../Config/DynamicConfig";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { eStatsType } from "../JavaScriptSDK.Enums/StatsType";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { INetworkStatsbeat } from "../JavaScriptSDK.Interfaces/INetworkStatsbeat";
-import { IStatsBeat, IStatsBeatConfig, IStatsBeatState, IStatsEndpointConfig } from "../JavaScriptSDK.Interfaces/IStatsBeat";
-import { IStatsMgr, IStatsMgrConfig } from "../JavaScriptSDK.Interfaces/IStatsMgr";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IPayloadData } from "../JavaScriptSDK.Interfaces/IXHROverride";
-import { _throwInternal, safeGetLogger } from "./DiagnosticLogger";
-import { isFeatureEnabled } from "./HelperFuncs";
-import { STR_EMPTY } from "./InternalConstants";
+import { _throwInternal, safeGetLogger } from "../Diagnostics/DiagnosticLogger";
+import { STR_EMPTY } from "../InternalConstants";
 
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
 const STATS_MIN_INTERVAL_SECONDS = 60; // 1 minute

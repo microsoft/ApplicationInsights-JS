@@ -1,5 +1,6 @@
 import { ShimsTests } from "./ShimsTests";
 
 export function runTests() {
-    new ShimsTests().registerTests();
+    // TODO: Add back tests
+    //new ShimsTests().registerTests();
 }

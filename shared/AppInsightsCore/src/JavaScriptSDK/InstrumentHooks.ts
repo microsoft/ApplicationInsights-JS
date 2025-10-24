@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import {
+    IInstrumentCallDetails, IInstrumentHook, IInstrumentHooks, IInstrumentHooksCallbacks, InstrumentorHooksCallback, _getObjProto
+} from "@microsoft/applicationinsights-common";
 import { strShimFunction, strShimPrototype } from "@microsoft/applicationinsights-shims";
 import { getInst, objHasOwnProperty } from "@nevware21/ts-utils";
-import {
-    IInstrumentCallDetails, IInstrumentHook, IInstrumentHooks, IInstrumentHooksCallbacks, InstrumentorHooksCallback
-} from "../JavaScriptSDK.Interfaces/IInstrumentHooks";
-import { _getObjProto } from "./HelperFuncs";
 
 const aiInstrumentHooks = "_aiHooks";
 

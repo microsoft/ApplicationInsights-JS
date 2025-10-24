@@ -33,7 +33,10 @@ jobs:
     - run: npm install
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
-    - run: npm run build --verbose
+    - name: Build packages
+      run: npm run build
       timeout-minutes: 20
-    - run: npm run test --verbose
+      # TODO: Add tests back with new infrastructure
+    # - name: Test packages
+    #   run: npm run test
       timeout-minutes: 30

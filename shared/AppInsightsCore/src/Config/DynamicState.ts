@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import {
+    IWatcherHandler, WatcherFunction, _IDynamicConfigHandlerState, _IDynamicDetail, _IInternalDynamicConfigHandler, _eInternalMessageId,
+    eLoggingSeverity
+} from "@microsoft/applicationinsights-common";
 import { ITimerHandler, arrForEach, arrIndexOf, dumpObj, newSymbol, scheduleTimeout } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { throwAggregationError } from "../JavaScriptSDK/AggregationError";
-import { _IInternalDynamicConfigHandler } from "./IDynamicConfigHandler";
-import { IWatcherHandler, WatcherFunction, _IDynamicDetail } from "./IDynamicWatcher";
-import { _IDynamicConfigHandlerState } from "./_IDynamicConfigHandlerState";
 
 const symPrefix = "[[ai_";
 const symPostfix = "]]";

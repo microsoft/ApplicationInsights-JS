@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
-import { IConfigDefaults } from "./IConfigDefaults";
-import { IDynamicPropertyHandler } from "./IDynamicPropertyHandler";
+import { IConfigDefaults, IConfiguration, IDynamicPropertyHandler, IUnloadHook } from "@microsoft/applicationinsights-common";
 
 export interface IWatchDetails<T = IConfiguration> {
     /**

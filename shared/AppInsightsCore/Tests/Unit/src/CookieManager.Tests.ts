@@ -1,7 +1,6 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { AppInsightsCore, createCookieMgr, IAppInsightsCore, IConfiguration, ICookieMgrConfig, IPlugin, ITelemetryItem, newId, objExtend } from "../../../src/applicationinsights-core-js"
-import { _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
+import { _eInternalMessageId } from "@microsoft/applicationinsights-common";
 
 export class CookieManagerTests extends AITestClass {
     private _cookieMgrCfg: ICookieMgrConfig;

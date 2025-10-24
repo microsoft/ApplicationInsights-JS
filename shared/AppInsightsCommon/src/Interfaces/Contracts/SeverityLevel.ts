@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createEnumStyle } from "@microsoft/applicationinsights-core-js";
+import { createEnumStyle } from "../../Enums/EnumHelperFuncs";
 
 /**
  * Defines the level of severity for the event.

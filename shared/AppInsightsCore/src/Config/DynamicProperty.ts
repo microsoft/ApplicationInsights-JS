@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 import {
+    IDiagnosticLogger, IWatcherHandler, _IDynamicConfigHandlerState, _IDynamicDetail, _IDynamicGetter, _eInternalMessageId, eLoggingSeverity
+} from "@microsoft/applicationinsights-common";
+import {
     arrForEach, arrIndexOf, dumpObj, isArray, objDefine, objDefineProp, objForEachKey, objGetOwnPropertyDescriptor
 } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { UNDEFINED_VALUE } from "../JavaScriptSDK/InternalConstants";
+import { UNDEFINED_VALUE } from "../InternalConstants";
 import { CFG_HANDLER_LINK, _canMakeDynamic, blockDynamicConversion, throwInvalidAccess } from "./DynamicSupport";
-import { IWatcherHandler, _IDynamicDetail } from "./IDynamicWatcher";
-import { _IDynamicConfigHandlerState, _IDynamicGetter } from "./_IDynamicConfigHandlerState";
 
 export const enum _eSetDynamicPropertyFlags {
     inPlace = 0,
