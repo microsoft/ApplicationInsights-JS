@@ -3,10 +3,9 @@
 
 import {
     IAppInsightsCore, IDistributedTraceContext, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryPlugin,
-    ITelemetryPluginChain, ITelemetryUnloadState, IUnloadableComponent, IW3cTraceState, createElmNodeData, generateW3CId, getLocation,
-    isValidSpanId, isValidTraceId
+    ITelemetryPluginChain, ITelemetryUnloadState, IUnloadableComponent, IW3cTraceState, createElmNodeData, createW3cTraceState,
+    generateW3CId, getLocation, isValidSpanId, isValidTraceId
 } from "@microsoft/applicationinsights-common";
-import { createW3cTraceState } from "@microsoft/applicationinsights-common/src/W3cTraceState";
 import { IOTelSpanContext } from "@microsoft/otel-core-js";
 import { arrForEach, isFunction, objDefineProps } from "@nevware21/ts-utils";
 import { STR_CORE, STR_EMPTY, STR_PRIORITY, STR_PROCESS_TELEMETRY, UNDEFINED_VALUE } from "../InternalConstants";
@@ -85,7 +84,7 @@ export function initializePlugins(processContext: IProcessTelemetryContext, exte
     });
 }
 
-export function sortPlugins<T = IPlugin>(plugins:T[]) {
+export function sortPlugins<T = IPlugin>(plugins: T[]) {
     // Sort by priority
     return plugins.sort((extA: any, extB: any) => {
         let result = 0;

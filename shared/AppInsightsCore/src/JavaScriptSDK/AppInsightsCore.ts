@@ -9,9 +9,8 @@ import {
     ITelemetryPlugin, ITelemetryPluginChain, ITelemetryUnloadState, ITelemetryUpdateState, IUnloadHook, IWatchDetails, SendRequestReason,
     TelemetryInitializerFunction, TelemetryUnloadReason, TelemetryUpdateReason, WatcherFunction, _IInternalDynamicConfigHandler,
     _eInternalMessageId, createUniqueNamespace, eActiveStatus, eEventsDiscardedReason, eLoggingSeverity, eTraceHeadersMode,
-    findW3cTraceParent, getSetValue, isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString
+    findW3cTraceParent, findW3cTraceState, getSetValue, isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString
 } from "@microsoft/applicationinsights-common";
-import { findW3cTraceState } from "@microsoft/applicationinsights-common/src/W3cTraceState";
 import {
     IOTelContextManager, IOTelSpanContext, IOTelTracer, IOTelTracerOptions, IOTelTracerProvider, createContextManager, createOTelSpanContext,
     createOTelTraceState
@@ -75,7 +74,7 @@ const maxInitTimeout = 50000;
 const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     cookieCfg: {},
     [STR_EXTENSIONS]: { rdOnly: true, ref: true, v: [] },
-    [STR_CHANNELS]: { rdOnly: true, ref: true, v:[] },
+    [STR_CHANNELS]: { rdOnly: true, ref: true, v: [] },
     [STR_EXTENSION_CONFIG]: { ref: true, v: {} },
     [STR_CREATE_PERF_MGR]: UNDEFINED_VALUE,
     loggingLevelConsole: eLoggingSeverity.DISABLED,
@@ -89,7 +88,7 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
  * @param core - The AppInsightsCore instance
  * @param notificationMgr - The notification manager
  */
-function _createPerfManager (core: IAppInsightsCore, notificationMgr: INotificationManager) {
+function _createPerfManager(core: IAppInsightsCore, notificationMgr: INotificationManager) {
     return new PerfManager(notificationMgr);
 }
 
@@ -159,7 +158,7 @@ function _deepMergeConfig(details: IWatchDetails<IConfiguration>, target: any, n
                     _deepMergeConfig(details, target[key], value, merge);
                 }
             }
-    
+
             if (merge && isPlainObject(value) && isPlainObject(target[key])) {
                 // The target is an object and it has a value
                 _deepMergeConfig(details, target[key], value, merge);
@@ -171,8 +170,8 @@ function _deepMergeConfig(details: IWatchDetails<IConfiguration>, target: any, n
     }
 }
 
-function _findWatcher(listeners: { rm: () => void, w: WatcherFunction<IConfiguration>}[], newWatcher: WatcherFunction<IConfiguration>) {
-    let theListener: { rm: () => void, w: WatcherFunction<IConfiguration>} = null;
+function _findWatcher(listeners: { rm: () => void, w: WatcherFunction<IConfiguration> }[], newWatcher: WatcherFunction<IConfiguration>) {
+    let theListener: { rm: () => void, w: WatcherFunction<IConfiguration> } = null;
     let idx: number = -1;
     arrForEach(listeners, (listener, lp) => {
         if (listener.w === newWatcher) {
@@ -185,7 +184,7 @@ function _findWatcher(listeners: { rm: () => void, w: WatcherFunction<IConfigura
     return { i: idx, l: theListener };
 }
 
-function _addDelayedCfgListener(listeners: { rm: () => void, w: WatcherFunction<IConfiguration>}[], newWatcher: WatcherFunction<IConfiguration>) {
+function _addDelayedCfgListener(listeners: { rm: () => void, w: WatcherFunction<IConfiguration> }[], newWatcher: WatcherFunction<IConfiguration>) {
     let theListener = _findWatcher(listeners, newWatcher).l;
 
     if (!theListener) {
@@ -204,7 +203,7 @@ function _addDelayedCfgListener(listeners: { rm: () => void, w: WatcherFunction<
     return theListener;
 }
 
-function _registerDelayedCfgListener(config: IConfiguration, listeners: { rm: () => void, w: WatcherFunction<IConfiguration>}[], logger: IDiagnosticLogger) {
+function _registerDelayedCfgListener(config: IConfiguration, listeners: { rm: () => void, w: WatcherFunction<IConfiguration> }[], logger: IDiagnosticLogger) {
     arrForEach(listeners, (listener) => {
         let unloadHdl = onConfigChange(config, listener.w, logger);
         delete listener.w;      // Clear the listener reference so it will get garbage collected.
@@ -249,7 +248,7 @@ function _getParentTraceCtx(mode: eTraceHeadersMode): IOTelSpanContext | null {
     let spanContext: IOTelSpanContext | null = null;
     const parentTrace = (mode & eTraceHeadersMode.TraceParent) ? findW3cTraceParent() : null;
     const parentTraceState = (mode & eTraceHeadersMode.TraceState) ? findW3cTraceState() : null;
-    
+
     if (parentTrace || parentTraceState) {
         spanContext = createOTelSpanContext({
             traceId: parentTrace ? parentTrace.traceId : null,
@@ -274,8 +273,8 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     /**
      * An array of the installed plugins that provide a version
      */
-     public readonly pluginVersionStringArr: string[];
-    
+    public readonly pluginVersionStringArr: string[];
+
     /**
      * The formatted string of the installed plugins that contain a version number
      */
@@ -325,7 +324,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _traceCtx: IDistributedTraceContext | null;
         let _rootTraceCtx: IDistributedTraceContext | null;
         let _instrumentationKey: string | null;
-        let _cfgListeners: { rm: () => void, w: WatcherFunction<CfgType>}[];
+        let _cfgListeners: { rm: () => void, w: WatcherFunction<CfgType> }[];
         let _extensions: IPlugin[];
         let _pluginVersionStringArr: string[];
         let _pluginVersionString: string;
@@ -334,7 +333,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _initInMemoMaxSize: number; // max event count limit during wait for init promises to be resolved
         let _isStatusSet: boolean; // track if active status is set in case of init timeout and init promises setting the status twice
         let _initTimer: ITimerHandler;
-    
+
         /**
          * Internal log poller
          */
@@ -368,7 +367,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (_isUnloading) {
                     throwError(strSdkUnloadingError);
                 }
-        
+
                 // Make sure core is only initialized once
                 if (_self.isInitialized()) {
                     throwError("Core cannot be initialized more than once");
@@ -422,7 +421,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (!_channels || _channels.length === 0) {
                     throwError("No " + STR_CHANNELS + " available");
                 }
-                
+
                 if (_channelConfig && _channelConfig.length > 1) {
                     let teeController = _self.getPlugin("TeeChannelController");
                     if (!teeController || !teeController.plugin) {
@@ -437,9 +436,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (_activeStatus === ActiveStatus.ACTIVE) {
                     _releaseQueues();
                 }
-                
+
             };
-        
+
             _self.getChannels = (): IChannelControls[] => {
                 let controls: IChannelControls[] = [];
                 if (_channels) {
@@ -450,7 +449,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                 return objFreeze(controls);
             };
-        
+
             _self.track = (telemetryItem: ITelemetryItem) => {
                 doPerf(_self.getPerfMgr(), () => "AppInsightsCore:track", () => {
                     if (telemetryItem === null) {
@@ -458,13 +457,13 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         // throw error
                         throwError("Invalid telemetry item");
                     }
-                    
+
                     // do basic validation before sending it through the pipeline
                     if (!telemetryItem.name && isNullOrUndefined(telemetryItem.name)) {
                         _notifyInvalidEvent(telemetryItem);
                         throwError("telemetry name required");
                     }
-            
+
                     // setup default iKey if not passed in
                     telemetryItem.iKey = telemetryItem.iKey || _instrumentationKey;
 
@@ -473,21 +472,21 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                     // Common Schema 4.0
                     telemetryItem.ver = telemetryItem.ver || "4.0";
-            
+
                     if (!_isUnloading && _self.isInitialized() && _activeStatus === ActiveStatus.ACTIVE) {
                         // Process the telemetry plugin chain
                         _createTelCtx().processNext(telemetryItem);
-                    } else if (_activeStatus !== ActiveStatus.INACTIVE){
+                    } else if (_activeStatus !== ActiveStatus.INACTIVE) {
                         // Queue events until all extensions are initialized
                         if (_eventQueue.length <= _initInMemoMaxSize) {
                             // set limit, if full, stop adding new events
                             _eventQueue.push(telemetryItem);
                         }
-                     
+
                     }
                 }, () => ({ item: telemetryItem }), !((telemetryItem as any).sync));
             };
-        
+
             _self.getProcessTelContext = _createTelCtx;
 
             _self.getNotifyMgr = (): INotificationManager => {
@@ -509,7 +508,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             _self.addNotificationListener = (listener: INotificationListener): void => {
                 _self.getNotifyMgr().addNotificationListener(listener);
             };
-        
+
             /**
              * Removes all instances of the listener.
              * @param listener - INotificationListener to remove.
@@ -519,7 +518,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     _notificationManager.removeNotificationListener(listener);
                 }
             };
-        
+
             _self.getCookieMgr = (): ICookieMgr => {
                 if (!_cookieManager) {
                     _cookieManager = createCookieMgr(_configHandler.cfg, _self.logger);
@@ -531,7 +530,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             _self.setCookieMgr = (cookieMgr: ICookieMgr) => {
                 if (_cookieManager !== cookieMgr) {
                     runTargetUnload(_cookieManager, false);
-    
+
                     _cookieManager = cookieMgr;
                 }
             };
@@ -674,7 +673,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 // reset to false for new dynamic changes
                 _isStatusSet = false;
                 _activeStatus = eActiveStatus.PENDING;
-                let initTimeout = isNotNullOrUndefined(theConfig.initTimeOut)?  theConfig.initTimeOut : maxInitTimeout; // theConfig.initTimeOut could be 0
+                let initTimeout = isNotNullOrUndefined(theConfig.initTimeOut) ? theConfig.initTimeOut : maxInitTimeout; // theConfig.initTimeOut could be 0
                 let allPromises = createSyncAllSettledPromise<string>(promises);
 
                 if (_initTimer) {
@@ -691,7 +690,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         _setStatus();
                     }
                 }, initTimeout);
-            
+
                 doAwaitResponse(allPromises, (response) => {
                     try {
                         if (_isStatusSet) {
@@ -710,7 +709,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                                 // endpoint
                                 if (values.length > 1) {
                                     let endpointRes = values[1];
-                                    _endpoint = endpointRes &&  endpointRes.value;
+                                    _endpoint = endpointRes && endpointRes.value;
                                 }
                             }
 
@@ -726,13 +725,13 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         // release queues
                         _setStatus();
                     } catch (e) {
-                        if (!_isStatusSet){
+                        if (!_isStatusSet) {
                             _setStatus();
                         }
                     }
                 });
             }
-    
+
             function _setStatus() {
                 _isStatusSet = true;
                 if (isNullOrUndefined(_instrumentationKey)) {
@@ -797,7 +796,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             };
 
             // Add addTelemetryInitializer
-            proxyFunctions(_self, () => _telemetryInitializerPlugin, [ "addTelemetryInitializer" ]);
+            proxyFunctions(_self, () => _telemetryInitializerPlugin, ["addTelemetryInitializer"]);
 
             objDefine(_self, "context", {
                 g: () => _otelContext.v
@@ -852,7 +851,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                     // Run all of the unload handlers first (before unloading the plugins)
                     _unloadHandlers.run(processUnloadCtx, unloadState);
-                    
+
                     // Stop polling the internal logs
                     _self.stopPollingInternalLogs();
 
@@ -933,7 +932,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     };
 
                     newConfig = updateState.newConfig as CfgType;
-                    let cfg =  _configHandler.cfg;
+                    let cfg = _configHandler.cfg;
 
                     // replace the immutable (if initialized) values
                     // We don't currently allow updating the extensions and channels via the update config
@@ -977,7 +976,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             };
 
             _self.flush = _flushChannels;
-        
+
             _self.getTraceCtx = (createNew?: boolean): IDistributedTraceContext | null => {
 
                 if ((!_traceCtx && createNew !== false) || createNew === true) {
@@ -1157,14 +1156,14 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             function _initPluginChain(updateState: ITelemetryUpdateState | null) {
                 // Extension validation
                 let theExtensions = _validateExtensions(_self.logger, ChannelControllerPriority, _configExtensions);
-            
+
                 _pluginChain = null;
                 _pluginVersionString = null;
                 _pluginVersionStringArr = null;
-    
+
                 // Get the primary channel queue and include as part of the normal extensions
-                _channels = (_channelConfig || [])[0] ||[];
-                
+                _channels = (_channelConfig || [])[0] || [];
+
                 // Add any channels provided in the extensions and sort them
                 _channels = sortPlugins(arrAppend(_channels, theExtensions.channels));
 
@@ -1354,17 +1353,17 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     if (doneIterating && waiting === 0) {
                         cbTimer && cbTimer.cancel();
                         cbTimer = null;
-    
+
                         callBack && callBack(doneIterating);
                         callBack = null;
                     }
                 }
-                    
+
                 if (_channels && _channels.length > 0) {
                     let flushCtx = _createTelCtx().createNew(_channels);
                     flushCtx.iterate<IChannelControls>((plugin) => {
                         if (plugin.flush) {
-                            waiting ++;
+                            waiting++;
 
                             let handled = false;
                             // Not all channels will call this callback for every scenario
@@ -1392,7 +1391,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                 doneIterating = true;
                 doCallback();
-                
+
                 return true;
             }
 
@@ -1650,7 +1649,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     public flush(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
-        
+
     /**
      * Gets the current distributed trace context for this instance if available, you can optional
      * create a new instance if one does not currently exist or return null if one does not currently exist.

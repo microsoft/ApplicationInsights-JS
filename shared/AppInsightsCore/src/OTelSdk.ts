@@ -1,18 +1,9 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    IAppInsightsCore, IConfiguration, IDynamicConfigHandler, IPlugin, IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain,
-    eW3CTraceFlags
+    IAppInsightsCore, IConfiguration, IDynamicConfigHandler, IPlugin, IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain
 } from "@microsoft/applicationinsights-common";
-import {
-    IOTelApi, IOTelApiCtx, IOTelConfig, IOTelIdGenerator, IOTelSampler, IOTelSdk, IOTelSpan, IOTelSpanCtx, IOTelTracer, IOTelTracerCtx,
-    IOTelTracerOptions, IReadableSpan, createTracer, deleteContextSpan, eOTelSamplingDecision, getContextSpan, isSpanContextValid,
-    isTracingSuppressed, wrapSpanContext
-} from "@microsoft/otel-core-js";
-import { ILazyValue, arrForEach, createDeferredCachedValue, normalizeJsName, objDefine, objDefineProps } from "@nevware21/ts-utils";
-import { createDynamicConfig, onConfigChange } from "./Config/DynamicConfig";
-import { STR_EMPTY } from "./InternalConstants";
-import { createProcessTelemetryContext } from "./JavaScriptSDK/ProcessTelemetryContext";
-import { createOTelApi, traceApiDefaultConfigValues } from "./OTelApi";
+import { IOTelApi, IOTelConfig, IOTelSdk, IOTelTracer, IOTelTracerOptions } from "@microsoft/otel-core-js";
+import { ILazyValue, objDefineProps } from "@nevware21/ts-utils";
 
 interface TraceList {
     name: string;
@@ -63,7 +54,7 @@ export class OTelSdk implements IOTelSdk {
     public identifier: string = OTelSdk.identifier;
     public cfg: IOTelConfig;
     public api: IOTelApi;
-    
+
     constructor() {
         // NOTE!: DON'T set default values here, instead set them in the _initDefaults() function as it is also called during teardown()
         let _configHandler: IDynamicConfigHandler<IOTelConfig>;
@@ -75,7 +66,7 @@ export class OTelSdk implements IOTelSdk {
             _initDefaults();
 
             objDefineProps(_self, {
-                cfg:{ g: () => _configHandler.cfg },
+                cfg: { g: () => _configHandler.cfg },
                 api: { g: () => _otelApi.v }
             });
 
@@ -89,53 +80,57 @@ export class OTelSdk implements IOTelSdk {
                 // }
             };
 
-            _self.getTracer = _getTracer;
+            // TODO: Enable
+            //_self.getTracer = _getTracer;
 
-            function _getTracer (name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer {
-                let tracer: IOTelTracer;
-                let tracerVer = version || STR_EMPTY;
-                let tracerSchema = options ? options.schemaUrl : null;
-                let keyName = normalizeJsName(name + "@" + tracerVer);
-                let tracerList = _tracers?.[keyName];
+            
+            // function _getTracer(name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer {
+            //     let tracer: IOTelTracer;
                 
-                if (tracerList) {
-                    arrForEach(tracerList, (item) => {
-                        if (item.name == name && item.version == tracerVer && item.schemaUrl == tracerSchema) {
-                            tracer = item.tracer;
-                            return -1;
-                        }
-                    });
-                } else {
-                    // Ensure _tracers is initialized before accessing it
-                    if (!_tracers) {
-                        _tracers = {};
-                    }
-                    tracerList = _tracers[keyName] = [];
-                }
 
-                if (!tracer) {
-                    // Ensure otelApi is available before accessing its properties
-                    let otelApi = _otelApi.v;
-                    // TODO: Enable
-                    // let tracerCtx: IOTelTracerCtx = {
-                    //     ctxMgr: otelApi?.context,
-                    //     //context: _otelSdkCtx.v.context,
-                    //     startSpan: _startSpan
-                    // };
+            // let tracerVer = version || STR_EMPTY;
+            // let tracerSchema = options ? options.schemaUrl : null;
+            // let keyName = normalizeJsName(name + "@" + tracerVer);
+            // let tracerList = _tracers?.[keyName];
 
-                    // tracer = createTracer(tracerCtx, {
-                    //     name,
-                    //     version,
-                    //     schemaUrl: options ? options.schemaUrl : null
-                    // });
+            // if (tracerList) {
+            //     arrForEach(tracerList, (item) => {
+            //         if (item.name == name && item.version == tracerVer && item.schemaUrl == tracerSchema) {
+            //             tracer = item.tracer;
+            //             return -1;
+            //         }
+            //     });
+            // } else {
+            //     // Ensure _tracers is initialized before accessing it
+            //     if (!_tracers) {
+            //         _tracers = {};
+            //     }
+            //     tracerList = _tracers[keyName] = [];
+            // }
 
-                    // // tracerList is guaranteed to be defined by the logic above
-                    // tracerList.push({ name, version: tracerVer, schemaUrl: tracerSchema, tracer });
-                }
-                
-                return tracer;
-            }
-       
+            // if (!tracer) {
+            // Ensure otelApi is available before accessing its properties
+
+            //let otelApi = _otelApi.v;
+            // let tracerCtx: IOTelTracerCtx = {
+            //     ctxMgr: otelApi?.context,
+            //     //context: _otelSdkCtx.v.context,
+            //     startSpan: _startSpan
+            // };
+
+            // tracer = createTracer(tracerCtx, {
+            //     name,
+            //     version,
+            //     schemaUrl: options ? options.schemaUrl : null
+            // });
+
+            // // tracerList is guaranteed to be defined by the logic above
+            // tracerList.push({ name, version: tracerVer, schemaUrl: tracerSchema, tracer });
+            //     }
+
+            //     return tracer;
+            // }
+
             // function _startSpan(name: string, options?: SpanOptions, pContext?: Context): IOTelSpan | IReadableSpan {
             //     let spanOpts = options || {};
             //     let kind = spanOpts.kind || SpanKind.INTERNAL;
@@ -161,7 +156,7 @@ export class OTelSdk implements IOTelSdk {
 
             //         const sampler = traceCfg.sampler;
             //         if (!_isSampledOut(sampler, theContext, spanContext, kind, attributes, links)) {
-        
+
             //             let spanCtx: IOTelSpanCtx = {
             //                 api: otelApi,
             //                 resource: null,
@@ -177,7 +172,7 @@ export class OTelSdk implements IOTelSdk {
             //                     _endSpan(this, span);
             //                 }
             //             };
-                        
+
             //             return createSpan(spanCtx, name, kind);
             //         }
             //     }
@@ -199,10 +194,10 @@ export class OTelSdk implements IOTelSdk {
                 // Use a default logger so initialization errors are not dropped on the floor with full logging
                 // TODO: Enable
                 //_configHandler = createDynamicConfig({} as IOTelConfig, traceApiDefaultConfigValues as any, _self.diagLog());
-                let otelConfig = _configHandler.cfg;
-                _tracers = {};
+                // let otelConfig = _configHandler.cfg;
+                // _tracers = {};
 
-                // TODO: Enable
+
                 // _otelApi = createDeferredCachedValue(() => {
                 //     let otelApiCtx: IOTelApiCtx = {
                 //         otelCfg: null,
@@ -211,7 +206,7 @@ export class OTelSdk implements IOTelSdk {
                 //         },
                 //         diagLogger: _self.diagLog()
                 //     };
-    
+
                 //     // make the config lookup dynamic, so when the config changes we return the current
                 //     objDefine(otelApiCtx, "otelCfg", { g: () => otelConfig });
 
@@ -230,7 +225,7 @@ export class OTelSdk implements IOTelSdk {
         });
     }
 
-    public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) {
+    public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

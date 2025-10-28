@@ -9,14 +9,14 @@ import {
     IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
     IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry, Metric, PageView,
     PageViewPerformance, RemoteDependencyData, Trace, createDomEvent, createTelemetryItem, dataSanitizeString, eSeverityLevel,
-    isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage, utlSetStoragePrefix
+    isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage, utlSetStoragePrefix, generateW3CId
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IExceptionConfig,
     IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem,
     ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent, TelemetryInitializerFunction, _eInternalMessageId, arrForEach,
     cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dumpObj,
-    eLoggingSeverity, eventOff, eventOn, fieldRedaction, findAllScripts, generateW3CId, getDocument, getExceptionName, getHistory,
+    eLoggingSeverity, eventOff, eventOn, fieldRedaction, findAllScripts, getDocument, getExceptionName, getHistory,
     getLocation, getWindow, hasHistory, hasWindow, isFunction, isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange,
     safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
@@ -30,7 +30,7 @@ import { ITiming, createTiming } from "./Timing";
 
 const strEvent = "event";
 
-function _dispatchEvent(target:EventTarget, evnt: Event) {
+function _dispatchEvent(target: EventTarget, evnt: Event) {
     if (target && target.dispatchEvent && evnt) {
         target.dispatchEvent(evnt);
     }
@@ -68,7 +68,7 @@ const defaultValues: IConfigDefaults<IAnalyticsConfig> = objDeepFreeze({
     enableDebug: cfgDfBoolean(),
     disableFlushOnBeforeUnload: cfgDfBoolean(),
     disableFlushOnUnload: cfgDfBoolean(false, "disableFlushOnBeforeUnload"),
-    expCfg: cfgDfMerge<IExceptionConfig>({inclScripts: false, expLog: undefined, maxLogs: 50})
+    expCfg: cfgDfMerge<IExceptionConfig>({ inclScripts: false, expLog: undefined, maxLogs: 50 })
 });
 
 function _chkConfigMilliseconds(value: number, defValue: number): number {
@@ -124,7 +124,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         let _extConfig: IAnalyticsConfig;
         let _autoTrackPageVisitTime: boolean;
         let _expCfg: IExceptionConfig;
-    
+
         // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
         let _prevUri: string; // Assigned in the constructor
         let _currUri: string;
@@ -144,7 +144,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             _self.processTelemetry = (env: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 _self.processNext(env, itemCtx);
             };
-        
+
             _self.trackEvent = (event: IEventTelemetry, customProperties?: ICustomProperties): void => {
                 try {
                     let telemetryItem = createTelemetryItem<IEventTelemetry>(
@@ -209,7 +209,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         Trace.envelopeType,
                         _self.diagLog(),
                         customProperties);
-        
+
                     _self.core.track(telemetryItem);
                 } catch (e) {
                     _throwInternal(eLoggingSeverity.WARNING,
@@ -238,7 +238,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         _self.diagLog(),
                         customProperties
                     );
-        
+
                     _self.core.track(telemetryItem);
                 } catch (e) {
                     _throwInternal(eLoggingSeverity.CRITICAL,
@@ -260,7 +260,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     if (_self.core && _self.core.config) {
                         inPv.uri = fieldRedaction(inPv.uri, _self.core.config);
                     }
-                    _pageViewManager.trackPageView(inPv, {...inPv.properties, ...inPv.measurements, ...customProperties});
+                    _pageViewManager.trackPageView(inPv, { ...inPv.properties, ...inPv.measurements, ...customProperties });
 
                     if (_autoTrackPageVisitTime) {
                         _pageVisitTimeManager.trackPreviousPageVisit(inPv.name, inPv.uri);
@@ -319,7 +319,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _self.diagLog(),
                     properties,
                     systemProperties);
-        
+
                 _self.core.track(telemetryItem);
             };
 
@@ -354,7 +354,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         let doc = getDocument();
                         name = doc && doc.title || "";
                     }
-        
+
                     _pageTracking.start(name);
                 } catch (e) {
                     _throwInternal(
@@ -379,7 +379,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         let doc = getDocument();
                         name = doc && doc.title || "";
                     }
-        
+
                     if (typeof url !== "string") {
                         let loc = getLocation();
                         url = loc && loc.href || "";
@@ -388,7 +388,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         url = fieldRedaction(url, _self.core.config);
                     }
                     _pageTracking.stop(name, url, properties, measurement);
-        
+
                     if (_autoTrackPageVisitTime) {
                         _pageVisitTimeManager.trackPreviousPageVisit(name, url);
                     }
@@ -461,7 +461,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 if (exception && !exception.exception && (exception as any).error) {
                     exception.exception = (exception as any).error;
                 }
-        
+
                 try {
                     _self.sendExceptionInternal(exception, customProperties);
                 } catch (e) {
@@ -498,7 +498,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         columnNumber: exception.columnNumber || 0,
                         message: exception.message
                     };
-    
+
                     if (isCrossOriginError(exception.message, exception.url, exception.lineNumber, exception.columnNumber, exception.error)) {
                         _sendCORSException(Exception.CreateAutoException(
                             "Script error: The browser's same-origin policy prevents us from getting the details of this exception. Consider using the 'crossorigin' attribute.",
@@ -518,7 +518,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     }
                 } catch (e) {
                     const errorString = error ? (error.name + ", " + error.message) : "null";
-        
+
                     _throwInternal(
                         eLoggingSeverity.CRITICAL,
                         _eInternalMessageId.ExceptionWhileLoggingError,
@@ -543,7 +543,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 _preInitTelemetryInitializers.push(telemetryInitializer);
             };
 
-            _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
+            _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) => {
                 if (_self.isInitialized()) {
                     return;
                 }
@@ -559,12 +559,12 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         arrForEach(_preInitTelemetryInitializers, (initializer) => {
                             core.addTelemetryInitializer(initializer);
                         });
-    
+
                         _preInitTelemetryInitializers = null;
                     }
 
                     _populateDefaults(config);
-    
+
                     _pageViewPerformanceManager = createPageViewPerformanceManager(_self.core);
                     _pageViewManager = createPageViewManager(_self, _extConfig.overridePageViewDuration, _self.core, _pageViewPerformanceManager);
                     _pageVisitTimeManager = createPageVisitTimeManager(_self.diagLog(), (pageName, pageUrl, pageVisitTime) => trackPageVisitTime(pageName, pageUrl, pageVisitTime));
@@ -575,40 +575,40 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                             if (!properties) {
                                 properties = {};
                             }
-    
+
                             if (!measurements) {
                                 measurements = {};
                             }
-    
+
                             properties.duration = duration.toString();
                             _self.trackEvent({ name, properties, measurements } as IEventTelemetry);
                         }
-    
+
                     // initialize page view timing
                     _pageTracking = createTiming(_self.diagLog(), "trackPageView");
                     _pageTracking.action = (name, url, duration, properties, measurements) => {
-    
+
                         // duration must be a custom property in order for the collector to extract it
                         if (isNullOrUndefined(properties)) {
                             properties = {};
                         }
                         properties.duration = duration.toString();
-    
+
                         let pageViewItem: IPageViewTelemetry = {
                             name,
                             uri: url,
                             properties,
                             measurements
                         };
-    
+
                         _self.sendPageViewInternal(pageViewItem, properties);
                     }
-    
+
                     if (hasWindow()) {
                         _updateExceptionTracking();
                         _updateLocationChange();
                     }
-    
+
                 } catch (e) {
                     // resetting the initialized state because of failure
                     _self.setInitialized(false);
@@ -618,17 +618,17 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 _pageViewManager && _pageViewManager.teardown(unloadCtx, unloadState)
-        
+
                 // Just register to remove all events associated with this namespace
                 eventOff(window, null, null, _evtNamespace);
                 _initDefaults();
             };
 
-           
+
             _self["_getDbgPlgTargets"] = () => {
                 return [_errorHookCnt, _autoExceptionInstrumented];
             };
-            
+
             function _resetAjaxAttempts() {
                 // Reset ajax attempts counter for the new page view
                 if (_self.core) {
@@ -638,7 +638,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     }
                 }
             }
-            
+
             function _populateDefaults(config: IConfiguration) {
                 // it is used for 1DS as well, so config type should be IConfiguration only
                 let identifier = _self.identifier;
@@ -653,7 +653,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _expCfg = _extConfig.expCfg;
                     _autoTrackPageVisitTime = _extConfig.autoTrackPageVisitTime;
 
-                    if (config.storagePrefix){
+                    if (config.storagePrefix) {
                         utlSetStoragePrefix(config.storagePrefix);
                     }
                     _updateStorageUsage(_extConfig);
@@ -738,7 +738,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                                 }
                             }
                         }, false));
-                        _errorHookCnt ++;
+                        _errorHookCnt++;
 
                         _autoExceptionInstrumented = true;
                     }
@@ -866,7 +866,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                                 }
                             }
                         }, false));
-                        _errorHookCnt ++;
+                        _errorHookCnt++;
                         _extConfig.autoUnhandledPromiseInstrumented = _autoUnhandledPromiseInstrumented = true;
                     }
                 }));
@@ -900,7 +900,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                 // Reset ajax attempts counter
                 _resetAjaxAttempts();
-            
+
                 // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
                 let location = getLocation(true);
                 _prevUri = location && location.href || "";
@@ -917,7 +917,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     g: () => _extConfig
                 });
             }
-        
+
             // For backward compatibility
             objDefine<any>(_self, "_pageViewManager", { g: () => _pageViewManager });
             objDefine<any>(_self, "_pageViewPerformanceManager", { g: () => _pageViewPerformanceManager });
@@ -933,7 +933,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
-    
+
     public processTelemetry(env: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
@@ -1078,7 +1078,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         return null;
     }
 
-    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) {
+    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }
