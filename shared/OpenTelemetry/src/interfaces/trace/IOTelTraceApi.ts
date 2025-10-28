@@ -1,6 +1,9 @@
-import {
-    IOTelContext, IOTelSpan, IOTelSpanContext, IOTelTracer, IOTelTracerOptions, IOTelTracerProvider
-} from "@microsoft/applicationinsights-core-js";
+import { IOTelContext } from "../context/IOTelContext";
+import { IOTelSpan } from "./IOTelSpan";
+import { IOTelSpanContext } from "./IOTelSpanContext";
+import { IOTelTracer } from "./IOTelTracer";
+import { IOTelTracerOptions } from "./IOTelTracerOptions";
+import { IOTelTracerProvider } from "./IOTelTracerProvider";
 
 /**
  * IOTelTraceApi provides an interface definition for the OpenTelemetry TraceAPI

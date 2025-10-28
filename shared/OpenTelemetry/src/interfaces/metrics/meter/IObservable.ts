@@ -1,4 +1,4 @@
-import { IOTelAttributes } from "@microsoft/applicationinsights-core-js";
+import { IOTelAttributes } from "../../IOTelAttributes";
 
 /**
  * Base interface for all Observable metrics

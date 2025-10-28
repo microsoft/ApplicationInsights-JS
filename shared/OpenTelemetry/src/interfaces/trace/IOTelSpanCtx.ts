@@ -1,7 +1,13 @@
-import {
-    IOTelAttributes, IOTelContext, IOTelInstrumentationScope, IOTelLink, IOTelResource, IOTelSpanContext, IReadableSpan, OTelTimeInput
-} from "@microsoft/applicationinsights-core-js";
+
 import { IOTelApi } from "../IOTelApi";
+import { IOTelAttributes } from "../IOTelAttributes";
+import { IOTelContext } from "../context/IOTelContext";
+import { IOTelResource } from "../resources/IOTelResource";
+import { OTelTimeInput } from "../time";
+import { IOTelInstrumentationScope } from "./IOTelInstrumentationScope";
+import { IOTelLink } from "./IOTelLink";
+import { IOTelSpanContext } from "./IOTelSpanContext";
+import { IReadableSpan } from "./IReadableSpan";
 
 /**
  * The context to use for creating a Span

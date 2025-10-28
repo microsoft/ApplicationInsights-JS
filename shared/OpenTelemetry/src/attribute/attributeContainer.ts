@@ -1,10 +1,13 @@
-import {
-    IOTelAttributeLimits, IOTelAttributes, IOTelConfig, IOTelTraceCfg, IUnloadHook, OTelAttributeValue, eAttributeChangeOp
-} from "@microsoft/applicationinsights-core-js";
+import { IUnloadHook } from "@microsoft/applicationinsights-common";
 import {
     CreateIteratorContext, ICachedValue, arrForEach, arrIndexOf, createCachedValue, createIterator, getLength, isFunction, isObject,
     isUndefined, iterForOf, objCreate, objDefine, objDefineProps, objForEachKey, objIs, objKeys, safe, strSplit
 } from "@nevware21/ts-utils";
+import { eAttributeChangeOp } from "../enums/eAttributeChangeOp";
+import { IOTelAttributes, OTelAttributeValue } from "../interfaces/IOTelAttributes";
+import { IOTelAttributeLimits } from "../interfaces/config/IOTelAttributeLimits";
+import { IOTelConfig } from "../interfaces/config/IOTelConfig";
+import { IOTelTraceCfg } from "../interfaces/config/IOTelTraceCfg";
 import { STR_EMPTY, UNDEFINED_VALUE } from "../internal/InternalConstants";
 import { handleAttribError } from "../internal/commonUtils";
 import { IAttributeChangeInfo, IAttributeContainer, eAttributeFilter } from "./IAttributeContainer";

@@ -1,4 +1,4 @@
-import { IOTelAttributes } from "@microsoft/applicationinsights-core-js";
+import { IOTelAttributes } from "../../IOTelAttributes";
 
 /**
  * Histogram metric instrument to record a distribution of values.

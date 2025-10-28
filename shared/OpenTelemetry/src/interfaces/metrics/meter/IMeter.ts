@@ -1,4 +1,5 @@
-import { IOTelAttributes } from "@microsoft/applicationinsights-core-js";
+
+import { IOTelAttributes } from "../../IOTelAttributes";
 import { IBatchObservableCallback } from "./IBatchObservableCallback";
 import { ICounter } from "./ICounter";
 import { IGauge } from "./IGauge";

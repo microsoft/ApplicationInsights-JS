@@ -1,4 +1,6 @@
-import { IDiagnosticLogger, IOTelConfig, IOTelTracerProvider } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger } from "@microsoft/applicationinsights-common";
+import { IOTelConfig } from "./config/IOTelConfig";
+import { IOTelTracerProvider } from "./trace/IOTelTracerProvider";
 
 /**
  * The context for the current IOTelApi instance and it's configuration

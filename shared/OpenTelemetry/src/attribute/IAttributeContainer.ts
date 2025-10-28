@@ -1,4 +1,6 @@
-import { IOTelAttributes, IUnloadHook, OTelAttributeValue, eAttributeChangeOp } from "@microsoft/applicationinsights-core-js";
+import { IUnloadHook } from "@microsoft/applicationinsights-common";
+import { eAttributeChangeOp } from "../enums/eAttributeChangeOp";
+import { IOTelAttributes, OTelAttributeValue } from "../interfaces/IOTelAttributes";
 
 /**
  * Identifies the source of an attribute value in iterator operations

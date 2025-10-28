@@ -15,13 +15,12 @@ const replaceValues = {
   "// Licensed under the MIT License.": ""
 };
 
-updateDistEsmFiles(replaceValues, banner, true, true, "dist-es2020");
+updateDistEsmFiles(replaceValues, banner, true, true, "dist-es5");
 
 export default createUnVersionedConfig(banner, 
   {
     namespace: "Microsoft.ApplicationInsights",
     version: version,
-    targetType: "es2020",
     node: {
       entryPoint: entryPointName, 
       outputName: entryPointName

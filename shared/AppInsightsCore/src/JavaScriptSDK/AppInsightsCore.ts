@@ -8,9 +8,14 @@ import {
     IPerfManager, IPlugin, IProcessTelemetryContext, IProcessTelemetryUpdateContext, ITelemetryInitializerHandler, ITelemetryItem,
     ITelemetryPlugin, ITelemetryPluginChain, ITelemetryUnloadState, ITelemetryUpdateState, IUnloadHook, IWatchDetails, SendRequestReason,
     TelemetryInitializerFunction, TelemetryUnloadReason, TelemetryUpdateReason, WatcherFunction, _IInternalDynamicConfigHandler,
-    _eInternalMessageId, createUniqueNamespace, eActiveStatus, eEventsDiscardedReason, eLoggingSeverity, eTraceHeadersMode, getSetValue,
-    isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString
+    _eInternalMessageId, createUniqueNamespace, eActiveStatus, eEventsDiscardedReason, eLoggingSeverity, eTraceHeadersMode,
+    findW3cTraceParent, getSetValue, isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString
 } from "@microsoft/applicationinsights-common";
+import { findW3cTraceState } from "@microsoft/applicationinsights-common/src/W3cTraceState";
+import {
+    IOTelContextManager, IOTelSpanContext, IOTelTracer, IOTelTracerOptions, IOTelTracerProvider, createContextManager, createOTelSpanContext,
+    createOTelTraceState
+} from "@microsoft/otel-core-js";
 import { IPromise, createPromise, createSyncAllSettledPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
     ILazyValue, ITimerHandler, arrAppend, arrForEach, arrIndexOf, createDeferredCachedValue, createTimeout, deepExtend, hasDocument,
@@ -23,14 +28,6 @@ import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole }
 import {
     STR_CHANNELS, STR_CREATE_PERF_MGR, STR_DISABLED, STR_EMPTY, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE
 } from "../InternalConstants";
-import { createContextManager } from "../OpenTelemetry/context/contextManager";
-import { IOTelContextManager } from "../OpenTelemetry/interfaces/context/IOTelContextManager";
-import { IOTelSpanContext } from "../OpenTelemetry/interfaces/trace/IOTelSpanContext";
-import { IOTelTracer } from "../OpenTelemetry/interfaces/trace/IOTelTracer";
-import { IOTelTracerOptions } from "../OpenTelemetry/interfaces/trace/IOTelTracerOptions";
-import { IOTelTracerProvider } from "../OpenTelemetry/interfaces/trace/IOTelTracerProvider";
-import { createOTelSpanContext } from "../OpenTelemetry/trace/spanContext";
-import { createOTelTraceState } from "../OpenTelemetry/trace/traceState";
 import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
 import { ChannelControllerPriority } from "./Constants";
 import { createCookieMgr } from "./CookieMgr";
@@ -44,8 +41,6 @@ import { _getPluginState, createDistributedTraceContext, initializePlugins, sort
 import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
 import { IUnloadHookContainer, createUnloadHookContainer } from "./UnloadHookContainer";
-import { findW3cTraceParent } from "./W3cTraceParent";
-import { findW3cTraceState } from "./W3cTraceState";
 
 const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";

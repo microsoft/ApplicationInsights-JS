@@ -1,5 +1,8 @@
-import { IOTelContext, IOTelSpanOptions, IOTelTracer, IOTelTracerOptions, IReadableSpan } from "@microsoft/applicationinsights-core-js";
-import { IOTelApi } from "./IOTelApi";
+import { IOTelContext } from "./context/IOTelContext";
+import { IOTelSpanOptions } from "./trace/IOTelSpanOptions";
+import { IOTelTracer } from "./trace/IOTelTracer";
+import { IOTelTracerOptions } from "./trace/IOTelTracerOptions";
+import { IReadableSpan } from "./trace/IReadableSpan";
 
 /**
  * The context for the current IOTelSdk instance and it's configuration

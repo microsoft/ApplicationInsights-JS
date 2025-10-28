@@ -9,13 +9,11 @@ import { LoggingEnumTests } from "./LoggingEnum.Tests";
 import { DynamicTests } from "./Dynamic.Tests";
 import { UpdateConfigTests } from "./UpdateConfig.Tests";
 import { EventsDiscardedReasonTests } from "./EventsDiscardedReason.Tests";
-import { W3cTraceParentTests } from "./W3cTraceParentTests";
 import { DynamicConfigTests } from "./DynamicConfig.Tests";
 import { SendPostManagerTests } from './SendPostManager.Tests';
 // import { StatsBeatTests } from './StatsBeat.Tests';
 import { OTelTraceApiTests } from './OpenTelemetry/traceState.Tests';
 import { OpenTelemetryErrorsTests } from './OpenTelemetry/errors.Tests';
-import { W3cTraceStateTests } from './W3TraceState.Tests';
 import { ThrottleMgrTest } from "./ThrottleMgr.tests";
 
 export function runTests() {
@@ -35,10 +33,8 @@ export function runTests() {
     // TODO: Enable tests
     //new UpdateConfigTests().registerTests();
     new EventsDiscardedReasonTests().registerTests();
-    new W3cTraceParentTests().registerTests();
     new OTelTraceApiTests().registerTests();
     new OpenTelemetryErrorsTests().registerTests();
-    new W3cTraceStateTests().registerTests();
     // new StatsBeatTests(false).registerTests();
     // new StatsBeatTests(true).registerTests();
     new SendPostManagerTests().registerTests();

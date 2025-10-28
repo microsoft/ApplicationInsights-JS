@@ -1,7 +1,9 @@
-import { BaseTelemetryPlugin, IOTelConfig, IOTelTracerProvider } from "@microsoft/applicationinsights-core-js";
-import { IOTelApi } from "./IOTelApi";
 
-export interface IOTelSdk extends BaseTelemetryPlugin, IOTelTracerProvider {
+import { IOTelApi } from "./IOTelApi";
+import { IOTelConfig } from "./config/IOTelConfig";
+import { IOTelTracerProvider } from "./trace/IOTelTracerProvider";
+
+export interface IOTelSdk extends IOTelTracerProvider {
     cfg: IOTelConfig;
 
     api: IOTelApi

@@ -48,7 +48,6 @@ export { throwAggregationError } from "./JavaScriptSDK/AggregationError";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseTelemetryPlugin } from "./JavaScriptSDK/BaseTelemetryPlugin";
 export { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "@microsoft/applicationinsights-common";
-export { Undefined, newGuid, generateW3CId } from "./JavaScriptSDK/CoreUtils";
 export { runTargetUnload, doUnloadAll } from "./JavaScriptSDK/AsyncUtils";
 export {
     normalizeJsName, toISOString, getExceptionName, strContains, setValue, getSetValue,
@@ -100,101 +99,9 @@ export {
 export { getDebugListener, getDebugExt } from "./JavaScriptSDK/DbgExtensionUtils"
 export { UnloadHandler, IUnloadHandlerContainer, createUnloadHandlerContainer } from "./JavaScriptSDK/UnloadHandlerContainer";
 export { IUnloadHookContainer, createUnloadHookContainer,  _testHookMaxUnloadHooksCb } from "./JavaScriptSDK/UnloadHookContainer";
-export {
-    createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent,
-    findAllScripts
-} from "./JavaScriptSDK/W3cTraceParent";
 export { ThrottleMgr } from "./Diagnostics/ThrottleMgr";
 
 // Dynamic Config definitions
 export { createDynamicConfig, onConfigChange } from "./Config/DynamicConfig";
 export { getDynamicConfigHandler, blockDynamicConversion, forceDynamicConversion } from "./Config/DynamicSupport";
 export { cfgDfValidate, cfgDfMerge, cfgDfBoolean, cfgDfFunc, cfgDfString, cfgDfSet, cfgDfBlockPropValue } from "./Config/ConfigDefaultHelpers";
-
-// W3c TraceState support
-export { createW3cTraceState, findW3cTraceState, isW3cTraceState, snapshotW3cTraceState } from "./JavaScriptSDK/W3cTraceState";
-
-// ==========================================================================
-// OpenTelemetry exports
-// ==========================================================================
-
-// Context
-export { createContextManager } from "./OpenTelemetry/context/contextManager";
-export { createContext } from "./OpenTelemetry/context/context";
-
-// Enums
-export { eOTelSamplingDecision, OTelSamplingDecision } from "./OpenTelemetry/enums/trace/OTelSamplingDecision";
-export { eOTelSpanKind, OTelSpanKind } from "./OpenTelemetry/enums/trace/OTelSpanKind";
-export { eOTelSpanStatusCode, OTelSpanStatusCode } from "./OpenTelemetry/enums/trace/OTelSpanStatus";
-
-// OpenTelemetry Attribute Support
-export { eAttributeChangeOp, AttributeChangeOp } from "./OpenTelemetry/enums/eAttributeChangeOp";
-
-// ---------------------------------------------------------------------------
-// Interfaces
-// ---------------------------------------------------------------------------
-
-// Config
-export { IOTelAttributeLimits } from "./OpenTelemetry/interfaces/config/IOTelAttributeLimits";
-export { IOTelConfig } from "./OpenTelemetry/interfaces/config/IOTelConfig";
-export { IOTelErrorHandlers } from "./OpenTelemetry/interfaces/config/IOTelErrorHandlers";
-export { IOTelTraceCfg } from "./OpenTelemetry/interfaces/config/IOTelTraceCfg";
-
-// Context
-export { IOTelContextManager } from "./OpenTelemetry/interfaces/context/IOTelContextManager";
-export { IOTelContext } from "./OpenTelemetry/interfaces/context/IOTelContext";
-
-// Noop Support
-export { INoopProxyConfig } from "./OpenTelemetry/interfaces/noop/INoopProxyConfig";
-
-// Resources
-export { IOTelResource, OTelMaybePromise, OTelRawResourceAttribute } from "./OpenTelemetry/interfaces/resources/IOTelResource";
-
-// Baggage
-export { IOTelBaggage } from "./OpenTelemetry/interfaces/baggage/IOTelBaggage";
-export { IOTelBaggageEntry } from "./OpenTelemetry/interfaces/baggage/IOTelBaggageEntry";
-export { OTelBaggageEntryMetadata, otelBaggageEntryMetadataSymbol } from "./OpenTelemetry/interfaces/baggage/OTelBaggageEntryMetadata";
-
-// Trace
-export { IOTelIdGenerator } from "./OpenTelemetry/interfaces/trace/IOTelIdGenerator";
-export { IOTelInstrumentationScope } from "./OpenTelemetry/interfaces/trace/IOTelInstrumentationScope";
-export { IOTelLink } from "./OpenTelemetry/interfaces/trace/IOTelLink";
-export { IOTelTracerCtx } from "./OpenTelemetry/interfaces/trace/IOTelTracerCtx";
-export { IOTelTraceState } from "./OpenTelemetry/interfaces/trace/IOTelTraceState";
-export { IReadableSpan } from "./OpenTelemetry/interfaces/trace/IReadableSpan";
-export { IOTelSampler } from "./OpenTelemetry/interfaces/trace/IOTelSampler";
-export { IOTelSamplingResult } from "./OpenTelemetry/interfaces/trace/IOTelSamplingResult";
-export { IOTelSpan } from "./OpenTelemetry/interfaces/trace/IOTelSpan";
-export { IOTelSpanContext } from "./OpenTelemetry/interfaces/trace/IOTelSpanContext";
-export { IOTelSpanOptions } from "./OpenTelemetry/interfaces/trace/IOTelSpanOptions";
-export { IOTelSpanStatus } from "./OpenTelemetry/interfaces/trace/IOTelSpanStatus";
-export { IOTelTimedEvent } from "./OpenTelemetry/interfaces/trace/IOTelTimedEvent";
-export { IOTelTracerProvider } from "./OpenTelemetry/interfaces/trace/IOTelTracerProvider";
-export { IOTelTracer } from "./OpenTelemetry/interfaces/trace/IOTelTracer";
-export { IOTelTracerOptions } from "./OpenTelemetry/interfaces/trace/IOTelTracerOptions";
-
-// Noop
-export { createNoopContextMgr } from "./OpenTelemetry/noop/noopContextMgr";
-export { _noopThis, _noopVoid } from "./OpenTelemetry/noop/noopHelpers";
-export { createNoopProxy } from "./OpenTelemetry/noop/noopProxy";
-export { createNoopTracerProvider } from "./OpenTelemetry/noop/noopTracerProvider";
-
-// Trace
-export { createNonRecordingSpan } from "./OpenTelemetry/trace/nonRecordingSpan";
-export { isSpanContext, wrapDistributedTrace, createOTelSpanContext } from "./OpenTelemetry/trace/spanContext";
-export { createTracer } from "./OpenTelemetry/trace/tracer";
-export { createOTelTraceState, isOTelTraceState } from "./OpenTelemetry/trace/traceState";
-export {
-    deleteContextSpan, getContextSpan, setContextSpan, setContextSpanContext, getContextActiveSpanContext, isSpanContextValid, wrapSpanContext,
-    isReadableSpan, isTracingSuppressed, suppressTracing, unsuppressTracing
-} from "./OpenTelemetry/trace/utils";
-
-// OpenTelemetry Error Classes
-export { OpenTelemetryError, OpenTelemetryErrorConstructor, getOpenTelemetryError, throwOTelError } from "./OpenTelemetry/errors/OTelError";
-export { OTelInvalidAttributeError, throwOTelInvalidAttributeError } from "./OpenTelemetry/errors/OTelInvalidAttributeError";
-export { OTelNotImplementedError, throwOTelNotImplementedError } from "./OpenTelemetry/errors/OTelNotImplementedError";
-export { OTelSpanError, throwOTelSpanError } from "./OpenTelemetry/errors/OTelSpanError";
-
-export { IOTelAttributes, OTelAttributeValue, ExtendedOTelAttributeValue } from "./OpenTelemetry/interfaces/IOTelAttributes";
-export { OTelException, IOTelExceptionWithCode, IOTelExceptionWithMessage, IOTelExceptionWithName } from "./OpenTelemetry/interfaces/IException";
-export { IOTelHrTime, OTelTimeInput } from "./OpenTelemetry/interfaces/time";

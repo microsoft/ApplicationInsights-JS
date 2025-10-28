@@ -1,4 +1,5 @@
-import { IOTelConfig, OTelRawResourceAttribute } from "@microsoft/applicationinsights-core-js";
+import { IOTelConfig } from "../config/IOTelConfig";
+import { OTelRawResourceAttribute } from "../resources/IOTelResource";
 
 export interface IOTelResourceCtx {
     cfg: IOTelConfig;

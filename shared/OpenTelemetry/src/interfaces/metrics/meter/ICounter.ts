@@ -1,4 +1,4 @@
-import { IOTelAttributes } from "@microsoft/applicationinsights-core-js";
+import { IOTelAttributes } from "../../IOTelAttributes";
 
 /**
  * Counter is the most common synchronous instrument. This instrument supports

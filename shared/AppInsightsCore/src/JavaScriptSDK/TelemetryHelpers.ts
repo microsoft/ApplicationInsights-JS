@@ -3,14 +3,13 @@
 
 import {
     IAppInsightsCore, IDistributedTraceContext, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryPlugin,
-    ITelemetryPluginChain, ITelemetryUnloadState, IUnloadableComponent, IW3cTraceState, createElmNodeData, getLocation
+    ITelemetryPluginChain, ITelemetryUnloadState, IUnloadableComponent, IW3cTraceState, createElmNodeData, generateW3CId, getLocation,
+    isValidSpanId, isValidTraceId
 } from "@microsoft/applicationinsights-common";
+import { createW3cTraceState } from "@microsoft/applicationinsights-common/src/W3cTraceState";
+import { IOTelSpanContext } from "@microsoft/otel-core-js";
 import { arrForEach, isFunction, objDefineProps } from "@nevware21/ts-utils";
 import { STR_CORE, STR_EMPTY, STR_PRIORITY, STR_PROCESS_TELEMETRY, UNDEFINED_VALUE } from "../InternalConstants";
-import { IOTelSpanContext } from "../OpenTelemetry/interfaces/trace/IOTelSpanContext";
-import { generateW3CId } from "./CoreUtils";
-import { isValidSpanId, isValidTraceId } from "./W3cTraceParent";
-import { createW3cTraceState } from "./W3cTraceState";
 
 export interface IPluginState {
     core?: IAppInsightsCore;

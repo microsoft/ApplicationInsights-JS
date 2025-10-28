@@ -1,8 +1,10 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
-import { eAttributeChangeOp, IOTelAttributes, IOTelConfig } from "@microsoft/applicationinsights-core-js";
 import { objKeys } from "@nevware21/ts-utils";
 import { addAttributes, createAttributeContainer, createAttributeSnapshot, isAttributeContainer } from "../../../../src/attribute/attributeContainer";
 import { eAttributeFilter, IAttributeChangeInfo } from "../../../../src/attribute/IAttributeContainer";
+import { IOTelConfig } from "../../../../src/interfaces/config/IOTelConfig";
+import { IOTelAttributes } from "../../../../src/interfaces/IOTelAttributes";
+import { eAttributeChangeOp } from "../../../../src/enums/eAttributeChangeOp";
 
 export class AttributeContainerTests extends AITestClass {
 

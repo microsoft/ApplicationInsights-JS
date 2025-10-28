@@ -1,4 +1,4 @@
-import { IOTelAttributes } from "@microsoft/applicationinsights-core-js";
+import { IOTelAttributes } from "../../IOTelAttributes";
 
 /**
  * UpDownCounter is a synchronous instrument and very similar to Counter except

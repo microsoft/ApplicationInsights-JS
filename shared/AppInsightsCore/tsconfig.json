@@ -21,7 +21,6 @@
     "removeComments": false
   },
   "include": [
-    "./src/**/*.ts"
-  ],
+    "./src/**/*.ts", "../AppInsightsCommon/src/Utils/CoreUtils.ts"],
   "exclude": ["node_modules/"]
 }
