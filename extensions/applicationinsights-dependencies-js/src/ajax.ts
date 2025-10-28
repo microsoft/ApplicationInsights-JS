@@ -6,7 +6,7 @@ import {
     DisabledPropertyName, IConfig, ICorrelationConfig, IDependencyTelemetry, IRequestContext, ITelemetryContext, PropertiesPluginIdentifier,
     RemoteDependencyData, RequestHeaders, correlationIdCanIncludeCorrelationHeader, correlationIdGetCorrelationContext,
     createDistributedTraceContextFromTrace, createTelemetryItem, createTraceParent, dateTimeUtilsNow, eDistributedTracingModes,
-    eRequestHeaders, formatTraceParent, isInternalApplicationInsightsEndpoint, generateW3CId
+    eRequestHeaders, formatTraceParent, generateW3CId, isInternalApplicationInsightsEndpoint
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICustomProperties, IDistributedTraceContext,

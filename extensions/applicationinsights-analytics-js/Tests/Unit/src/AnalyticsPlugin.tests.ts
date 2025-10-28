@@ -1,31 +1,31 @@
-import { 
-    Assert, AITestClass, PollingAssert, EventValidator, TraceValidator, ExceptionValidator, 
+import {
+    Assert, AITestClass, PollingAssert, EventValidator, TraceValidator, ExceptionValidator,
     MetricValidator, PageViewPerformanceValidator, PageViewValidator, RemoteDepdencyValidator
 } from "@microsoft/ai-test-framework";
 import { SinonStub, SinonSpy } from 'sinon';
-import { 
-    Exception, SeverityLevel, Event, Trace, PageViewPerformance, IConfig, IExceptionInternal, 
-    AnalyticsPluginIdentifier, IAppInsights, Metric, PageView, RemoteDependencyData, utlCanUseLocalStorage, createDomEvent 
+import {
+    Exception, SeverityLevel, Event, Trace, PageViewPerformance, IConfig, IExceptionInternal,
+    AnalyticsPluginIdentifier, IAppInsights, Metric, PageView, RemoteDependencyData, utlCanUseLocalStorage, createDomEvent, findAllScripts
 } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj, __getRegisteredEvents, createCookieMgr, findAllScripts } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj, __getRegisteredEvents, createCookieMgr } from "@microsoft/applicationinsights-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js"
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { AnalyticsPlugin } from "../../../src/JavaScriptSDK/AnalyticsPlugin";
 
 declare class ExceptionHelper {
-    capture: (appInsights:IAppInsights) => void;
-    captureStrict: (appInsights:IAppInsights) => void;
-    throw: (value:any) => void;
+    capture: (appInsights: IAppInsights) => void;
+    captureStrict: (appInsights: IAppInsights) => void;
+    throw: (value: any) => void;
     throwCors: () => void;
-    throwStrict: (value:any) => void;
+    throwStrict: (value: any) => void;
     throwRuntimeException: (timeoutFunc: VoidFunction) => void;
     throwStrictRuntimeException: (timeoutFunc: VoidFunction) => void;
 };
 
 export class AnalyticsPluginTests extends AITestClass {
-    private _onerror:any = null;
-    private trackSpy:SinonSpy;
-    private throwInternalSpy:SinonSpy;
+    private _onerror: any = null;
+    private trackSpy: SinonSpy;
+    private throwInternalSpy: SinonSpy;
     private exceptionHelper: any = new ExceptionHelper();
     private cookieMgr = createCookieMgr();
 
@@ -56,7 +56,7 @@ export class AnalyticsPluginTests extends AITestClass {
         window.onerror = this._onerror;
     }
 
-    public causeException(cb:Function) {
+    public causeException(cb: Function) {
         AITestClass.orgSetTimeout(() => {
             cb();
         }, 0);
@@ -592,21 +592,21 @@ export class AnalyticsPluginTests extends AITestClass {
                 let script2 = window.document.createElement("script");
                 script2.src = "https://www.test.com/test.js";
                 script2.innerHTML = "test tests";
-                script2.setAttribute("async", ""); 
+                script2.setAttribute("async", "");
                 window.document.body.appendChild(script);
                 window.document.body.appendChild(script2);
 
 
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
-                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                appInsights.trackException({ error: new Error(), severityLevel: SeverityLevel.Critical });
                 Assert.ok(trackStub.calledOnce, "single exception is tracked");
                 const baseData = (trackStub.args[0][0] as ITelemetryItem).baseData as IExceptionInternal;
                 const prop = baseData.properties;
                 Assert.equal(-1, JSON.stringify(prop).indexOf("https://www.example.com/test.js"), "script info is not included");
-                
+
                 appInsights.config.expCfg.inclScripts = true;
                 this.clock.tick(1);
-                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                appInsights.trackException({ error: new Error(), severityLevel: SeverityLevel.Critical });
                 Assert.ok(trackStub.calledTwice, "single exception is tracked");
                 const baseData2 = (trackStub.args[1][0] as ITelemetryItem).baseData as IExceptionInternal;
                 const prop2 = baseData2.properties;
@@ -636,19 +636,19 @@ export class AnalyticsPluginTests extends AITestClass {
                 core.initialize(config, [appInsights, channel, properties]);
 
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
-                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                appInsights.trackException({ error: new Error(), severityLevel: SeverityLevel.Critical });
                 Assert.ok(trackStub.calledOnce, "single exception is tracked");
                 const baseData = (trackStub.args[0][0] as ITelemetryItem).baseData as IExceptionInternal;
                 const prop = baseData.properties;
                 Assert.equal(-1, JSON.stringify(prop).indexOf("test message"), "log info is not included");
-                
+
                 let applelist = new Array(49).fill("apple");
                 // check maxLength default value
                 appInsights.config.expCfg.expLog = () => {
-                    return {logs: applelist.concat(['pear', 'banana'])};
+                    return { logs: applelist.concat(['pear', 'banana']) };
                 };;
                 this.clock.tick(1);
-                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                appInsights.trackException({ error: new Error(), severityLevel: SeverityLevel.Critical });
                 Assert.ok(trackStub.calledTwice, "second exception is tracked");
                 const baseData2 = (trackStub.args[1][0] as ITelemetryItem).baseData as IExceptionInternal;
                 const prop2 = baseData2.properties;
@@ -660,12 +660,12 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 // check maxLength would truncate the log info
                 let myLogFunction = () => {
-                    return {logs: ['test message', 'check message', 'banana']};
+                    return { logs: ['test message', 'check message', 'banana'] };
                 };
                 appInsights.config.expCfg.expLog = myLogFunction;
                 appInsights.config.expCfg.maxLogs = 2;
                 this.clock.tick(1);
-                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                appInsights.trackException({ error: new Error(), severityLevel: SeverityLevel.Critical });
                 this.clock.tick(1);
                 Assert.ok(trackStub.calledThrice, "third exception is tracked");
                 const baseData3 = (trackStub.args[2][0] as ITelemetryItem).baseData as IExceptionInternal;
@@ -687,7 +687,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
-                    {instrumentationKey: iKey},
+                    { instrumentationKey: iKey },
                     [plugin]
                 );
                 const appInsights = new AnalyticsPlugin();
@@ -698,7 +698,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 core.addPlugin(appInsights);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
-    
+
                 let envelope: ITelemetryItem;
                 const test = (action, expectedEnvelopeType, expectedDataType, test?: () => void) => {
                     action();
@@ -706,15 +706,15 @@ export class AnalyticsPluginTests extends AITestClass {
                     Assert.equal("", envelope.iKey, "envelope iKey");
                     Assert.equal(expectedEnvelopeType, envelope.name, "envelope name");
                     Assert.equal(expectedDataType, envelope.baseType, "data type name");
-                    if (typeof test === 'function') {test();}
+                    if (typeof test === 'function') { test(); }
                     trackStub.reset();
                 };
 
                 // Test
-                test(() => appInsights.trackException({exception: new Error(), severityLevel: SeverityLevel.Critical}), Exception.envelopeType, Exception.dataType)
-                test(() => appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical}), Exception.envelopeType, Exception.dataType)
-                test(() => appInsights.trackTrace({message: "some string"}), Trace.envelopeType, Trace.dataType);
-                test(() => appInsights.trackPageViewPerformance({name: undefined, uri: undefined, measurements: {somefield: 123}}, {vpHeight: 123}), PageViewPerformance.envelopeType, PageViewPerformance.dataType, () => {
+                test(() => appInsights.trackException({ exception: new Error(), severityLevel: SeverityLevel.Critical }), Exception.envelopeType, Exception.dataType)
+                test(() => appInsights.trackException({ error: new Error(), severityLevel: SeverityLevel.Critical }), Exception.envelopeType, Exception.dataType)
+                test(() => appInsights.trackTrace({ message: "some string" }), Trace.envelopeType, Trace.dataType);
+                test(() => appInsights.trackPageViewPerformance({ name: undefined, uri: undefined, measurements: { somefield: 123 } }, { vpHeight: 123 }), PageViewPerformance.envelopeType, PageViewPerformance.dataType, () => {
                     Assert.deepEqual(undefined, envelope.baseData.properties, 'Properties does not exist in Part B');
                 });
             }
@@ -733,7 +733,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin]
                 );
                 const appInsights = new AnalyticsPlugin();
@@ -741,9 +741,9 @@ export class AnalyticsPluginTests extends AITestClass {
                 const senderStub = this.sandbox.stub(appInsights.core, "track");
 
                 // Act
-                appInsights.trackException({exception: new Error(), severityLevel: SeverityLevel.Critical});
-                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
-                appInsights.trackException({exception: "Critical Exception" as any, severityLevel: SeverityLevel.Critical});
+                appInsights.trackException({ exception: new Error(), severityLevel: SeverityLevel.Critical });
+                appInsights.trackException({ error: new Error(), severityLevel: SeverityLevel.Critical });
+                appInsights.trackException({ exception: "Critical Exception" as any, severityLevel: SeverityLevel.Critical });
                 appInsights.trackException("Critical Exception" as any);
                 this.clock.tick(1);
 
@@ -766,7 +766,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin]
                 );
                 const appInsights = new AnalyticsPlugin();
@@ -774,7 +774,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
 
                 // Test
-                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                appInsights.trackException({ error: new Error(), severityLevel: SeverityLevel.Critical });
                 Assert.ok(trackStub.calledOnce, "single exception is tracked");
 
                 // Verify ver is a string, as required by CS4.0
@@ -796,7 +796,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin]
                 );
                 const appInsights = new AnalyticsPlugin();
@@ -804,13 +804,13 @@ export class AnalyticsPluginTests extends AITestClass {
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
 
                 // Test
-                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                appInsights.trackException({ error: new Error(), severityLevel: SeverityLevel.Critical });
                 Assert.ok(trackStub.calledOnce, "single exception is tracked");
                 Assert.equal(SeverityLevel.Critical, trackStub.firstCall.args[0].baseData.severityLevel);
 
                 trackStub.reset();
 
-                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Error});
+                appInsights.trackException({ error: new Error(), severityLevel: SeverityLevel.Error });
                 Assert.ok(trackStub.calledOnce, "single exception is tracked");
                 Assert.equal(SeverityLevel.Error, trackStub.firstCall.args[0].baseData.severityLevel);
             }
@@ -828,7 +828,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin]
                 );
                 const appInsights = new AnalyticsPlugin();
@@ -836,14 +836,14 @@ export class AnalyticsPluginTests extends AITestClass {
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
 
                 // Test
-                appInsights.trackException({exception: new Error("Critical Exception"), severityLevel: SeverityLevel.Critical});
+                appInsights.trackException({ exception: new Error("Critical Exception"), severityLevel: SeverityLevel.Critical });
                 Assert.ok(trackStub.calledOnce, "single exception is tracked");
                 Assert.equal(SeverityLevel.Critical, trackStub.firstCall.args[0].baseData.severityLevel);
                 Assert.equal("Critical Exception", trackStub.firstCall.args[0].baseData.exceptions[0].message);
 
                 trackStub.reset();
 
-                appInsights.trackException({exception: "String Exception" as any, severityLevel: SeverityLevel.Error});
+                appInsights.trackException({ exception: "String Exception" as any, severityLevel: SeverityLevel.Error });
                 Assert.ok(trackStub.calledOnce, "single exception is tracked");
                 Assert.equal(SeverityLevel.Error, trackStub.firstCall.args[0].baseData.severityLevel);
                 Assert.equal("String Exception", trackStub.firstCall.args[0].baseData.exceptions[0].message);
@@ -882,7 +882,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin]
                 );
                 const appInsights = new AnalyticsPlugin();
@@ -894,7 +894,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 this.sandbox.stub(appInsights, "trackException").throws(unexpectedError);
 
                 // Act
-                appInsights._onerror({message: "msg", url: "some://url", lineNumber: 123, columnNumber: 456, error: unexpectedError});
+                appInsights._onerror({ message: "msg", url: "some://url", lineNumber: 123, columnNumber: 456, error: unexpectedError });
 
                 // Assert
                 Assert.equal(1, throwSpy.callCount);
@@ -917,7 +917,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin]
                 );
                 const appInsights = new AnalyticsPlugin();
@@ -927,7 +927,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 const stub = this.sandbox.stub(appInsights, "trackException").throws(unexpectedError);
 
                 // Act
-                appInsights._onerror({message: "any message", url: "any://url", lineNumber: 123, columnNumber: 456, error: unexpectedError});
+                appInsights._onerror({ message: "any message", url: "any://url", lineNumber: 123, columnNumber: 456, error: unexpectedError });
 
                 // Test
                 const dumpExMsg = throwSpy.args[0][3].exception;
@@ -951,7 +951,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    { instrumentationKey: "key" },
                     [plugin]
                 );
                 const appInsights = new AnalyticsPlugin();
@@ -962,7 +962,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 this.sandbox.stub(appInsights, "trackException").throws(new CustomTestError("Simulated Error"));
                 const expectedErrorName: string = "CustomTestError";
 
-                appInsights._onerror({message: "some message", url: "some://url", lineNumber: 1234, columnNumber: 5678, error: new Error()});
+                appInsights._onerror({ message: "some message", url: "some://url", lineNumber: 1234, columnNumber: 5678, error: new Error() });
 
                 Assert.ok(throwInternal.calledOnce, "throwInternal called once");
                 const logMessage: string = throwInternal.getCall(0).args[2];
@@ -982,7 +982,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin]
                 );
                 const appInsights = new AnalyticsPlugin();
@@ -990,7 +990,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 const trackSpy = this.sandbox.spy(appInsights.core, "track");
 
                 // Act
-                appInsights._onerror({message: "Script error.", url: "", lineNumber: 0, columnNumber: 0, error: null});
+                appInsights._onerror({ message: "Script error.", url: "", lineNumber: 0, columnNumber: 0, error: null });
 
                 // Assert
                 Assert.equal(document.URL, trackSpy.args[0][0].baseData.url);
@@ -1009,7 +1009,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin]
                 );
                 const appInsights = new AnalyticsPlugin();
@@ -1018,7 +1018,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 // Act
                 // Last arg is not an error/null which will be treated as not CORS issue
-                appInsights._onerror({message: "Script error.", url: "", lineNumber: 0, columnNumber: 0, error: new Object() as any});
+                appInsights._onerror({ message: "Script error.", url: "", lineNumber: 0, columnNumber: 0, error: new Object() as any });
 
                 // Assert
                 // properties are passed as a 3rd parameter
@@ -1038,7 +1038,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    { instrumentationKey: "key" },
                     [plugin]
                 );
                 const appInsights = new AnalyticsPlugin();
@@ -1054,7 +1054,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 this.sandbox.stub(appInsights, "trackException").throws(theError);
 
 
-                appInsights._onerror({message: "some message", url: "some://url", lineNumber: 1234, columnNumber: 5678, error: "the error message"});
+                appInsights._onerror({ message: "some message", url: "some://url", lineNumber: 1234, columnNumber: 5678, error: "the error message" });
 
                 Assert.ok(throwInternal.calledOnce, "throwInternal called once");
                 const logMessage: string = throwInternal.getCall(0).args[2];
@@ -1083,7 +1083,7 @@ export class AnalyticsPluginTests extends AITestClass {
                                 enableSessionStorageBuffer: false,
                                 maxBatchInterval: 1
                             }
-                        }                
+                        }
                     },
                     [sender]
                 );
@@ -1094,7 +1094,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
-                sender._sender = (payload:any[], isAsync:boolean) => {
+                sender._sender = (payload: any[], isAsync: boolean) => {
                     sender._onSuccess(payload, payload.length);
                 };
                 this.sandbox.spy()
@@ -1108,14 +1108,14 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 Assert.ok(!this.trackSpy.calledOnce, "track not called yet");
                 Assert.ok(!this.throwInternalSpy.called, "No internal errors");
-                
+
                 return this._asyncQueue()
                     .add(this.waitForExceptionPromise(1))
                     .add(() => {
                         let isLocal = window.location.protocol === "file:";
                         let exp = this.trackSpy.args[0];
                         const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
-                    
+
                         if (payloadStr.length > 0) {
                             const payload = JSON.parse(payloadStr[0]);
                             const data = payload.data;
@@ -1128,22 +1128,22 @@ export class AnalyticsPluginTests extends AITestClass {
                                     if (isLocal) {
                                         Assert.ok(ex.message.indexOf("Script error:") !== -1, "Make sure the error message is present [" + ex.message + "]");
                                         Assert.equal("String", ex.typeName, "Got the correct typename [" + ex.typeName + "]");
-                                } else {
-                                    Assert.ok(ex.message.indexOf("ug is not a function") !== -1, "Make sure the error message is present [" + ex.message + "]");
-                                    Assert.equal("TypeError", ex.typeName, "Got the correct typename [" + ex.typeName + "]");
-                                    Assert.ok(baseData.properties["columnNumber"], "has column number");
-                                    Assert.ok(baseData.properties["lineNumber"], "has Line number");
-                                }
+                                    } else {
+                                        Assert.ok(ex.message.indexOf("ug is not a function") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                        Assert.equal("TypeError", ex.typeName, "Got the correct typename [" + ex.typeName + "]");
+                                        Assert.ok(baseData.properties["columnNumber"], "has column number");
+                                        Assert.ok(baseData.properties["lineNumber"], "has Line number");
+                                    }
 
-                                Assert.ok(ex.stack.length > 0, "Has stack");
-                                Assert.ok(ex.parsedStack, "Stack was parsed");
-                                Assert.ok(ex.hasFullStack, "Stack has been decoded");
-                                Assert.ok(baseData.properties["url"], "has Url");
-                                Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
+                                    Assert.ok(ex.stack.length > 0, "Has stack");
+                                    Assert.ok(ex.parsedStack, "Stack was parsed");
+                                    Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                                    Assert.ok(baseData.properties["url"], "has Url");
+                                    Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
+                                }
                             }
                         }
-                    }
-                });
+                    });
             }
         });
 
@@ -1167,58 +1167,58 @@ export class AnalyticsPluginTests extends AITestClass {
                                 enableSessionStorageBuffer: false,
                                 maxBatchInterval: 1
                             }
-                            }                
-                        },
-                        [sender]
-                    );
-                    const appInsights = new AnalyticsPlugin();
-                    core.addPlugin(appInsights);
-                    appInsights.addTelemetryInitializer((item: ITelemetryItem) => {
-                        Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
-                    });
+                        }
+                    },
+                    [sender]
+                );
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
+                appInsights.addTelemetryInitializer((item: ITelemetryItem) => {
+                    Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
+                });
 
-                    this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
-                    sender._sender = (payload:any[], isAsync:boolean) => {
-                        sender._onSuccess(payload, payload.length);
-                    };
-                    this.sandbox.spy()
-                    this.trackSpy = this.sandbox.spy(sender, "_onSuccess");
+                this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
+                sender._sender = (payload: any[], isAsync: boolean) => {
+                    sender._onSuccess(payload, payload.length);
+                };
+                this.sandbox.spy()
+                this.trackSpy = this.sandbox.spy(sender, "_onSuccess");
 
-                    this.exceptionHelper.capture(appInsights);
-                    this.causeException(() => {
-                        this.exceptionHelper.throw("Test Text Error!");
-                    });
+                this.exceptionHelper.capture(appInsights);
+                this.causeException(() => {
+                    this.exceptionHelper.throw("Test Text Error!");
+                });
 
-                    Assert.ok(!this.trackSpy.calledOnce, "track not called yet");
-                    Assert.ok(!this.throwInternalSpy.called, "No internal errors");
-                
-                    return this._asyncQueue()
-                        .add(this.waitForExceptionPromise(1))
-                        .add(() => {
-                            let exp = this.trackSpy.args[0];
-                            const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
-                            if (payloadStr.length > 0) {
-                                const payload = JSON.parse(payloadStr[0]);
-                                const data = payload.data;
-                                Assert.ok(data, "Has Data");
-                                if (data) {
-                                    Assert.ok(data.baseData, "Has BaseData");
-                                    let baseData = data.baseData;
-                                    if (baseData) {
-                                        const ex = baseData.exceptions[0];
-                                        Assert.ok(ex.message.indexOf("Test Text Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
-                                        Assert.ok(baseData.properties["columnNumber"], "has column number");
-                                        Assert.ok(baseData.properties["lineNumber"], "has Line number");
-                                        Assert.equal("String", ex.typeName, "Got the correct typename");
-                                        Assert.ok(ex.stack.length > 0, "Has stack");
-                                        Assert.ok(ex.parsedStack, "Stack was parsed");
-                                        Assert.ok(ex.hasFullStack, "Stack has been decoded");
-                                        Assert.ok(baseData.properties["url"], "has Url");
-                                        Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
-                                    }
+                Assert.ok(!this.trackSpy.calledOnce, "track not called yet");
+                Assert.ok(!this.throwInternalSpy.called, "No internal errors");
+
+                return this._asyncQueue()
+                    .add(this.waitForExceptionPromise(1))
+                    .add(() => {
+                        let exp = this.trackSpy.args[0];
+                        const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
+                        if (payloadStr.length > 0) {
+                            const payload = JSON.parse(payloadStr[0]);
+                            const data = payload.data;
+                            Assert.ok(data, "Has Data");
+                            if (data) {
+                                Assert.ok(data.baseData, "Has BaseData");
+                                let baseData = data.baseData;
+                                if (baseData) {
+                                    const ex = baseData.exceptions[0];
+                                    Assert.ok(ex.message.indexOf("Test Text Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                    Assert.ok(baseData.properties["columnNumber"], "has column number");
+                                    Assert.ok(baseData.properties["lineNumber"], "has Line number");
+                                    Assert.equal("String", ex.typeName, "Got the correct typename");
+                                    Assert.ok(ex.stack.length > 0, "Has stack");
+                                    Assert.ok(ex.parsedStack, "Stack was parsed");
+                                    Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                                    Assert.ok(baseData.properties["url"], "has Url");
+                                    Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
                                 }
                             }
-                        });
+                        }
+                    });
             }
         });
 
@@ -1242,7 +1242,7 @@ export class AnalyticsPluginTests extends AITestClass {
                                 enableSessionStorageBuffer: false,
                                 maxBatchInterval: 1
                             }
-                        }                
+                        }
                     },
                     [sender]
                 );
@@ -1253,7 +1253,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
-                sender._sender = (payload:any[], isAsync:boolean) => {
+                sender._sender = (payload: any[], isAsync: boolean) => {
                     sender._onSuccess(payload, payload.length);
                 };
                 this.sandbox.spy()
@@ -1266,7 +1266,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 Assert.ok(!this.trackSpy.calledOnce, "track not called yet");
                 Assert.ok(!this.throwInternalSpy.called, "No internal errors");
-                
+
                 return this._asyncQueue()
                     .add(this.waitForExceptionPromise(1))
                     .add(() => {
@@ -1325,7 +1325,7 @@ export class AnalyticsPluginTests extends AITestClass {
                                 enableSessionStorageBuffer: false,
                                 maxBatchInterval: 1
                             }
-                        }                
+                        }
                     },
                     [sender]
                 );
@@ -1336,7 +1336,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
-                sender._sender = (payload:any[], isAsync:boolean) => {
+                sender._sender = (payload: any[], isAsync: boolean) => {
                     sender._onSuccess(payload, payload.length);
                 };
                 this.sandbox.spy()
@@ -1349,7 +1349,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 Assert.ok(!this.trackSpy.calledOnce, "track not called yet");
                 Assert.ok(!this.throwInternalSpy.called, "No internal errors");
-                
+
                 return this._asyncQueue()
                     .add(this.waitForExceptionPromise(1))
                     .add(() => {
@@ -1369,22 +1369,22 @@ export class AnalyticsPluginTests extends AITestClass {
                                         Assert.ok(ex.message.indexOf("Script error:") !== -1, "Make sure the error message is present [" + ex.message + "]");
                                         Assert.equal("String", ex.typeName, "Got the correct typename");
                                     } else {
-                                    Assert.ok(ex.message.indexOf("Test Text Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
-                                    Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
-                                    Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
-                                    Assert.ok(baseData.properties["columnNumber"], "has column number");
-                                    Assert.ok(baseData.properties["lineNumber"], "has Line number");
-                                }
+                                        Assert.ok(ex.message.indexOf("Test Text Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                        Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
+                                        Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
+                                        Assert.ok(baseData.properties["columnNumber"], "has column number");
+                                        Assert.ok(baseData.properties["lineNumber"], "has Line number");
+                                    }
 
-                                Assert.ok(ex.stack.length > 0, "Has stack");
-                                Assert.ok(ex.parsedStack, "Stack was parsed");
-                                Assert.ok(ex.hasFullStack, "Stack has been decoded");
-                                Assert.ok(baseData.properties["url"], "has Url");
-                                Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
+                                    Assert.ok(ex.stack.length > 0, "Has stack");
+                                    Assert.ok(ex.parsedStack, "Stack was parsed");
+                                    Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                                    Assert.ok(baseData.properties["url"], "has Url");
+                                    Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
+                                }
                             }
                         }
-                    }
-                });
+                    });
             }
         });
     }
@@ -1428,7 +1428,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    { instrumentationKey: "key" },
                     [plugin]
                 );
                 const appInsights = new AnalyticsPlugin();
@@ -1542,9 +1542,9 @@ export class AnalyticsPluginTests extends AITestClass {
                     this.onDone(() => {
                         core.unload(false);
                     });
-    
+
                     core.initialize(
-                        {instrumentationKey: "ikey"},
+                        { instrumentationKey: "ikey" },
                         [plugin]
                     );
                     const appInsights = new AnalyticsPlugin();
@@ -1574,9 +1574,9 @@ export class AnalyticsPluginTests extends AITestClass {
                     this.onDone(() => {
                         core.unload(false);
                     });
-    
+
                     core.initialize(
-                        {instrumentationKey: "ikey"},
+                        { instrumentationKey: "ikey" },
                         [plugin]
                     );
                     const appInsights = new AnalyticsPlugin();
@@ -1608,7 +1608,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin]
                 );
                 const appInsights = new AnalyticsPlugin();
@@ -1616,7 +1616,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
 
                 // Act
-                appInsights.trackMetric({name: "test metric", average: 0});
+                appInsights.trackMetric({ name: "test metric", average: 0 });
                 this.clock.tick(1);
 
                 // Verify
@@ -1626,7 +1626,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 // Act
                 for (let i = 0; i < 100; i++) {
-                    appInsights.trackMetric({name: "test metric", average: 0});
+                    appInsights.trackMetric({ name: "test metric", average: 0 });
                 }
                 this.clock.tick(1);
 
@@ -1672,8 +1672,8 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 // verify
                 const telemetry = trackStub.args[0][0];
-                Assert.equal(testValues.name,telemetry.baseData.name);
-                Assert.deepEqual({ "duration": "5"},telemetry.baseData.properties);
+                Assert.equal(testValues.name, telemetry.baseData.name);
+                Assert.deepEqual({ "duration": "5" }, telemetry.baseData.properties);
                 Assert.equal(undefined, telemetry.baseData.measurements.measurement);
             }
         });
@@ -1696,13 +1696,13 @@ export class AnalyticsPluginTests extends AITestClass {
                 // act
                 appInsights.startTrackEvent(testValues.name);
                 this.clock.tick(5);
-                appInsights.stopTrackEvent(testValues.name,testValues.properties,testValues.measurements);
+                appInsights.stopTrackEvent(testValues.name, testValues.properties, testValues.measurements);
                 Assert.ok(trackStub.calledOnce, "single event tracking stopped");
 
                 // verify
                 const telemetry = trackStub.args[0][0];
-                Assert.equal(testValues.name,telemetry.baseData.name);
-                Assert.equal(testValues.properties.property1,telemetry.baseData.properties.property1);
+                Assert.equal(testValues.name, telemetry.baseData.name);
+                Assert.equal(testValues.properties.property1, telemetry.baseData.properties.property1);
                 Assert.equal(testValues.properties.property2, telemetry.baseData.properties.property2);
                 Assert.equal(testValues.properties.refUri, telemetry.baseData.properties.refUri);
                 Assert.equal("5", telemetry.baseData.properties.duration);
@@ -1726,7 +1726,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin, appInsights]
                 );
 
@@ -1738,7 +1738,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 // act
                 appInsights.addTelemetryInitializer(telemetryInitializer.initializer);
-                appInsights.trackEvent({name: 'test event'});
+                appInsights.trackEvent({ name: 'test event' });
                 this.clock.tick(1);
 
                 // verify
@@ -1761,7 +1761,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin, appInsights]
                 );
 
@@ -1770,12 +1770,13 @@ export class AnalyticsPluginTests extends AITestClass {
                 const telemetryInitializer = {
                     initializer: (envelope) => {
                         envelope.name = nameOverride;
-                        return true;}
+                        return true;
+                    }
                 }
 
                 // act
                 appInsights.addTelemetryInitializer(telemetryInitializer.initializer);
-                appInsights.trackTrace({message: 'test message'});
+                appInsights.trackTrace({ message: 'test message' });
                 this.clock.tick(1);
 
                 // verify
@@ -1799,7 +1800,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin, appInsights]
                 );
 
@@ -1825,7 +1826,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 appInsights.addTelemetryInitializer(telemetryInitializer.initializer);
 
                 // act
-                appInsights.trackTrace({message: 'test message'});
+                appInsights.trackTrace({ message: 'test message' });
 
                 // verify
                 Assert.ok(trackStub.calledOnce, "sender should be called");
@@ -1849,7 +1850,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin, appInsights]
                 );
 
@@ -1862,7 +1863,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 appInsights.addTelemetryInitializer(initializer1.init);
                 appInsights.addTelemetryInitializer(initializer2.init);
 
-                appInsights.trackTrace({message: 'test message'});
+                appInsights.trackTrace({ message: 'test message' });
 
                 // verify
                 Assert.ok(spy1.calledOnce);
@@ -1883,20 +1884,24 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin, appInsights]
                 );
 
-                const initializer1 = { init: (item: ITelemetryItem) => { 
-                    if (item.data !== undefined) {
-                        item.data.init1 = true;
+                const initializer1 = {
+                    init: (item: ITelemetryItem) => {
+                        if (item.data !== undefined) {
+                            item.data.init1 = true;
+                        }
                     }
-                } };
-                const initializer2 = { init: (item: ITelemetryItem) => { 
-                    if (item.data !== undefined) {
-                        item.data.init2 = true;
+                };
+                const initializer2 = {
+                    init: (item: ITelemetryItem) => {
+                        if (item.data !== undefined) {
+                            item.data.init2 = true;
+                        }
                     }
-                } };
+                };
                 const spy1 = this.sandbox.spy(initializer1, "init");
                 const spy2 = this.sandbox.spy(initializer2, "init");
 
@@ -1905,7 +1910,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 appInsights.addTelemetryInitializer(initializer2.init);
 
                 // Act
-                appInsights._onerror({message: "msg", url: "some://url", lineNumber: 123, columnNumber: 456, error: new Error()});
+                appInsights._onerror({ message: "msg", url: "some://url", lineNumber: 123, columnNumber: 456, error: new Error() });
 
                 // verify
                 Assert.ok(spy1.calledOnce);
@@ -1926,7 +1931,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin, appInsights]
                 );
 
@@ -1939,7 +1944,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 appInsights.addTelemetryInitializer(initializer1.init);
                 appInsights.addTelemetryInitializer(initializer2.init);
 
-                appInsights.trackException({exception: new Error(), severityLevel: SeverityLevel.Critical});
+                appInsights.trackException({ exception: new Error(), severityLevel: SeverityLevel.Critical });
 
                 // verify
                 Assert.ok(spy1.calledOnce);
@@ -1960,7 +1965,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin, appInsights]
                 );
 
@@ -1968,7 +1973,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 // act
                 appInsights.addTelemetryInitializer(() => false);
-                appInsights.trackTrace({message: 'test message'});
+                appInsights.trackTrace({ message: 'test message' });
 
                 // verify
                 Assert.ok(trackStub.notCalled);
@@ -1988,7 +1993,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin, appInsights]
                 );
 
@@ -1996,7 +2001,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 // act
                 appInsights.addTelemetryInitializer(() => { return; });
-                appInsights.trackTrace({message: 'test message'});
+                appInsights.trackTrace({ message: 'test message' });
 
                 // verify
                 Assert.ok(trackStub.calledOnce); // TODO: use sender
@@ -2016,7 +2021,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin, appInsights]
                 );
 
@@ -2024,7 +2029,7 @@ export class AnalyticsPluginTests extends AITestClass {
 
                 // act
                 appInsights.addTelemetryInitializer(() => true);
-                appInsights.trackTrace({message: 'test message'});
+                appInsights.trackTrace({ message: 'test message' });
 
                 // verify
                 Assert.ok(trackStub.calledOnce);
@@ -2044,7 +2049,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin, appInsights]
                 );
 
@@ -2054,7 +2059,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 appInsights.addTelemetryInitializer(() => true);
                 appInsights.addTelemetryInitializer(() => false);
 
-                appInsights.trackTrace({message: 'test message'});
+                appInsights.trackTrace({ message: 'test message' });
 
                 // verify
                 Assert.ok(trackStub.notCalled);
@@ -2074,7 +2079,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin, appInsights]
                 );
 
@@ -2084,7 +2089,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 appInsights.addTelemetryInitializer(() => false);
                 appInsights.addTelemetryInitializer(() => true);
 
-                appInsights.trackTrace({message: 'test message'});
+                appInsights.trackTrace({ message: 'test message' });
 
                 // verify
                 Assert.ok(trackStub.notCalled);
@@ -2104,7 +2109,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin, appInsights]
                 );
 
@@ -2114,7 +2119,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 appInsights.addTelemetryInitializer((() => "asdf") as any);
                 appInsights.addTelemetryInitializer(() => null);
                 appInsights.addTelemetryInitializer(() => undefined);
-                appInsights.trackTrace({message: 'test message'});
+                appInsights.trackTrace({ message: 'test message' });
 
                 // verify
                 Assert.ok(trackStub.calledOnce); // TODO: use sender
@@ -2134,7 +2139,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 });
 
                 core.initialize(
-                    {instrumentationKey: "ikey"},
+                    { instrumentationKey: "ikey" },
                     [plugin, appInsights]
                 );
 
@@ -2143,7 +2148,7 @@ export class AnalyticsPluginTests extends AITestClass {
                 // act
                 appInsights.addTelemetryInitializer(() => { throw new Error("Test error IGNORE"); });
                 appInsights.addTelemetryInitializer(() => { });
-                appInsights.trackTrace({message: 'test message'});
+                appInsights.trackTrace({ message: 'test message' });
 
                 // verify
                 Assert.ok(trackStub.calledOnce);
@@ -2173,7 +2178,7 @@ export class AnalyticsPluginTests extends AITestClass {
     private waitForExceptionPromise(expectedCount: number, action: string = "", includeInit: boolean = false) {
         const testContext = this._testContext;
         const self = this; // Capture 'this' context to use in the polling function
-        
+
         // Execute initial setup actions outside of the polling function
         const message = "polling: " + new Date().toISOString() + " " + action;
         Assert.ok(true, message);
@@ -2182,7 +2187,7 @@ export class AnalyticsPluginTests extends AITestClass {
         if (testContext && testContext.clock) {
             testContext.clock.tick(500);
         }
-        
+
         return PollingAssert.asyncTaskPollingAssert(function () {
             let argCount = 0;
             if (self.trackSpy && self.trackSpy.called) {
@@ -2190,7 +2195,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     argCount += call.length;
                 });
             }
-    
+
             Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking spy " + new Date().toISOString());
             try {
                 if (argCount >= expectedCount) {
@@ -2215,7 +2220,7 @@ export class AnalyticsPluginTests extends AITestClass {
                                 return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
                             case RemoteDependencyData.dataType:
                                 return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
-        
+
                             default:
                                 return EventValidator.EventValidator.Validate(payload, baseType);
                         }
@@ -2226,7 +2231,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     testContext.clock.tick(500);
                 }
             }
-            
+
             return false;
         }, "sender succeeded", 10, 1000);
     }
@@ -2265,7 +2270,7 @@ class ChannelPlugin implements IPlugin {
         }
     }
 
-    public processTelemetry(env: ITelemetryItem) {}
+    public processTelemetry(env: ITelemetryItem) { }
 
     setNextPlugin(next: any) {
         // no next setup
@@ -2281,8 +2286,8 @@ class ChannelPlugin implements IPlugin {
 
 class CustomTestError extends Error {
     constructor(message = "") {
-      super(message);
-      this.name = "CustomTestError";
-      this.message = message + " -- test error.";
+        super(message);
+        this.name = "CustomTestError";
+        this.message = message + " -- test error.";
     }
 }
