@@ -1,16 +1,15 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    IAppInsightsCore, IConfiguration, IDynamicConfigHandler, IPlugin, IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain
+    IAppInsightsCore, IConfiguration, IPlugin, IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain
 } from "@microsoft/applicationinsights-common";
 import { IOTelApi, IOTelConfig, IOTelSdk, IOTelTracer, IOTelTracerOptions } from "@microsoft/otel-core-js";
-import { ILazyValue, objDefineProps } from "@nevware21/ts-utils";
 
-interface TraceList {
-    name: string;
-    tracer: IOTelTracer;
-    version?: string;
-    schemaUrl?: string;
-}
+// interface TraceList {
+//     name: string;
+//     tracer: IOTelTracer;
+//     version?: string;
+//     schemaUrl?: string;
+// }
 
 // TODO: Enable
 // function _createSpanContext(parentSpanContext: SpanContext | null, idGenerator: IOTelIdGenerator): SpanContext {
@@ -57,18 +56,18 @@ export class OTelSdk implements IOTelSdk {
 
     constructor() {
         // NOTE!: DON'T set default values here, instead set them in the _initDefaults() function as it is also called during teardown()
-        let _configHandler: IDynamicConfigHandler<IOTelConfig>;
-        let _otelApi: ILazyValue<IOTelApi>;
-        let _tracers: { [key: string]: TraceList[] };
+        // let _configHandler: IDynamicConfigHandler<IOTelConfig>;
+        // let _otelApi: ILazyValue<IOTelApi>;
+        // let _tracers: { [key: string]: TraceList[] };
 
         dynamicProto(OTelSdk, this, (_self, _base) => {
             // Set the default values (also called during teardown)
             _initDefaults();
 
-            objDefineProps(_self, {
-                cfg: { g: () => _configHandler.cfg },
-                api: { g: () => _otelApi.v }
-            });
+            // objDefineProps(_self, {
+            //     cfg: { g: () => _configHandler.cfg },
+            //     api: { g: () => _otelApi.v }
+            // });
 
             // Creating the self.initialize = ()
             _self.initialize = (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain): void => {
@@ -83,10 +82,10 @@ export class OTelSdk implements IOTelSdk {
             // TODO: Enable
             //_self.getTracer = _getTracer;
 
-            
+
             // function _getTracer(name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer {
             //     let tracer: IOTelTracer;
-                
+
 
             // let tracerVer = version || STR_EMPTY;
             // let tracerSchema = options ? options.schemaUrl : null;
