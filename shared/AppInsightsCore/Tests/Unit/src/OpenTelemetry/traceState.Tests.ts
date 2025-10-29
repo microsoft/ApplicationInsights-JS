@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { createOTelTraceState } from "../../../../src/OpenTelemetry/trace/traceState";
+import { createOTelTraceState } from "@microsoft/otel-core-js";
 import { strRepeat } from "@nevware21/ts-utils";
 
 export class OTelTraceApiTests extends AITestClass {

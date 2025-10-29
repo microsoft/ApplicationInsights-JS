@@ -24,6 +24,11 @@
       "projectFolder": "shared/AppInsightsCommon",
       "shouldPublish": true
     },
+     {
+      "packageName": "@microsoft/otel-core-js",
+      "projectFolder": "shared/OpenTelemetry",
+      "shouldPublish": true
+    },
     {
       "packageName": "@microsoft/applicationinsights-core-js",
       "projectFolder": "shared/AppInsightsCore",
@@ -93,11 +98,6 @@
       "packageName": "@microsoft/applicationinsights-cfgsync-js",
       "projectFolder": "extensions/applicationinsights-cfgsync-js",
       "shouldPublish": false
-    },
-    {
-      "packageName": "@microsoft/otel-core-js",
-      "projectFolder": "shared/OpenTelemetry",
-      "shouldPublish": true
     }
   ]
 }

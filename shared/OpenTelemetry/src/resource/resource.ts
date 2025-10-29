@@ -1,9 +1,10 @@
-import { IOTelAttributes, IOTelResource, OTelAttributeValue, OTelRawResourceAttribute } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwait } from "@nevware21/ts-async";
 import { arrAppend, arrForEach, isPromiseLike, objDefineProps } from "@nevware21/ts-utils";
 import { IAttributeContainer } from "../attribute/IAttributeContainer";
 import { createAttributeContainer } from "../attribute/attributeContainer";
+import { IOTelAttributes, OTelAttributeValue } from "../interfaces/IOTelAttributes";
 import { IOTelResourceCtx } from "../interfaces/resource/IOTelResourceCtx";
+import { IOTelResource, OTelRawResourceAttribute } from "../interfaces/resources/IOTelResource";
 import { UNDEFINED_VALUE } from "../internal/InternalConstants";
 import { handleDebug, handleError } from "../internal/commonUtils";
 

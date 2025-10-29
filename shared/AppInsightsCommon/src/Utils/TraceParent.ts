@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach, isArray, isNullOrUndefined, isString, strLeft, strSubstr, strTrim } from "@nevware21/ts-utils";
+import { arrForEach, isArray, isNullOrUndefined, isString, strLeft, strTrim } from "@nevware21/ts-utils";
 import { eW3CTraceFlags } from "../Enums/W3CTraceFlags";
 import { ITelemetryTrace } from "../Interfaces/Context/ITelemetryTrace";
 import { IDistributedTraceContext } from "../Interfaces/IDistributedTraceContext";
 import { ITraceParent } from "../Interfaces/ITraceParent";
 import { STR_EMPTY } from "../InternalConstants";
+import { generateW3CId } from "./CoreUtils";
 import { findMetaTag, findNamedServerTiming } from "./EnvUtils";
-import { random32 } from "./RandomHelper";
 
 const TRACE_PARENT_REGEX = /^([\da-f]{2})-([\da-f]{32})-([\da-f]{16})-([\da-f]{2})(-[^\s]{1,64})?$/i;
 const DEFAULT_VERSION = "00";
@@ -17,32 +17,6 @@ export const INVALID_TRACE_ID = "00000000000000000000000000000000";
 export const INVALID_SPAN_ID = "0000000000000000";
 const SAMPLED_FLAG = 0x01;
 
-/**
- * generate W3C trace id
- */
-function _generateW3CId(): string {
-    const hexValues = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
-
-    // rfc4122 version 4 UUID without dashes and with lowercase letters
-    let oct = STR_EMPTY;
-    let tmp: number;
-    for (let lp = 0; lp < 4; lp++) {
-        tmp = random32();
-        oct +=
-            hexValues[tmp & 0xF] +
-            hexValues[tmp >> 4 & 0xF] +
-            hexValues[tmp >> 8 & 0xF] +
-            hexValues[tmp >> 12 & 0xF] +
-            hexValues[tmp >> 16 & 0xF] +
-            hexValues[tmp >> 20 & 0xF] +
-            hexValues[tmp >> 24 & 0xF] +
-            hexValues[tmp >> 28 & 0xF];
-    }
-
-    // "Set the two most significant bits (bits 6 and 7) of the clock_seq_hi_and_reserved to zero and one, respectively"
-    const clockSequenceHi = hexValues[8 + (random32() & 0x03) | 0];
-    return strSubstr(oct, 0, 8) + strSubstr(oct, 9, 4) + "4" + strSubstr(oct, 13, 3) + clockSequenceHi + strSubstr(oct, 16, 3) + strSubstr(oct, 19, 12);
-}
 
 function _isValid(value: string, len: number, invalidValue?: string): boolean {
     if (value && value.length === len && value !== invalidValue) {
@@ -83,8 +57,8 @@ function _formatFlags(value: number): string {
 export function createTraceParent(traceId?: string, spanId?: string, flags?: number, version?: string): ITraceParent {
     return {
         version: _isValid(version, 2, INVALID_VERSION) ? version : DEFAULT_VERSION,
-        traceId: isValidTraceId(traceId) ? traceId : _generateW3CId(),
-        spanId: isValidSpanId(spanId) ? spanId : strLeft(_generateW3CId(), 16),
+        traceId: isValidTraceId(traceId) ? traceId : generateW3CId(),
+        spanId: isValidSpanId(spanId) ? spanId : strLeft(generateW3CId(), 16),
         traceFlags: (!isNullOrUndefined(flags) && flags >= 0 && flags <= 0xFF ? flags : eW3CTraceFlags.Sampled)
     };
 }

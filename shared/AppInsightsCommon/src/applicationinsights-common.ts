@@ -166,3 +166,8 @@ export { createUniqueNamespace, createElmNodeData } from "./Utils/DataCacheHelpe
 export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
 export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";
 export const AnalyticsPluginIdentifier = "ApplicationInsightsAnalytics";
+
+// W3c TraceState support
+export { createW3cTraceState, findW3cTraceState, isW3cTraceState, snapshotW3cTraceState } from "./W3cTraceState";
+
+export { Undefined, newGuid, generateW3CId } from "./Utils/CoreUtils";

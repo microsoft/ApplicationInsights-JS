@@ -1,7 +1,8 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { IOTelErrorHandlers } from "@microsoft/applicationinsights-core-js";
 import { getGlobal } from "@nevware21/ts-utils";
 import { handleAttribError, handleDebug, handleError, handleNotImplemented, handleSpanError, handleWarn } from "../../../../src/internal/commonUtils";
+import { IOTelErrorHandlers } from "../../../../src/interfaces/config/IOTelErrorHandlers";
+
 
 export class CommonUtilsTests extends AITestClass {
 

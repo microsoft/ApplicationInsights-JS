@@ -18,8 +18,8 @@ const defaultConfigValues: IConfigDefaults<IConfiguration> = {
     connectionString: UNDEFINED_VALUE,
     endpointUrl: UNDEFINED_VALUE,
     instrumentationKey: UNDEFINED_VALUE,
-    featureOptIn:{
-        ["zipPayload"]: {mode: FeatureOptInMode.none}
+    featureOptIn: {
+        ["zipPayload"]: { mode: FeatureOptInMode.none }
     },
     extensionConfig: {}
 };
@@ -53,17 +53,17 @@ export class ApplicationInsights {
         }
 
         dynamicProto(ApplicationInsights, this, (_self) => {
-            
+
             // Define _self.config
             objDefine(_self, "config", {
                 g: () => _config
             });
 
             _initialize();
-          
+
             _self.initialize = _initialize;
             _self.track = _track;
-        
+
             proxyFunctions(_self, core, [
                 "flush",
                 "pollInternalLogs",
@@ -82,10 +82,10 @@ export class ApplicationInsights {
             function _initialize(): void {
                 let cfgHandler: IDynamicConfigHandler<IConfiguration & IConfig> = createDynamicConfig(config || ({} as any), defaultConfigValues);
                 _config = cfgHandler.cfg;
-    
+
                 core.addUnloadHook(onConfigChange(cfgHandler, () => {
-                    let configCs =  _config.connectionString;
-                
+                    let configCs = _config.connectionString;
+
                     if (isPromiseLike(configCs)) {
                         let ikeyPromise = createSyncPromise<string>((resolve, reject) => {
                             doAwaitResponse(configCs, (res) => {
@@ -109,7 +109,7 @@ export class ApplicationInsights {
                                 if (!res.rejected && curCs) {
                                     let resolvedCs = parseConnectionString(curCs);
                                     let ingest = resolvedCs.ingestionendpoint;
-                                    url = ingest? ingest + DEFAULT_BREEZE_PATH : url;
+                                    url = ingest ? ingest + DEFAULT_BREEZE_PATH : url;
                                 }
                                 resolve(url);
                             });
@@ -118,9 +118,9 @@ export class ApplicationInsights {
 
                         _config.instrumentationKey = ikeyPromise;
                         _config.endpointUrl = _config.userOverrideEndpointUrl || urlPromise;
-                    
+
                     }
-                    
+
                     if (isString(configCs)) {
                         const cs = parseConnectionString(configCs);
                         const ingest = cs.ingestionendpoint;
@@ -130,7 +130,7 @@ export class ApplicationInsights {
                     // userOverrideEndpointUrl have the highest priority
                     _config.endpointUrl = _config.userOverrideEndpointUrl ? _config.userOverrideEndpointUrl : _config.endpointUrl;
                 }));
-    
+
                 // initialize core
                 core.initialize(_config, [new Sender()]);
             }
@@ -266,7 +266,7 @@ export class ApplicationInsights {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
-    
+
 }
 
 export {

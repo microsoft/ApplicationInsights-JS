@@ -5,7 +5,7 @@
     "noImplicitAny": true,
     "module": "es6",
     "moduleResolution": "node",
-    "target": "es2020",
+    "target": "es5",
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
     "noEmitHelpers": true,
@@ -16,12 +16,14 @@
     "allowSyntheticDefaultImports": true,
     "declaration": true,
     "declarationDir": "build/types",
-    "outDir": "dist-es2020",
+    "outDir": "dist-es5",
     "rootDir": "./src",
     "removeComments": false
   },
   "include": [
     "./src/**/*.ts"
   ],
-  "exclude": ["node_modules/"]
+  "exclude": [
+    "node_modules/"
+  ]
 }

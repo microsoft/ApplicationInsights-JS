@@ -4,12 +4,7 @@
             "constEnums": [
                 "_eSetDynamicPropertyFlags",
                 "ePendingOp",
-                "CallbackType",
-                "eTraceStateKeyType",
-                "eAttributeChangeOp",
-                "eOTelSamplingDecision",
-                "eOTelSpanKind",
-                "eOTelSpanStatusCode"
+                "CallbackType"
             ]
         },
         "@microsoft/applicationinsights-perfmarkmeasure-js": {
@@ -19,6 +14,7 @@
             "constEnums": [
                 "eOfflineValue",
                 "eRequestHeaders",
+                "eTraceStateKeyType",
                 "eStorageType",
                 "FieldType",
                 "eDistributedTracingModes",
@@ -78,6 +74,10 @@
                 "eAttributeSource",
                 "AddAttributeResult",
                 "eAttributeFilter",
+                "eAttributeChangeOp",
+                "eOTelSamplingDecision",
+                "eOTelSpanKind",
+                "eOTelSpanStatusCode",
                 "eValueType"
             ]
         }

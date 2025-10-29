@@ -6,13 +6,13 @@ import {
     DisabledPropertyName, IConfig, ICorrelationConfig, IDependencyTelemetry, IRequestContext, ITelemetryContext, PropertiesPluginIdentifier,
     RemoteDependencyData, RequestHeaders, correlationIdCanIncludeCorrelationHeader, correlationIdGetCorrelationContext,
     createDistributedTraceContextFromTrace, createTelemetryItem, createTraceParent, dateTimeUtilsNow, eDistributedTracingModes,
-    eRequestHeaders, formatTraceParent, isInternalApplicationInsightsEndpoint
+    eRequestHeaders, formatTraceParent, generateW3CId, isInternalApplicationInsightsEndpoint
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICustomProperties, IDistributedTraceContext,
     IInstrumentCallDetails, IInstrumentHooksCallbacks, IPlugin, IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain,
     InstrumentFunc, InstrumentProto, _eInternalMessageId, _throwInternal, arrForEach, createDistributedTraceContext,
-    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eW3CTraceFlags, eventOn, fieldRedaction, generateW3CId,
+    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eW3CTraceFlags, eventOn, fieldRedaction,
     getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction, isNullOrUndefined, isString, isXhrSupported,
     mergeEvtNamespace, onConfigChange, strPrototype, strTrim
 } from "@microsoft/applicationinsights-core-js";
@@ -30,7 +30,7 @@ const STR_FETCH = "fetch";
 
 const ERROR_HEADER = "Failed to monitor XMLHttpRequest";
 const ERROR_PREFIX = ", monitoring data for this ajax call ";
-const ERROR_POSTFIX = ERROR_PREFIX +  "may be incorrect.";
+const ERROR_POSTFIX = ERROR_PREFIX + "may be incorrect.";
 const ERROR_NOT_SENT = ERROR_PREFIX + "won't be sent.";
 const CORRELATION_HEADER_ERROR = "Failed to get Request-Context correlation header as it may be not included in the response or not accessible.";
 const CUSTOM_REQUEST_CONTEXT_ERROR = "Failed to add custom defined request context as configured call back may missing a null check.";
@@ -48,9 +48,9 @@ interface _IInternalDependencyHandler<F> {
 function _supportsFetch(): (input: RequestInfo, init?: RequestInit) => Promise<Response> {
     let _global = getGlobal();
     if (!_global ||
-            isNullOrUndefined((_global as any).Request) ||
-            isNullOrUndefined((_global as any).Request[strPrototype]) ||
-            isNullOrUndefined(_global[STR_FETCH])) {
+        isNullOrUndefined((_global as any).Request) ||
+        isNullOrUndefined((_global as any).Request[strPrototype]) ||
+        isNullOrUndefined(_global[STR_FETCH])) {
         return null;
     }
 
@@ -117,7 +117,7 @@ function _supportsAjaxMonitoring(ajaxMonitorInstance: AjaxMonitor, ajaxDataId: s
  */
 const _getAjaxData = (xhr: XMLHttpRequestInstrumented, ajaxDataId: string): IAjaxRecordInternal => {
     if (xhr && ajaxDataId && xhr[AJAX_DATA_CONTAINER]) {
-        return (xhr[AJAX_DATA_CONTAINER].i || { })[ajaxDataId];
+        return (xhr[AJAX_DATA_CONTAINER].i || {})[ajaxDataId];
     }
 
     return null;
@@ -174,17 +174,17 @@ function _getFailedAjaxDiagnosticsMessage(xhr: XMLHttpRequestInstrumented, ajaxD
 }
 
 /** @ignore */
-function _throwInternalCritical(ajaxMonitorInstance:AjaxMonitor, msgId: _eInternalMessageId, message: string, properties?: Object, isUserAct?: boolean): void {
+function _throwInternalCritical(ajaxMonitorInstance: AjaxMonitor, msgId: _eInternalMessageId, message: string, properties?: Object, isUserAct?: boolean): void {
     _throwInternal(ajaxMonitorInstance[strDiagLog](), eLoggingSeverity.CRITICAL, msgId, message, properties, isUserAct);
 }
 
 /** @ignore */
-function _throwInternalWarning(ajaxMonitorInstance:AjaxMonitor, msgId: _eInternalMessageId, message: string, properties?: Object, isUserAct?: boolean): void {
+function _throwInternalWarning(ajaxMonitorInstance: AjaxMonitor, msgId: _eInternalMessageId, message: string, properties?: Object, isUserAct?: boolean): void {
     _throwInternal(ajaxMonitorInstance[strDiagLog](), eLoggingSeverity.WARNING, msgId, message, properties, isUserAct);
 }
 
 /** @Ignore */
-function _createErrorCallbackFunc(ajaxMonitorInstance: AjaxMonitor, internalMessage: _eInternalMessageId, message:string) {
+function _createErrorCallbackFunc(ajaxMonitorInstance: AjaxMonitor, internalMessage: _eInternalMessageId, message: string) {
     // tslint:disable-next-line
     return function (callDetails: IInstrumentCallDetails) {
         _throwInternalCritical(ajaxMonitorInstance,
@@ -197,7 +197,7 @@ function _createErrorCallbackFunc(ajaxMonitorInstance: AjaxMonitor, internalMess
     };
 }
 
-function _indexOf(value:string, match:string):number {
+function _indexOf(value: string, match: string): number {
     if (value && match) {
         return strIndexOf(value, match);
     }
@@ -287,10 +287,10 @@ function _processDependencyListeners(listeners: _IInternalDependencyHandler<Depe
                 }
             }
         });
-    
+
         result = _processDependencyContainer(core, listeners, details, "listener");
     }
-    
+
     return result;
 }
 
@@ -344,28 +344,28 @@ export interface IAjaxRecordData {
      * @returns The absolute URL string or null
      */
     getAbsoluteUrl(): string | null;
-    
+
     /**
      * Gets the sanitized path name for the request URL
      * @returns The sanitized path name string or null
      */
     getPathName(): string | null;
-    
+
     /**
      * The distributed trace context for the request containing trace ID, span ID, and trace flags
      */
     readonly traceCtx: IDistributedTraceContext;
-    
+
     /**
      * Object containing request headers that have been set for this request
      */
     requestHeaders: { [key: string]: string };
-    
+
     /**
      * Indicates whether the request was aborted (0 = not aborted, 1 = aborted)
      */
     aborted: number;
-    
+
     /**
      * Optional context object that can be set by dependency listeners
      */
@@ -383,112 +383,112 @@ export interface IAjaxRecordInternal extends IAjaxRecordData {
      * Indicates if the ajax call has completed
      */
     completed: boolean;
-    
+
     /**
      * Size of the request headers in bytes
      */
     requestHeadersSize: number;
-    
+
     /**
      * Duration of receiving the response in milliseconds
      */
     responseReceivingDuration: number;
-    
+
     /**
      * Duration of the callback execution in milliseconds
      */
     callbackDuration: number;
-    
+
     /**
      * Total duration of the ajax call in milliseconds
      */
     ajaxTotalDuration: number;
-    
+
     /**
      * URL of the page that initiated the request
      */
     pageUrl: string;
-    
+
     /**
      * The URL of the request
      */
     requestUrl: string;
-    
+
     /**
      * Size of the request in bytes
      */
     requestSize: number;
-    
+
     /**
      * HTTP method used for the request
      */
     method: string;
-    
+
     /**
      * Performance mark associated with this request
      */
     perfMark: PerformanceMark;
-    
+
     /**
      * Performance timing data from the Resource Timing API
      */
     perfTiming: PerformanceResourceTiming;
-    
+
     /**
      * Number of attempts to find performance data
      */
     perfAttempts?: number;
-    
+
     /**
      * Indicates if the request was made asynchronously
      */
     async?: boolean;
-    
+
     /**
      * Should the Error Status text be included in the response
      */
     errorStatusText?: boolean;
-    
+
     /**
      * HTTP status code of the response
      */
     status: string | number;
-    
+
     /**
      * Timestamp when the request was sent
      */
     requestSentTime: number;
-    
+
     /**
      * Timestamp when the first byte was received
      */
     responseStartedTime: number;
-    
+
     /**
      * Timestamp when the last byte was received
      */
     responseFinishedTime: number;
-    
+
     /**
      * Timestamp when the onreadystatechange callback finished
      */
     callbackFinishedTime: number;
-    
+
     /**
      * Timestamp when the ajax call ended
      */
     endTime: number;
-    
+
     /**
      * State tracking object for XHR monitoring
      */
     xhrMonitoringState: IXHRMonitoringState;
-    
+
     /**
      * Indicates if a JavaScript exception occurred in xhr.onreadystatechange code (1 if occurred, 0 otherwise)
      */
     clientFailure: number;
-    
+
     /**
      * Creates a telemetry item for tracking this ajax request
      * @param ajaxType - Type of the ajax request
@@ -497,7 +497,7 @@ export interface IAjaxRecordInternal extends IAjaxRecordData {
      * @returns Dependency telemetry item or null
      */
     CreateTrackItem(ajaxType: string, enableRequestHeaderTracking: boolean, getResponse: () => IAjaxRecordResponse): IDependencyTelemetry;
-    
+
     /**
      * Gets Part A properties for telemetry
      * @returns Object containing Part A properties or null
@@ -538,7 +538,7 @@ const _defaultConfig: IConfigDefaults<ICorrelationConfig> = objFreeze({
     enableAjaxPerfTracking: false,
     maxAjaxPerfLookupAttempts: 3,
     ajaxPerfLookupDelay: 25,
-    ignoreHeaders:[
+    ignoreHeaders: [
         "Authorization",
         "X-API-Key",
         "WWW-Authenticate"
@@ -593,7 +593,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
 
             _initDefaults();
 
-            _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
+            _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) => {
                 if (!_self.isInitialized()) {
                     _base.initialize(config, core, extensions, pluginChain);
 
@@ -622,7 +622,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
             _self.includeCorrelationHeaders = (ajaxData: IAjaxRecordInternal, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any => {
                 // Test Hook to allow the overriding of the location host
                 let currentWindowHost = (_self as any)["_currentWindowHost"] || _currentWindowHost;
-                
+
                 if (_processDependencyListeners(_dependencyListeners, _self.core, ajaxData, xhr, input, init)) {
                     if (input || input === "") { // Fetch
                         if (correlationIdCanIncludeCorrelationHeader(_extensionConfig, ajaxData.getAbsoluteUrl(), currentWindowHost)) {
@@ -643,7 +643,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                                     ajaxData.requestHeaders[RequestHeaders[eRequestHeaders.requestIdHeader]] = id;
                                 }
                             }
-                            const appId: string = _appId ||(_context && _context.appId());
+                            const appId: string = _appId || (_context && _context.appId());
                             if (appId) {
                                 headers.set(RequestHeaders[eRequestHeaders.requestContextHeader], RequestHeaders[eRequestHeaders.requestContextAppIdFormat] + appId);
                                 if (_enableRequestHeaderTracking) {
@@ -799,7 +799,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
             _self.addDependencyInitializer = (dependencyInitializer: DependencyInitializerFunction): IDependencyInitializerHandler => {
                 return _addHandler(_dependencyInitializers, _dependencyHandlerId++, dependencyInitializer);
             };
-        
+
             function _initDefaults() {
                 let location = getLocation();
                 _fetchInitialized = false;      // fetch monitoring initialized
@@ -821,7 +821,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                 _disabledUrls = {};
                 _disableAjaxTracking = false;
                 _disableFetchTracking = false;
-        
+
                 _excludeRequestFromAutoTrackingPatterns = null;
                 _addRequestContext = null;
                 _evtNamespace = null;
@@ -842,7 +842,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                     let config = details.cfg;
                     let ctx = createProcessTelemetryContext(null, config, _self.core);
                     _extensionConfig = ctx.getExtCfg(AjaxMonitor.identifier, _defaultConfig);
-    
+
                     _distributedTracingMode = _extensionConfig.distributedTracingMode;
                     _enableRequestHeaderTracking = _extensionConfig.enableRequestHeaderTracking;
                     _enableAjaxErrorStatusText = _extensionConfig.enableAjaxErrorStatusText;
@@ -909,9 +909,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                             req: (callDetails: IInstrumentCallDetails, input, init) => {
                                 let fetchData: IAjaxRecordInternal;
                                 if (!_disableFetchTracking && _fetchInitialized &&
-                                        !_isDisabledRequest(null, input, init) &&
-                                        // If we have a polyfil and XHR instrumented then let XHR report otherwise we get duplicates
-                                        !(isPolyfill && _xhrInitialized)) {
+                                    !_isDisabledRequest(null, input, init) &&
+                                    // If we have a polyfil and XHR instrumented then let XHR report otherwise we get duplicates
+                                    !(isPolyfill && _xhrInitialized)) {
                                     let ctx = callDetails.ctx();
                                     fetchData = _createFetchRecord(input, init);
                                     let newInit = _self.includeCorrelationHeaders(fetchData, input, init);
@@ -927,13 +927,13 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                                     if (fetchData) {
                                         // Replace the result with the new promise from this code
                                         callDetails.rslt = callDetails.rslt.then((response: any) => {
-                                            _reportFetchMetrics(callDetails, (response||{}).status, input, response, fetchData, () => {
-                                                let ajaxResponse:IAjaxRecordResponse = {
-                                                    statusText: (response||{}).statusText,
+                                            _reportFetchMetrics(callDetails, (response || {}).status, input, response, fetchData, () => {
+                                                let ajaxResponse: IAjaxRecordResponse = {
+                                                    statusText: (response || {}).statusText,
                                                     headerMap: null,
                                                     correlationContext: _getFetchCorrelationContext(response)
                                                 };
-        
+
                                                 if (_enableResponseHeaderTracking && response) {
                                                     const responseHeaderMap: any = {};
                                                     response.headers.forEach((value: string, name: string) => {     // @skip-minify
@@ -941,13 +941,13 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                                                             responseHeaderMap[name] = value;
                                                         }
                                                     });
-        
+
                                                     ajaxResponse.headerMap = responseHeaderMap;
                                                 }
-        
+
                                                 return ajaxResponse;
                                             });
-        
+
                                             return response;
                                         })
                                             .catch((reason: any) => {
@@ -961,7 +961,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                             hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxOpen,
                                 "Failed to monitor Window.fetch" + ERROR_POSTFIX)
                         }, true, isWebWorker()));
-    
+
                         _fetchInitialized = true;
                     } else if (isPolyfill && !_polyfillInitialized) {
                         // If fetch is a polyfill we need to capture the request to ensure that we correctly track
@@ -980,7 +980,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                         _polyfillInitialized = true;
                     }
                 }));
-                
+
                 if (isPolyfill) {
                     // retag the instrumented fetch with the same polyfill settings this is mostly for testing
                     // But also supports multiple App Insights usages
@@ -992,7 +992,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                 _addHook(InstrumentProto(target, funcName, callbacks));
             }
 
-            function _instrumentXhr():void {
+            function _instrumentXhr(): void {
                 if (!_supportsAjaxMonitoring(_self, _ajaxDataId)) {
                     return;
                 }
@@ -1004,7 +1004,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                         // Instrument open
                         _hookProto(XMLHttpRequest, "open", {
                             ns: _evtNamespace,
-                            req: (callDetails: IInstrumentCallDetails, method:string, url:string, async?:boolean) => {
+                            req: (callDetails: IInstrumentCallDetails, method: string, url: string, async?: boolean) => {
                                 if (!_disableAjaxTracking) {
                                     let xhr = callDetails.inst as XMLHttpRequestInstrumented;
                                     let ajaxData = _getAjaxData(xhr, _ajaxDataId);
@@ -1013,7 +1013,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                                             // Only create a single ajaxData (even when multiple AI instances are running)
                                             ajaxData = _openHandler(xhr, method, url, async);
                                         }
-        
+
                                         // always attach to the on ready state change (required for handling multiple instances)
                                         _attachToOnReadyStateChange(xhr, ajaxData);
                                     }
@@ -1022,7 +1022,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                             hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxOpen,
                                 ERROR_HEADER + ".open" + ERROR_POSTFIX)
                         });
-    
+
                         // Instrument send
                         _hookProto(XMLHttpRequest, "send", {
                             ns: _evtNamespace,
@@ -1041,7 +1041,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                             hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxSend,
                                 ERROR_HEADER + ERROR_POSTFIX)
                         });
-    
+
                         // Instrument abort
                         _hookProto(XMLHttpRequest, "abort", {
                             ns: _evtNamespace,
@@ -1058,7 +1058,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                             hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxAbort,
                                 ERROR_HEADER + ".abort" + ERROR_POSTFIX)
                         });
-    
+
                         // Instrument setRequestHeader
                         _hookProto(XMLHttpRequest, "setRequestHeader", {
                             ns: _evtNamespace,
@@ -1077,16 +1077,16 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                             hkErr: _createErrorCallbackFunc(_self, _eInternalMessageId.FailedMonitorAjaxSetRequestHeader,
                                 ERROR_HEADER + ".setRequestHeader" + ERROR_POSTFIX)
                         });
-    
+
                         _xhrInitialized = true;
                     }
                 }));
-                
+
             }
 
             function _isDisabledRequest(xhr?: XMLHttpRequestInstrumented, request?: Request | string, init?: RequestInit) {
                 let isDisabled = false;
-                let theUrl:string = ((!isString(request) ? ((request ||{}) as Request).url || "" : request as string) ||"").toLowerCase();
+                let theUrl: string = ((!isString(request) ? ((request || {}) as Request).url || "" : request as string) || "").toLowerCase();
 
                 // check excludeRequestFromAutoTrackingPatterns before stripping off any query string
                 arrForEach(_excludeRequestFromAutoTrackingPatterns, (regex: string | RegExp) => {
@@ -1122,7 +1122,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                 } else if (!isNullOrUndefined(request)) { // fetch
                     // Look for DisabledPropertyName in either Request or RequestInit
                     isDisabled = (typeof request === "object" ? (request as any)[DisabledPropertyName] === true : false) ||
-                            (init ? (init as any)[DisabledPropertyName] === true : false);
+                        (init ? (init as any)[DisabledPropertyName] === true : false);
                 }
 
                 // Also add extra check just in case the XHR or fetch objects where not decorated with the DisableProperty due to sealing or freezing
@@ -1197,7 +1197,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
 
                 if (dependency) {
                     if (properties !== undefined) {
-                        dependency.properties = {...dependency.properties, ...properties};
+                        dependency.properties = { ...dependency.properties, ...properties };
                     }
 
                     let sysProperties = ajaxData.getPartAProps();
@@ -1207,8 +1207,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
             }
 
             function _openHandler(xhr: XMLHttpRequestInstrumented, method: string, url: string, async: boolean): IAjaxRecordInternal {
-                let xhrRequestData = xhr[AJAX_DATA_CONTAINER] = (xhr[AJAX_DATA_CONTAINER] || { xh: [], i: {}});
-                let ajaxDataCntr = xhrRequestData.i = (xhrRequestData.i || { });
+                let xhrRequestData = xhr[AJAX_DATA_CONTAINER] = (xhr[AJAX_DATA_CONTAINER] || { xh: [], i: {} });
+                let ajaxDataCntr = xhrRequestData.i = (xhrRequestData.i || {});
                 const ajaxData = ajaxDataCntr[_ajaxDataId] = (ajaxDataCntr[_ajaxDataId] || _startSpan());
 
                 ajaxData.method = method;
@@ -1263,11 +1263,11 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                 ajaxData.responseFinishedTime = dateTimeUtilsNow();
                 ajaxData.status = xhr.status;
 
-                function _reportXhrError(e: any, failedProps?:Object) {
-                    let errorProps = failedProps||{} as any;
+                function _reportXhrError(e: any, failedProps?: Object) {
+                    let errorProps = failedProps || {} as any;
                     errorProps["ajaxDiagnosticsMessage"] = _getFailedAjaxDiagnosticsMessage(xhr, _ajaxDataId);
                     if (e) {
-                        errorProps["exception"]  = dumpObj(e);
+                        errorProps["exception"] = dumpObj(e);
                     }
 
                     _throwInternalWarning(_self,
@@ -1280,7 +1280,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                 _findPerfResourceEntry("xmlhttprequest", ajaxData, () => {
                     try {
                         const dependency = ajaxData.CreateTrackItem("Ajax", _enableRequestHeaderTracking, () => {
-                            let ajaxResponse:IAjaxRecordResponse = {
+                            let ajaxResponse: IAjaxRecordResponse = {
                                 statusText: xhr.statusText,
                                 headerMap: null,
                                 correlationContext: _getAjaxCorrelationContext(xhr),
@@ -1300,7 +1300,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                                         const parts = line.split(": ");
                                         const header = parts.shift();
                                         const value = parts.join(": ");
-                                        if(_canIncludeHeaders(header)) {
+                                        if (_canIncludeHeaders(header)) {
                                             responseHeaderMap[header] = value;
                                         }
                                     });
@@ -1315,7 +1315,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                         let properties;
                         try {
                             if (!!_addRequestContext) {
-                                properties = _addRequestContext({status: xhr.status, xhr});
+                                properties = _addRequestContext({ status: xhr.status, xhr });
                             }
                         } catch (e) {
                             _throwInternalWarning(_self,
@@ -1334,8 +1334,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                     } finally {
                         // cleanup telemetry data
                         try {
-                            let xhrRequestData = (xhr[AJAX_DATA_CONTAINER] || { i: {}});
-                            let ajaxDataCntr = (xhrRequestData.i || { });
+                            let xhrRequestData = (xhr[AJAX_DATA_CONTAINER] || { i: {} });
+                            let ajaxDataCntr = (xhrRequestData.i || {});
                             if (ajaxDataCntr[_ajaxDataId]) {
                                 ajaxDataCntr[_ajaxDataId] = null;
                             }
@@ -1369,7 +1369,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                 }
             }
 
-            function _createMarkId(type:string, ajaxData:IAjaxRecordInternal) {
+            function _createMarkId(type: string, ajaxData: IAjaxRecordInternal) {
                 if (ajaxData.requestUrl && _markPrefix && _enableAjaxPerfTracking) {
                     let performance = getPerformance();
                     if (performance && isFunction(performance.mark)) {
@@ -1384,7 +1384,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                 }
             }
 
-            function _findPerfResourceEntry(initiatorType:string, ajaxData:IAjaxRecordInternal, trackCallback:() => void, reportError:(e:any) => void): void {
+            function _findPerfResourceEntry(initiatorType: string, ajaxData: IAjaxRecordInternal, trackCallback: () => void, reportError: (e: any) => void): void {
                 let perfMark = ajaxData.perfMark;
                 let performance = getPerformance();
                 let maxAttempts = _maxAjaxPerfLookupAttempts;
@@ -1395,14 +1395,14 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                     try {
                         if (performance && perfMark) {
                             attempt++;
-                            let perfTiming:PerformanceResourceTiming = null;
+                            let perfTiming: PerformanceResourceTiming = null;
                             let entries = performance.getEntries();
                             for (let lp = entries.length - 1; lp >= 0; lp--) {
-                                let entry:PerformanceEntry = entries[lp];
+                                let entry: PerformanceEntry = entries[lp];
                                 if (entry) {
                                     if (entry.entryType === "resource") {
                                         if ((entry as PerformanceResourceTiming).initiatorType === initiatorType &&
-                                                (_indexOf(entry.name, requestUrl) !== -1 || _indexOf(requestUrl, entry.name) !== -1)) {
+                                            (_indexOf(entry.name, requestUrl) !== -1 || _indexOf(requestUrl, entry.name) !== -1)) {
 
                                             perfTiming = entry as PerformanceResourceTiming;
                                         }
@@ -1453,11 +1453,11 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
 
                 let requestUrl: string;
                 if (input instanceof Request) {
-                    requestUrl = (input||{}).url || "";
+                    requestUrl = (input || {}).url || "";
                 } else {
                     requestUrl = input;
                 }
-                if (requestUrl === "" ) {
+                if (requestUrl === "") {
                     const location = getLocation();
                     if (location && location.href) {
                         requestUrl = strSplit(location.href, "#")[0];
@@ -1514,16 +1514,16 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                 return result;
             }
 
-            function _reportFetchMetrics(callDetails: IInstrumentCallDetails, status: number, input: Request, response: Response | string, ajaxData: IAjaxRecordInternal, getResponse:() => IAjaxRecordResponse, properties?: { [key: string]: any }): void {
+            function _reportFetchMetrics(callDetails: IInstrumentCallDetails, status: number, input: Request, response: Response | string, ajaxData: IAjaxRecordInternal, getResponse: () => IAjaxRecordResponse, properties?: { [key: string]: any }): void {
                 if (!ajaxData) {
                     return;
                 }
 
-                function _reportFetchError(msgId: _eInternalMessageId, e: any, failedProps?:Object) {
-                    let errorProps = failedProps||{} as any;
+                function _reportFetchError(msgId: _eInternalMessageId, e: any, failedProps?: Object) {
+                    let errorProps = failedProps || {} as any;
                     errorProps["fetchDiagnosticsMessage"] = _getFailedFetchDiagnosticsMessage(input);
                     if (e) {
-                        errorProps["exception"]  = dumpObj(e);
+                        errorProps["exception"] = dumpObj(e);
                     }
 
                     _throwInternalWarning(_self,
@@ -1537,18 +1537,18 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
 
                 _findPerfResourceEntry(STR_FETCH, ajaxData, () => {
                     const dependency = ajaxData.CreateTrackItem("Fetch", _enableRequestHeaderTracking, getResponse);
-                    
+
                     let properties;
                     try {
                         if (!!_addRequestContext) {
-                            properties = _addRequestContext({status, request: input, response});
+                            properties = _addRequestContext({ status, request: input, response });
                         }
                     } catch (e) {
                         _throwInternalWarning(_self,
                             _eInternalMessageId.FailedAddingCustomDefinedRequestContext,
                             CUSTOM_REQUEST_CONTEXT_ERROR);
                     }
-                    
+
                     if (!dependency) {
                         _reportFetchError(_eInternalMessageId.FailedMonitorAjaxDur, null,
                             {
@@ -1588,7 +1588,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                 properties?: { [key: string]: any },
                 systemProperties?: { [key: string]: any }
             ) {
-            
+
                 let result = true;
                 var initializersCount = initializers.length;
                 if (initializersCount > 0) {
@@ -1599,10 +1599,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                         context: ajaxData ? ajaxData.context : null,
                         aborted: ajaxData ? !!ajaxData.aborted : false
                     };
-                
+
                     result = _processDependencyContainer(core, initializers, details, "initializer");
                 }
-            
+
                 if (result) {
                     _self.trackDependencyDataInternal(dependency, properties, systemProperties);
                 }
@@ -1610,7 +1610,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
         });
     }
 
-    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) {
+    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

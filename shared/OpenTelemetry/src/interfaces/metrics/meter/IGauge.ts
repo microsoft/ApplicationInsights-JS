@@ -1,4 +1,4 @@
-import { IOTelAttributes } from "@microsoft/applicationinsights-core-js";
+import { IOTelAttributes } from "../../IOTelAttributes";
 
 /**
  * Gauge metric instrument for recording current value.

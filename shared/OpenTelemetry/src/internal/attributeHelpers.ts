@@ -1,7 +1,8 @@
-import { IOTelAttributes, OTelAttributeValue } from "@microsoft/applicationinsights-core-js";
+
 import { arrForEach, arrSlice, isArray, isObject, isString, objForEachKey } from "@nevware21/ts-utils";
 import { createAttributeContainer } from "../attribute/attributeContainer";
 import { IOTelApi } from "../interfaces/IOTelApi";
+import { IOTelAttributes, OTelAttributeValue } from "../interfaces/IOTelAttributes";
 import { handleWarn } from "./commonUtils";
 
 function _isSupportedType(theType: string): boolean {

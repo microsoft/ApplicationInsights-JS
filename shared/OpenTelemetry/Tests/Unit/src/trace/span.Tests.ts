@@ -1,9 +1,16 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { dumpObj, perfNow, isFunction, isString, isNumber, isBoolean, isObject, isArray } from "@nevware21/ts-utils";
 import { IOTelApi } from "../../../../src/interfaces/IOTelApi";
-import { eOTelSpanKind, eOTelSpanStatusCode, IOTelAttributes, IOTelConfig, IOTelErrorHandlers, IOTelSpanContext, IReadableSpan } from "@microsoft/applicationinsights-core-js";
 import { IOTelSpanCtx } from "../../../../src/interfaces/trace/IOTelSpanCtx";
-import { createSpan } from "../../../../src/trace/span";
+import { IOTelSpanContext } from "../../../../src/interfaces/trace/IOTelSpanContext";
+import { IReadableSpan } from "../../../../src/interfaces/trace/IReadableSpan";
+import { IOTelConfig } from "../../../../src/interfaces/config/IOTelConfig";
+import { eOTelSpanKind } from "../../../../src/enums/trace/OTelSpanKind";
+import { eOTelSpanStatusCode } from "../../../../src/enums/trace/OTelSpanStatus";
+import { IOTelErrorHandlers } from "../../../../src/interfaces/config/IOTelErrorHandlers";
+import { IOTelAttributes } from "../../../../src/interfaces/IOTelAttributes";
+import { createSpan } from "../../../../src/api/trace/span";
+
 
 export class SpanTests extends AITestClass {
 

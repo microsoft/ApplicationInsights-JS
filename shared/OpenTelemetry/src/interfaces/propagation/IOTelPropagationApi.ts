@@ -1,5 +1,6 @@
-import { IOTelContext } from "@microsoft/applicationinsights-core-js";
+
 import { Baggage, BaggageEntry, TextMapGetter, TextMapPropagator, TextMapSetter } from "@opentelemetry/api";
+import { IOTelContext } from "../context/IOTelContext";
 
 /**
  * IOTelPropagationApi provides an interface definition for the OpenTelemetry PropagationAPI

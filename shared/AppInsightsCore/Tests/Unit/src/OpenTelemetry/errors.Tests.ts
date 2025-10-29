@@ -1,23 +1,7 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
+import { getOpenTelemetryError, OTelInvalidAttributeError, OTelSpanError, throwOTelError, throwOTelInvalidAttributeError, throwOTelNotImplementedError, throwOTelSpanError } from "@microsoft/otel-core-js";
 import { isFunction, isString, dumpObj } from "@nevware21/ts-utils";
-import { 
-    OpenTelemetryError, 
-    OpenTelemetryErrorConstructor, 
-    getOpenTelemetryError, 
-    throwOTelError 
-} from "../../../../src/OpenTelemetry/errors/OTelError";
-import { 
-    OTelInvalidAttributeError, 
-    throwOTelInvalidAttributeError 
-} from "../../../../src/OpenTelemetry/errors/OTelInvalidAttributeError";
-import { 
-    OTelNotImplementedError, 
-    throwOTelNotImplementedError 
-} from "../../../../src/OpenTelemetry/errors/OTelNotImplementedError";
-import { 
-    OTelSpanError, 
-    throwOTelSpanError 
-} from "../../../../src/OpenTelemetry/errors/OTelSpanError";
+
 
 export class OpenTelemetryErrorsTests extends AITestClass {
 
