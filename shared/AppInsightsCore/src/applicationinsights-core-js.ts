@@ -47,7 +47,7 @@ export {
 export { throwAggregationError } from "./JavaScriptSDK/AggregationError";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseTelemetryPlugin } from "./JavaScriptSDK/BaseTelemetryPlugin";
-export { randomValue, random32, mwcRandomSeed, mwcRandom32, newId } from "@microsoft/applicationinsights-common";
+export { randomValue, random32, mwcRandomSeed, mwcRandom32, newId, newGuid, generateW3CId } from "@microsoft/applicationinsights-common";
 export { runTargetUnload, doUnloadAll } from "./JavaScriptSDK/AsyncUtils";
 export {
     normalizeJsName, toISOString, getExceptionName, strContains, setValue, getSetValue,
@@ -75,7 +75,8 @@ export {
     getCrypto, getMsCrypto, getLocation, hasJSON, getJSON,
     isReactNative, getConsole, isIE, getIEVersion, isSafari,
     setEnableEnvMocks, isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported,
-    findMetaTag, findNamedServerTiming, sendCustomEvent, dispatchEvent, createCustomDomEvent, fieldRedaction
+    findMetaTag, findNamedServerTiming, sendCustomEvent, dispatchEvent, createCustomDomEvent, fieldRedaction,
+    findW3cTraceParent, findW3cTraceState
 } from "@microsoft/applicationinsights-common";
 export {
     getGlobal,
@@ -105,3 +106,12 @@ export { ThrottleMgr } from "./Diagnostics/ThrottleMgr";
 export { createDynamicConfig, onConfigChange } from "./Config/DynamicConfig";
 export { getDynamicConfigHandler, blockDynamicConversion, forceDynamicConversion } from "./Config/DynamicSupport";
 export { cfgDfValidate, cfgDfMerge, cfgDfBoolean, cfgDfFunc, cfgDfString, cfgDfSet, cfgDfBlockPropValue } from "./Config/ConfigDefaultHelpers";
+
+// OpenTelemetry interface exports (re-exported from @microsoft/otel-core-js)
+export {
+    IOTelContextManager,
+    IOTelContext,
+    IOTelSpan,
+    IOTelSpanContext,
+    IOTelSpanOptions
+} from "@microsoft/otel-core-js";

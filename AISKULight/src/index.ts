@@ -282,16 +282,13 @@ export {
     throwError,
     proxyFunctions,
     IPlugin,
-    ITelemetryPlugin
-} from "@microsoft/applicationinsights-core-js";
-
-export {
+    ITelemetryPlugin,
     IOTelContextManager,
     IOTelContext,
     IOTelSpan,
     IOTelSpanContext,
     IOTelSpanOptions
-} from "@microsoft/otel-core-js";
+} from "@microsoft/applicationinsights-core-js";
 
 export {
     SeverityLevel,
