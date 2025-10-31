@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { OTelSeverityNumber } from "../../enums/logs/OTelSeverityNumber";
-import { OTelAnyValue, OTelAnyValueMap } from "../../types/OTelAnyValue";
+import { OTelAnyValue, OTelAnyValueMap } from "../../OTelTypes/OTelAnyValue";
 import { IOTelContext } from "../context/IOTelContext";
 import { OTelTimeInput } from "../time";
 

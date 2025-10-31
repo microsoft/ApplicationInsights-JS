@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { OTelSeverityNumber } from "../../enums/logs/OTelSeverityNumber";
-import { OTelAnyValue } from "../../types/OTelAnyValue";
+import { OTelAnyValue } from "../../OTelTypes/OTelAnyValue";
 import { IOTelResource } from "../resources/IOTelResource";
 import { IOTelHrTime } from "../time";
 import { IOTelInstrumentationScope } from "../trace/IOTelInstrumentationScope";
