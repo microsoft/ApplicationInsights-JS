@@ -97,5 +97,26 @@ export class SnippetTests extends AITestClass {
             }
         });
 
+        this.testCase({
+            name: "Verify comment line is at the end of the snippet",
+            test: () => {
+                let key = "InstrumentationKey=814a172a-92fd-4950-9023-9cf13bb65696;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/";
+                let config = {
+                    connectionString: key
+                };
+                let theSnippet = getSdkLoaderScript(config);
+                          
+                // Test that snippet.min.js.ma appears only once
+                let sourcemapPattern = "snippet.min.js.map";
+                let firstIndex = theSnippet.indexOf(sourcemapPattern);
+                let lastIndex = theSnippet.lastIndexOf(sourcemapPattern);
+                QUnit.assert.ok(firstIndex !== -1, "Make sure snippet.min.js.ma exists in the snippet");
+                QUnit.assert.equal(firstIndex, lastIndex, "Make sure snippet.min.js.ma appears only once");
+                
+                // Test that snippet.min.js.ma is at the end of the snippet
+                let trimmedSnippet = theSnippet.trim();
+                QUnit.assert.ok(trimmedSnippet.endsWith("snippet.min.js.map"), "Make sure snippet.min.js.map is at the very end of the snippet");
+            }
+        });
     }
 }
