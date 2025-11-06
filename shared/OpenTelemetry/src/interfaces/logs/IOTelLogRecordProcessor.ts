@@ -14,7 +14,7 @@ export interface IOTelLogRecordProcessor {
     forceFlush(): Promise<void>;
 
     /**
-     * Called when a {@link LogRecord} is emit
+     * Called when a {@link LogRecord} is emitted
      * @param logRecord the ReadWriteLogRecord that just emitted.
      * @param context the current Context, or an empty Context if the Logger was obtained with include_trace_context=false
      */
