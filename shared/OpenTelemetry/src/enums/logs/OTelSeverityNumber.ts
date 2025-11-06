@@ -4,7 +4,7 @@
 /**
  * Numerical values of severity levels.
  */
-export enum OTelSeverityNumber {
+export const enum OTelSeverityNumber {
   UNSPECIFIED = 0,
   TRACE = 1,
   TRACE2 = 2,
