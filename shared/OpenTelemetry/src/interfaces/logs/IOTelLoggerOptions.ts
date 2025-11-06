@@ -5,7 +5,7 @@ import { IOTelAttributes } from "../IOTelAttributes";
 
 export interface IOTelLoggerOptions {
     /**
-     * The schemaUrl of the tracer or instrumentation library
+     * The schemaUrl of the logger or instrumentation library
      */
     schemaUrl?: string;
 
