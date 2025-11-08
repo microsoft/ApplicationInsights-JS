@@ -66,3 +66,4 @@ export const OTelSeverityNumber = createEnumStyle({
 });
 
 export type OTelSeverityNumber = number | eOTelSeverityNumber;
+
