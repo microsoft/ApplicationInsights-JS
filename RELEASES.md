@@ -33,7 +33,13 @@
 
 ### Potential breaking changes
 
-This release contains a potential breaking change to the `flush` method signature in the `IChannelControls` interface. The parameter name has been changed from `async` to `isAsync` to avoid potential conflicts with the `async` keyword.
+Renamed `flush` method parameter from `async` to `isAsync` in `IChannelControls` interface to avoid potential keyword conflicts (only affects code that relies on named parameters)
+  - Fixed return type of `flush` method to properly include `boolean` when callbacks complete synchronously
+  - Fixed root cause where `_doSend()` couldn't handle asynchronous callbacks from `preparePayload()` when compression is enabled
+  - `await applicationInsights.flush()` now works correctly with compression enabled
+  - Added proper error handling and promise rejection propagation through async callback chains
+  - Improved handling of both synchronous and asynchronous callback execution patterns
+  - No polling overhead - uses direct callback invocation for better performance
 
 **Interfaces change:**
 ```typescript
