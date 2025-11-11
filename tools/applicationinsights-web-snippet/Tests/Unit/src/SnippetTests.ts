@@ -12,7 +12,7 @@ export class SnippetTests extends AITestClass {
         this.testCase({
             name: "Check snippet version",
             test: () => {
-                QUnit.assert.equal("9", webSnippetVersion());
+                QUnit.assert.equal("10", webSnippetVersion());
             }
         });
 
