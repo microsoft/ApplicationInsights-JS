@@ -13,7 +13,7 @@ import {
 } from "@microsoft/applicationinsights-common";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
-import { dumpObj, objHasOwnProperty, strSubstring } from "@nevware21/ts-utils";
+import { dumpObj, isPromiseLike, objHasOwnProperty, strSubstring } from "@nevware21/ts-utils";
 import { AppInsightsSku } from "../../../src/AISku";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -1025,7 +1025,7 @@ export class SnippetInitializationTests extends AITestClass {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                     const result = theSnippet.unload();
                     Assert.ok(result, "unload() should return a promise when called without parameters");
-                    Assert.ok(typeof result.then === 'function', "returned value should be promise-like");
+                    Assert.ok(isPromiseLike(result), "returned value should be promise-like");
                     
                     // Wait for the promise to resolve
                     return result;
@@ -1041,7 +1041,7 @@ export class SnippetInitializationTests extends AITestClass {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                     const result = theSnippet.unload(true);
                     Assert.ok(result, "unload(true) should return a promise");
-                    Assert.ok(typeof result.then === 'function', "returned value should be promise-like");
+                    Assert.ok(isPromiseLike(result), "returned value should be promise-like");
                     
                     // Wait for the promise to resolve
                     return result;
