@@ -1016,6 +1016,70 @@ export class SnippetInitializationTests extends AITestClass {
                 Assert.equal(envelope.sampleRate, 50, "sampleRate is generated");
             }
         })
+
+        this.testCaseAsync({
+            name: 'Unload: unload() without parameters should return a promise',
+            stepDelay: 100,
+            steps: [
+                () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    const result = theSnippet.unload();
+                    Assert.ok(result, "unload() should return a promise when called without parameters");
+                    Assert.ok(typeof result.then === 'function', "returned value should be promise-like");
+                    
+                    // Wait for the promise to resolve
+                    return result;
+                }
+            ]
+        });
+
+        this.testCaseAsync({
+            name: 'Unload: unload(true) should return a promise',
+            stepDelay: 100,
+            steps: [
+                () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    const result = theSnippet.unload(true);
+                    Assert.ok(result, "unload(true) should return a promise");
+                    Assert.ok(typeof result.then === 'function', "returned value should be promise-like");
+                    
+                    // Wait for the promise to resolve
+                    return result;
+                }
+            ]
+        });
+
+        this.testCase({
+            name: 'Unload: unload(false) should not return a promise',
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                const result = theSnippet.unload(false);
+                Assert.equal(result, undefined, "unload(false) should return undefined");
+            }
+        });
+
+        this.testCaseAsync({
+            name: 'Unload: unload with callback should not return a promise',
+            stepDelay: 100,
+            steps: [
+                () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    let callbackCalled = false;
+                    const result = theSnippet.unload(true, () => {
+                        callbackCalled = true;
+                    });
+                    Assert.equal(result, undefined, "unload with callback should return undefined");
+                    
+                    // Wait for callback to be called
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            Assert.ok(callbackCalled, "callback should have been called");
+                            resolve();
+                        }, 200);
+                    });
+                }
+            ]
+        });
     }
 
     private _initializeSnippet(snippet: Snippet): IApplicationInsights {
