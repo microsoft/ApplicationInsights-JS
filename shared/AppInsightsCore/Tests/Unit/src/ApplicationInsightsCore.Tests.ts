@@ -2110,7 +2110,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         this.testCase({
             name: "FieldRedaction: should return non-string values unchanged without processing",
             test: () => {
-                let config = {} as IConfiguration;
+                
                 
                 // Test with null - should return null unchanged
                 const nullUrl = null;
