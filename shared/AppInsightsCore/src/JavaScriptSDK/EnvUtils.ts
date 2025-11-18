@@ -461,7 +461,7 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
  * @returns The redacted URL string or the original string if no redaction was needed or possible.
  */
 export function fieldRedaction(input: string, config: IConfiguration): string {
-    if (!input || input.indexOf(" ") !== -1) {
+    if (!input || !isString(input) || input.indexOf(" ") !== -1) {
         return input;
     }
     const isRedactionDisabled = config && config.redactUrls === false;

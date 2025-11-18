@@ -2111,46 +2111,31 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "FieldRedaction: should return non-string values unchanged without processing",
             test: () => {
                 
-                
+                let config = {} as IConfiguration;
                 // Test with null - should return null unchanged
                 const nullUrl = null;
-                let fieldRedactionCalled = false;
-                if (isString(nullUrl)) {
-                    fieldRedactionCalled = true;
-                }
-                Assert.equal(fieldRedactionCalled, false, "fieldRedaction should not be called when URL is null");
+                const redactedLocation = fieldRedaction(nullUrl as any, config);
+                Assert.strictEqual(redactedLocation, null, "fieldRedaction should return null unchanged");
                 
                 // Test with number - should return the number unchanged
                 const numberUrl = 12345;
-                fieldRedactionCalled = false;
-                if (isString(numberUrl)) {
-                    fieldRedactionCalled = true;
-                }
-                Assert.equal(fieldRedactionCalled, false, "fieldRedaction should not be called when URL is a number");
+                const redactedNumber = fieldRedaction(numberUrl as any, config);
+                Assert.strictEqual(redactedNumber, 12345, "fieldRedaction should return number unchanged");
                 
                 // Test with object - should return the object unchanged
                 const objectUrl = { url: "https://example.com" };
-                fieldRedactionCalled = false;
-                if (isString(objectUrl)) {
-                    fieldRedactionCalled = true;
-                }
-                Assert.equal(fieldRedactionCalled, false, "fieldRedaction should not be called when URL is an object");
+                const redactedObject = fieldRedaction(objectUrl as any, config);
+                Assert.strictEqual(redactedObject, objectUrl, "fieldRedaction should return object unchanged");
                 
                 // Test with array - should return the array unchanged
                 const arrayUrl = ["https://example.com"];
-                fieldRedactionCalled = false;
-                if (isString(arrayUrl)) {
-                    fieldRedactionCalled = true;
-                }
-                Assert.equal(fieldRedactionCalled, false, "fieldRedaction should not be called when URL is an array");
+                const redactedArray = fieldRedaction(arrayUrl as any, config);
+                Assert.strictEqual(redactedArray, arrayUrl, "fieldRedaction should return array unchanged");
                 
                 // Test with boolean - should return the boolean unchanged
                 const boolUrl = true;
-                fieldRedactionCalled = false;
-                if (isString(boolUrl)) {
-                    fieldRedactionCalled = true;
-                }
-                Assert.equal(fieldRedactionCalled, false, "fieldRedaction should not be called when URL is a boolean");
+                const redactedBool = fieldRedaction(boolUrl as any, config);
+                Assert.strictEqual(redactedBool, true, "fieldRedaction should return boolean unchanged");
             }
         });
 
