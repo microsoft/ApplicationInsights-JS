@@ -3,7 +3,7 @@
 */
 
 import {
-    IConfiguration, fieldRedaction, getDocument, getLocation, getWindow, hasDocument, isFunction
+    IConfiguration, fieldRedaction, getDocument, getLocation, getWindow, hasDocument, isFunction, isString
 } from "@microsoft/applicationinsights-core-js";
 import { scheduleTimeout } from "@nevware21/ts-utils";
 import { IClickAnalyticsConfiguration, IOverrideValues } from "./Interfaces/Datamodel";
@@ -143,7 +143,9 @@ export function sanitizeUrl(config: IClickAnalyticsConfiguration, location: Loca
     if (!!config.urlCollectQuery) { // false by default
         url += (isValueAssigned(location.search)? location.search : "");
     }
-    url = fieldRedaction(url, rootConfig);
+    if (isString(url)) {
+        url = fieldRedaction(url, rootConfig);
+    }
     return url;
 }
 

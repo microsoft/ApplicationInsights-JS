@@ -1205,7 +1205,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                 }
 
                 if (_self.core && _self.core.config) {
-                    requestUrl = fieldRedaction(requestUrl, _self.core.config);
+                    if (isString(requestUrl)) {
+                        requestUrl = fieldRedaction(requestUrl, _self.core.config);
+                    }
                 }
 
                 ajaxData.requestUrl = requestUrl;

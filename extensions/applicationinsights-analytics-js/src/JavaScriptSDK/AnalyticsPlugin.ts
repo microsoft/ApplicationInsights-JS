@@ -260,7 +260,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 try {
                     let inPv = pageView || {};
                     if (_self.core && _self.core.config) {
-                        inPv.uri = fieldRedaction(inPv.uri, _self.core.config);
+                        if (isString(inPv.uri)) {
+                            inPv.uri = fieldRedaction(inPv.uri, _self.core.config);
+                        }
                     }
                     _pageViewManager.trackPageView(inPv, {...inPv.properties, ...inPv.measurements, ...customProperties});
 
@@ -288,7 +290,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     pageView.refUri = pageView.refUri === undefined ? doc.referrer : pageView.refUri;
                 }
                 if (_self.core && _self.core.config) {
-                    pageView.refUri = fieldRedaction(pageView.refUri, _self.core.config);
+                    if (isString(pageView.uri)) {
+                        pageView.refUri = fieldRedaction(pageView.refUri, _self.core.config);
+                    }
                 }
                 if (isNullOrUndefined(pageView.startTime)) {
                     // calculate the start time manually
@@ -387,7 +391,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         url = loc && loc.href || "";
                     }
                     if (_self.core && _self.core.config) {
-                        url = fieldRedaction(url, _self.core.config);
+                        if (isString(url)) {
+                            url = fieldRedaction(url, _self.core.config);
+                        }
                     }
                     _pageTracking.stop(name, url, properties, measurement);
         
@@ -815,7 +821,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         _currUri = locn && locn.href || "";
                     }
                     if (_self.core && _self.core.config) {
-                        _currUri = fieldRedaction(_currUri, _self.core.config);
+                        if (isString(_currUri)) {
+                            _currUri = fieldRedaction(_currUri, _self.core.config);
+                        }
                     }
                     if (_enableAutoRouteTracking) {
                         let distributedTraceCtx = _getDistributedTraceCtx();
@@ -925,7 +933,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 let location = getLocation(true);
                 _prevUri = location && location.href || "";
                 if (_self.core && _self.core.config) {
-                    _prevUri = fieldRedaction(_prevUri, _self.core.config);
+                    if (isString(_prevUri)) {
+                        _prevUri = fieldRedaction(_prevUri, _self.core.config);
+                    }
                 }
                 _currUri = null;
                 _evtNamespace = null;

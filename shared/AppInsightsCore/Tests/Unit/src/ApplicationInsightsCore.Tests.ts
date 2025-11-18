@@ -2,7 +2,8 @@ import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework
 import { 
     IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, IAppInsightsCore, normalizeJsName,
     random32, mwcRandomSeed, newId, randomValue, mwcRandom32, isNullOrUndefined, SenderPostManager,
-    OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig, fieldRedaction
+    OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig, fieldRedaction,
+    isString
 } from "../../../src/applicationinsights-core-js"
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
 import { IChannelControls } from "../../../src/JavaScriptSDK.Interfaces/IChannelControls";
@@ -2103,6 +2104,53 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 const redactedLocation = fieldRedaction(url, config);
                 Assert.equal(redactedLocation, "https://example.com/path with spaces?param=value with spaces", 
                     "URL with spaces should be returned unchanged");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should return non-string values unchanged without processing",
+            test: () => {
+                let config = {} as IConfiguration;
+                
+                // Test with null - should return null unchanged
+                const nullUrl = null;
+                let fieldRedactionCalled = false;
+                if (isString(nullUrl)) {
+                    fieldRedactionCalled = true;
+                }
+                Assert.equal(fieldRedactionCalled, false, "fieldRedaction should not be called when URL is null");
+                
+                // Test with number - should return the number unchanged
+                const numberUrl = 12345;
+                fieldRedactionCalled = false;
+                if (isString(numberUrl)) {
+                    fieldRedactionCalled = true;
+                }
+                Assert.equal(fieldRedactionCalled, false, "fieldRedaction should not be called when URL is a number");
+                
+                // Test with object - should return the object unchanged
+                const objectUrl = { url: "https://example.com" };
+                fieldRedactionCalled = false;
+                if (isString(objectUrl)) {
+                    fieldRedactionCalled = true;
+                }
+                Assert.equal(fieldRedactionCalled, false, "fieldRedaction should not be called when URL is an object");
+                
+                // Test with array - should return the array unchanged
+                const arrayUrl = ["https://example.com"];
+                fieldRedactionCalled = false;
+                if (isString(arrayUrl)) {
+                    fieldRedactionCalled = true;
+                }
+                Assert.equal(fieldRedactionCalled, false, "fieldRedaction should not be called when URL is an array");
+                
+                // Test with boolean - should return the boolean unchanged
+                const boolUrl = true;
+                fieldRedactionCalled = false;
+                if (isString(boolUrl)) {
+                    fieldRedactionCalled = true;
+                }
+                Assert.equal(fieldRedactionCalled, false, "fieldRedaction should not be called when URL is a boolean");
             }
         });
 

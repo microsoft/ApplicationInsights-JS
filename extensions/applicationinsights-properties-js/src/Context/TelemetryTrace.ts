@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { ITelemetryTrace, ITraceState, dataSanitizeString } from "@microsoft/applicationinsights-common";
-import { IConfiguration, IDiagnosticLogger, fieldRedaction, generateW3CId, getLocation } from "@microsoft/applicationinsights-core-js";
+import { IConfiguration, IDiagnosticLogger, fieldRedaction, generateW3CId, getLocation, isString } from "@microsoft/applicationinsights-core-js";
 
 export class TelemetryTrace implements ITelemetryTrace {
 
@@ -20,7 +20,9 @@ export class TelemetryTrace implements ITelemetryTrace {
         if (!name && location && location.pathname) {
             name = location.pathname;
             if (config) {
-                name = fieldRedaction(name, config);
+                if (isString(name)) {
+                    name = fieldRedaction(name, config);
+                }
             }
         }
 
