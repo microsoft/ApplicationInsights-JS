@@ -1998,8 +1998,8 @@ export class ApplicationInsightsTests extends AITestClass {
         }
     }
     private asserts: any = (expectedCount: number, includeInit:boolean = false, doBoilerPlate:boolean = true) => {
-        // Capture the initial call count to handle responses from previous tests
-        const initialCallCount = this.successSpy.callCount || 0;
+        // Note: initialCallCount must be captured when polling starts, not when asserts() is called
+        let initialCallCount: number | undefined = undefined;
         
         return [
             () => {
@@ -2014,6 +2014,12 @@ export class ApplicationInsightsTests extends AITestClass {
                 }
             },
             (PollingAssert.createPollingAssert(() => {
+                // Capture baseline on first poll to avoid race condition
+                if (initialCallCount === undefined) {
+                    initialCallCount = this.successSpy.callCount || 0;
+                    console.log("* Captured baseline call count: " + initialCallCount + " at " + new Date().toISOString());
+                }
+
                 // First ensure we have a response (success or error) from THIS test
                 const newCalls = this.successSpy.callCount - initialCallCount;
                 if (newCalls === 0 && !this.errorSpy.called) {
