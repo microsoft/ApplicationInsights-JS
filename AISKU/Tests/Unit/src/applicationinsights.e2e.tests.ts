@@ -1995,7 +1995,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 if (payloadStr.length > 0) {
                     let currentCount: number = payloadStr.length;
                     console.log('curr: ' + currentCount + ' exp: ' + expectedCount, ' appId: ' + this._ai.context.appId());
-                    if (currentCount === expectedCount && !!this._ai.context.appId()) {
+                    if (currentCount === expectedCount) {
                         const payload = JSON.parse(payloadStr[0]);
                         const baseType = payload.data.baseType;
                         // call the appropriate Validate depending on the baseType
