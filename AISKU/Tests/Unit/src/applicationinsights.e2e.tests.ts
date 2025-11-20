@@ -1957,6 +1957,13 @@ export class ApplicationInsightsTests extends AITestClass {
         });
     }
 
+    private waitForResponse() {
+        // Wait for the successSpy or errorSpy to be called
+        return PollingAssert.asyncTaskPollingAssert(() => {
+            return (this.successSpy.called || this.errorSpy.called);
+        }, "Wait for response" + new Date().toISOString(), 15, 1000);
+    }
+
     private boilerPlateAsserts = () => {
         Assert.ok(this.successSpy.called, "success");
         Assert.ok(!this.errorSpy.called, "no error sending");
@@ -1981,6 +1988,11 @@ export class ApplicationInsightsTests extends AITestClass {
             }
         },
         (PollingAssert.createPollingAssert(() => {
+            // First ensure we have a response (success or error)
+            if (!this.successSpy.called && !this.errorSpy.called) {
+                return false;
+            }
+
             let argCount = 0;
             if (this.successSpy.called && this.successSpy.args && this.successSpy.args.length > 0) {
                 this.successSpy.args.forEach(call => {
