@@ -2042,32 +2042,32 @@ export class ApplicationInsightsTests extends AITestClass {
 
                 if (argCount >= expectedCount) {
                     let payloadStr = this.getNewPayloadMessages(this.successSpy, initialCallCount, includeInit);
-                    if (payloadStr.length > 0) {
+                    if (payloadStr.length >= expectedCount) {
                         let currentCount: number = payloadStr.length;
                         console.log('curr: ' + currentCount + ' exp: ' + expectedCount, ' appId: ' + this._ai.context.appId());
-                        if (currentCount === expectedCount) {
-                            const payload = JSON.parse(payloadStr[0]);
-                            const baseType = payload.data.baseType;
-                            // call the appropriate Validate depending on the baseType
-                            switch (baseType) {
-                                case Event.dataType:
-                                    return EventValidator.EventValidator.Validate(payload, baseType);
-                                case Trace.dataType:
-                                    return TraceValidator.TraceValidator.Validate(payload, baseType);
-                                case Exception.dataType:
-                                    return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
-                                case Metric.dataType:
-                                    return MetricValidator.MetricValidator.Validate(payload, baseType);
-                                case PageView.dataType:
-                                    return PageViewValidator.PageViewValidator.Validate(payload, baseType);
-                                case PageViewPerformance.dataType:
-                                    return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
-                                case RemoteDependencyData.dataType:
-                                    return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
+                        // Use >= to handle case where extra telemetry arrived
+                        // We'll validate the first expectedCount items
+                        const payload = JSON.parse(payloadStr[0]);
+                        const baseType = payload.data.baseType;
+                        // call the appropriate Validate depending on the baseType
+                        switch (baseType) {
+                            case Event.dataType:
+                                return EventValidator.EventValidator.Validate(payload, baseType);
+                            case Trace.dataType:
+                                return TraceValidator.TraceValidator.Validate(payload, baseType);
+                            case Exception.dataType:
+                                return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
+                            case Metric.dataType:
+                                return MetricValidator.MetricValidator.Validate(payload, baseType);
+                            case PageView.dataType:
+                                return PageViewValidator.PageViewValidator.Validate(payload, baseType);
+                            case PageViewPerformance.dataType:
+                                return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
+                            case RemoteDependencyData.dataType:
+                                return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
 
-                                default:
-                                    return EventValidator.EventValidator.Validate(payload, baseType);
-                            }
+                            default:
+                                return EventValidator.EventValidator.Validate(payload, baseType);
                         }
                     }
                 }
