@@ -2000,6 +2000,7 @@ export class ApplicationInsightsTests extends AITestClass {
     private asserts: any = (expectedCount: number, includeInit:boolean = false, doBoilerPlate:boolean = true) => {
         // Note: initialCallCount must be captured when polling starts, not when asserts() is called
         let initialCallCount: number | undefined = undefined;
+        let initialErrorCount: number | undefined = undefined;
         
         return [
             () => {
@@ -2017,12 +2018,14 @@ export class ApplicationInsightsTests extends AITestClass {
                 // Capture baseline on first poll to avoid race condition
                 if (initialCallCount === undefined) {
                     initialCallCount = this.successSpy.callCount || 0;
-                    console.log("* Captured baseline call count: " + initialCallCount + " at " + new Date().toISOString());
+                    initialErrorCount = this.errorSpy.callCount || 0;
+                    console.log("* Captured baseline - success: " + initialCallCount + ", error: " + initialErrorCount + " at " + new Date().toISOString());
                 }
 
                 // First ensure we have a response (success or error) from THIS test
                 const newCalls = this.successSpy.callCount - initialCallCount;
-                if (newCalls === 0 && !this.errorSpy.called) {
+                const newErrors = this.errorSpy.callCount - initialErrorCount;
+                if (newCalls === 0 && newErrors === 0) {
                     return false;
                 }
 
@@ -2035,7 +2038,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     }
                 }
 
-                Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking success spy (new calls: " + newCalls + ") " + new Date().toISOString());
+                Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking success spy (new calls: " + newCalls + ", new errors: " + newErrors + ") " + new Date().toISOString());
 
                 if (argCount >= expectedCount) {
                     let payloadStr = this.getNewPayloadMessages(this.successSpy, initialCallCount, includeInit);
