@@ -1957,6 +1957,28 @@ export class ApplicationInsightsTests extends AITestClass {
         });
     }
 
+    private getNewPayloadMessages(spy: SinonSpy, startIndex: number, includeInit:boolean = false) {
+        let resultPayload: any[] = [];
+        if (spy.called && spy.args && spy.args.length > startIndex) {
+            for (let i = startIndex; i < spy.args.length; i++) {
+                const call = spy.args[i];
+                call[0].forEach((item: any) => {
+                    let message = item;
+                    if (typeof item !== "string") {
+                        message = item.item;
+                    }
+                    if (message) {
+                        // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                        if (includeInit || message.indexOf("AI (Internal): 72 ") === -1) {
+                            resultPayload.push(message);
+                        }
+                    }
+                });
+            }
+        }
+        return resultPayload;
+    }
+
     private waitForResponse() {
         // Wait for the successSpy or errorSpy to be called
         return PollingAssert.asyncTaskPollingAssert(() => {
@@ -1975,68 +1997,76 @@ export class ApplicationInsightsTests extends AITestClass {
             }
         }
     }
-    private asserts: any = (expectedCount: number, includeInit:boolean = false, doBoilerPlate:boolean = true) => [
-        () => {
-            const message = "polling: " + new Date().toISOString();
-            Assert.ok(true, message);
-            console.log(message);
+    private asserts: any = (expectedCount: number, includeInit:boolean = false, doBoilerPlate:boolean = true) => {
+        // Capture the initial call count to handle responses from previous tests
+        const initialCallCount = this.successSpy.callCount || 0;
+        
+        return [
+            () => {
+                const message = "polling: " + new Date().toISOString();
+                Assert.ok(true, message);
+                console.log(message);
 
-            if (doBoilerPlate) {
-                if (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called) {
-                    this.boilerPlateAsserts();
+                if (doBoilerPlate) {
+                    if (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called) {
+                        this.boilerPlateAsserts();
+                    }
                 }
-            }
-        },
-        (PollingAssert.createPollingAssert(() => {
-            // First ensure we have a response (success or error)
-            if (!this.successSpy.called && !this.errorSpy.called) {
-                return false;
-            }
+            },
+            (PollingAssert.createPollingAssert(() => {
+                // First ensure we have a response (success or error) from THIS test
+                const newCalls = this.successSpy.callCount - initialCallCount;
+                if (newCalls === 0 && !this.errorSpy.called) {
+                    return false;
+                }
 
-            let argCount = 0;
-            if (this.successSpy.called && this.successSpy.args && this.successSpy.args.length > 0) {
-                this.successSpy.args.forEach(call => {
-                    argCount += call[0].length;
-                });
-            }
+                let argCount = 0;
+                // Only count calls that happened AFTER this test started
+                if (this.successSpy.called && this.successSpy.args && this.successSpy.args.length > initialCallCount) {
+                    for (let i = initialCallCount; i < this.successSpy.args.length; i++) {
+                        const call = this.successSpy.args[i];
+                        argCount += call[0].length;
+                    }
+                }
 
-            Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking success spy " + new Date().toISOString());
+                Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking success spy (new calls: " + newCalls + ") " + new Date().toISOString());
 
-            if (argCount >= expectedCount) {
-                let payloadStr = this.getPayloadMessages(this.successSpy, includeInit);
-                if (payloadStr.length > 0) {
-                    let currentCount: number = payloadStr.length;
-                    console.log('curr: ' + currentCount + ' exp: ' + expectedCount, ' appId: ' + this._ai.context.appId());
-                    if (currentCount === expectedCount) {
-                        const payload = JSON.parse(payloadStr[0]);
-                        const baseType = payload.data.baseType;
-                        // call the appropriate Validate depending on the baseType
-                        switch (baseType) {
-                            case Event.dataType:
-                                return EventValidator.EventValidator.Validate(payload, baseType);
-                            case Trace.dataType:
-                                return TraceValidator.TraceValidator.Validate(payload, baseType);
-                            case Exception.dataType:
-                                return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
-                            case Metric.dataType:
-                                return MetricValidator.MetricValidator.Validate(payload, baseType);
-                            case PageView.dataType:
-                                return PageViewValidator.PageViewValidator.Validate(payload, baseType);
-                            case PageViewPerformance.dataType:
-                                return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
-                            case RemoteDependencyData.dataType:
-                                return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
+                if (argCount >= expectedCount) {
+                    let payloadStr = this.getNewPayloadMessages(this.successSpy, initialCallCount, includeInit);
+                    if (payloadStr.length > 0) {
+                        let currentCount: number = payloadStr.length;
+                        console.log('curr: ' + currentCount + ' exp: ' + expectedCount, ' appId: ' + this._ai.context.appId());
+                        if (currentCount === expectedCount) {
+                            const payload = JSON.parse(payloadStr[0]);
+                            const baseType = payload.data.baseType;
+                            // call the appropriate Validate depending on the baseType
+                            switch (baseType) {
+                                case Event.dataType:
+                                    return EventValidator.EventValidator.Validate(payload, baseType);
+                                case Trace.dataType:
+                                    return TraceValidator.TraceValidator.Validate(payload, baseType);
+                                case Exception.dataType:
+                                    return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
+                                case Metric.dataType:
+                                    return MetricValidator.MetricValidator.Validate(payload, baseType);
+                                case PageView.dataType:
+                                    return PageViewValidator.PageViewValidator.Validate(payload, baseType);
+                                case PageViewPerformance.dataType:
+                                    return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
+                                case RemoteDependencyData.dataType:
+                                    return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
 
-                            default:
-                                return EventValidator.EventValidator.Validate(payload, baseType);
+                                default:
+                                    return EventValidator.EventValidator.Validate(payload, baseType);
+                            }
                         }
                     }
                 }
-            }
 
-            return false;
-        }, "sender succeeded", 60))
-    ];
+                return false;
+            }, "sender succeeded", 60))
+        ];
+    };
 }
 
 class CustomTestError extends Error {
