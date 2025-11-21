@@ -867,7 +867,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 }
             }].concat(PollingAssert.createPollingAssert(() => {
 
-                if (this._ctx && this._ctx.err) {
+                if (this._ctx && this._ctx.val) {
                     return true;
                 }
                 return false;
