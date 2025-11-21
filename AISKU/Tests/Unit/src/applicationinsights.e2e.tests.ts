@@ -839,39 +839,31 @@ export class ApplicationInsightsTests extends AITestClass {
             }, "Wait for response" + new Date().toISOString(), 60) as any)
         });
 
-        this.testCaseAsync({
-            name: "E2E.GenericTests: Fetch Static Web CDN V3",
-            stepDelay: 1,
+        this.testCase({
+            name: "E2E.GenericTests: Fetch Static Web js0 - CDN V3",
             useFakeServer: false,
             useFakeFetch: false,
             fakeFetchAutoRespond: false,
-            steps: [() => {
+            test: async () => {
                 // Use beta endpoint to pre-test any changes before public V3 cdn
                 let random = utcNow();
                 // Under Cors Mode, Options request will be auto-triggered
                 try {
-                    fetch(`https://js0.tst.applicationinsights.io/scripts/b/ai.3.gbl.min.js?${random}`, {
+                    let res = await fetch(`https://js0.tst.applicationinsights.io/scripts/b/ai.3.gbl.min.js?${random}`, {
                         method: "GET"
-                    }).then((res) => {
-                        this._ctx.res = res;
-                        if (res.ok) {
-                            res.text().then((val) => {
-                                this._ctx.val = val;
-                            });
-                        }
-                    }).catch((e) => {
-                        this._ctx.err = e.message;
-                    })
+                    });
+
+                    if (res.ok) {
+                        let val = await res.text();
+                        Assert.ok(val, "Response text should be returned" );
+                    } else {
+                        Assert.fail("Fetch failed with status: " + dumpObj(res));
+                    }
                 } catch (e) {
                     this._ctx.err = e;
+                    Assert.fail("Fetch Error: " + dumpObj(e));
                 }
-            }].concat(PollingAssert.createPollingAssert(() => {
-
-                if (this._ctx && this._ctx.val) {
-                    return true;
-                }
-                return false;
-            }, "Wait for response" + new Date().toISOString(), 60) as any)
+            }
         });
     }
 
