@@ -839,39 +839,31 @@ export class ApplicationInsightsTests extends AITestClass {
             }, "Wait for response" + new Date().toISOString(), 60) as any)
         });
 
-        this.testCaseAsync({
-            name: "E2E.GenericTests: Fetch Static Web CDN V3",
-            stepDelay: 1,
+        this.testCase({
+            name: "E2E.GenericTests: Fetch Static Web js0 - CDN V3",
             useFakeServer: false,
             useFakeFetch: false,
             fakeFetchAutoRespond: false,
-            steps: [() => {
+            test: async () => {
                 // Use beta endpoint to pre-test any changes before public V3 cdn
                 let random = utcNow();
                 // Under Cors Mode, Options request will be auto-triggered
                 try {
-                    fetch(`https://js0.tst.applicationinsights.io/scripts/b/ai.3.gbl.min.js?${random}`, {
+                    let res = await fetch(`https://js0.tst.applicationinsights.io/scripts/b/ai.3.gbl.min.js?${random}`, {
                         method: "GET"
-                    }).then((res) => {
-                        this._ctx.res = res;
-                        if (res.ok) {
-                            res.text().then((val) => {
-                                this._ctx.val = val;
-                            });
-                        }
-                    }).catch((e) => {
-                        this._ctx.err = e.message;
-                    })
+                    });
+
+                    if (res.ok) {
+                        let val = await res.text();
+                        Assert.ok(val, "Response text should be returned" );
+                    } else {
+                        Assert.fail("Fetch failed with status: " + dumpObj(res));
+                    }
                 } catch (e) {
                     this._ctx.err = e;
+                    Assert.fail("Fetch Error: " + dumpObj(e));
                 }
-            }].concat(PollingAssert.createPollingAssert(() => {
-
-                if (this._ctx && this._ctx.err) {
-                    return true;
-                }
-                return false;
-            }, "Wait for response" + new Date().toISOString(), 60) as any)
+            }
         });
     }
 
@@ -1957,35 +1949,6 @@ export class ApplicationInsightsTests extends AITestClass {
         });
     }
 
-    private getNewPayloadMessages(spy: SinonSpy, startIndex: number, includeInit:boolean = false) {
-        let resultPayload: any[] = [];
-        if (spy.called && spy.args && spy.args.length > startIndex) {
-            for (let i = startIndex; i < spy.args.length; i++) {
-                const call = spy.args[i];
-                call[0].forEach((item: any) => {
-                    let message = item;
-                    if (typeof item !== "string") {
-                        message = item.item;
-                    }
-                    if (message) {
-                        // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
-                        if (includeInit || message.indexOf("AI (Internal): 72 ") === -1) {
-                            resultPayload.push(message);
-                        }
-                    }
-                });
-            }
-        }
-        return resultPayload;
-    }
-
-    private waitForResponse() {
-        // Wait for the successSpy or errorSpy to be called
-        return PollingAssert.asyncTaskPollingAssert(() => {
-            return (this.successSpy.called || this.errorSpy.called);
-        }, "Wait for response" + new Date().toISOString(), 15, 1000);
-    }
-
     private boilerPlateAsserts = () => {
         Assert.ok(this.successSpy.called, "success");
         Assert.ok(!this.errorSpy.called, "no error sending");
@@ -1997,64 +1960,34 @@ export class ApplicationInsightsTests extends AITestClass {
             }
         }
     }
-    private asserts: any = (expectedCount: number, includeInit:boolean = false, doBoilerPlate:boolean = true) => {
-        // Capture baseline AFTER the first step runs (after telemetry is sent)
-        let initialCallCount: number | undefined = undefined;
-        let initialErrorCount: number | undefined = undefined;
-        let baselineCaptured = false;
-        
-        return [
-            () => {
-                const message = "polling: " + new Date().toISOString();
-                Assert.ok(true, message);
-                console.log(message);
+    private asserts: any = (expectedCount: number, includeInit:boolean = false, doBoilerPlate:boolean = true) => [
+        () => {
+            const message = "polling: " + new Date().toISOString();
+            Assert.ok(true, message);
+            console.log(message);
 
-                // Capture baseline here, after previous step (telemetry sending) completes
-                if (!baselineCaptured) {
-                    initialCallCount = this.successSpy.callCount || 0;
-                    initialErrorCount = this.errorSpy.callCount || 0;
-                    baselineCaptured = true;
-                    console.log("* Captured baseline - success: " + initialCallCount + ", error: " + initialErrorCount + " at " + new Date().toISOString());
+            if (doBoilerPlate) {
+                if (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called) {
+                    this.boilerPlateAsserts();
                 }
+            }
+        },
+        (PollingAssert.createPollingAssert(() => {
+            let argCount = 0;
+            if (this.successSpy.called && this.successSpy.args && this.successSpy.args.length > 0) {
+                this.successSpy.args.forEach(call => {
+                    argCount += call[0].length;
+                });
+            }
 
-                if (doBoilerPlate) {
-                    if (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called) {
-                        this.boilerPlateAsserts();
-                    }
-                }
-            },
-            (PollingAssert.createPollingAssert(() => {
-                // Ensure baseline was captured
-                if (!baselineCaptured) {
-                    console.log("* Warning: baseline not yet captured");
-                    return false;
-                }
+            Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking success spy " + new Date().toISOString());
 
-                // First ensure we have a response (success or error) from THIS test
-                const newCalls = this.successSpy.callCount - initialCallCount;
-                const newErrors = this.errorSpy.callCount - initialErrorCount;
-                if (newCalls === 0 && newErrors === 0) {
-                    return false;
-                }
-
-                let argCount = 0;
-                // Only count calls that happened AFTER this test started
-                if (this.successSpy.called && this.successSpy.args && this.successSpy.args.length > initialCallCount) {
-                    for (let i = initialCallCount; i < this.successSpy.args.length; i++) {
-                        const call = this.successSpy.args[i];
-                        argCount += call[0].length;
-                    }
-                }
-
-                Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking success spy (new calls: " + newCalls + ", new errors: " + newErrors + ") " + new Date().toISOString());
-
-                if (argCount >= expectedCount) {
-                    let payloadStr = this.getNewPayloadMessages(this.successSpy, initialCallCount, includeInit);
-                    if (payloadStr.length >= expectedCount) {
-                        let currentCount: number = payloadStr.length;
-                        console.log('curr: ' + currentCount + ' exp: ' + expectedCount, ' appId: ' + this._ai.context.appId());
-                        // Use >= to handle case where extra telemetry arrived
-                        // We'll validate the first expectedCount items
+            if (argCount >= expectedCount) {
+                let payloadStr = this.getPayloadMessages(this.successSpy, includeInit);
+                if (payloadStr.length > 0) {
+                    let currentCount: number = payloadStr.length;
+                    console.log('curr: ' + currentCount + ' exp: ' + expectedCount, ' appId: ' + this._ai.context.appId());
+                    if (currentCount === expectedCount && !!this._ai.context.appId()) {
                         const payload = JSON.parse(payloadStr[0]);
                         const baseType = payload.data.baseType;
                         // call the appropriate Validate depending on the baseType
@@ -2079,11 +2012,11 @@ export class ApplicationInsightsTests extends AITestClass {
                         }
                     }
                 }
+            }
 
-                return false;
-            }, "sender succeeded", 60))
-        ];
-    };
+            return false;
+        }, "sender succeeded", 60))
+    ];
 }
 
 class CustomTestError extends Error {
