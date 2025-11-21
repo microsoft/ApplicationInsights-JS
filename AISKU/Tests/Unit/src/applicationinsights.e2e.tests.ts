@@ -1998,15 +1998,24 @@ export class ApplicationInsightsTests extends AITestClass {
         }
     }
     private asserts: any = (expectedCount: number, includeInit:boolean = false, doBoilerPlate:boolean = true) => {
-        // Note: initialCallCount must be captured when polling starts, not when asserts() is called
+        // Capture baseline AFTER the first step runs (after telemetry is sent)
         let initialCallCount: number | undefined = undefined;
         let initialErrorCount: number | undefined = undefined;
+        let baselineCaptured = false;
         
         return [
             () => {
                 const message = "polling: " + new Date().toISOString();
                 Assert.ok(true, message);
                 console.log(message);
+
+                // Capture baseline here, after previous step (telemetry sending) completes
+                if (!baselineCaptured) {
+                    initialCallCount = this.successSpy.callCount || 0;
+                    initialErrorCount = this.errorSpy.callCount || 0;
+                    baselineCaptured = true;
+                    console.log("* Captured baseline - success: " + initialCallCount + ", error: " + initialErrorCount + " at " + new Date().toISOString());
+                }
 
                 if (doBoilerPlate) {
                     if (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called) {
@@ -2015,11 +2024,10 @@ export class ApplicationInsightsTests extends AITestClass {
                 }
             },
             (PollingAssert.createPollingAssert(() => {
-                // Capture baseline on first poll to avoid race condition
-                if (initialCallCount === undefined) {
-                    initialCallCount = this.successSpy.callCount || 0;
-                    initialErrorCount = this.errorSpy.callCount || 0;
-                    console.log("* Captured baseline - success: " + initialCallCount + ", error: " + initialErrorCount + " at " + new Date().toISOString());
+                // Ensure baseline was captured
+                if (!baselineCaptured) {
+                    console.log("* Warning: baseline not yet captured");
+                    return false;
                 }
 
                 // First ensure we have a response (success or error) from THIS test
