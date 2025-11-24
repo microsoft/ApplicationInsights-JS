@@ -101,9 +101,6 @@ export class IOTelLogRecordImpl implements ReadableLogRecord {
             if (spanContext && isSpanContextValid(spanContext)) {
                 this.spanContext = spanContext;
             }
-            if (spanContext && isSpanContextValid(spanContext)) {
-                this.spanContext = spanContext;
-            }
         }
         this.severityNumber = severityNumber;
         this.severityText = severityText;
