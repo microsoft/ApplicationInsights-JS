@@ -4,15 +4,16 @@
 import { IOTelContext } from "../context/IOTelContext";
 import { IOTelLogRecordProcessor } from "./IOTelLogRecordProcessor";
 import { ReadableLogRecord } from "./IOTelReadableLogRecord";
+import { IPromise, createSyncPromise } from "../../async/Promise";
 
 export class NoopLogRecordProcessor implements IOTelLogRecordProcessor {
-    forceFlush(): Promise<void> {
-        return Promise.resolve();
+    forceFlush(): IPromise<void> {
+        return createSyncPromise<void>();
     }
 
     onEmit(_logRecord: ReadableLogRecord, _context: IOTelContext): void {}
 
-    shutdown(): Promise<void> {
-        return Promise.resolve();
+    shutdown(): IPromise<void> {
+        return createSyncPromise<void>();
     }
 }
