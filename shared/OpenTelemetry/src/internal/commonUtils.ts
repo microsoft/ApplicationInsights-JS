@@ -103,3 +103,49 @@ export function handleNotImplemented(handlers: IOTelErrorHandlers, message: stri
         }
     }
 }
+
+/**
+ * Error that is thrown on timeouts.
+ */
+export class TimeoutError extends Error {
+    constructor(message?: string) {
+        super(message);
+
+        Object.setPrototypeOf(this, TimeoutError.prototype);
+    }
+}
+
+/**
+ * Adds a timeout to a promise and rejects if the specified timeout has elapsed.
+ * Reports the timeout through the configured error handlers before rejecting.
+ *
+ * @param handlers - The configured error handlers to notify.
+ * @param promise - The promise to guard with the timeout.
+ * @param timeout - Timeout in milliseconds before the promise is rejected.
+ */
+
+export function callWithTimeout<T>(
+    handlers: IOTelErrorHandlers,
+    promise: Promise<T>,
+    timeout: number
+): Promise<T> {
+    let timeoutHandle: ReturnType<typeof setTimeout>;
+
+    const timeoutPromise = new Promise<never>(function timeoutFunction(_resolve, reject) {
+        timeoutHandle = setTimeout(function timeoutHandler() {
+            handleError(handlers, "Operation timed out.");
+            reject(new TimeoutError("Operation timed out."));
+        }, timeout);
+    });
+
+    return Promise.race([promise, timeoutPromise]).then(
+        result => {
+            clearTimeout(timeoutHandle);
+            return result;
+        },
+        reason => {
+            clearTimeout(timeoutHandle);
+            throw reason;
+        }
+    );
+}
