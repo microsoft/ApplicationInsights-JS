@@ -142,7 +142,7 @@ export class IOTelLogRecordImpl implements ReadableLogRecord {
                 this._logRecordLimits.attributeCountLimit &&
             !Object.prototype.hasOwnProperty.call(this.attributes, key)
         ) {
-        // This logic is to create drop message at most once per LogRecord to prevent excessive logging.
+            // This logic is to create drop message at most once per LogRecord to prevent excessive logging.
             if (this.droppedAttributesCount === 1) {
                 console.warn("Dropping extra attributes.");
             }
