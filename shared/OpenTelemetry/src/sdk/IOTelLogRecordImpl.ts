@@ -127,11 +127,11 @@ export class IOTelLogRecordImpl implements ReadableLogRecord {
         }
         if (
             !isAttributeValue(value) &&
-        !(
-            typeof value === "object" &&
-            !Array.isArray(value) &&
-            Object.keys(value).length > 0
-        )
+            !(
+                typeof value === "object" &&
+                !Array.isArray(value) &&
+                Object.keys(value).length > 0
+            )
         ) {
             console.warn(`Invalid attribute value set for key: ${key}`);
             return this;
