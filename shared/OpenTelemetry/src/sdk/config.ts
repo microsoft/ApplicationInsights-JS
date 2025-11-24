@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { IOTelLogRecordLimits } from "../interfaces/logs/IOTelLogRecordLimits";
-import { inspect } from "util";
 
 /**
  * Retrieves a number from an environment variable.
@@ -27,7 +26,7 @@ export function getNumberFromEnv(key: string): number | undefined {
     const value = Number(raw);
     if (isNaN(value)) {
         console.warn(
-            `Unknown value ${inspect(raw)} for ${key}, expected a number, using defaults`
+            `Unknown value ${JSON.stringify(raw)} for ${key}, expected a number, using defaults`
         );
         return undefined;
     }
@@ -40,10 +39,10 @@ export function loadDefaultConfig() {
         forceFlushTimeoutMillis: 30000,
         logRecordLimits: {
             attributeValueLengthLimit:
-                getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT") ??
+                getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT") ||
                 Infinity,
             attributeCountLimit:
-                getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT") ?? 128,
+                getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT") || 128,
         },
         includeTraceContext: true
     };
@@ -62,17 +61,17 @@ export function reconfigureLimits(
          * Reassign log record attribute count limit to use first non null value defined by user or use default value
          */
         attributeCountLimit:
-            logRecordLimits.attributeCountLimit ??
-            getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT") ??
-            getNumberFromEnv("OTEL_ATTRIBUTE_COUNT_LIMIT") ??
+            logRecordLimits.attributeCountLimit ||
+            getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT") ||
+            getNumberFromEnv("OTEL_ATTRIBUTE_COUNT_LIMIT") ||
             128,
         /**
          * Reassign log record attribute value length limit to use first non null value defined by user or use default value
          */
         attributeValueLengthLimit:
-            logRecordLimits.attributeValueLengthLimit ??
-            getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT") ??
-            getNumberFromEnv("OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT") ??
+            logRecordLimits.attributeValueLengthLimit ||
+            getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT") ||
+            getNumberFromEnv("OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT") ||
             Infinity
     };
 }

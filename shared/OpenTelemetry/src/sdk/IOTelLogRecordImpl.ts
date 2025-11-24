@@ -88,13 +88,15 @@ export class IOTelLogRecordImpl implements ReadableLogRecord {
             severityNumber,
             severityText,
             body,
-            attributes = {},
+            attributes,
             context
         } = logRecord;
 
+        const logAttributes = attributes || {};
+
         const now = Date.now();
-        this.hrTime = timeInputToHrTime(timestamp ?? now);
-        this.hrTimeObserved = timeInputToHrTime(observedTimestamp ?? now);
+        this.hrTime = timeInputToHrTime(timestamp || now);
+        this.hrTimeObserved = timeInputToHrTime(observedTimestamp || now);
 
         if (context) {
             const spanContext = getContextActiveSpanContext(context);
@@ -112,7 +114,7 @@ export class IOTelLogRecordImpl implements ReadableLogRecord {
         this.instrumentationScope = instrumentationScope;
         this._logRecordLimits = _sharedState.logRecordLimits;
         this._eventName = eventName;
-        this.setAttributes(attributes);
+        this.setAttributes(logAttributes);
     }
 
     public setAttribute(key: string, value?: OTelAnyValue) {

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IPromise, createPromise, doAwait } from "@nevware21/ts-async";
 import type { IOTelLogRecordProcessor } from "../interfaces/logs/IOTelLogRecordProcessor";
 import type { IOTelSdkLogRecord } from "../interfaces/logs/IOTelSdkLogRecord";
 import { IOTelErrorHandlers } from "../interfaces/config/IOTelErrorHandlers";
@@ -22,13 +23,31 @@ export class MultiLogRecordProcessor implements IOTelLogRecordProcessor {
         this._errorHandlers = errorHandlers || {};
     }
 
-    public async forceFlush(): Promise<void> {
+    public forceFlush(): IPromise<void> {
         const timeout = this.forceFlushTimeoutMillis;
-        await Promise.all(
-            this.processors.map(processor =>
-                callWithTimeout(this._errorHandlers, processor.forceFlush(), timeout)
-            )
-        );
+        return createPromise((resolve, reject) => {
+            const processors = this.processors;
+            const length = processors.length;
+            if (length === 0) {
+                resolve();
+                return;
+            }
+
+            let remaining = length;
+            for (let idx = 0; idx < length; idx++) {
+                const processor = processors[idx];
+                doAwait(
+                    callWithTimeout(this._errorHandlers, processor.forceFlush(), timeout),
+                    () => {
+                        remaining--;
+                        if (remaining === 0) {
+                            resolve();
+                        }
+                    },
+                    reject
+                );
+            }
+        });
     }
 
     public onEmit(logRecord: IOTelSdkLogRecord, context?: IOTelContext): void {
@@ -37,7 +56,29 @@ export class MultiLogRecordProcessor implements IOTelLogRecordProcessor {
         );
     }
 
-    public async shutdown(): Promise<void> {
-        await Promise.all(this.processors.map(processor => processor.shutdown()));
+    public shutdown(): IPromise<void> {
+        return createPromise((resolve, reject) => {
+            const processors = this.processors;
+            const length = processors.length;
+            if (length === 0) {
+                resolve();
+                return;
+            }
+
+            let remaining = length;
+            for (let idx = 0; idx < length; idx++) {
+                const processor = processors[idx];
+                doAwait(
+                    processor.shutdown(),
+                    () => {
+                        remaining--;
+                        if (remaining === 0) {
+                            resolve();
+                        }
+                    },
+                    reject
+                );
+            }
+        });
     }
 }

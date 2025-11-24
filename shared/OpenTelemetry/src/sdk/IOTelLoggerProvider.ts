@@ -8,6 +8,7 @@ import { IOTelLoggerProvider } from "../interfaces/logs/IOTelLoggerProvider";
 import { IOTelLoggerProviderConfig } from "../interfaces/logs/IOTelLoggerProviderConfig";
 import { LoggerProviderSharedState } from "../internal/LoggerProviderSharedState";
 import { Logger } from "./IOTelLogger";
+import { createResource } from "../resource/resource";
 import { loadDefaultConfig, reconfigureLimits } from "./config";
 
 export const DEFAULT_LOGGER_NAME = "unknown";
@@ -17,12 +18,22 @@ export class LoggerProvider implements IOTelLoggerProvider {
     private readonly _sharedState: LoggerProviderSharedState;
 
     constructor(config: IOTelLoggerProviderConfig = {}) {
-        const mergedConfig = { ...loadDefaultConfig(), ...config };
+        const defaults = loadDefaultConfig();
+        const forceFlushTimeoutMillis = config.forceFlushTimeoutMillis !== undefined
+            ? config.forceFlushTimeoutMillis
+            : defaults.forceFlushTimeoutMillis;
+        const logRecordLimits = config.logRecordLimits || defaults.logRecordLimits;
+
+        let resource = config.resource;
+        if (!resource) {
+            resource = createResource({ cfg: { errorHandlers: {} }, attribs: [] });
+        }
+
         this._sharedState = new LoggerProviderSharedState(
-            config.resource ?? { attributes: {} } as any,
-            mergedConfig.forceFlushTimeoutMillis,
-            reconfigureLimits(mergedConfig.logRecordLimits),
-            config?.processors ?? []
+            resource,
+            forceFlushTimeoutMillis,
+            reconfigureLimits(logRecordLimits),
+            config && config.processors ? config.processors : []
         );
     }
 
@@ -43,12 +54,13 @@ export class LoggerProvider implements IOTelLoggerProvider {
             console.warn("Logger requested without instrumentation scope name.");
         }
         const loggerName = name || DEFAULT_LOGGER_NAME;
-        const key = `${loggerName}@${version || ""}:${options?.schemaUrl || ""}`;
+        const schemaUrl = options && options.schemaUrl;
+        const key = `${loggerName}@${version || ""}:${schemaUrl || ""}`;
         if (!this._sharedState.loggers.has(key)) {
             this._sharedState.loggers.set(
                 key,
                 new Logger(
-                    { name: loggerName, version, schemaUrl: options?.schemaUrl },
+                    { name: loggerName, version, schemaUrl },
                     this._sharedState
                 )
             );

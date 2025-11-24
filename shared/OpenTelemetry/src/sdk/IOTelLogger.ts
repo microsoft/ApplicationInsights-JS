@@ -22,13 +22,21 @@ export class Logger implements IOTelLogger {
          * the LogRecords it emits MUST automatically include the Trace Context from the active Context,
          * if Context has not been explicitly set.
          */
+        const logRecordData: IOTelLogRecord = {
+            context: currentContext,
+            timestamp: logRecord.timestamp,
+            observedTimestamp: logRecord.observedTimestamp,
+            eventName: logRecord.eventName,
+            severityNumber: logRecord.severityNumber,
+            severityText: logRecord.severityText,
+            body: logRecord.body,
+            attributes: logRecord.attributes
+        };
+
         const logRecordInstance = new IOTelLogRecordImpl(
             this._sharedState,
             this.instrumentationScope,
-            {
-                context: currentContext,
-                ...logRecord
-            }
+            logRecordData
         );
         /**
          * the explicitly passed Context,
