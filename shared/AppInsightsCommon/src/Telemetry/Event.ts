@@ -7,10 +7,19 @@ import { FieldType } from "../Enums";
 import { IEventData } from "../Interfaces/Contracts/IEventData";
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString } from "./Common/DataSanitizer";
+import { EventDataType } from "./DataTypes";
+import { EventEnvelopeType } from "./EnvelopeTypes";
 
 export class Event implements IEventData, ISerializable {
-    public static envelopeType = "Microsoft.ApplicationInsights.{0}.Event";
-    public static dataType = "EventData";
+    /**
+     * @deprecated Use the constant EventEnvelopeType instead.
+     */
+    public static envelopeType = EventEnvelopeType;
+
+    /**
+     * @deprecated Use the constant EventDataType instead.
+     */
+    public static dataType = EventDataType;
 
     public aiDataContract = {
         ver: FieldType.Required,

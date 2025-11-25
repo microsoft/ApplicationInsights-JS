@@ -18,7 +18,7 @@ export function createTracerProvider(core: IAppInsightsCore): IOTelTracerProvide
 
     return {
         getTracer(name: string, version?: string): IOTelTracer {
-            const tracerKey = `${name|| "ai-web"}@${version || "unknown"}`;
+            const tracerKey = (name|| "ai-web") + "@" + (version || "unknown");
             
             if (!tracers[tracerKey]) {
                 tracers[tracerKey] = createTracer(core);
@@ -35,6 +35,6 @@ export function createTracerProvider(core: IAppInsightsCore): IOTelTracerProvide
             tracers = {};
             core = null;
             return;
-        }            
+        }
     };
 }

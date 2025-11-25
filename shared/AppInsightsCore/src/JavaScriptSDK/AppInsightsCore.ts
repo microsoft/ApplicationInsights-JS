@@ -5,7 +5,7 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import { IPromise, createPromise, createSyncAllSettledPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
     ITimerHandler, arrAppend, arrForEach, arrIndexOf, createTimeout, deepExtend, hasDocument, isFunction, isNullOrUndefined, isPlainObject,
-    isPromiseLike, objDeepFreeze, objDefine, objForEachKey, objFreeze, objHasOwn, scheduleTimeout, throwError
+    isPromiseLike, objAssign, objDeepFreeze, objDefine, objForEachKey, objFreeze, objHasOwn, scheduleTimeout, throwError
 } from "@nevware21/ts-utils";
 import { cfgDfMerge } from "../Config/ConfigDefaultHelpers";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
@@ -41,6 +41,7 @@ import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnl
 import { ITraceCfg } from "../OpenTelemetry/interfaces/config/ITraceCfg";
 import { IOTelSpanOptions } from "../OpenTelemetry/interfaces/trace/IOTelSpanOptions";
 import { IReadableSpan } from "../OpenTelemetry/interfaces/trace/IReadableSpan";
+import { ISpanScope } from "../applicationinsights-core-js";
 import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
 import { ChannelControllerPriority } from "./Constants";
 import { createCookieMgr } from "./CookieMgr";
@@ -124,6 +125,39 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     })
     // _sdk: { rdOnly: true, ref: true, v: defaultSdkConfig }
 });
+
+function _getDefaultConfig<CfgType>(core: IAppInsightsCore): IConfigDefaults<CfgType> {
+    let handlers = {
+        // Dynamic Default Error Handlers
+        errorHandlers: cfgDfMerge({
+            attribError: (message: string, key: string, value: any) => {
+                core.logger.throwInternal(eLoggingSeverity.WARNING, _eInternalMessageId.AttributeError, message, {
+                    attribName: key,
+                    value: value
+                });
+            },
+            spanError: (message: string, spanName: string) => {
+                core.logger.throwInternal(eLoggingSeverity.WARNING, _eInternalMessageId.SpanError, message, {
+                    spanName: spanName
+                });
+            },
+            debug: (message: string) => {
+                core.logger.debugToConsole(message);
+            },
+            warn: (message: string) => {
+                core.logger.warnToConsole(message)
+            },
+            error: (message: string) => {
+                core.logger.throwInternal(eLoggingSeverity.CRITICAL, _eInternalMessageId.TraceError, message);
+            },
+            notImplemented: (message: string) => {
+                core.logger.throwInternal(eLoggingSeverity.CRITICAL, _eInternalMessageId.NotImplementedError, message);
+            }
+        })
+    };
+    
+    return objDeepFreeze(objAssign({}, defaultConfig as any, handlers));
+}
 
 /**
  * Helper to create the default performance manager
@@ -304,6 +338,10 @@ function _getParentTraceCtx(mode: eTraceHeadersMode): IDistributedTraceContext |
     return spanContext;
 }
 
+function _noOpFunc() {
+    // No-op function
+}
+
 /**
  * @group Classes
  * @group Entrypoint
@@ -409,7 +447,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     throwError("Core cannot be initialized more than once");
                 }
 
-                _configHandler = createDynamicConfig<CfgType>(config, defaultConfig as any, logger || _self.logger, false);
+                _configHandler = createDynamicConfig<CfgType>(config, _getDefaultConfig<CfgType>(_self), logger || _self.logger, false);
 
                 // Re-assigning the local config property so we don't have any references to the passed value and it can be garbage collected
                 config = _configHandler.cfg;
@@ -1049,11 +1087,34 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
              * Set the current Active Span
              * @param span - The span to set as the active span
              */
-            _self.setActiveSpan = (span: IReadableSpan): void => {
+            _self.setActiveSpan = (span: IReadableSpan): ISpanScope<IAppInsightsCore<CfgType>> => {
+                let activeSpan: IReadableSpan | null;
+                let restoreFn = _noOpFunc;
+                let scope: ISpanScope<IAppInsightsCore<CfgType>>;
+                
                 if (_traceProvider && _traceProvider.isAvailable()) {
-                    // No trace provider available or provider is not ready
+                    // Trace provider available or provider is not ready
+                    activeSpan = _traceProvider.activeSpan();
                     _traceProvider.setActiveSpan(span);
+                    restoreFn = () => {
+                        if (_traceProvider && _traceProvider.isAvailable()) {
+                            // Trace provider available or provider is not ready
+                            _traceProvider.setActiveSpan(activeSpan);
+                        }
+
+                        // Clear the restore function, so that multiple calls to restore do not have any effect
+                        scope.restore = _noOpFunc;
+                    };
                 }
+
+                scope = {
+                    core: _self,
+                    span: span,
+                    prvSpan: activeSpan,
+                    restore: restoreFn
+                };
+
+                return scope;
             };
 
             _self.setTraceProvider = (traceProvider: ITraceProvider): void => {
@@ -1766,7 +1827,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     }
 
     /**
-     * Return the current active span
+     * Return the current active span, if no trace provider is available null will be returned
+     * @returns The current active span or null if no trace provider is available
+     * @since 3.4.0
      */
     public activeSpan?(): IReadableSpan | null {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1776,9 +1839,13 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     /**
      * Set the current Active Span
      * @param span - The span to set as the active span
+     * @returns An ISpanScope instance that provides the current scope, the span will always be the span passed in
+     * even when no trace provider is available
+     * @since 3.4.0
      */
-    public setActiveSpan?(span: IReadableSpan): void {
+    public setActiveSpan?(span: IReadableSpan): ISpanScope<IAppInsightsCore<CfgType>> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     /**

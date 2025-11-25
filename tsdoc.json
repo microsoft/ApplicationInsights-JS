@@ -22,6 +22,14 @@
             "syntaxKind": "block"
         },
         {
+            "tagName": "@defaultBehavior",
+            "syntaxKind": "block"
+        },
+        {
+            "tagName": "@function",
+            "syntaxKind": "block"
+        },
+        {
             "tagName": "@property",
             "syntaxKind": "block"
         },

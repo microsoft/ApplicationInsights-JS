@@ -1,13 +1,15 @@
-import { arrSlice, fnApply, isFunction } from "@nevware21/ts-utils";
+import { arrSlice, fnApply, isFunction, isObject } from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDistributedTraceContext } from "../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
+import { IDistributedTraceContext, IDistributedTraceInit } from "../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
+import { createDistributedTraceContext, isDistributedTraceContext } from "../../JavaScriptSDK/TelemetryHelpers";
 import { isValidSpanId, isValidTraceId } from "../../JavaScriptSDK/W3cTraceParent";
 import { eOTelSpanKind } from "../enums/trace/OTelSpanKind";
 import { IOTelApi } from "../interfaces/IOTelApi";
 import { ITraceCfg } from "../interfaces/config/ITraceCfg";
 import { IOTelSpanCtx } from "../interfaces/trace/IOTelSpanCtx";
 import { IReadableSpan } from "../interfaces/trace/IReadableSpan";
+import { ISpanScope } from "../interfaces/trace/ISpanScope";
 import { createSpan } from "./span";
 
 /**
@@ -15,35 +17,81 @@ import { createSpan } from "./span";
  * @param core - The current core
  * @param span - The span to set as the active span during the execution of the callback
  * @param fn - the callback function
- * @param thisArg - the `this` argument for the callback
+ * @param thisArg - the `this` argument for the callback. If not provided, ISpanScope is used as `this`
  * @param _args - Additional arguments to be passed to the function
  */
-export function withSpan<C extends IAppInsightsCore, A extends unknown[], F extends (...args: A) => ReturnType<F>>(core: C, span: IReadableSpan, fn: F, thisArg?: ThisParameterType<F>, ..._args: A) : ReturnType<F>;
+export function withSpan<C extends IAppInsightsCore, A extends unknown[], F extends (this: ThisParameterType<F> | ISpanScope<C>, ...args: A) => ReturnType<F>>(core: C, span: IReadableSpan, fn: F, thisArg?: ThisParameterType<F>, ..._args: A) : ReturnType<F>;
 
 /**
  * Execute the callback `fn` function with the passed span as the active span
  * @param core - The current core
  * @param span - The span to set as the active span during the execution of the callback
  * @param fn - the callback function
- * @param thisArg - the `this` argument for the callback
- * @returns 
+ * @param thisArg - the `this` argument for the callback. If not provided, ISpanScope is used as `this`
+ * @returns the result of the function
  */
-export function withSpan<C extends IAppInsightsCore, A extends unknown[], F extends (...args: A) => ReturnType<F>>(core: C, span: IReadableSpan, fn: F, thisArg?: ThisParameterType<F>): ReturnType<F> {
-    let currentSpan = core.activeSpan();
+export function withSpan<C extends IAppInsightsCore, A extends unknown[], F extends (this: ThisParameterType<F> | ISpanScope<C>,...args: A) => ReturnType<F>>(core: C, span: IReadableSpan, fn: F, thisArg?: ThisParameterType<F>): ReturnType<F> {
+    let scope = core.setActiveSpan(span);
     try {
-        core.setActiveSpan(span);
-        return fnApply(fn, thisArg, arrSlice(arguments, 4));
+        return fnApply(fn, thisArg || scope, arrSlice(arguments, 4));
     } finally {
-        core.setActiveSpan(currentSpan);
+        // Restore previous active span
+        if (scope) {
+            scope.restore();
+        }
     }
 }
 
 /**
- * Returns true if this {@link IDistributedTraceContext} is valid.
+ * Execute the callback `fn` function with the passed span as the active span. The callback receives
+ * an ISpanScope object as its first parameter and the `this` context (when no thisArg is provided).
+ * @param core - The current core
+ * @param span - The span to set as the active span during the execution of the callback
+ * @param fn - the callback function that receives an ISpanScope
+ * @param thisArg - the `this` argument for the callback. If not provided, ISpanScope is used as `this`
+ * @returns The result of the function
+ */
+export function useSpan<C extends IAppInsightsCore, F extends (this: ThisParameterType<F> | ISpanScope<C>, scope: ISpanScope<C>) => ReturnType<F>>(core: C, span: IReadableSpan, fn: F, thisArg?: ThisParameterType<F>) : ReturnType<F>;
+
+/**
+ * Execute the callback `fn` function with the passed span as the active span. The callback receives
+ * an ISpanScope object as its first parameter and the `this` context (when no thisArg is provided).
+ * @param core - The current core
+ * @param span - The span to set as the active span during the execution of the callback
+ * @param fn - the callback function that receives an ISpanScope and additional arguments
+ * @param thisArg - the `this` argument for the callback. If not provided, ISpanScope is used as `this`
+ * @param _args - Additional arguments to be passed to the function
+ * @returns The result of the function
+ */
+export function useSpan<C extends IAppInsightsCore, A extends unknown[], F extends (this: ThisParameterType<F> | ISpanScope<C>, scope: ISpanScope<C>, ...args: A) => ReturnType<F>>(core: C, span: IReadableSpan, fn: F, thisArg?: ThisParameterType<F>, ..._args: A) : ReturnType<F>;
+
+/**
+ * Execute the callback `fn` function with the passed span as the active span. The callback receives
+ * an ISpanScope object as its first parameter and the `this` context (when no thisArg is provided).
+ * @param core - The current core
+ * @param span - The span to set as the active span during the execution of the callback
+ * @param fn - the callback function that receives an ISpanScope and additional arguments
+ * @param thisArg - the `this` argument for the callback. If not provided, ISpanScope is used as `this`
+ * @param _args - Additional arguments to be passed to the function
+ */
+export function useSpan<C extends IAppInsightsCore, A extends unknown[], F extends (this: ThisParameterType<F> | ISpanScope<C>, scope: ISpanScope<C>, ...args: A) => ReturnType<F>>(core: C, span: IReadableSpan, fn: F, thisArg?: ThisParameterType<F>): ReturnType<F> {
+    let scope = core.setActiveSpan(span);
+    try {
+        return fnApply(fn, thisArg || scope, [scope].concat(arrSlice(arguments, 4)));
+    } finally {
+        // Restore previous active span
+        if (scope) {
+            scope.restore();
+        }
+    }
+}
+
+/**
+ * Returns true if the passed spanContext of type  {@link IDistributedTraceContext} or {@link IDistributedTraceInit} is valid.
  * @return true if this {@link IDistributedTraceContext} is valid.
  */
 /*#__NO_SIDE_EFFECTS__*/
-export function isSpanContextValid(spanContext: IDistributedTraceContext): boolean {
+export function isSpanContextValid(spanContext: IDistributedTraceContext | IDistributedTraceInit): boolean {
     return spanContext ? (isValidTraceId(spanContext.traceId) && isValidSpanId(spanContext.spanId)) : false;
 }
   
@@ -53,7 +101,11 @@ export function isSpanContextValid(spanContext: IDistributedTraceContext): boole
  * @param spanContext - span context to be wrapped
  * @returns a new non-recording {@link IReadableSpan} with the provided context
  */
-export function wrapSpanContext(otelApi: IOTelApi, spanContext: IDistributedTraceContext): IReadableSpan {
+export function wrapSpanContext(otelApi: IOTelApi, spanContext: IDistributedTraceContext | IDistributedTraceInit): IReadableSpan {
+    if (!isDistributedTraceContext(spanContext)) {
+        spanContext = createDistributedTraceContext(spanContext);
+    }
+    
     // Return a non-recording span
     return createNonRecordingSpan(otelApi, "wrapped(\"" + spanContext.spanId + "\")", spanContext);
 }
@@ -74,7 +126,7 @@ export function createNonRecordingSpan(otelApi: IOTelApi, spanName: string, span
         isRecording: false
     };
     
-    return createSpan(spanCtx, spanName, eOTelSpanKind.INTERNAL);    
+    return createSpan(spanCtx, spanName, eOTelSpanKind.INTERNAL);
 }
 
 /**
@@ -85,6 +137,7 @@ export function createNonRecordingSpan(otelApi: IOTelApi, spanName: string, span
 /*#__NO_SIDE_EFFECTS__*/
 export function isReadableSpan(span: any): span is IReadableSpan {
     return !!span &&
+        isObject(span) &&
         "name" in span &&
         "kind" in span &&
         isFunction(span.spanContext) &&
@@ -96,8 +149,8 @@ export function isReadableSpan(span: any): span is IReadableSpan {
         "links" in span &&
         "events" in span &&
         "status" in span &&
-        "resource" in span &&
-        "instrumentationScope" in span &&
+        // "resource" in span &&
+        // "instrumentationScope" in span &&
         "droppedAttributesCount" in span &&
         isFunction(span.isRecording) &&
         isFunction(span.setStatus) &&
