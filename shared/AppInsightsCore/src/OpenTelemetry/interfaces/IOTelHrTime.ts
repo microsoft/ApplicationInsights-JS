@@ -25,7 +25,6 @@ export type OTelHrTimeBase = [number, number];
  * const hrTime: IOTelHrTime = {
  *   0: 1609459200,     // seconds since Unix epoch
  *   1: 500000000,      // nanoseconds (0-999,999,999)
- *   unixNano: 1609459200500000000n // optional: total nanoseconds since epoch
  * };
  * ```
  * 
@@ -47,12 +46,12 @@ export interface IOTelHrTime extends OTelHrTimeBase {
     /**
      * Optional total nanoseconds since Unix epoch.
      * When provided, this should be equivalent to (this[0] * 1e9) + this[1].
-     * 
+     *
      * @remarks
      * This field may be used for more efficient time calculations or when
      * working with systems that natively use nanosecond timestamps.
      */
-    unixNano?: number;
+    // unixNano?: number;
 }
 
 /**

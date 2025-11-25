@@ -2,18 +2,15 @@
 // Licensed under the MIT License.
 
 import { IPromise } from "@nevware21/ts-async";
-import { ITimerHandler } from "@nevware21/ts-utils";
+import { ICachedValue, ITimerHandler } from "@nevware21/ts-utils";
 import { WatcherFunction } from "../Config/IDynamicWatcher";
 import { eActiveStatus } from "../JavaScriptSDK.Enums/InitActiveStatusEnum";
 import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
-import { IOTelSpanOptions } from "../OpenTelemetry/interfaces/trace/IOTelSpanOptions";
-import { IReadableSpan } from "../OpenTelemetry/interfaces/trace/IReadableSpan";
 import { IChannelControls } from "./IChannelControls";
 import { IConfiguration } from "./IConfiguration";
 import { ICookieMgr } from "./ICookieMgr";
 import { IDiagnosticLogger } from "./IDiagnosticLogger";
-import { IDistributedTraceContext } from "./IDistributedTraceContext";
 import { INotificationListener } from "./INotificationListener";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManagerProvider } from "./IPerfManager";
@@ -22,7 +19,7 @@ import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./IT
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "./ITelemetryPlugin";
 import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
-import { ITraceProvider } from "./ITraceProvider";
+import { ITraceHost, ITraceProvider } from "./ITraceProvider";
 import { ILegacyUnloadHook, IUnloadHook } from "./IUnloadHook";
 
 // import { IStatsBeat, IStatsBeatState } from "./IStatsBeat";
@@ -48,12 +45,7 @@ export interface ILoadedPlugin<T extends IPlugin> {
     remove: (isAsync?: boolean, removeCb?: (removed?: boolean) => void) => void;
 }
 
-export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguration> extends IPerfManagerProvider {
-
-    /*
-    * Config object used to initialize AppInsights
-    */
-    readonly config: CfgType;
+export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguration> extends IPerfManagerProvider, ITraceHost<CfgType> {
 
     /**
      * The current logger instance for this instance.
@@ -224,59 +216,13 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
     flush(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason, cbTimeout?: number): boolean | void;
 
     /**
-     * Gets the current distributed trace active context for this instance
-     * @param createNew - Optional flag to create a new instance if one doesn't currently exist, defaults to true. By default this
-     * will use any located parent as defined by the {@link IConfiguration.traceHdrMode} configuration for each new instance created.
-     */
-    getTraceCtx(createNew?: boolean): IDistributedTraceContext | null;
-
-    /**
-     * Sets the current distributed trace context for this instance if available
-     */
-    setTraceCtx(newTraceCtx: IDistributedTraceContext | null | undefined): void;
-
-    /**
-     * Start a new span with the given name and optional parent context.
-     *
-     * Note: This method only creates and returns the span. It does not automatically
-     * set the span as the active trace context. Context management should be handled
-     * separately using setTraceCtx() if needed.
-     *
-     * @param name - The name of the span
-     * @param options - Options for creating the span (kind, attributes, startTime)
-     * @param parent - Optional parent context. If not provided, uses the current active trace context
-     * @returns A new span instance, or null if no trace provider is available
-     * @since 3.4.0
-     */
-    startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan | null;
-
-    /**
-     * Return the current active span
-     */
-    activeSpan?(): IReadableSpan | null;
-
-    /**
-     * Set the current Active Span
-     * @param span - The span to set as the active span
-     */
-    setActiveSpan?(span: IReadableSpan): void
-
-    /**
      * Set the trace provider for creating spans.
      * This allows different SKUs to provide their own span implementations.
      *
      * @param provider - The trace provider to use for span creation
      * @since 3.4.0
      */
-    setTraceProvider(provider: ITraceProvider): void;
-
-    /**
-     * Get the current trace provider.
-     *
-     * @returns The current trace provider, or null if none is set
-     * @since 3.4.0
-     */
-    getTraceProvider(): ITraceProvider | null;
+    setTraceProvider(provider: ICachedValue<ITraceProvider>): void;
 
     /**
      * Watches and tracks changes for accesses to the current config, and if the accessed config changes the

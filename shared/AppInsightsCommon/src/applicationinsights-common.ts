@@ -22,6 +22,7 @@ export { Metric } from "./Telemetry/Metric";
 export { PageView } from "./Telemetry/PageView";
 export { IPageViewData } from "./Interfaces/Contracts/IPageViewData";
 export { RemoteDependencyData } from "./Telemetry/RemoteDependencyData";
+export { IRemoteDependencyData } from "./Interfaces/Contracts/IRemoteDependencyData";
 export { IEventTelemetry } from "./Interfaces/IEventTelemetry";
 export { ITraceTelemetry } from "./Interfaces/ITraceTelemetry";
 export { IMetricTelemetry } from "./Interfaces/IMetricTelemetry";
@@ -29,6 +30,7 @@ export { IDependencyTelemetry } from "./Interfaces/IDependencyTelemetry";
 export { IExceptionTelemetry, IAutoExceptionTelemetry, IExceptionInternal } from "./Interfaces/IExceptionTelemetry";
 export { IPageViewTelemetry, IPageViewTelemetryInternal } from "./Interfaces/IPageViewTelemetry";
 export { IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal } from "./Interfaces/IPageViewPerformanceTelemetry";
+export { IRequestTelemetry } from "./Interfaces/IRequestTelemetry";
 export { Trace } from "./Telemetry/Trace";
 export { PageViewPerformance } from "./Telemetry/PageViewPerformance";
 export { Data } from "./Telemetry/Common/Data";
@@ -36,6 +38,14 @@ export { eSeverityLevel, SeverityLevel } from "./Interfaces/Contracts/SeverityLe
 export { IConfig, ConfigurationManager } from "./Interfaces/IConfig";
 export { IStorageBuffer } from "./Interfaces/IStorageBuffer";
 export { IContextTagKeys, ContextTagKeys } from "./Interfaces/Contracts/ContextTagKeys";
+export {
+    EventDataType, ExceptionDataType, MetricDataType, PageViewDataType, PageViewPerformanceDataType, RemoteDependencyDataType,
+    RequestDataType, TraceDataType
+} from "./Telemetry/DataTypes";
+export {
+    EventEnvelopeType, ExceptionEnvelopeType, MetricEnvelopeType, PageViewEnvelopeType, PageViewPerformanceEnvelopeType,
+    RemoteDependencyEnvelopeType, RequestEnvelopeType, TraceEnvelopeType
+} from "./Telemetry/EnvelopeTypes"
 export {
     DataSanitizerValues,
     dataSanitizeKeyAndAddUniqueness, dataSanitizeKey, dataSanitizeString, dataSanitizeUrl, dataSanitizeMessage,

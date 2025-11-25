@@ -6,28 +6,28 @@ import { IReadableSpan } from "./IReadableSpan";
 
 /**
  * OpenTelemetry tracer interface for creating and managing spans within a trace.
- * 
+ *
  * A tracer is responsible for creating spans that represent units of work within a distributed system.
  * Each tracer is typically associated with a specific instrumentation library or component,
  * allowing for fine-grained control over how different parts of an application generate telemetry.
- * 
+ *
  * @example
  * ```typescript
  * // Get a tracer instance
  * const tracer = otelApi.getTracer('my-service');
- * 
+ *
  * // Create a simple span
  * const span = tracer.startSpan('database-query');
  * span.setAttribute('db.operation', 'SELECT');
  * span.end();
- * 
+ *
  * // Create an active span with automatic context management
  * tracer.startActiveSpan('process-request', (span) => {
  *   span.setAttribute('request.id', '12345');
- *   
+ *
  *   // Any spans created within this block will be children of this span
  *   processRequest();
- *   
+ *
  *   span.end();
  * });
  * ```
@@ -40,22 +40,22 @@ import { IReadableSpan } from "./IReadableSpan";
 export interface IOTelTracer {
     /**
      * Creates and starts a new span without setting it as the active span in the current context.
-     * 
+     *
      * This method creates a span but does NOT modify the current execution context.
      * The caller is responsible for managing the span's lifecycle, including calling `end()`
      * when the operation completes.
-     * 
+     *
      * @param name - The name of the span, should be descriptive of the operation being traced
      * @param options - Optional configuration for span creation (parent context, attributes, etc.)
      * @param context - Optional context to use for extracting the parent span; if not provided, uses current context
-     * 
+     *
      * @returns The newly created span, or null if span creation failed
-     * 
+     *
      * @remarks
      * - The returned span must be manually ended by calling `span.end()`
      * - This span will not automatically become the parent for spans created in nested operations
      * - Use `startActiveSpan` if you want automatic context management
-     * 
+     *
      * @example
      * ```typescript
      * const span = tracer.startSpan('database-operation');
@@ -63,10 +63,10 @@ export interface IOTelTracer {
      *   try {
      *     span.setAttribute('db.table', 'users');
      *     span.setAttribute('db.operation', 'SELECT');
-     *     
+     *
      *     // Perform database operation
      *     const result = await db.query('SELECT * FROM users');
-     *     
+     *
      *     span.setAttributes({
      *       'db.rows_affected': result.length,
      *       'operation.success': true
@@ -88,7 +88,7 @@ export interface IOTelTracer {
     /**
      * Creates and starts a new span, sets it as the active span in the current context,
      * and executes a provided function within this context.
-     * 
+     *
      * This method creates a span, makes it active during the execution of the provided
      * function, and automatically ends the span when the function completes (or throws).
      * This provides automatic span lifecycle management and context propagation.

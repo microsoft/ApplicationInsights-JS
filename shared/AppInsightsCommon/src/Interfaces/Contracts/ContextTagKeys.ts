@@ -227,6 +227,7 @@ export interface IContextTagKeys {
     readonly internalSdkSrc: string;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export class ContextTagKeys extends createClassFromInterface<IContextTagKeys>({
     applicationVersion: _aiApplication("ver"),
     applicationBuild: _aiApplication("build"),

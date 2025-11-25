@@ -6,7 +6,7 @@
  * with the provider pattern.
  */
 
-import { ApplicationInsights, AppInsightsTraceProvider } from "@microsoft/applicationinsights-web";
+import { ApplicationInsights, eOTelSpanKind } from "@microsoft/applicationinsights-web";
 
 // Initialize ApplicationInsights
 const appInsights = new ApplicationInsights({
@@ -16,15 +16,11 @@ const appInsights = new ApplicationInsights({
 });
 appInsights.loadAppInsights();
 
-// Register the trace provider with the core
-const traceProvider = new AppInsightsTraceProvider();
-appInsights.appInsightsCore?.setTracer(traceProvider);
-
 // Example usage
 function exampleSpanUsage() {
     // Start a span using the core's provider pattern
     const span = appInsights.appInsightsCore?.startSpan("example-operation", {
-        kind: OTelSpanKind.CLIENT,
+        kind: eOTelSpanKind.CLIENT,
         attributes: {
             "operation.name": "example",
             "user.id": "12345"
@@ -38,8 +34,8 @@ function exampleSpanUsage() {
             span.setAttribute("duration", 100);
             
             // Create a child span
-            const childSpan = appInsights.appInsightsCore?.startSpan("child-operation", {
-                kind: SpanKind.INTERNAL,
+            const childSpan = appInsights.startSpan("child-operation", {
+                kind: eOTelSpanKind.INTERNAL,
                 startTime: Date.now()
             }, span.spanContext());
 
@@ -49,7 +45,7 @@ function exampleSpanUsage() {
                 childSpan.end();
             }
 
-        } catch (error) {
+        } catch (error: any) {
             span.setAttribute("error", true);
             span.setAttribute("error.message", error.message);
         } finally {
@@ -60,7 +56,7 @@ function exampleSpanUsage() {
 
 // Example of checking if trace provider is available
 function checkTraceProviderAvailability() {
-    const provider = appInsights.appInsightsCore?.getTraceProvider();
+    const provider = appInsights.getTraceProvider();
     if (provider && provider.isAvailable()) {
         console.log(`Trace provider available: ${provider.getProviderId()}`);
         exampleSpanUsage();

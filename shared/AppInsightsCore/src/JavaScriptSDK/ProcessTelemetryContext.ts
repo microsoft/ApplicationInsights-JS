@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 "use strict";
 
-import {
-    arrForEach, dumpObj, isArray, isFunction, isNullOrUndefined, isUndefined, objForEachKey, objFreeze, objKeys
-} from "@nevware21/ts-utils";
+import { arrForEach, dumpObj, isArray, isFunction, isNullOrUndefined, isUndefined, objForEachKey, objFreeze } from "@nevware21/ts-utils";
 import { _applyDefaultValue } from "../Config/ConfigDefaults";
 import { createDynamicConfig } from "../Config/DynamicConfig";
 import { IConfigDefaults } from "../Config/IConfigDefaults";
@@ -12,7 +10,6 @@ import { IDynamicConfigHandler } from "../Config/IDynamicConfigHandler";
 import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import {
     IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext
 } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
@@ -21,8 +18,8 @@ import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetr
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
+import { _noopVoid } from "../OpenTelemetry/noop/noopHelpers";
 import { _throwInternal, safeGetLogger } from "./DiagnosticLogger";
-import { proxyFunctions } from "./HelperFuncs";
 import { STR_CORE, STR_DISABLED, STR_EMPTY } from "./InternalConstants";
 import { doPerf } from "./PerfManager";
 import { _getPluginState } from "./TelemetryHelpers";
@@ -556,7 +553,7 @@ export function createTelemetryPluginProxy(plugin: ITelemetryPlugin, config: ICo
             return hasRun;
         }
 
-        if (!_processChain(unloadCtx, _callTeardown, "unload", () => {}, unloadState.isAsync)) {
+        if (!_processChain(unloadCtx, _callTeardown, "unload", _noopVoid, unloadState.isAsync)) {
             // Only called if we hasRun was not true
             unloadCtx.processNext(unloadState);
         }
@@ -583,97 +580,11 @@ export function createTelemetryPluginProxy(plugin: ITelemetryPlugin, config: ICo
             return hasRun;
         }
         
-        if (!_processChain(updateCtx, _callUpdate, "update", () => {}, false)) {
+        if (!_processChain(updateCtx, _callUpdate, "update", _noopVoid, false)) {
             // Only called if we hasRun was not true
             updateCtx.processNext(updateState);
         }
     }
 
     return objFreeze(proxyChain);
-}
-
-/**
- * This class will be removed!
- * @deprecated use createProcessTelemetryContext() instead
- */
-export class ProcessTelemetryContext implements IProcessTelemetryContext {
-    /**
-     * Gets the current core config instance
-     */
-    public getCfg: () => IConfiguration;
-
-    public getExtCfg: <T>(identifier:string, defaultValue?: IConfigDefaults<T>) => T;
-
-    public getConfig: (identifier:string, field: string, defaultValue?: number | string | boolean | string[] | RegExp[] | Function) => number | string | boolean | string[] | RegExp[] | Function;
-
-    /**
-     * Returns the IAppInsightsCore instance for the current request
-     */
-    public core: () => IAppInsightsCore;
-
-    /**
-     * Returns the current IDiagnosticsLogger for the current request
-     */
-    public diagLog: () => IDiagnosticLogger;
-
-    /**
-     * Helper to allow inherited classes to check and possibly shortcut executing code only
-     * required if there is a nextPlugin
-     */
-    public hasNext: () => boolean;
-
-    /**
-     * Returns the next configured plugin proxy
-     */
-    public getNext: () => ITelemetryPluginChain;
-
-    /**
-     * Helper to set the next plugin proxy
-     */
-    public setNext: (nextCtx:ITelemetryPluginChain) => void;
-
-    /**
-     * Call back for telemetry processing before it it is sent
-     * @param env - This is the current event being reported
-     * @param itemCtx - This is the context for the current request, ITelemetryPlugin instances
-     * can optionally use this to access the current core instance or define / pass additional information
-     * to later plugins (vs appending items to the telemetry item)
-     * @returns boolean (true) if there is no more plugins to process otherwise false or undefined (void)
-     */
-    public processNext: (env: ITelemetryItem) => boolean | void;
-
-    /**
-     * Synchronously iterate over the context chain running the callback for each plugin, once
-     * every plugin has been executed via the callback, any associated onComplete will be called.
-     * @param callback - The function call for each plugin in the context chain
-     */
-    public iterate: <T extends ITelemetryPlugin = ITelemetryPlugin>(callback: (plugin: T) => void) => void;
- 
-    /**
-     * Create a new context using the core and config from the current instance
-     * @param plugins - The execution order to process the plugins, if null or not supplied
-     *                  then the current execution order will be copied.
-     * @param startAt - The plugin to start processing from, if missing from the execution
-     *                  order then the next plugin will be NOT set.
-     */
-    public createNew: (plugins?:IPlugin[]|ITelemetryPluginChain, startAt?:IPlugin) => IProcessTelemetryContext;
- 
-    /**
-     * Set the function to call when the current chain has executed all processNext or unloadNext items.
-     */
-    public onComplete: (onComplete: () => void) => void;
- 
-    /**
-     * Creates a new Telemetry Item context with the current config, core and plugin execution chain
-     * @param plugins - The plugin instances that will be executed
-     * @param config - The current config
-     * @param core - The current core instance
-     */
-    constructor(pluginChain: ITelemetryPluginChain, config: IConfiguration, core: IAppInsightsCore, startAt?:IPlugin) {
-        let _self = this;
-
-        let context = createProcessTelemetryContext(pluginChain, config, core, startAt);
-        // Proxy all functions of the context to this object
-        proxyFunctions(_self, context, objKeys(context) as any);
-    }
 }

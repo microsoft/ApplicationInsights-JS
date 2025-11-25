@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import {
     CreateIteratorContext, ICachedValue, arrForEach, arrIndexOf, createCachedValue, createIterator, getLength, isFunction, isObject,
     isUndefined, iterForOf, objCreate, objDefine, objDefineProps, objForEachKey, objIs, objKeys, safe, strSplit
@@ -5,11 +8,11 @@ import {
 import { IUnloadHook } from "../../JavaScriptSDK.Interfaces/IUnloadHook";
 import { STR_EMPTY, UNDEFINED_VALUE } from "../../JavaScriptSDK/InternalConstants";
 import { eAttributeChangeOp } from "../enums/eAttributeChangeOp";
+import { handleAttribError } from "../helpers/handleErrors";
 import { IOTelAttributes, OTelAttributeValue } from "../interfaces/IOTelAttributes";
 import { IOTelAttributeLimits } from "../interfaces/config/IOTelAttributeLimits";
 import { IOTelConfig } from "../interfaces/config/IOTelConfig";
 import { ITraceCfg } from "../interfaces/config/ITraceCfg";
-import { handleAttribError } from "../internal/commonUtils";
 import { IAttributeChangeInfo, IAttributeContainer, eAttributeFilter } from "./IAttributeContainer";
 
 let _inheritedKey = "~[[inherited]]";

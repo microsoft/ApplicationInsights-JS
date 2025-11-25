@@ -5,10 +5,11 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    AnalyticsPluginIdentifier, Event as EventTelemetry, Exception, IAppInsights, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
-    IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
-    IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry, Metric, PageView,
-    PageViewPerformance, RemoteDependencyData, Trace, createDomEvent, createTelemetryItem, dataSanitizeString, eSeverityLevel,
+    AnalyticsPluginIdentifier, EventDataType, EventEnvelopeType, Exception, ExceptionDataType, ExceptionEnvelopeType, IAppInsights,
+    IAutoExceptionTelemetry, IConfig, IDependencyTelemetry, IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry,
+    IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry,
+    MetricDataType, MetricEnvelopeType, PageViewDataType, PageViewEnvelopeType, PageViewPerformanceDataType, PageViewPerformanceEnvelopeType,
+    RemoteDependencyDataType, TraceDataType, TraceEnvelopeType, createDomEvent, createTelemetryItem, dataSanitizeString, eSeverityLevel,
     isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
@@ -159,8 +160,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 try {
                     let telemetryItem = createTelemetryItem<IEventTelemetry>(
                         event,
-                        EventTelemetry.dataType,
-                        EventTelemetry.envelopeType,
+                        EventDataType,
+                        EventEnvelopeType,
                         _self.diagLog(),
                         customProperties
                     );
@@ -215,8 +216,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 try {
                     let telemetryItem = createTelemetryItem<ITraceTelemetry>(
                         trace,
-                        Trace.dataType,
-                        Trace.envelopeType,
+                        TraceDataType,
+                        TraceEnvelopeType,
                         _self.diagLog(),
                         customProperties);
         
@@ -243,8 +244,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 try {
                     let telemetryItem = createTelemetryItem<IMetricTelemetry>(
                         metric,
-                        Metric.dataType,
-                        Metric.envelopeType,
+                        MetricDataType,
+                        MetricEnvelopeType,
                         _self.diagLog(),
                         customProperties
                     );
@@ -305,8 +306,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 }
                 let telemetryItem = createTelemetryItem<IPageViewTelemetryInternal>(
                     pageView,
-                    PageView.dataType,
-                    PageView.envelopeType,
+                    PageViewDataType,
+                    PageViewEnvelopeType,
                     _self.diagLog(),
                     properties,
                     systemProperties);
@@ -324,8 +325,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             _self.sendPageViewPerformanceInternal = (pageViewPerformance: IPageViewPerformanceTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) => {
                 let telemetryItem = createTelemetryItem<IPageViewPerformanceTelemetryInternal>(
                     pageViewPerformance,
-                    PageViewPerformance.dataType,
-                    PageViewPerformance.envelopeType,
+                    PageViewPerformanceDataType,
+                    PageViewPerformanceEnvelopeType,
                     _self.diagLog(),
                     properties,
                     systemProperties);
@@ -450,8 +451,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 }
                 let telemetryItem: ITelemetryItem = createTelemetryItem<IExceptionInternal>(
                     exceptionPartB,
-                    Exception.dataType,
-                    Exception.envelopeType,
+                    ExceptionDataType,
+                    ExceptionEnvelopeType,
                     _self.diagLog(),
                     customProperties,
                     systemProperties
@@ -697,7 +698,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 if (!_browserLinkInitializerAdded && _isBrowserLinkTrackingEnabled) {
                     const browserLinkPaths = ["/browserLinkSignalR/", "/__browserLink/"];
                     const dropBrowserLinkRequests = (envelope: ITelemetryItem) => {
-                        if (_isBrowserLinkTrackingEnabled && envelope.baseType === RemoteDependencyData.dataType) {
+                        if (_isBrowserLinkTrackingEnabled && envelope.baseType === RemoteDependencyDataType) {
                             let remoteData = envelope.baseData as IDependencyTelemetry;
                             if (remoteData) {
                                 for (let i = 0; i < browserLinkPaths.length; i++) {
@@ -719,8 +720,8 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             function _sendCORSException(exception: IAutoExceptionTelemetry, properties?: ICustomProperties) {
                 let telemetryItem: ITelemetryItem = createTelemetryItem<IAutoExceptionTelemetry>(
                     exception,
-                    Exception.dataType,
-                    Exception.envelopeType,
+                    ExceptionDataType,
+                    ExceptionEnvelopeType,
                     _self.diagLog(),
                     properties
                 );

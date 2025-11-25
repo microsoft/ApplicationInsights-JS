@@ -14,6 +14,7 @@ import {
 import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
 import { IXDomainRequest } from "../JavaScriptSDK.Interfaces/IXDomainRequest";
 import { IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction } from "../JavaScriptSDK.Interfaces/IXHROverride";
+import { _noopVoid } from "../OpenTelemetry/noop/noopHelpers";
 import { DisabledPropertyName } from "./Constants";
 import { _throwInternal, _warnToConsole } from "./DiagnosticLogger";
 import { getLocation, isBeaconsSupported, isFetchSupported, isXhrSupported, useXDomainRequest } from "./EnvUtils";
@@ -30,10 +31,8 @@ declare var XDomainRequest: {
 
 
 /**
- * This Internal component
- * Manager SendPost functions
- * SendPostManger
- * @internal for internal use only
+ * Manager for SendPost functions
+ * @since 3.0.0
  */
 export class SenderPostManager {
 
@@ -650,7 +649,7 @@ export class SenderPostManager {
                 };
 
                 
-                xdr.onprogress = () => { };
+                xdr.onprogress = _noopVoid;
         
                 // XDomainRequest requires the same protocol as the hosting page.
                 // If the protocol doesn't match, we can't send the telemetry :(.

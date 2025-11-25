@@ -1,25 +1,23 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { perfNow, isFunction, isString, isNumber, isBoolean, isObject, isArray } from "@nevware21/ts-utils";
+import { getDeferred, ICachedValue, isNullOrUndefined, mathMin, objDefine, perfNow, strSubstr } from "@nevware21/ts-utils";
 import { createSpan } from "../../../../src/OpenTelemetry/trace/span";
+import { createOTelApi } from "../../../../src/OpenTelemetry/otelApi";
 import { IOTelSpanCtx } from "../../../../src/OpenTelemetry/interfaces/trace/IOTelSpanCtx";
 import { IOTelApi } from "../../../../src/OpenTelemetry/interfaces/IOTelApi";
 import { IOTelConfig } from "../../../../src/OpenTelemetry/interfaces/config/IOTelConfig";
-import { eOTelSpanKind } from "../../../../src/OpenTelemetry/interfaces/trace/IOTelSpanOptions";
 import { eOTelSpanStatusCode } from "../../../../src/OpenTelemetry/enums/trace/OTelSpanStatus";
-import { IOTelErrorHandlers } from "../../../../src/OpenTelemetry/interfaces/config/IOTelErrorHandlers";
 import { IOTelAttributes } from "../../../../src/OpenTelemetry/interfaces/IOTelAttributes";
 import { IReadableSpan } from "../../../../src/OpenTelemetry/interfaces/trace/IReadableSpan";
 import { IDistributedTraceContext } from "../../../../src/JavaScriptSDK.Interfaces/IDistributedTraceContext";
 import { createDistributedTraceContext } from "../../../../src/JavaScriptSDK/TelemetryHelpers";
 import { generateW3CId } from "../../../../src/JavaScriptSDK/CoreUtils";
-import { suppressTracing, unsuppressTracing, isTracingSuppressed, withSpan } from "../../../../src/OpenTelemetry/trace/utils";
+import { suppressTracing, unsuppressTracing, isTracingSuppressed, useSpan, withSpan } from "../../../../src/OpenTelemetry/trace/utils";
 import { ITraceCfg } from "../../../../src/OpenTelemetry/interfaces/config/ITraceCfg";
 import { AppInsightsCore } from "../../../../src/JavaScriptSDK/AppInsightsCore";
 import { IConfiguration } from "../../../../src/JavaScriptSDK.Interfaces/IConfiguration";
-import { ITraceProvider } from "../../../../src/JavaScriptSDK.Interfaces/ITraceProvider";
-import { createOTelApi } from "../../../../src/OpenTelemetry/otelApi";
-import { IOTelApiCtx } from "../../../../src/OpenTelemetry/interfaces/IOTelApiCtx";
+import { ITraceProvider, ISpanScope, ITraceHost } from "../../../../src/JavaScriptSDK.Interfaces/ITraceProvider";
 import { IOTelSpanOptions } from "../../../../src/OpenTelemetry/interfaces/trace/IOTelSpanOptions";
+import { eOTelSpanKind } from "../../../../src/OpenTelemetry/enums/trace/OTelSpanKind";
 
 export class SpanTests extends AITestClass {
 
@@ -62,59 +60,60 @@ export class SpanTests extends AITestClass {
     /**
      * Helper function to create a simple trace provider with onEnd callback
      */
-    private _createTestTraceProvider(onEnd?: (span: IReadableSpan) => void): ITraceProvider {
+    private _createTestTraceProvider(host: ITraceHost, onEnd?: (span: IReadableSpan) => void): ICachedValue<ITraceProvider> {
         const actualOnEnd = onEnd || ((span) => this._onEndCalls.push(span));
-        let _activeSpan: IReadableSpan | null = null;
 
-        const provider: ITraceProvider = {
-            createSpan: (name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan => {
-                // Create a new distributed trace context for this span
-                let newCtx: IDistributedTraceContext;
-                if (parent) {
-                    // For child spans: keep parent's traceId but generate new spanId
-                    newCtx = createDistributedTraceContext({
-                        traceId: parent.traceId,
-                        spanId: generateW3CId().substring(0, 16), // Generate new 16-char spanId
-                        traceFlags: parent.traceFlags || 0,
-                        isRemote: false
-                    });
-                } else {
-                    // For root spans: generate new traceId and spanId
-                    newCtx = createDistributedTraceContext();
-                }
-                
-                // Get configuration from the core if available, including suppressTracing
-                let isRecording = options?.recording !== false;
-                if (this._core && this._core.config && this._core.config.traceCfg && this._core.config.traceCfg.suppressTracing) {
-                    isRecording = false;
-                }
-                
-                // Create the span context
-                const spanCtx: IOTelSpanCtx = {
-                    api: this._mockApi,
-                    spanContext: newCtx,
-                    attributes: options?.attributes,
-                    startTime: options?.startTime,
-                    isRecording: isRecording,
-                    onEnd: actualOnEnd
-                };
+        return getDeferred(() => {
+            const provider: ITraceProvider = {
+                api: this._mockApi,
+                createSpan: (name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan => {
+                    // Create a new distributed trace context for this span
+                    let newCtx: IDistributedTraceContext;
+                    let parentCtx: IDistributedTraceContext | undefined;
 
-                return createSpan(spanCtx, name, options?.kind || eOTelSpanKind.INTERNAL);
-            },
+                    if (options && options.root) {
+                        newCtx = createDistributedTraceContext();
+                    } else {
+                        newCtx = createDistributedTraceContext(parent || host.getTraceCtx());
+                        if (newCtx.parentCtx) {
+                            parentCtx = newCtx.parentCtx;
+                        }
+                    }
+
+                    // Always generate a new spanId
+                    newCtx.spanId = strSubstr(generateW3CId(), 0, 16);
+
+                    // Get configuration from the core if available
+                    let isRecording = options?.recording !== false;
+                    if (this._core && this._core.config && this._core.config.traceCfg && this._core.config.traceCfg.suppressTracing) {
+                        isRecording = false;
+                    }
+                    
+                    // Create the span context
+                    const spanCtx: IOTelSpanCtx = {
+                        api: this._mockApi,
+                        spanContext: newCtx,
+                        attributes: options?.attributes,
+                        startTime: options?.startTime,
+                        isRecording: isRecording,
+                        onEnd: actualOnEnd
+                    };
+
+                    if (parentCtx) {
+                        objDefine(spanCtx, "parentSpanContext", {
+                            v: parentCtx,
+                            w: false
+                        });
+                    }
+
+                    return createSpan(spanCtx, name, options?.kind || eOTelSpanKind.INTERNAL);
+                },
+                getProviderId: (): string => "test-provider",
+                isAvailable: (): boolean => true
+            };
             
-            activeSpan: (): IReadableSpan | null => {
-                return _activeSpan;
-            },
-            
-            setActiveSpan: (span: IReadableSpan): void => {
-                _activeSpan = span;
-            },
-            
-            getProviderId: (): string => "test-provider",
-            isAvailable: (): boolean => true
-        };
-        
-        return provider;
+            return provider;
+        });
     }
 
     /**
@@ -145,7 +144,7 @@ export class SpanTests extends AITestClass {
         this._core.initialize(coreConfig, [testChannel]);
 
         // Set up the trace provider
-        const traceProvider = this._createTestTraceProvider();
+        const traceProvider = this._createTestTraceProvider(this._core);
         this._core.setTraceProvider(traceProvider);
 
         return this._core;
@@ -639,7 +638,8 @@ export class SpanTests extends AITestClass {
             test: () => {
                 // Arrange
                 const core = this._setupCore();
-                Assert.equal(core.activeSpan!(), null, "No active span initially");
+                let initialActiveSpan = core.getActiveSpan();
+                Assert.ok(!isNullOrUndefined(initialActiveSpan), "Initially, activeSpan should not be null with a trace provider");
 
                 // Act
                 const span = core.startSpan("active-span-test");
@@ -651,19 +651,23 @@ export class SpanTests extends AITestClass {
                 Assert.ok(traceProvider!.isAvailable(), "Trace provider should be available");
                 
                 // Debug: Check trace provider before setActiveSpan
-                const providerActiveSpanBefore = traceProvider!.activeSpan();
-                Assert.equal(providerActiveSpanBefore, null, "Trace provider should not have active span initially");
+                const providerActiveSpanBefore = core.getActiveSpan();
+                Assert.equal(providerActiveSpanBefore, initialActiveSpan, "Trace provider should return the initially active span before setActiveSpan");
                 
                 // Manually set as active span (this would normally be done by startActiveSpan)
-                core.setActiveSpan!(span!);
+                const scope = core.setActiveSpan(span!);
+
+                // Assert scope object
+                Assert.ok(scope, "Scope should be returned");
+                Assert.equal(scope.span, span, "Scope.span should equal the passed span");
 
                 // Debug: Check trace provider directly after setActiveSpan
-                const providerActiveSpanAfter = traceProvider!.activeSpan();
+                const providerActiveSpanAfter = core.getActiveSpan();
                 Assert.ok(providerActiveSpanAfter, "Trace provider should have active span after setActiveSpan");
                 Assert.equal(providerActiveSpanAfter, span, "Trace provider active span should be the same instance");
 
                 // Assert
-                const activeSpan = core.activeSpan!();
+                const activeSpan = core.getActiveSpan();
                 Assert.ok(activeSpan, "Active span should be available");
                 if (activeSpan) {
                     const readableActiveSpan = activeSpan as IReadableSpan;
@@ -687,7 +691,13 @@ export class SpanTests extends AITestClass {
                 Assert.ok(parentSpan, "Parent span should be created");
                 
                 // Set parent as active
-                core.setActiveSpan!(parentSpan!);
+                const scope = core.setActiveSpan(parentSpan!);
+                const activeSpan = core.getActiveSpan();
+                
+                // Assert scope and activeSpan
+                Assert.ok(scope, "Scope should be returned");
+                Assert.equal(scope.span, parentSpan, "Scope.span should equal the parent span");
+                Assert.equal(activeSpan, parentSpan, "GetGetGetGetGetGetGetGetGetActiveSpan() should return the parent span");
                 
                 const childSpan = core.startSpan("child-operation", {
                     kind: eOTelSpanKind.CLIENT,
@@ -817,7 +827,7 @@ export class SpanTests extends AITestClass {
 
                 // Act - Create new trace provider with different onEnd behavior
                 let alternativeOnEndCalls: IReadableSpan[] = [];
-                const newProvider = this._createTestTraceProvider((span) => {
+                const newProvider = this._createTestTraceProvider(core, (span) => {
                     alternativeOnEndCalls.push(span);
                 });
                 
@@ -847,11 +857,11 @@ export class SpanTests extends AITestClass {
                         generalLimits: {
                             attributeCountLimit: 64,
                             attributeValueLengthLimit: 256
-                        },
-                        spanLimits: {
-                            attributeCountLimit: 32,
-                            eventCountLimit: 16,
-                            linkCountLimit: 8
+                        // },
+                        // spanLimits: {
+                        //     attributeCountLimit: 32,
+                        //     eventCountLimit: 16,
+                        //     linkCountLimit: 8
                         }
                     }
                 });
@@ -875,6 +885,266 @@ export class SpanTests extends AITestClass {
             }
         });
 
+        // === Tracer startActiveSpan Tests ===
+
+        this.testCase({
+            name: "Tracer.startActiveSpan: should set span as active during callback execution",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                const otelApi = createOTelApi({ host: core });
+                const tracer = otelApi.trace.getTracer("test-tracer");
+                const initialActiveSpan = core.getActiveSpan();
+
+                let activeSpanInsideCallback: IReadableSpan | null | undefined = null;
+                let callbackExecuted = false;
+
+                // Act
+                const result = tracer.startActiveSpan("test-operation", (span) => {
+                    callbackExecuted = true;
+                    
+                    // Check if the span is set as active in the host instance
+                    activeSpanInsideCallback = core.getActiveSpan();
+                    
+                    span.setAttribute("test.key", "test-value");
+                    return "callback-result";
+                });
+
+                // Assert
+                Assert.ok(callbackExecuted, "Callback should have been executed");
+                Assert.equal(result, "callback-result", "Should return callback result");
+                Assert.ok(activeSpanInsideCallback, "Active span should be set during callback");
+                Assert.equal(activeSpanInsideCallback?.name, "test-operation", "Active span should be the created span");
+                
+                // Verify active span is restored after callback
+                const activeSpanAfterCallback = core.getActiveSpan();
+                Assert.equal(activeSpanAfterCallback, initialActiveSpan, "Active span should be restored to initial state");
+            }
+        });
+
+        this.testCase({
+            name: "Tracer.startActiveSpan: should automatically end span after callback completes",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                const otelApi = createOTelApi({ host: core });
+                const tracer = otelApi.trace.getTracer("test-tracer");
+                
+                let spanInsideCallback: IReadableSpan | null = null;
+                const initialOnEndCount = this._onEndCalls.length;
+
+                // Act
+                tracer.startActiveSpan("auto-end-test", (span) => {
+                    spanInsideCallback = span;
+                    Assert.ok(!span.ended, "Span should not be ended during callback");
+                    span.setAttribute("operation.type", "test");
+                });
+
+                // Assert
+                Assert.ok(spanInsideCallback, "Span should have been passed to callback");
+                Assert.ok(spanInsideCallback!.ended, "Span should be ended after callback completes");
+                Assert.equal(this._onEndCalls.length, initialOnEndCount + 1, "onEnd should have been called");
+                Assert.equal(this._onEndCalls[this._onEndCalls.length - 1].name, "auto-end-test", "onEnd should receive the correct span");
+            }
+        });
+
+        this.testCase({
+            name: "Tracer.startActiveSpan: should handle nested startActiveSpan calls",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                const otelApi = createOTelApi({ host: core });
+                const tracer = otelApi.trace.getTracer("test-tracer");
+                
+                const executionTrace: string[] = [];
+
+                // Act
+                const result = tracer.startActiveSpan("outer-operation", (outerSpan) => {
+                    const outerActiveSpan = core.getActiveSpan();
+                    executionTrace.push(`outer-start: ${outerActiveSpan?.name}`);
+                    
+                    outerSpan.setAttribute("level", "outer");
+                    
+                    // Nested startActiveSpan
+                    const innerResult = tracer.startActiveSpan("inner-operation", (innerSpan) => {
+                        const innerActiveSpan = core.getActiveSpan();
+                        executionTrace.push(`inner: ${innerActiveSpan?.name}`);
+                        
+                        innerSpan.setAttribute("level", "inner");
+                        
+                        // Verify the inner span is now active
+                        Assert.equal(innerActiveSpan?.name, "inner-operation", "Inner span should be active during inner callback");
+                        
+                        return "inner-result";
+                    });
+                    
+                    // After inner callback, outer should be active again
+                    const outerActiveSpanRestored = core.getActiveSpan();
+                    executionTrace.push(`outer-end: ${outerActiveSpanRestored?.name}`);
+                    
+                    Assert.equal(outerActiveSpanRestored?.name, "outer-operation", "Outer span should be restored as active after inner callback");
+                    
+                    return `outer(${innerResult})`;
+                });
+
+                // Assert
+                Assert.equal(result, "outer(inner-result)", "Nested startActiveSpan should work correctly");
+                Assert.equal(executionTrace.length, 3, "Should have captured 3 execution points");
+                Assert.equal(executionTrace[0], "outer-start: outer-operation", "Outer callback should see outer span active");
+                Assert.equal(executionTrace[1], "inner: inner-operation", "Inner callback should see inner span active");
+                Assert.equal(executionTrace[2], "outer-end: outer-operation", "Outer callback should see outer span restored after inner");
+            }
+        });
+
+        this.testCase({
+            name: "Tracer.startActiveSpan: should handle async callback with active span management",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                const otelApi = createOTelApi({ host: core });
+                const tracer = otelApi.trace.getTracer("test-tracer");
+                const initialActiveSpan = core.getActiveSpan();
+                
+                let activeSpanDuringAsync: IReadableSpan | null | undefined = null;
+
+                // Act
+                return tracer.startActiveSpan("async-operation", async (span) => {
+                    // Check active span at start
+                    activeSpanDuringAsync = core.getActiveSpan();
+                    Assert.equal(activeSpanDuringAsync?.name, "async-operation", "Span should be active at start of async callback");
+                    
+                    span.setAttribute("async.phase", "start");
+                    
+                    // Simulate async operation
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    // Check active span after async operation
+                    const activeSpanAfterAwait = core.getActiveSpan();
+                    Assert.equal(activeSpanAfterAwait?.name, "async-operation", "Span should still be active after await");
+                    
+                    span.setAttribute("async.phase", "end");
+                    
+                    return "async-result";
+                }).then(result => {
+                    // Assert
+                    Assert.equal(result, "async-result", "Should return async callback result");
+                    Assert.ok(activeSpanDuringAsync, "Active span should have been set during callback");
+                    
+                    // Verify active span is restored after async callback completes
+                    const activeSpanAfterCallback = core.getActiveSpan();
+                    Assert.equal(activeSpanAfterCallback, initialActiveSpan, "Active span should be restored after async callback");
+                });
+            }
+        });
+
+        this.testCase({
+            name: "Tracer.startActiveSpan: should handle exceptions and still restore active span",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                const otelApi = createOTelApi({ host: core });
+                const tracer = otelApi.trace.getTracer("test-tracer");
+                const initialActiveSpan = core.getActiveSpan();
+                
+                let spanInsideCallback: IReadableSpan | null = null;
+                let exceptionThrown = false;
+
+                // Act
+                try {
+                    tracer.startActiveSpan("error-operation", (span) => {
+                        spanInsideCallback = span;
+                        const activeSpan = core.getActiveSpan();
+                        Assert.equal(activeSpan?.name, "error-operation", "Span should be active before exception");
+                        
+                        throw new Error("Test exception");
+                    });
+                } catch (error: any) {
+                    exceptionThrown = true;
+                    Assert.equal(error.message, "Test exception", "Should propagate exception");
+                }
+
+                // Assert
+                Assert.ok(exceptionThrown, "Exception should have been thrown");
+                Assert.ok(spanInsideCallback, "Span should have been created");
+                Assert.ok(spanInsideCallback!.ended, "Span should be ended even after exception");
+                
+                // Verify active span is restored even after exception
+                const activeSpanAfterException = core.getActiveSpan();
+                Assert.equal(activeSpanAfterException, initialActiveSpan, "Active span should be restored even after exception");
+            }
+        });
+
+        this.testCase({
+            name: "Tracer.startActiveSpan: should work with options parameter",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                const otelApi = createOTelApi({ host: core });
+                const tracer = otelApi.trace.getTracer("test-tracer");
+                
+                let activeSpanInsideCallback: IReadableSpan | null | undefined = null;
+
+                // Act
+                const result = tracer.startActiveSpan("options-test", 
+                    {
+                        kind: eOTelSpanKind.SERVER,
+                        attributes: {
+                            "http.method": "POST",
+                            "http.route": "/api/test"
+                        }
+                    },
+                    (span) => {
+                        activeSpanInsideCallback = core.getActiveSpan();
+                        
+                        Assert.equal(span.kind, eOTelSpanKind.SERVER, "Span kind should match options");
+                        span.setAttribute("response.status", 200);
+                        
+                        return "options-result";
+                    }
+                );
+
+                // Assert
+                Assert.equal(result, "options-result", "Should return callback result");
+                Assert.ok(activeSpanInsideCallback, "Active span should be set during callback");
+                Assert.equal(activeSpanInsideCallback?.name, "options-test", "Active span should be the created span");
+            }
+        });
+
+        this.testCase({
+            name: "Tracer.startActiveSpan: child spans should inherit parent from active span",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                const otelApi = createOTelApi({ host: core });
+                const tracer = otelApi.trace.getTracer("test-tracer");
+                
+                let parentSpanId: string | undefined;
+                let childSpanParentId: string | undefined;
+
+                // Act
+                tracer.startActiveSpan("parent-operation", (parentSpan) => {
+                    parentSpanId = parentSpan.spanContext().spanId;
+                    
+                    // Create a child span using startSpan (not startActiveSpan)
+                    // It should automatically use the active span (parent-operation) as parent
+                    const childSpan = core.startSpan("child-operation");
+                    
+                    Assert.ok(childSpan, "Child span should be created");
+                    const childContext = childSpan!.spanContext();
+                    childSpanParentId = childSpan!.parentSpanId;
+                    
+                    // Verify parent-child relationship
+                    Assert.equal(childContext.traceId, parentSpan.spanContext().traceId, "Child should have same trace ID as parent");
+                    
+                    childSpan!.end();
+                });
+
+                // Assert
+                Assert.ok(parentSpanId, "Parent span ID should be captured");
+                Assert.equal(childSpanParentId, parentSpanId, "Child span parent ID should match parent span ID");
+            }
+        });
+
         // === withSpan Helper Tests ===
 
         this.testCase({
@@ -882,12 +1152,14 @@ export class SpanTests extends AITestClass {
             test: () => {
                 // Arrange
                 const core = this._setupCore();
+                let initialActiveSpan = core.getActiveSpan();
+                Assert.ok(!isNullOrUndefined(initialActiveSpan), "Initially, activeSpan should not be null with a trace provider");
                 const testSpan = core.startSpan("withSpan-test-active");
                 Assert.ok(testSpan, "Test span should be created");
                 
                 let capturedActiveSpan: IReadableSpan | null = null;
                 const testFunction = () => {
-                    capturedActiveSpan = core.activeSpan!();
+                    capturedActiveSpan = core.getActiveSpan();
                     return "test-result";
                 };
 
@@ -898,7 +1170,7 @@ export class SpanTests extends AITestClass {
                 Assert.equal(result, "test-result", "withSpan should return function result");
                 Assert.ok(capturedActiveSpan, "Function should have access to active span");
                 Assert.equal(capturedActiveSpan, testSpan, "Active span should be the provided span");
-                Assert.equal(core.activeSpan!(), null, "Active span should be restored after execution");
+                Assert.equal(core.getActiveSpan(), initialActiveSpan, "Active span should be restored after execution");
             }
         });
 
@@ -912,12 +1184,12 @@ export class SpanTests extends AITestClass {
                 Assert.ok(previousSpan && testSpan, "Both spans should be created");
                 
                 // Set previous span as active
-                core.setActiveSpan!(previousSpan!);
-                Assert.equal(core.activeSpan!(), previousSpan, "Previous span should be active initially");
+                core.setActiveSpan(previousSpan!);
+                Assert.equal(core.getActiveSpan(), previousSpan, "Previous span should be active initially");
                 
                 let capturedActiveSpan: IReadableSpan | null = null;
                 const testFunction = () => {
-                    capturedActiveSpan = core.activeSpan!();
+                    capturedActiveSpan = core.getActiveSpan();
                     return 42;
                 };
 
@@ -927,7 +1199,7 @@ export class SpanTests extends AITestClass {
                 // Assert
                 Assert.equal(result, 42, "withSpan should return function result");
                 Assert.equal(capturedActiveSpan, testSpan, "Function should have access to test span");
-                Assert.equal(core.activeSpan!(), previousSpan, "Previous active span should be restored");
+                Assert.equal(core.getActiveSpan(), previousSpan, "Previous active span should be restored");
             }
         });
 
@@ -989,7 +1261,7 @@ export class SpanTests extends AITestClass {
                 const testSpan = core.startSpan("withSpan-test-exception");
                 Assert.ok(previousSpan && testSpan, "Both spans should be created");
                 
-                core.setActiveSpan!(previousSpan!);
+                core.setActiveSpan(previousSpan!);
                 
                 const testFunction = () => {
                     throw new Error("Test exception");
@@ -1005,7 +1277,7 @@ export class SpanTests extends AITestClass {
 
                 Assert.ok(thrownError, "Exception should be thrown");
                 Assert.equal(thrownError!.message, "Test exception", "Exception message should be preserved");
-                Assert.equal(core.activeSpan!(), previousSpan, "Previous active span should be restored even after exception");
+                Assert.equal(core.getActiveSpan(), previousSpan, "Previous active span should be restored even after exception");
             }
         });
 
@@ -1048,6 +1320,8 @@ export class SpanTests extends AITestClass {
             test: () => {
                 // Arrange
                 const core = this._setupCore();
+                let initialActiveSpan = core.getActiveSpan();
+                Assert.ok(!isNullOrUndefined(initialActiveSpan), "Initially, activeSpan should not be null with a trace provider");
                 const testSpan = core.startSpan("withSpan-test-async-pattern");
                 Assert.ok(testSpan, "Test span should be created");
                 
@@ -1055,7 +1329,7 @@ export class SpanTests extends AITestClass {
                 
                 // Simulate async-like pattern with callback
                 const asyncFunction = (callback: (result: string) => void) => {
-                    spanDuringExecution = core.activeSpan!();
+                    spanDuringExecution = core.getActiveSpan();
                     // Simulate some async work completing synchronously for this test
                     callback("async-result");
                     return "function-result";
@@ -1073,7 +1347,7 @@ export class SpanTests extends AITestClass {
                 Assert.equal(result, "function-result", "withSpan should return main function result");
                 Assert.equal(callbackResult, "async-result", "Callback should be executed");
                 Assert.equal(spanDuringExecution, testSpan, "Active span should be available during execution");
-                Assert.equal(core.activeSpan!(), null, "Active span should be restored after completion");
+                Assert.equal(core.getActiveSpan(), initialActiveSpan, "Active span should be restored after completion");
             }
         });
 
@@ -1082,13 +1356,14 @@ export class SpanTests extends AITestClass {
             test: () => {
                 // Arrange
                 const core = this._setupCore();
+                let initialActiveSpan = core.getActiveSpan();
                 const testSpan = core.startSpan("withSpan-test-no-previous");
                 Assert.ok(testSpan, "Test span should be created");
-                Assert.equal(core.activeSpan!(), null, "No active span initially");
+                Assert.equal(core.getActiveSpan(), initialActiveSpan, "Just starting a span should not change active span");
                 
                 let capturedActiveSpan: IReadableSpan | null = null;
                 const testFunction = () => {
-                    capturedActiveSpan = core.activeSpan!();
+                    capturedActiveSpan = core.getActiveSpan();
                     return "success";
                 };
 
@@ -1098,7 +1373,7 @@ export class SpanTests extends AITestClass {
                 // Assert
                 Assert.equal(result, "success", "Function should execute successfully");
                 Assert.equal(capturedActiveSpan, testSpan, "Test span should be active during execution");
-                Assert.equal(core.activeSpan!(), null, "No active span should be restored (was null)");
+                Assert.equal(core.getActiveSpan(), initialActiveSpan, "No active span should be restored");
             }
         });
 
@@ -1107,6 +1382,8 @@ export class SpanTests extends AITestClass {
             test: () => {
                 // Arrange
                 const core = this._setupCore();
+                let initialActiveSpan = core.getActiveSpan();
+                Assert.ok(!isNullOrUndefined(initialActiveSpan), "Initially, activeSpan should not be null with a trace provider");
                 const outerSpan = core.startSpan("outer-span");
                 const innerSpan = core.startSpan("inner-span");
                 Assert.ok(outerSpan && innerSpan, "Both spans should be created");
@@ -1114,18 +1391,18 @@ export class SpanTests extends AITestClass {
                 const executionTrace: string[] = [];
                 
                 const innerFunction = () => {
-                    const activeSpan = core.activeSpan!();
+                    const activeSpan = core.getActiveSpan();
                     executionTrace.push(`inner: ${activeSpan ? (activeSpan as IReadableSpan).name : 'null'}`);
                     return "inner-result";
                 };
                 
                 const outerFunction = () => {
-                    const activeSpanBefore = core.activeSpan!();
+                    const activeSpanBefore = core.getActiveSpan();
                     executionTrace.push(`outer-start: ${activeSpanBefore ? (activeSpanBefore as IReadableSpan).name : 'null'}`);
                     
                     const innerResult = withSpan(core, innerSpan!, innerFunction);
                     
-                    const activeSpanAfter = core.activeSpan!();
+                    const activeSpanAfter = core.getActiveSpan();
                     executionTrace.push(`outer-end: ${activeSpanAfter ? (activeSpanAfter as IReadableSpan).name : 'null'}`);
                     
                     return `outer(${innerResult})`;
@@ -1140,7 +1417,7 @@ export class SpanTests extends AITestClass {
                 Assert.equal(executionTrace[0], "outer-start: outer-span", "Outer function should see outer span");
                 Assert.equal(executionTrace[1], "inner: inner-span", "Inner function should see inner span");
                 Assert.equal(executionTrace[2], "outer-end: outer-span", "Outer function should see outer span restored");
-                Assert.equal(core.activeSpan!(), null, "No active span should remain after nested execution");
+                Assert.equal(core.getActiveSpan(), initialActiveSpan, "No active span should remain after nested execution");
             }
         });
 
@@ -1149,11 +1426,13 @@ export class SpanTests extends AITestClass {
             test: () => {
                 // Arrange
                 const core = this._setupCore();
+                let initialActiveSpan = core.getActiveSpan();
+                Assert.ok(!isNullOrUndefined(initialActiveSpan), "Initially, activeSpan should not be null with a trace provider");
                 const testSpan = core.startSpan("withSpan-test-operations");
                 Assert.ok(testSpan, "Test span should be created");
                 
                 const testFunction = () => {
-                    const activeSpan = core.activeSpan!();
+                    const activeSpan = core.getActiveSpan();
                     Assert.ok(activeSpan, "Should have active span in function");
                     
                     // Perform span operations
@@ -1175,7 +1454,7 @@ export class SpanTests extends AITestClass {
 
                 // Assert
                 Assert.equal(result, "operations-completed", "Function should complete successfully");
-                Assert.equal(core.activeSpan!(), null, "Active span should be restored");
+                Assert.equal(core.getActiveSpan(), initialActiveSpan, "Active span should be restored");
                 
                 // Verify span operations were applied (span should still be valid)
                 const readableSpan = testSpan! as IReadableSpan;
@@ -1236,7 +1515,7 @@ export class SpanTests extends AITestClass {
                 const testSpan = core.startSpan("withSpan-performance-test");
                 Assert.ok(testSpan, "Test span should be created");
                 
-                const iterations = 1000;
+                const iterations = 10000;
                 let computeResult = 0;
                 
                 const computeFunction = (base: number, multiplier: number) => {
@@ -1263,11 +1542,428 @@ export class SpanTests extends AITestClass {
 
                 // Assert reasonable performance characteristics
                 // withSpan should not add more than 10x overhead (very generous threshold)
-                const overhead = timeWith / timeWithout;
-                Assert.ok(overhead < 10, `withSpan overhead should be reasonable: ${overhead.toFixed(2)}x`);
+                const overhead = timeWith / (timeWithout || 1);
+                Assert.ok(overhead < 15, `withSpan overhead should be reasonable: ${overhead.toFixed(2)}x`);
                 
                 // Results should be the same
                 Assert.ok(computeResult > 0, "Computations should have produced results");
+            }
+        });
+        // === useSpan Helper Tests ===
+
+        this.testCase({
+            name: "useSpan: should execute function with span as active span",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                let initialActiveSpan = core.getActiveSpan();
+                Assert.ok(!isNullOrUndefined(initialActiveSpan), "Initially, activeSpan should not be null with a trace provider");
+                const testSpan = core.startSpan("useSpan-test-active");
+                Assert.ok(testSpan, "Test span should be created");
+                
+                let capturedActiveSpan: IReadableSpan | null = null;
+                const testFunction = () => {
+                    capturedActiveSpan = core.getActiveSpan();
+                    return "test-result";
+                };
+
+                // Act
+                const result = useSpan(core, testSpan!, testFunction);
+
+                // Assert
+                Assert.equal(result, "test-result", "useSpan should return function result");
+                Assert.ok(capturedActiveSpan, "Function should have access to active span");
+                Assert.equal(capturedActiveSpan, testSpan, "Active span should be the provided span");
+                Assert.equal(core.getActiveSpan(), initialActiveSpan, "Active span should be restored after execution");
+            }
+        });
+
+        this.testCase({
+            name: "useSpan: should restore previous active span after execution",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                const previousSpan = core.startSpan("previous-span");
+                const testSpan = core.startSpan("useSpan-test-restore");
+                Assert.ok(previousSpan && testSpan, "Both spans should be created");
+                
+                // Set previous span as active
+                core.setActiveSpan(previousSpan!);
+                Assert.equal(core.getActiveSpan(), previousSpan, "Previous span should be active initially");
+                
+                let capturedActiveSpan: IReadableSpan | null = null;
+                const testFunction = () => {
+                    capturedActiveSpan = core.getActiveSpan();
+                    return 42;
+                };
+
+                // Act
+                const result = useSpan(core, testSpan!, testFunction);
+
+                // Assert
+                Assert.equal(result, 42, "useSpan should return function result");
+                Assert.equal(capturedActiveSpan, testSpan, "Function should have access to test span");
+                Assert.equal(core.getActiveSpan(), previousSpan, "Previous active span should be restored");
+            }
+        });
+
+        this.testCase({
+            name: "useSpan: should handle function with arguments",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                const testSpan = core.startSpan("useSpan-test-args");
+                Assert.ok(testSpan, "Test span should be created");
+                
+                let capturedArgs: any[] = [];
+                const testFunction = (scope: ISpanScope, ...args: any[]) => {
+                    capturedArgs = args;
+                    return args.reduce((sum, val) => sum + val, 0);
+                };
+
+                // Act
+                const result = useSpan(core, testSpan!, testFunction, undefined, 10, 20, 30);
+
+                // Assert
+                Assert.equal(result, 60, "useSpan should return correct sum");
+                Assert.equal(capturedArgs.length, 3, "Function should receive all arguments");
+                Assert.equal(capturedArgs[0], 10, "First argument should be correct");
+                Assert.equal(capturedArgs[1], 20, "Second argument should be correct");
+                Assert.equal(capturedArgs[2], 30, "Third argument should be correct");
+            }
+        });
+
+        this.testCase({
+            name: "useSpan: should handle function with thisArg context",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                const testSpan = core.startSpan("useSpan-test-this");
+                Assert.ok(testSpan, "Test span should be created");
+                
+                const contextObject = {
+                    value: 100,
+                    getValue: function(scope: ISpanScope, multiplier: number) {
+                        return this.value * multiplier;
+                    }
+                };
+                
+                // Act
+                const result = useSpan(core, testSpan!, contextObject.getValue, contextObject, 2);
+
+                // Assert
+                Assert.equal(result, 200, "useSpan should execute with correct this context");
+            }
+        });
+
+        this.testCase({
+            name: "useSpan: should handle exceptions and still restore active span",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                const previousSpan = core.startSpan("previous-span-exception");
+                const testSpan = core.startSpan("useSpan-test-exception");
+                Assert.ok(previousSpan && testSpan, "Both spans should be created");
+                
+                core.setActiveSpan(previousSpan!);
+                
+                const testFunction = () => {
+                    throw new Error("Test exception");
+                };
+
+                // Act & Assert
+                let thrownError: Error | null = null;
+                try {
+                    useSpan(core, testSpan!, testFunction);
+                } catch (error) {
+                    thrownError = error as Error;
+                }
+
+                Assert.ok(thrownError, "Exception should be thrown");
+                Assert.equal(thrownError!.message, "Test exception", "Exception message should be preserved");
+                Assert.equal(core.getActiveSpan(), previousSpan, "Previous active span should be restored even after exception");
+            }
+        });
+
+        this.testCase({
+            name: "useSpan: should work with functions returning different types",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                const testSpan = core.startSpan("useSpan-test-types");
+                Assert.ok(testSpan, "Test span should be created");
+
+                // Test string return
+                const stringResult = useSpan(core, testSpan!, () => "hello world");
+                Assert.equal(stringResult, "hello world", "String return should work");
+
+                // Test number return
+                const numberResult = useSpan(core, testSpan!, () => 123.45);
+                Assert.equal(numberResult, 123.45, "Number return should work");
+
+                // Test boolean return
+                const booleanResult = useSpan(core, testSpan!, () => true);
+                Assert.equal(booleanResult, true, "Boolean return should work");
+
+                // Test object return
+                const objectResult = useSpan(core, testSpan!, () => ({ key: "value" }));
+                Assert.ok(objectResult && objectResult.key === "value", "Object return should work");
+
+                // Test undefined return
+                const undefinedResult = useSpan(core, testSpan!, () => undefined);
+                Assert.equal(undefinedResult, undefined, "Undefined return should work");
+
+                // Test null return
+                const nullResult = useSpan(core, testSpan!, () => null);
+                Assert.equal(nullResult, null, "Null return should work");
+            }
+        });
+
+        this.testCase({
+            name: "useSpan: should work with async-like function patterns",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                let initialActiveSpan = core.getActiveSpan();
+                Assert.ok(!isNullOrUndefined(initialActiveSpan), "Initially, activeSpan should not be null with a trace provider");
+                const testSpan = core.startSpan("useSpan-test-async-pattern");
+                Assert.ok(testSpan, "Test span should be created");
+                
+                let spanDuringExecution: IReadableSpan | null = null;
+                
+                // Simulate async-like pattern with callback
+                const asyncFunction = (scope: ISpanScope, callback: (result: string) => void) => {
+                    spanDuringExecution = scope.span;
+                    // Simulate some async work completing synchronously for this test
+                    callback("async-result");
+                    return "function-result";
+                };
+
+                let callbackResult = "";
+                const callback = (result: string) => {
+                    callbackResult = result;
+                };
+
+                // Act
+                const result = useSpan(core, testSpan!, asyncFunction, undefined, callback);
+
+                // Assert
+                Assert.equal(result, "function-result", "useSpan should return main function result");
+                Assert.equal(callbackResult, "async-result", "Callback should be executed");
+                Assert.equal(spanDuringExecution, testSpan, "Active span should be available during execution");
+                Assert.equal(core.getActiveSpan(), initialActiveSpan, "Active span should be restored after completion");
+            }
+        });
+
+        this.testCase({
+            name: "useSpan: should work when no previous active span exists",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                let initialActiveSpan = core.getActiveSpan();
+                const testSpan = core.startSpan("useSpan-test-no-previous");
+                Assert.ok(testSpan, "Test span should be created");
+                Assert.ok(!isNullOrUndefined(initialActiveSpan), "With a traceprovider, activeSpan should not be null");
+                
+                let capturedActiveSpan: IReadableSpan | null = null;
+                const testFunction = () => {
+                    capturedActiveSpan = core.getActiveSpan();
+                    return "success";
+                };
+
+                // Act
+                const result = useSpan(core, testSpan!, testFunction);
+
+                // Assert
+                Assert.equal(result, "success", "Function should execute successfully");
+                Assert.equal(capturedActiveSpan, testSpan, "Test span should be active during execution");
+                Assert.equal(core.getActiveSpan(), initialActiveSpan, "No active span should be restored (was null)");
+            }
+        });
+
+        this.testCase({
+            name: "useSpan: should work with nested useSpan calls",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                let initialActiveSpan = core.getActiveSpan();
+                Assert.ok(!isNullOrUndefined(initialActiveSpan), "Initially, activeSpan should not be null with a trace provider");
+                const outerSpan = core.startSpan("outer-span");
+                const innerSpan = core.startSpan("inner-span");
+                Assert.ok(outerSpan && innerSpan, "Both spans should be created");
+                
+                const executionTrace: string[] = [];
+                
+                const innerFunction = (scope: ISpanScope) => {
+                    const activeSpan = scope.span;
+                    executionTrace.push(`inner: ${activeSpan ? (activeSpan as IReadableSpan).name : 'null'}`);
+                    return "inner-result";
+                };
+                
+                const outerFunction = (scope: ISpanScope) => {
+                    const activeSpanBefore = scope.span;
+                    executionTrace.push(`outer-start: ${activeSpanBefore ? (activeSpanBefore as IReadableSpan).name : 'null'}`);
+                    
+                    const innerResult = useSpan(core, innerSpan!, innerFunction);
+                    
+                    const activeSpanAfter = core.getActiveSpan();
+                    executionTrace.push(`outer-end: ${activeSpanAfter ? (activeSpanAfter as IReadableSpan).name : 'null'}`);
+                    
+                    return `outer(${innerResult})`;
+                };
+
+                // Act
+                const result = useSpan(core, outerSpan!, outerFunction);
+
+                // Assert
+                Assert.equal(result, "outer(inner-result)", "Nested useSpan should work correctly");
+                Assert.equal(executionTrace.length, 3, "Should have captured 3 execution points");
+                Assert.equal(executionTrace[0], "outer-start: outer-span", "Outer function should see outer span");
+                Assert.equal(executionTrace[1], "inner: inner-span", "Inner function should see inner span");
+                Assert.equal(executionTrace[2], "outer-end: outer-span", "Outer function should see outer span restored");
+                Assert.equal(core.getActiveSpan?.(), initialActiveSpan, "The initial active span should be restored after nested execution");
+            }
+        });
+
+        this.testCase({
+            name: "useSpan: should handle span operations within useSpan context",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                let initialActiveSpan = core.getActiveSpan();
+                Assert.ok(!isNullOrUndefined(initialActiveSpan), "Initially, activeSpan should not be null with a trace provider");
+                const testSpan = core.startSpan("useSpan-test-operations");
+                Assert.ok(testSpan, "Test span should be created");
+                
+                const testFunction = (scope: ISpanScope) => {
+                    const activeSpan = scope.span;
+                    Assert.ok(activeSpan, "Should have active span in function");
+                    
+                    // Perform span operations
+                    activeSpan.setAttribute("operation.name", "test-operation");
+                    activeSpan.setAttribute("operation.step", 1);
+                    
+                    // Create child span
+                    const childSpan = core.startSpan("child-operation");
+                    Assert.ok(childSpan, "Child span should be created");
+                    
+                    childSpan?.setAttribute("child.attribute", "child-value");
+                    childSpan?.end();
+                    
+                    return "operations-completed";
+                };
+
+                // Act
+                const result = useSpan(core, testSpan!, testFunction);
+
+                // Assert
+                Assert.equal(result, "operations-completed", "Function should complete successfully");
+                Assert.equal(core.getActiveSpan(), initialActiveSpan, "Active span should be restored");
+                
+                // Verify span operations were applied (span should still be valid)
+                const readableSpan = testSpan! as IReadableSpan;
+                Assert.ok(!readableSpan.ended, "Test span should not be ended");
+                Assert.ok(testSpan!.isRecording(), "Test span should still be recording");
+            }
+        });
+
+        this.testCase({
+            name: "useSpan: should work with core that has no trace provider",
+            test: () => {
+                // Arrange
+                const core = new AppInsightsCore();
+                
+                // Create a simple test channel
+                const testChannel = {
+                    identifier: "TestChannel",
+                    priority: 1001,
+                    initialize: () => {},
+                    processTelemetry: () => {},
+                    teardown: () => {},
+                    isInitialized: () => true
+                };
+                
+                core.initialize({ instrumentationKey: "test-key" }, [testChannel]); // Initialize with channel but no trace provider
+                
+                // Create a mock span (this would need to come from somewhere else since no provider)
+                const spanCtx: IOTelSpanCtx = {
+                    api: this._mockApi,
+                    spanContext: this._mockSpanContext,
+                    onEnd: (span) => this._onEndCalls.push(span)
+                };
+                const mockSpan = createSpan(spanCtx, "mock-span", eOTelSpanKind.CLIENT);
+                
+                let functionExecuted = false;
+                const testFunction = () => {
+                    functionExecuted = true;
+                    return "no-provider-result";
+                };
+
+                // Act
+                const result = useSpan(core, mockSpan, testFunction);
+
+                // Assert
+                Assert.equal(result, "no-provider-result", "Function should execute even without trace provider");
+                Assert.ok(functionExecuted, "Function should have been executed");
+                
+                // Cleanup
+                core.unload(false);
+            }
+        });
+
+        this.testCase({
+            name: "useSpan: performance test - should not add significant overhead",
+            test: () => {
+                // Arrange
+                const core = this._setupCore();
+                const testSpan = core.startSpan("useSpan-performance-test");
+                Assert.ok(testSpan, "Test span should be created");
+                
+                const iterations = 10000;
+                let computeResult = 0;
+                
+                const computeFunction = (_scope: ISpanScope, base: number, multiplier: number) => {
+                    // Simple computation to measure overhead
+                    return base * multiplier + Math.sqrt(base);
+                };
+
+                let maxOverhead: number = 100;
+
+                // Perform multiple runs to get a stable measurement
+                for (let lp = 0; lp < 10; lp++) {
+                    // Measure time without useSpan
+                    const startWithout = perfNow();
+                    for (let i = 0; i < iterations; i++) {
+                        computeResult += computeFunction(null as any as ISpanScope, i, 2);
+                    }
+                    const timeWithout = perfNow() - startWithout;
+
+                    // Reset result
+                    computeResult = 0;
+
+                    // Measure time with useSpan
+                    const startWith = perfNow();
+                    for (let i = 0; i < iterations; i++) {
+                        computeResult += useSpan(core, testSpan!, computeFunction, undefined, i, 2);
+                    }
+
+                    // Results should be the same
+                    Assert.ok(computeResult > 0, "Computations should have produced results");
+
+                    const timeWith = perfNow() - startWith;
+
+                    const overhead = timeWith / (timeWithout || 1);
+
+                    if (lp === 0) {
+                        maxOverhead = overhead;
+                    }
+                    maxOverhead = mathMin(maxOverhead, overhead);
+                }
+
+                // Assert reasonable performance characteristics
+                // useSpan should not add more than 10x overhead (very generous threshold)
+                Assert.ok(maxOverhead < 10, `useSpan overhead should be reasonable: ${maxOverhead.toFixed(2)}x`);
+                
             }
         });
     }

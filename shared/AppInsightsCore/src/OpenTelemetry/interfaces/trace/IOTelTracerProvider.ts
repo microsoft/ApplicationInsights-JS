@@ -40,5 +40,5 @@ export interface IOTelTracerProvider {
      * Shuts down the tracer provider and releases any resources.
      * @returns A promise that resolves when the shutdown is complete.
      */
-    shutdown?: () => IPromise<void> | void;    
+    shutdown?: () => IPromise<void> | void;
 }

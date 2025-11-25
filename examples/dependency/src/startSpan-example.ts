@@ -4,7 +4,7 @@
 import { IReadableSpan } from "@microsoft/applicationinsights-core-js";
 import {
     ApplicationInsights,
-    SpanKind
+    OTelSpanKind
 } from "@microsoft/applicationinsights-web";
 
 /**
@@ -41,7 +41,7 @@ export class StartSpanExample {
 
         // Create a root span with attributes
         const span = this._appInsights.appInsights.core.startSpan("user-action", {
-            kind: SpanKind.SERVER,
+            kind: OTelSpanKind.SERVER,
             attributes: {
                 "user.id": "user123",
                 "action.type": "button_click",
@@ -98,7 +98,7 @@ export class StartSpanExample {
 
         // Create parent span for overall operation
         const parentSpan = this._appInsights.appInsights.core.startSpan("data-processing", {
-            kind: SpanKind.INTERNAL,
+            kind: OTelSpanKind.INTERNAL,
             attributes: {
                 "operation.type": "batch_process",
                 "data.source": "user_upload"
@@ -108,7 +108,7 @@ export class StartSpanExample {
         // Create child span for specific sub-operation
         // The child will automatically inherit the parent's trace context
         const childSpan = this._appInsights.appInsights.core.startSpan("validate-data", {
-            kind: SpanKind.INTERNAL,
+            kind: OTelSpanKind.INTERNAL,
             attributes: {
                 "validation.rules": "strict",
                 "data.format": "csv"
@@ -166,7 +166,7 @@ export class StartSpanExample {
 
         // Create span for HTTP request
         const httpSpan = this._appInsights.appInsights.core.startSpan("api-call", {
-            kind: SpanKind.CLIENT,
+            kind: OTelSpanKind.CLIENT,
             attributes: {
                 "http.method": "POST",
                 "http.url": "https://api.example.com/data",
@@ -233,7 +233,7 @@ export class StartSpanExample {
 
         // Create a span - this automatically becomes the active trace context
         const span = this._appInsights.appInsights.core.startSpan("background-task", {
-            kind: SpanKind.INTERNAL,
+            kind: OTelSpanKind.INTERNAL,
             attributes: {
                 "task.priority": "low"
             }
@@ -270,7 +270,7 @@ export class StartSpanExample {
         }
 
         const span = this._appInsights.appInsights.core.startSpan("business-operation", {
-            kind: SpanKind.INTERNAL,
+            kind: OTelSpanKind.INTERNAL,
             attributes: {
                 // Use semantic naming conventions
                 "operation.name": "calculate_price",

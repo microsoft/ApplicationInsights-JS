@@ -2114,7 +2114,7 @@ export class AjaxTests extends AITestClass {
                     method: 'get',
                     headers: headers
                 };
-                const url = 'https://httpbin.org/status/200';
+                const url = 'http://localhost:9001/shared/';
 
                 let headerSpy = this.sandbox.spy(this._ajax, "includeCorrelationHeaders");
 
@@ -2794,7 +2794,7 @@ export class AjaxTests extends AITestClass {
                                 statusText: "Hello",
                                 trailer: null,
                                 type: "basic",
-                                url: "https://httpbin.org/status/200",
+                                url: "http://localhost:9001/shared/",
                                 clone: () => null,
                                 arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
                                 blob: () => Promise.resolve(new Blob()),
@@ -2824,7 +2824,7 @@ export class AjaxTests extends AITestClass {
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
 
                 // Use test hook to simulate the correct url location host to enable correlation headers
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
 
                 // Set up trace context with known values
                 let traceCtx = appInsightsCore.getTraceCtx();
@@ -2858,13 +2858,13 @@ export class AjaxTests extends AITestClass {
 
                 try {
                     // Act - make first fetch request (this should trigger header addition)
-                    fetch("https://httpbin.org/status/200", {
+                    fetch("http://localhost:9001/shared/", {
                         method: "GET",
                         headers: { "Custom-Header": "Value1" }
                     });
 
                     // Act - make second fetch request  
-                    fetch("https://httpbin.org/api/test", {
+                    fetch("https://localhost:9001/api/test", {
                         method: "POST", 
                         headers: { "Custom-Header": "Value2" }
                     });
@@ -3753,6 +3753,10 @@ export class AjaxPerfTrackTests extends AITestClass {
                     appInsightsCore.unload(false);
                 });
 
+                this.onDone(() => {
+                    appInsightsCore.unload(false);
+                });
+
                 // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
                 this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
 
@@ -3812,6 +3816,10 @@ export class AjaxPerfTrackTests extends AITestClass {
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 this._ajax["_currentWindowHost"] = "localhost:9001";
+
+                this.onDone(() => {
+                    appInsightsCore.unload(false);
+                });
 
                 this.onDone(() => {
                     appInsightsCore.unload(false);
@@ -3983,6 +3991,10 @@ export class AjaxPerfTrackTests extends AITestClass {
                     appInsightsCore.unload(false);
                 });
 
+                this.onDone(() => {
+                    appInsightsCore.unload(false);
+                });
+
                 // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
                 this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
 
@@ -4039,6 +4051,10 @@ export class AjaxPerfTrackTests extends AITestClass {
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 this._ajax["_currentWindowHost"] = "localhost:9001";
+
+                this.onDone(() => {
+                    appInsightsCore.unload(false);
+                });
 
                 this.onDone(() => {
                     appInsightsCore.unload(false);
@@ -4436,7 +4452,7 @@ export class AjaxFrozenTests extends AITestClass {
         //                 testThis._context["_eventsSent"] = events;
         //             }
         //         });
-        //         this._ajax["_currentWindowHost"] = "httpbin.org";
+        //         this._ajax["_currentWindowHost"] = "localhost:9001";
 
         //         // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
         //         this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
@@ -4452,7 +4468,7 @@ export class AjaxFrozenTests extends AITestClass {
         //         }
 
         //         // trigger the request that should cause a track event once the xhr request is complete
-        //         xhr.open("GET", "https://httpbin.org/status/200");
+        //         xhr.open("GET", "http://localhost:9001/shared/");
         //         xhr.send();
         //         appInsightsCore.track({
         //             name: "Hello World!"

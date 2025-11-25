@@ -4,7 +4,7 @@ const fs = require('fs');
 const request = require('request');
 // const zlib = require('zlib');
 
-async function generateSizeBadge(path, fileSize, isGzip = false, maxSize = 35, minSize = 30) {
+async function generateSizeBadge(path, fileSize, isGzip = false, maxSize = 80, minSize = 70) {
     try {
         let sizeBadge = `https://img.shields.io/badge/size-${fileSize}kb`;
         if (isGzip) {

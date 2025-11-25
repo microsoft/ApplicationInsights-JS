@@ -6,6 +6,7 @@
                 "ePendingOp",
                 "CallbackType",
                 "eTraceStateKeyType",
+                "eDependencyTypes",
                 "eEventsDiscardedReason",
                 "eBatchDiscardedReason",
                 "FeatureOptInMode",
@@ -57,7 +58,9 @@
             "constEnums": []
         },
         "@microsoft/applicationinsights-channel-js": {
-            "constEnums": []
+            "constEnums": [
+                "eSerializeType"
+            ]
         },
         "@microsoft/applicationinsights-react-native": {
             "constEnums": []
@@ -76,7 +79,9 @@
             ]
         },
         "@microsoft/applicationinsights-web": {
-            "constEnums": []
+            "constEnums": [
+                "eMaxPropertyLengths"
+            ]
         },
         "@microsoft/applicationinsights-react-js": {
             "constEnums": []

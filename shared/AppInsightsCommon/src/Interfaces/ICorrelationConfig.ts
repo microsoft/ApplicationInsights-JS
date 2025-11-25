@@ -70,7 +70,7 @@ export interface ICorrelationConfig {
      * This is used to determine which headers are sent with requests and how the
      * telemetry is correlated across services.
      * @default AI_AND_W3C
-     * @see {@link DistributedTracingModes}
+     * @see {@link eDistributedTracingModes}
      */
     distributedTracingMode: DistributedTracingModes;
     

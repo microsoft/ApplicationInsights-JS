@@ -4,9 +4,9 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     DisabledPropertyName, IConfig, ICorrelationConfig, IDependencyTelemetry, IRequestContext, ITelemetryContext, PropertiesPluginIdentifier,
-    RemoteDependencyData, RequestHeaders, correlationIdCanIncludeCorrelationHeader, correlationIdGetCorrelationContext,
-    createDistributedTraceContextFromTrace, createTelemetryItem, createTraceParent, dateTimeUtilsNow, eDistributedTracingModes,
-    eRequestHeaders, formatTraceParent, isInternalApplicationInsightsEndpoint
+    RemoteDependencyDataType, RemoteDependencyEnvelopeType, RequestHeaders, correlationIdCanIncludeCorrelationHeader,
+    correlationIdGetCorrelationContext, createDistributedTraceContextFromTrace, createTelemetryItem, createTraceParent, dateTimeUtilsNow,
+    eDistributedTracingModes, eRequestHeaders, formatTraceParent, isInternalApplicationInsightsEndpoint
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICustomProperties, IDistributedTraceContext,
@@ -335,8 +335,6 @@ export interface IDependenciesPlugin extends IDependencyListenerContainer {
 /**
  * Interface for ajax data passed to includeCorrelationHeaders function.
  * Contains the public properties and methods needed for correlation header processing.
- *
- * @public
  */
 export interface IAjaxRecordData {
     /**
@@ -773,8 +771,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                     }
                     const item = createTelemetryItem<IDependencyTelemetry>(
                         dependency,
-                        RemoteDependencyData.dataType,
-                        RemoteDependencyData.envelopeType,
+                        RemoteDependencyDataType,
+                        RemoteDependencyEnvelopeType,
                         _self[strDiagLog](),
                         properties,
                         systemProperties);

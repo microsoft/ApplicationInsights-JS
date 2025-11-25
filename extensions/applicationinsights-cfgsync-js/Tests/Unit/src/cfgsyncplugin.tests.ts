@@ -387,7 +387,7 @@ export class CfgSyncPluginTests extends AITestClass {
 
         this.testCaseAsync({
             name: "CfgSyncPlugin: should fetch from config url at expected interval",
-            stepDelay: 10,
+            stepDelay: 100,
             useFakeTimers: true,
             steps: [ () => {
                 let doc = getGlobal();

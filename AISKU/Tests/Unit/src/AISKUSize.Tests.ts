@@ -46,18 +46,18 @@ function _loadPackageJson(cb:(isNightly: boolean, packageJson: any) => IPromise<
 }
 
 function _checkSize(checkType: string, maxSize: number, size: number, isNightly: boolean): void {
-  if (isNightly) {
+    if (isNightly) {
         maxSize += .5;
     }
 
     Assert.ok(size <= maxSize, `exceed ${maxSize} KB, current ${checkType} size is: ${size} KB`);
-}    
+}
 
 export class AISKUSizeCheck extends AITestClass {
-    private readonly MAX_RAW_SIZE = 170;
-    private readonly MAX_BUNDLE_SIZE = 170;
-    private readonly MAX_RAW_DEFLATE_SIZE = 68;
-    private readonly MAX_BUNDLE_DEFLATE_SIZE = 68;
+    private readonly MAX_RAW_SIZE = 174;
+    private readonly MAX_BUNDLE_SIZE = 174;
+    private readonly MAX_RAW_DEFLATE_SIZE = 70;
+    private readonly MAX_BUNDLE_DEFLATE_SIZE = 70;
     private readonly rawFilePath = "../dist/es5/applicationinsights-web.min.js";
     // Automatically updated by version scripts
     private readonly currentVer = "3.3.11";

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { IPromise } from "@nevware21/ts-async";
 import { eTraceHeadersMode } from "../JavaScriptSDK.Enums/TraceHeadersMode";
-import { ITraceCfg } from "../OpenTelemetry/interfaces/config/ITraceCfg";
+import { IOTelConfig } from "../OpenTelemetry/interfaces/config/IOTelConfig";
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IChannelControls } from "./IChannelControls";
 import { ICookieMgrConfig } from "./ICookieMgr";
@@ -15,7 +15,7 @@ import { ITelemetryPlugin } from "./ITelemetryPlugin";
 /**
  * Configuration provided to SDK core
  */
-export interface IConfiguration {
+export interface IConfiguration extends IOTelConfig {
     /**
      * Instrumentation key of resource. Either this or connectionString must be specified.
      */
@@ -258,31 +258,6 @@ export interface IConfiguration {
      * @defaultValue eTraceHeadersMode.All
      */
     traceHdrMode?: eTraceHeadersMode;
-
-    /**
-     * Configuration interface for OpenTelemetry tracing functionality.
-     * This interface contains all the settings that control how traces are created,
-     * processed, and managed within the OpenTelemetry system.
-     *
-     * @example
-     * ```typescript
-     * const traceCfg: ITraceCfg = {
-     *   serviceName: "my-service",
-     *   generalLimits: {
-     *     attributeCountLimit: 128,
-     *     attributeValueLengthLimit: 4096
-     *   },
-     *   spanLimits: {
-     *     attributeCountLimit: 128,
-     *     linkCountLimit: 128,
-     *     eventCountLimit: 128
-     *   }
-     * };
-     * ```
-     *
-     * @since 3.4.0
-     */
-    readonly traceCfg?: ITraceCfg;
 }
 
 ///**

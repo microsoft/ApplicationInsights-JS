@@ -11,10 +11,6 @@ import {
     throwOTelInvalidAttributeError 
 } from "../../../../src/OpenTelemetry/errors/OTelInvalidAttributeError";
 import { 
-    OTelNotImplementedError, 
-    throwOTelNotImplementedError 
-} from "../../../../src/OpenTelemetry/errors/OTelNotImplementedError";
-import { 
     OTelSpanError, 
     throwOTelSpanError 
 } from "../../../../src/OpenTelemetry/errors/OTelSpanError";
@@ -260,70 +256,6 @@ export class OpenTelemetryErrorsTests extends AITestClass {
             }
         });
 
-        // OTelNotImplementedError tests
-        this.testCase({
-            name: "OTelNotImplementedError: should throw with message",
-            test: () => {
-                // Arrange
-                const testMessage = "Not implemented error";
-                let caughtError: any = null;
-
-                // Act & Assert
-                try {
-                    throwOTelNotImplementedError(testMessage);
-                    Assert.ok(false, "Should have thrown an error");
-                } catch (error) {
-                    caughtError = error;
-                }
-
-                Assert.ok(caughtError, "Error should have been caught");
-                Assert.ok(caughtError instanceof Error, "Should be an instance of Error");
-                Assert.ok(caughtError.name === "OTelNotImplementedError", "Name should be OTelNotImplementedError");
-                Assert.ok(caughtError.message === testMessage, "Message should match");
-            }
-        });
-
-        this.testCase({
-            name: "OTelNotImplementedError: should inherit from OpenTelemetryError",
-            test: () => {
-                // Arrange
-                const testMessage = "Inheritance test";
-                const OpenTelemetryErrorConstructor = getOpenTelemetryError();
-                let caughtError: any = null;
-
-                // Act & Assert
-                try {
-                    throwOTelNotImplementedError(testMessage);
-                    Assert.ok(false, "Should have thrown an error");
-                } catch (error) {
-                    caughtError = error;
-                }
-
-                Assert.ok(caughtError instanceof OpenTelemetryErrorConstructor, "Should be instance of OpenTelemetryError");
-            }
-        });
-
-        this.testCase({
-            name: "OTelNotImplementedError: should handle empty message",
-            test: () => {
-                // Arrange
-                const testMessage = "";
-                let caughtError: any = null;
-
-                // Act & Assert
-                try {
-                    throwOTelNotImplementedError(testMessage);
-                    Assert.ok(false, "Should have thrown an error");
-                } catch (error) {
-                    caughtError = error;
-                }
-
-                Assert.ok(caughtError, "Error should have been caught");
-                Assert.ok(caughtError.name === "OTelNotImplementedError", "Name should be OTelNotImplementedError");
-                Assert.ok(caughtError.message === testMessage, "Message should match (empty)");
-            }
-        });
-
         // OTelSpanError tests
         this.testCase({
             name: "OTelSpanError: should throw with message and span name",
@@ -460,28 +392,21 @@ export class OpenTelemetryErrorsTests extends AITestClass {
                 }
 
                 try {
-                    throwOTelNotImplementedError("not implemented");
-                } catch (e) {
-                    errors.push(e);
-                }
-
-                try {
                     throwOTelSpanError("span error", "span");
                 } catch (e) {
                     errors.push(e);
                 }
 
                 // Assert - Check that all error types have unique names
-                Assert.ok(errors.length === 4, "Should have caught 4 errors");
+                Assert.ok(errors.length === 3, "Should have caught 3 errors");
                 Assert.ok(errors[0].name === "OpenTelemetryError", "First error should be OpenTelemetryError");
                 Assert.ok(errors[1].name === "OTelInvalidAttributeError", "Second error should be OTelInvalidAttributeError");
-                Assert.ok(errors[2].name === "OTelNotImplementedError", "Third error should be OTelNotImplementedError");
-                Assert.ok(errors[3].name === "OTelSpanError", "Fourth error should be OTelSpanError");
+                Assert.ok(errors[2].name === "OTelSpanError", "Third error should be OTelSpanError");
                 
                 // Verify all names are unique
                 const names = errors.map(e => e.name);
                 const uniqueNames = [...new Set(names)];
-                Assert.ok(uniqueNames.length === 4, "All error names should be unique");
+                Assert.ok(uniqueNames.length === 3, "All error names should be unique");
             }
         });
 
@@ -580,27 +505,6 @@ export class OpenTelemetryErrorsTests extends AITestClass {
         });
 
         this.testCase({
-            name: "OTelNotImplementedError: dumpObj should indicate not implemented status",
-            test: () => {
-                // Arrange & Act
-                let error: any = null;
-                try {
-                    throwOTelNotImplementedError("Feature not implemented");
-                } catch (e) {
-                    error = e;
-                }
-                const errorDump = dumpObj(error);
-
-                // Assert
-                Assert.ok(error, "Error should have been caught");
-                Assert.ok(errorDump, "dumpObj should return a string representation");
-                Assert.ok(errorDump.indexOf("Feature not implemented") !== -1, `Error dump should contain message: ${errorDump}`);
-                Assert.ok(errorDump.indexOf("name") !== -1, `Error dump should contain name property: ${errorDump}`);
-                Assert.ok(errorDump.indexOf("OTelNotImplementedError") !== -1, `Error dump should contain error type: ${errorDump}`);
-            }
-        });
-
-        this.testCase({
             name: "OTelSpanError: dumpObj should show span-specific properties",
             test: () => {
                 // Arrange & Act
@@ -673,13 +577,6 @@ export class OpenTelemetryErrorsTests extends AITestClass {
                     invalidAttrError = e;
                 }
                 
-                let notImplError: any = null;
-                try {
-                    throwOTelNotImplementedError("Not implemented");
-                } catch (e) {
-                    notImplError = e;
-                }
-                
                 let spanError: any = null;
                 try {
                     throwOTelSpanError("Span error", "span");
@@ -689,21 +586,16 @@ export class OpenTelemetryErrorsTests extends AITestClass {
 
                 const baseDump = dumpObj(baseError);
                 const invalidAttrDump = dumpObj(invalidAttrError);
-                const notImplDump = dumpObj(notImplError);
                 const spanDump = dumpObj(spanError);
 
                 // Assert - Each dump should be unique based on error type and message
                 Assert.notEqual(baseDump, invalidAttrDump, "Base and InvalidAttribute dumps should be different");
-                Assert.notEqual(baseDump, notImplDump, "Base and NotImplemented dumps should be different");
                 Assert.notEqual(baseDump, spanDump, "Base and Span dumps should be different");
-                Assert.notEqual(invalidAttrDump, notImplDump, "InvalidAttribute and NotImplemented dumps should be different");
                 Assert.notEqual(invalidAttrDump, spanDump, "InvalidAttribute and Span dumps should be different");
-                Assert.notEqual(notImplDump, spanDump, "NotImplemented and Span dumps should be different");
 
                 // Each should contain their specific error type names
                 Assert.ok(baseDump.indexOf("OpenTelemetryError") !== -1, `Base error dump should contain type: ${baseDump}`);
                 Assert.ok(invalidAttrDump.indexOf("OTelInvalidAttributeError") !== -1, `InvalidAttribute dump should contain type: ${invalidAttrDump}`);
-                Assert.ok(notImplDump.indexOf("OTelNotImplementedError") !== -1, `NotImplemented dump should contain type: ${notImplDump}`);
                 Assert.ok(spanDump.indexOf("OTelSpanError") !== -1, `Span dump should contain type: ${spanDump}`);
                 
                 // Verify error objects have the expected custom properties (beyond what dumpObj shows)

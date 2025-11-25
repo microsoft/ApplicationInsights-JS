@@ -1,5 +1,4 @@
 import { IOTelAttributeLimits } from "./IOTelAttributeLimits";
-import { IOTelSpanLimits } from "./IOTelSpanLimits";
 
 /**
  * Configuration interface for OpenTelemetry compatible tracing functionality.
@@ -36,15 +35,15 @@ export interface ITraceCfg {
      */
     generalLimits?: IOTelAttributeLimits;
 
-    /**
-     * Specific limits that apply only to spans.
-     * These limits override the general limits for span-specific properties.
-     * 
-     * @remarks
-     * Includes limits for attributes, events, links, and their associated attributes.
-     * This allows for fine-tuned control over span size and complexity.
-     */
-    spanLimits?: IOTelSpanLimits;
+    // /**
+    //  * Specific limits that apply only to spans.
+    //  * These limits override the general limits for span-specific properties.
+    //  * 
+    //  * @remarks
+    //  * Includes limits for attributes, events, links, and their associated attributes.
+    //  * This allows for fine-tuned control over span size and complexity.
+    //  */
+    // spanLimits?: IOTelSpanLimits;
 
     // idGenerator?: IOTelIdGenerator;
 

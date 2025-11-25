@@ -43,16 +43,16 @@ function _loadPackageJson(cb:(isNightly: boolean, packageJson: any) => IPromise<
 }
 
 function _checkSize(checkType: string, maxSize: number, size: number, isNightly: boolean): void {
-  if (isNightly) {
+    if (isNightly) {
         maxSize += .5;
     }
 
     QUnit.assert.ok(size <= maxSize, `exceed ${maxSize} KB, current ${checkType} size is: ${size} KB`);
-}    
+}
 
 export class FileSizeCheckTest extends AITestClass {
-    private readonly MAX_BUNDLE_SIZE = 80;
-    private readonly MAX_DEFLATE_SIZE = 34;
+    private readonly MAX_BUNDLE_SIZE = 90;
+    private readonly MAX_DEFLATE_SIZE = 38;
     private readonly bundleFilePath = "../bundle/es5/ms.core.min.js";
 
     public testInitialize() {

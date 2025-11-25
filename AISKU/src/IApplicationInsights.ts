@@ -1,20 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-"use strict";
-
 import { AnalyticsPlugin } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { IAppInsights, IPropertiesPlugin, IRequestHeaders } from "@microsoft/applicationinsights-common";
 import {
-    IConfiguration, IDistributedTraceContext, ILoadedPlugin, IOTelApi, IOTelSpanOptions, IPlugin, IReadableSpan, ITelemetryPlugin,
-    ITelemetryUnloadState, ITraceApi, UnloadHandler
+    IConfiguration, ILoadedPlugin, IOTelApi, IPlugin, ITelemetryPlugin, ITelemetryUnloadState, ITraceApi, ITraceHost, UnloadHandler
 } from "@microsoft/applicationinsights-core-js";
 import { IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import { IPromise } from "@nevware21/ts-async";
 
 export { IRequestHeaders };
 
-export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
+export interface IApplicationInsights<CfgType extends IConfiguration = IConfiguration> extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin, ITraceHost<CfgType> {
     appInsights: AnalyticsPlugin;
 
     /**
@@ -74,7 +71,7 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
 
     /**
      * Find and return the (first) plugin with the specified identifier if present
-     * @param pluginIdentifier
+     * @param pluginIdentifier - The identifier of the plugin to find
      */
     getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T>;
   
@@ -104,19 +101,4 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
      * @param handler - the handler
      */
     addUnloadCb(handler: UnloadHandler): void;
-
-    /**
-     * Start a new span with the given name and optional parent context.
-     *
-     * Note: This method only creates and returns the span. It does not automatically
-     * set the span as the active trace context. Context management should be handled
-     * separately using setTraceCtx() if needed.
-     *
-     * @param name - The name of the span
-     * @param options - Options for creating the span (kind, attributes, startTime)
-     * @param parent - Optional parent context. If not provided, uses the current active trace context
-     * @returns A new span instance, or null if no trace provider is available
-     * @since 3.4.0
-     */
-    startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan | null;
 }

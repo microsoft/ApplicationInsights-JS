@@ -1,4 +1,5 @@
 import { IDistributedTraceContext } from "../../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
+import { ISpanScope } from "../../../JavaScriptSDK.Interfaces/ITraceProvider";
 import { IOTelTracer } from "./IOTelTracer";
 import { IOTelTracerOptions } from "./IOTelTracerProvider";
 import { IReadableSpan } from "./IReadableSpan";
@@ -39,7 +40,8 @@ export interface ITraceApi {
 
     /**
      * Set or clear the current active span.
-     * @param span 
+     * @param span - The span to set as the active span, or null/undefined to clear the active span.
+     * @return An ISpanScope instance returned by the host, or void if there is no defined host.
      */
-    setActiveSpan(span: IReadableSpan | undefined | null): void;
+    setActiveSpan(span: IReadableSpan | undefined | null): ISpanScope | undefined | null;
 }
