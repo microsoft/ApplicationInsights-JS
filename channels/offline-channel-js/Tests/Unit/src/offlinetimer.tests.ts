@@ -262,6 +262,81 @@ export class Offlinetimer extends AITestClass {
         });
 
         this.testCase({
+            name: "SendNextBatch Timer: Timer should resume sending after offline-to-online transition",
+            useFakeTimers: true,
+            test: () => {
+                let sendCalled = 0;
+                
+                let sendPost = (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
+                    sendCalled++;
+                    oncomplete(200, {});
+                    return;
+                }
+
+                let xhrOverride = {sendPOST: sendPost}
+                this.coreConfig.extensionConfig = {["OfflineChannel"]: {
+                    providers:[eStorageProviders.LocalStorage], 
+                    inMemoMaxTime: 2000, 
+                    eventsLimitInMem: 2, 
+                    maxSentBatchInterval: 10000,
+                    senderCfg: {httpXHROverride: xhrOverride, alwaysUseXhrOverride: true}
+                } as IOfflineChannelConfiguration};
+                
+                let channel = new OfflineChannel();
+                let onlineChannel = new TestChannel();
+                onlineChannel.setIsIdle(true);
+                this.core.initialize(this.coreConfig,[channel, onlineChannel]);
+                
+                let offlineListener = channel.getOfflineListener() as any;
+                // Start offline
+                offlineListener.setOnlineState(2);
+                this.clock.tick(1);
+                
+                // Verify timer is still enabled while offline
+                let sendBatchTimer = channel["_getDbgPlgTargets"]()[4];
+                Assert.ok(sendBatchTimer.enabled, "Timer should be initially enabled even when offline");
+                Assert.equal(sendCalled, 0, "No data should be sent while offline");
+
+                // Add events while offline
+                let evt = mockTelemetryItem() as IPostTransmissionTelemetryItem;
+                evt.persistence = EventPersistence.Critical;
+                channel.processTelemetry(evt);
+                channel.processTelemetry(evt);
+
+                // Flush to storage
+                this.clock.tick(10000);
+                
+                // Timer should be disabled after send attempt
+                sendBatchTimer = channel["_getDbgPlgTargets"]()[4];
+                Assert.ok(!sendBatchTimer.enabled, "Timer should be disabled after send attempt");
+                Assert.equal(sendCalled, 0, "No data should be sent while offline");
+                
+                // Transition from offline to online - this triggers the bug
+                offlineListener.setOnlineState(1);
+                
+                // Timer should be enabled after going online
+                sendBatchTimer = channel["_getDbgPlgTargets"]()[4];
+                Assert.ok(sendBatchTimer, "Timer should exist after going online");
+                Assert.ok(sendBatchTimer.enabled, "Timer should be enabled after going online");
+                
+                // Wait for timer to fire
+                this.clock.tick(10000);
+                
+                // BUG: The timer callback still thinks we're offline due to stale closure
+                // so it cancels itself and doesn't send data
+                sendBatchTimer = channel["_getDbgPlgTargets"]()[4];
+                
+                // This assertion will fail with the bug - timer gets cancelled
+                Assert.ok(sendBatchTimer.enabled, "Timer should still be enabled and continue sending batches");
+                
+                // This assertion will fail with the bug - no data gets sent
+                Assert.ok(sendCalled > 0, "Data should be sent after going online");
+                
+                channel.teardown();
+            }
+        });
+
+        this.testCase({
             name: "SendNextBatch Timer: Handle sendNextBatch timer",
             useFakeTimers: true,
             test: () => {
