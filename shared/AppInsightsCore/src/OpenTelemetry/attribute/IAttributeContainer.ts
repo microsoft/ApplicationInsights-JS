@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { IUnloadHook } from "../../JavaScriptSDK.Interfaces/IUnloadHook";
 import { eAttributeChangeOp } from "../enums/eAttributeChangeOp";
 import { IOTelAttributes, OTelAttributeValue } from "../interfaces/IOTelAttributes";
@@ -22,6 +25,8 @@ export const enum eAttributeFilter {
      */
     LocalOrDeleted = 2
 }
+
+export type AttributeFilter = number | eAttributeFilter;
 
 /**
  * Information about what changed in an attribute container
@@ -179,7 +184,7 @@ export interface IAttributeContainer<V extends OTelAttributeValue = OTelAttribut
      * so that any future changes to the parent container do not affect the child container.
      * The child will use all of the configuration from the parent container.
      * @param name - Optional name for the child container
-     * @param snapshot If true, the child container will be a snapshot of the current state
+     * @param snapshot - If true, the child container will be a snapshot of the current state
      * @returns A new attribute container instance
      */
     child: (name?: string, snapshot?: boolean) => IAttributeContainer

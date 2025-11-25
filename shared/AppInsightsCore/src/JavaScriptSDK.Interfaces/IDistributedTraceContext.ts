@@ -310,8 +310,8 @@ export interface IDistributedTraceContext {
    
     /**
      * Returns the current trace state which will be used to propgate context across different services.
-     * Updating (adding / removing keys) of the trace state will modify the current context.
-     * @remarks Unlike the OpenTelemetry {@link TraceState}, this value is a mutable object, so you can
+     * Updating (adding / removing keys) of the trace state will modify the current context.IOTelTraceState
+     * @remarks Unlike the OpenTelemetry {@link IOTelTraceState}, this value is a mutable object, so you can
      * modify it directly you do not need to reassign the new value to this property.
      * @since 3.4.0
      */

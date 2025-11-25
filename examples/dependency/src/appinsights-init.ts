@@ -4,7 +4,7 @@
 import {
     ApplicationInsights, IConfiguration,
     DependencyListenerFunction, DependencyInitializerFunction, IDependencyInitializerHandler, IDependencyListenerHandler,
-    SpanKind
+    OTelSpanKind
 } from "@microsoft/applicationinsights-web";
 import { generateNewConfig } from "./utils";
 
@@ -117,7 +117,7 @@ export function createSpanWithTraceAPI() {
         
         // Create a span using the OpenTelemetry API
         const span = tracer.startSpan("api-request", {
-            kind: SpanKind.SERVER,
+            kind: OTelSpanKind.SERVER,
             attributes: {
                 "http.method": "POST",
                 "http.url": "/api/users",
@@ -200,7 +200,7 @@ export function createExampleSpan() {
     if (_appInsights) {
         // Create a span for a user operation
         const span = _appInsights.core.startSpan("user-checkout", {
-            kind: SpanKind.SERVER,
+            kind: OTelSpanKind.SERVER,
             attributes: {
                 "user.action": "checkout",
                 "cart.items": 3,
@@ -244,7 +244,7 @@ export function createChildSpanExample() {
     if (_appInsights) {
         // Create parent span
         const parentSpan = _appInsights.core.startSpan("process-order", {
-            kind: SpanKind.INTERNAL,
+            kind: OTelSpanKind.INTERNAL,
             attributes: {
                 "order.id": "12345"
             }
@@ -252,7 +252,7 @@ export function createChildSpanExample() {
 
         // Create child span for payment processing
         const paymentSpan = _appInsights.core.startSpan("process-payment", {
-            kind: SpanKind.CLIENT,
+            kind: OTelSpanKind.CLIENT,
             attributes: {
                 "payment.processor": "stripe",
                 "amount": 99.99

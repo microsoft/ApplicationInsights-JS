@@ -1,11 +1,11 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
-import { Sample } from "../../../src/TelemetryProcessors/Sample";
+import { createSampler } from "../../../src/TelemetryProcessors/Sample";
 import { ITelemetryItem, isBeaconsSupported, newId } from "@microsoft/applicationinsights-core-js";
-import { PageView, TelemetryItemCreator, IPageViewTelemetry } from "@microsoft/applicationinsights-common";
-import { HashCodeScoreGenerator } from "../../../src/TelemetryProcessors/SamplingScoreGenerators/HashCodeScoreGenerator";
+import { TelemetryItemCreator, IPageViewTelemetry, PageViewDataType, PageViewEnvelopeType, ISample } from "@microsoft/applicationinsights-common";
+import { getHashCodeScore } from "../../../src/TelemetryProcessors/SamplingScoreGenerators/HashCodeScoreGenerator";
 
 export class SampleTests extends AITestClass {
-    private sample: Sample
+    private sample: ISample;
     private item: ITelemetryItem;
 
     public testInitialize() {
@@ -26,9 +26,9 @@ export class SampleTests extends AITestClass {
         this.testCase({
             name: 'Sampling: isSampledIn returns true for 100 sampling rate',
             test: () => {
-                this.sample = new Sample(100);
+                this.sample = createSampler(100);
                 this.item = this.getTelemetryItem();
-                const scoreStub = this.sandbox.stub(this.sample["samplingScoreGenerator"], "getSamplingScore");
+                const scoreStub = this.sandbox.stub(this.sample["generator"], "getScore");
 
                 QUnit.assert.ok(this.sample.isSampledIn(this.item));
                 QUnit.assert.ok(scoreStub.notCalled);
@@ -38,7 +38,7 @@ export class SampleTests extends AITestClass {
         this.testCase({
             name: 'Sampling: hashing is based on user id even if operation id is provided',
             test: () => {
-                this.sample = new Sample(33);
+                this.sample = createSampler(33);
 
                 const userid = "asdf";
 
@@ -60,7 +60,7 @@ export class SampleTests extends AITestClass {
         this.testCase({
             name: 'Sampling: hashing is based on operation id if no user id is provided',
             test: () => {
-                this.sample = new Sample(33);
+                this.sample = createSampler(33);
                 const operationId = "operation id";
 
                 const item1 = this.getTelemetryItem();
@@ -95,7 +95,7 @@ export class SampleTests extends AITestClass {
             name: 'Sampling: hashing is random if no user id nor operation id provided',
             test: () => {
                 // setup
-                this.sample = new Sample(33);
+                this.sample = createSampler(33);
 
                 const envelope1 = this.getTelemetryItem();
                 envelope1.tags["ai.user.id"] = null;
@@ -127,11 +127,10 @@ export class SampleTests extends AITestClass {
 
                 // act
                 sampleRates.forEach((sampleRate) => {
-                    const sut = new HashCodeScoreGenerator();
                     let countOfSampledItems = 0;
 
                     ids.forEach((id) => {
-                        if (sut.getHashCodeScore(id) < sampleRate) {++countOfSampledItems; }
+                        if (getHashCodeScore(id) < sampleRate) {++countOfSampledItems; }
                     });
 
                     // Assert
@@ -147,7 +146,7 @@ export class SampleTests extends AITestClass {
         return TelemetryItemCreator.create<IPageViewTelemetry>({
             name: 'some page',
             uri: 'some uri'
-        }, PageView.dataType, PageView.envelopeType, null);
+        }, PageViewDataType, PageViewEnvelopeType, null);
     }
 
     private getMetricItem(): ITelemetryItem {

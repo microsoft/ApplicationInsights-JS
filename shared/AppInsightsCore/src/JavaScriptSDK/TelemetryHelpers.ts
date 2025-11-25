@@ -141,7 +141,7 @@ export function unloadComponents(components: any | IUnloadableComponent[], unloa
     return _doUnload();
 }
 
-function isDistributedTraceContext(obj: any): obj is IDistributedTraceContext {
+export function isDistributedTraceContext(obj: any): obj is IDistributedTraceContext {
     return obj &&
         isFunction(obj.getName) &&
         isFunction(obj.getTraceId) &&

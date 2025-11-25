@@ -2,23 +2,23 @@
 // Licensed under the MIT License.
 
 import {
-    ILazyValue, createDeferredCachedValue, dumpObj, isNullOrUndefined, isString, objDefineProps, objFreeze, objIs, objKeys, perfNow
+    ILazyValue, dumpObj, getDeferred, isNullOrUndefined, isString, objDefineProps, objFreeze, objIs, objKeys, perfNow
 } from "@nevware21/ts-utils";
 import { setProtoTypeName, updateProtoTypeName } from "../../JavaScriptSDK/HelperFuncs";
 import { STR_EMPTY, UNDEFINED_VALUE } from "../../JavaScriptSDK/InternalConstants";
 import { IAttributeContainer } from "../attribute/IAttributeContainer";
 import { addAttributes, createAttributeContainer } from "../attribute/attributeContainer";
+import { OTelSpanKind, eOTelSpanKind } from "../enums/trace/OTelSpanKind";
 import { eOTelSpanStatusCode } from "../enums/trace/OTelSpanStatus";
+import { isAttributeValue } from "../helpers/attributeHelpers";
+import { handleAttribError, handleNotImplemented, handleSpanError, handleWarn } from "../helpers/handleErrors";
+import { hrTime, hrTimeDuration, hrTimeToMilliseconds, millisToHrTime, timeInputToHrTime, zeroHrTime } from "../helpers/timeHelpers";
 import { IOTelAttributes } from "../interfaces/IOTelAttributes";
 import { OTelException } from "../interfaces/IOTelException";
 import { IOTelHrTime, OTelTimeInput } from "../interfaces/IOTelHrTime";
 import { IOTelSpanCtx } from "../interfaces/trace/IOTelSpanCtx";
-import { OTelSpanKind, eOTelSpanKind } from "../interfaces/trace/IOTelSpanOptions";
 import { IOTelSpanStatus } from "../interfaces/trace/IOTelSpanStatus";
 import { IReadableSpan } from "../interfaces/trace/IReadableSpan";
-import { isAttributeValue } from "../internal/attributeHelpers";
-import { handleAttribError, handleNotImplemented, handleSpanError, handleWarn } from "../internal/commonUtils";
-import { hrTime, hrTimeDuration, hrTimeToMilliseconds, millisToHrTime, timeInputToHrTime, zeroHrTime } from "../internal/timeHelpers";
 
 export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpanKind): IReadableSpan {
     let otelCfg = spanCtx.api.cfg;
@@ -27,7 +27,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
     let attributes: ILazyValue<IAttributeContainer>;
     let isEnded = false;
     let errorHandlers = otelCfg.errorHandlers || {};
-    let spanStartTime: ILazyValue<IOTelHrTime> = createDeferredCachedValue(() => {
+    let spanStartTime: ILazyValue<IOTelHrTime> = getDeferred(() => {
         if (isNullOrUndefined(spanCtx.startTime)) {
             return hrTime(perfStartTime);
         }
@@ -40,6 +40,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
     // let links: IOTelLink[] = [];
     // let events: IOTelTimedEvent[] = [];
     let localDroppedAttributes = 0;
+    let localContainer: IAttributeContainer = null;;
     // let droppedEvents = 0;
     // let droppedLinks = 0;
     let isRecording = spanCtx.isRecording !== false;
@@ -50,7 +51,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
 
     let spanName = orgName || STR_EMPTY;
     if (isRecording) {
-        attributes = createDeferredCachedValue(() => createAttributeContainer(otelCfg, spanName, spanCtx.attributes));
+        attributes = getDeferred(() => createAttributeContainer(otelCfg, spanName, spanCtx.attributes));
     }
 
     function _handleIsEnded(operation: string, extraMsg?: string): boolean {
@@ -69,7 +70,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
         setAttribute: (key: string, value: any) => {
             let message: string;
 
-            if (value !== null && !_handleIsEnded("setAttribute")) {
+            if (value !== null && !_handleIsEnded("setAttribute") && isRecording) {
                 if (!key || key.length === 0) {
                     message = "Invalid attribute key: " + dumpObj(key);
                 } else if (!isAttributeValue(value)) {
@@ -79,17 +80,19 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                 if (message) {
                     handleAttribError(errorHandlers, message, key, value);
                     localDroppedAttributes++;
-                } else if (isRecording){
+                } else if (isRecording && attributes){
                     attributes.v.set(key, value);
                 } else {
                     localDroppedAttributes++;
                 }
+            } else {
+                localDroppedAttributes++;
             }
 
             return theSpan;
         },
         setAttributes: (attrs: IOTelAttributes) => {
-            if (!_handleIsEnded("setAttributes") && isRecording) {
+            if (!_handleIsEnded("setAttributes") && isRecording && attributes) {
                 addAttributes(attributes.v, attrs);
             } else {
                 localDroppedAttributes += (objKeys(attrs).length || 0);
@@ -124,7 +127,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
         setStatus: (newStatus: IOTelSpanStatus) => {
             if (!_handleIsEnded("setStatus")) {
                 spanStatus = newStatus;
-                if (!isNullOrUndefined(spanStatus.message) && !isString(spanStatus.message)) {
+                if (!isNullOrUndefined(spanStatus) && !isNullOrUndefined(spanStatus.message) && !isString(spanStatus.message)) {
                     spanStatus.message = dumpObj(spanStatus.message);
                 }
             }
@@ -213,6 +216,16 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                 return attributes ? attributes.v.attributes : objFreeze({});
             }
         },
+        attribContainer: {
+            g: () => {
+                if (!attributes && !localContainer) {
+                    // Create an empty container and cache it for future use (for performance only)
+                    localContainer = createAttributeContainer(otelCfg, spanName);
+                }
+
+                return attributes ? attributes.v : localContainer;
+            }
+        },
         links: {
             g: () => {
                 return [];
@@ -249,12 +262,12 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
         //     }
         // },
         parentSpanContext: {
-            l: createDeferredCachedValue(() => {
+            l: getDeferred(() => {
                 return spanCtx ? spanCtx.parentSpanContext : UNDEFINED_VALUE;
             })
         },
         parentSpanId: {
-            l: createDeferredCachedValue(() => {
+            l: getDeferred(() => {
                 let parentSpanId = UNDEFINED_VALUE;
                 if (spanCtx) {
                     let parentSpanCtx = spanCtx.parentSpanContext;

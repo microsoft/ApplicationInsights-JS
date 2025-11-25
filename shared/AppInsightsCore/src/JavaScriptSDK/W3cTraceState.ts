@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import {
-    ICachedValue, arrForEach, arrIndexOf, createCachedValue, createDeferredCachedValue, isArray, isFunction, isNullOrUndefined, isString,
-    objDefineProps, safe, strSplit
+    ICachedValue, arrForEach, arrIndexOf, createCachedValue, isArray, isFunction, isNullOrUndefined, isString, objDefineProps,
+    safeGetDeferred, strSplit
 } from "@nevware21/ts-utils";
 import { IW3cTraceState } from "../JavaScriptSDK.Interfaces/IW3cTraceState";
 import { findMetaTags, findNamedServerTimings } from "./EnvUtils";
@@ -246,7 +246,7 @@ export function isW3cTraceState(value: any): value is IW3cTraceState {
  * @returns - A new distributed trace state instance
  */
 export function createW3cTraceState(value?: string | null, parent?: IW3cTraceState | null): IW3cTraceState {
-    let cachedItems: ICachedValue<ITraceStateMember[]> = createDeferredCachedValue(() => safe(_parseTraceStateList, [value || STR_EMPTY]).v || []);
+    let cachedItems: ICachedValue<ITraceStateMember[]> = safeGetDeferred(_parseTraceStateList, [], [value || STR_EMPTY]);
 
     function _get(key: string): string | undefined {
         let value: string | undefined;

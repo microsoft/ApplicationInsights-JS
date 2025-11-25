@@ -41,6 +41,7 @@ ES3 support has been removed from the latest version (v3.x), if required [see fo
 
 ### Docs
 
+- [OpenTelemetry Tracing API](./OTel/README.md) - OpenTelemetry-compatible tracing API for distributed tracing
 - [Performance Monitoring](./PerformanceMonitoring.md)
 - [Dependency Listeners](./Dependency.md)
 - [SDK Load Failure](./SdkLoadFailure.md)

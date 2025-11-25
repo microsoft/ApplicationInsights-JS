@@ -16,6 +16,7 @@ export { IUnloadableComponent } from "./JavaScriptSDK.Interfaces/IUnloadableComp
 export { IPayloadData, SendPOSTFunction, IXHROverride, OnCompleteCallback } from "./JavaScriptSDK.Interfaces/IXHROverride"
 export { IUnloadHook, ILegacyUnloadHook } from "./JavaScriptSDK.Interfaces/IUnloadHook";
 export { eEventsDiscardedReason, EventsDiscardedReason, eBatchDiscardedReason, BatchDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
+export { eDependencyTypes, DependencyTypes } from "./JavaScriptSDK.Enums/DependencyTypes";
 export { SendRequestReason, TransportType } from "./JavaScriptSDK.Enums/SendRequestReason";
 //export { StatsType, eStatsType } from "./JavaScriptSDK.Enums/StatsType";
 export { TelemetryUpdateReason } from "./JavaScriptSDK.Enums/TelemetryUpdateReason";
@@ -31,7 +32,7 @@ export {
     normalizeJsName, toISOString, getExceptionName, strContains, setValue, getSetValue,
     proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
     isNotUndefined, isNotNullOrUndefined, objExtend, isFeatureEnabled, getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports,
-    openXhr, _appendHeader, _getAllResponseHeaders, convertAllHeadersToMap, setObjStringTag, setProtoTypeName
+    openXhr, _appendHeader, _getAllResponseHeaders, setObjStringTag, setProtoTypeName
 } from "./JavaScriptSDK/HelperFuncs";
 export { parseResponse } from "./JavaScriptSDK/ResponseHelpers";
 export { IXDomainRequest, IBackendResponse } from "./JavaScriptSDK.Interfaces/IXDomainRequest";
@@ -42,12 +43,13 @@ export { SenderPostManager } from "./JavaScriptSDK/SenderPostManager";
 //export { IStatsMgr, IStatsMgrConfig } from "./JavaScriptSDK.Interfaces/IStatsMgr";
 //export { createStatsMgr } from "./JavaScriptSDK/StatsBeat";
 export {
-    isArray, isTypeof, isUndefined, isNullOrUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,
+    isArray, isTypeof, isUndefined, isNullOrUndefined, isStrictUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,
     strEndsWith, strStartsWith, isDate, isError, isString, isNumber, isBoolean, arrForEach, arrIndexOf,
-    arrReduce, arrMap, strTrim, objKeys, objDefineAccessors, throwError, isSymbol,
+    arrReduce, arrMap, strTrim, objKeys, objCreate, objDefine, objDefineProp, objDefineAccessors, throwError, isSymbol,
     isNotTruthy, isTruthy, objFreeze, objSeal, objToString, objDeepFreeze as deepFreeze,
     getInst as getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, hasNavigator, getNavigator, hasHistory,
-    getHistory, dumpObj, asString, objForEachKey, getPerformance, utcNow as dateNow, perfNow
+    getHistory, dumpObj, asString, objForEachKey, getPerformance, utcNow as dateNow, perfNow,
+    ObjDefinePropDescriptor
 } from "@nevware21/ts-utils";
 export { EnumValue, createEnumStyle, createValueMap } from "./JavaScriptSDK.Enums/EnumHelperFuncs";
 export {
@@ -78,10 +80,10 @@ export { IFeatureOptInDetails, IFeatureOptIn } from "./JavaScriptSDK.Interfaces/
 export { FeatureOptInMode, CdnFeatureMode } from "./JavaScriptSDK.Enums/FeatureOptInEnums"
 export { safeGetLogger, DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole, _logInternalMessage } from "./JavaScriptSDK/DiagnosticLogger";
 export {
-    ProcessTelemetryContext, createProcessTelemetryContext
+    createProcessTelemetryContext
     // Explicitly NOT exporting createProcessTelemetryUnloadContext() and createProcessTelemetryUpdateContext() as these should only be created internally
 } from "./JavaScriptSDK/ProcessTelemetryContext";
-export { initializePlugins, sortPlugins, unloadComponents, createDistributedTraceContext } from "./JavaScriptSDK/TelemetryHelpers";
+export { initializePlugins, sortPlugins, unloadComponents, createDistributedTraceContext, isDistributedTraceContext } from "./JavaScriptSDK/TelemetryHelpers";
 export { _eInternalMessageId, _InternalMessageId, LoggingSeverity, eLoggingSeverity } from "./JavaScriptSDK.Enums/LoggingEnums";
 export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs, InstrumentEvent } from "./JavaScriptSDK/InstrumentHooks";
 export { ICookieMgr, ICookieMgrConfig } from "./JavaScriptSDK.Interfaces/ICookieMgr";
@@ -96,7 +98,7 @@ export { UnloadHandler, IUnloadHandlerContainer, createUnloadHandlerContainer } 
 export { IUnloadHookContainer, createUnloadHookContainer,  _testHookMaxUnloadHooksCb } from "./JavaScriptSDK/UnloadHookContainer";
 export { ITelemetryUpdateState } from "./JavaScriptSDK.Interfaces/ITelemetryUpdateState";
 export { ITelemetryUnloadState } from "./JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-export { IDistributedTraceContext } from "./JavaScriptSDK.Interfaces/IDistributedTraceContext";
+export { IDistributedTraceContext, IDistributedTraceInit } from "./JavaScriptSDK.Interfaces/IDistributedTraceContext";
 export { ITraceParent } from "./JavaScriptSDK.Interfaces/ITraceParent";
 export {
     createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent,
@@ -122,17 +124,35 @@ export { IOTelTraceState } from "./OpenTelemetry/interfaces/trace/IOTelTraceStat
 export { IOTelSpan } from "./OpenTelemetry/interfaces/trace/IOTelSpan";
 export { IOTelTracer } from "./OpenTelemetry/interfaces/trace/IOTelTracer";
 export { IOTelTracerProvider, IOTelTracerOptions } from "./OpenTelemetry/interfaces/trace/IOTelTracerProvider";
-export { ITraceProvider } from "./JavaScriptSDK.Interfaces/ITraceProvider";
-export { OTelSpanKind, IOTelSpanOptions } from "./OpenTelemetry/interfaces/trace/IOTelSpanOptions";
+export { ITraceProvider, ITraceHost, ISpanScope } from "./JavaScriptSDK.Interfaces/ITraceProvider";
+export { IOTelSpanOptions } from "./OpenTelemetry/interfaces/trace/IOTelSpanOptions";
 export { createOTelTraceState } from "./OpenTelemetry/trace/traceState";
 export { createSpan } from "./OpenTelemetry/trace/span";
-export { createTracerProvider } from "./OpenTelemetry/trace/tracerProvider";
-export { createTracer } from "./OpenTelemetry/trace/tracer";
-export { isSpanContextValid, wrapSpanContext, isReadableSpan, suppressTracing, unsuppressTracing, isTracingSuppressed, withSpan } from "./OpenTelemetry/trace/utils";
+export { createTraceProvider } from "./OpenTelemetry/trace/traceProvider";
+export { isSpanContextValid, wrapSpanContext, isReadableSpan, suppressTracing, unsuppressTracing, isTracingSuppressed, useSpan, withSpan, startActiveSpan } from "./OpenTelemetry/trace/utils";
 
-// Additional exports for backward compatibility
-export { OTelSpanKind as SpanKind } from "./OpenTelemetry/interfaces/trace/IOTelSpanOptions";
-export { IOTelSpanOptions as SpanOptions } from "./OpenTelemetry/interfaces/trace/IOTelSpanOptions";
+export {
+    AzureMonitorSampleRate, ApplicationInsightsCustomEventName, MicrosoftClientIp, ApplicationInsightsMessageName,
+    ApplicationInsightsExceptionName, ApplicationInsightsPageViewName, ApplicationInsightsAvailabilityName,
+    ApplicationInsightsEventName, ApplicationInsightsBaseType, ApplicationInsightsMessageBaseType,
+    ApplicationInsightsExceptionBaseType, ApplicationInsightsPageViewBaseType, ApplicationInsightsAvailabilityBaseType,
+    ApplicationInsightsEventBaseType, ATTR_ENDUSER_ID, ATTR_ENDUSER_PSEUDO_ID, ATTR_HTTP_ROUTE, SEMATTRS_NET_PEER_IP,
+    SEMATTRS_NET_PEER_NAME, SEMATTRS_NET_HOST_IP, SEMATTRS_PEER_SERVICE, SEMATTRS_HTTP_USER_AGENT, SEMATTRS_HTTP_METHOD,
+    SEMATTRS_HTTP_URL, SEMATTRS_HTTP_STATUS_CODE, SEMATTRS_HTTP_ROUTE, SEMATTRS_HTTP_HOST, SEMATTRS_DB_SYSTEM,
+    SEMATTRS_DB_STATEMENT, SEMATTRS_DB_OPERATION, SEMATTRS_DB_NAME, SEMATTRS_RPC_SYSTEM, SEMATTRS_RPC_GRPC_STATUS_CODE,
+    SEMATTRS_EXCEPTION_TYPE, SEMATTRS_EXCEPTION_MESSAGE, SEMATTRS_EXCEPTION_STACKTRACE, SEMATTRS_HTTP_SCHEME,
+    SEMATTRS_HTTP_TARGET, SEMATTRS_HTTP_FLAVOR, SEMATTRS_NET_TRANSPORT, SEMATTRS_NET_HOST_NAME, SEMATTRS_NET_HOST_PORT,
+    SEMATTRS_NET_PEER_PORT, SEMATTRS_HTTP_CLIENT_IP, SEMATTRS_ENDUSER_ID, ATTR_CLIENT_ADDRESS, ATTR_CLIENT_PORT,
+    ATTR_SERVER_ADDRESS, ATTR_SERVER_PORT, ATTR_URL_FULL, ATTR_URL_PATH, ATTR_URL_QUERY, ATTR_URL_SCHEME,
+    ATTR_ERROR_TYPE, ATTR_NETWORK_LOCAL_ADDRESS, ATTR_NETWORK_LOCAL_PORT, ATTR_NETWORK_PROTOCOL_NAME,
+    ATTR_NETWORK_PEER_ADDRESS, ATTR_NETWORK_PEER_PORT, ATTR_NETWORK_PROTOCOL_VERSION, ATTR_NETWORK_TRANSPORT,
+    ATTR_USER_AGENT_ORIGINAL, ATTR_HTTP_REQUEST_METHOD, ATTR_HTTP_RESPONSE_STATUS_CODE, ATTR_EXCEPTION_TYPE,
+    ATTR_EXCEPTION_MESSAGE, ATTR_EXCEPTION_STACKTRACE, EXP_ATTR_ENDUSER_ID, EXP_ATTR_ENDUSER_PSEUDO_ID,
+    EXP_ATTR_SYNTHETIC_TYPE, DBSYSTEMVALUES_MONGODB, DBSYSTEMVALUES_COSMOSDB, DBSYSTEMVALUES_MYSQL,
+    DBSYSTEMVALUES_POSTGRESQL, DBSYSTEMVALUES_REDIS, DBSYSTEMVALUES_DB2, DBSYSTEMVALUES_DERBY, DBSYSTEMVALUES_MARIADB,
+    DBSYSTEMVALUES_MSSQL, DBSYSTEMVALUES_ORACLE, DBSYSTEMVALUES_SQLITE, DBSYSTEMVALUES_OTHER_SQL, DBSYSTEMVALUES_HSQLDB,
+    DBSYSTEMVALUES_H2
+} from "./OpenTelemetry/attribute/SemanticConventions"
 
 // OpenTelemetry Core API Interfaces
 export { IOTelApi } from "./OpenTelemetry/interfaces/IOTelApi";
@@ -152,32 +172,36 @@ export { IReadableSpan } from "./OpenTelemetry/interfaces/trace/IReadableSpan";
 export { IOTelConfig } from "./OpenTelemetry/interfaces/config/IOTelConfig";
 export { IOTelAttributeLimits } from "./OpenTelemetry/interfaces/config/IOTelAttributeLimits";
 export { IOTelErrorHandlers } from "./OpenTelemetry/interfaces/config/IOTelErrorHandlers";
-export { IOTelSpanLimits } from "./OpenTelemetry/interfaces/config/IOTelSpanLimits";
 export { ITraceCfg } from "./OpenTelemetry/interfaces/config/ITraceCfg";
 
 // OpenTelemetry Attribute Support
 export { IAttributeContainer, IAttributeChangeInfo } from "./OpenTelemetry/attribute/IAttributeContainer";
 export { eAttributeChangeOp, AttributeChangeOp } from "./OpenTelemetry/enums/eAttributeChangeOp";
 export { createAttributeContainer, addAttributes, isAttributeContainer, createAttributeSnapshot } from "./OpenTelemetry/attribute/attributeContainer";
+export { eAttributeFilter, AttributeFilter } from "./OpenTelemetry/attribute/IAttributeContainer";
 
 // OpenTelemetry Enums
-export { eOTelSpanKind } from "./OpenTelemetry/enums/trace/OTelSpanKind";
+export { eOTelSpanKind, OTelSpanKind } from "./OpenTelemetry/enums/trace/OTelSpanKind";
 export { eOTelSpanStatusCode, OTelSpanStatusCode } from "./OpenTelemetry/enums/trace/OTelSpanStatus";
 
-// OpenTelemetry Internal Utilities
+// OpenTelemetry Helper Utilities
 export {
     hrTime, hrTimeToTimeStamp, hrTimeDuration, hrTimeToMilliseconds, timeInputToHrTime, millisToHrTime, hrTimeToNanoseconds,
-    addHrTimes, hrTimeToMicroseconds, hrTimeToUnixNanos, zeroHrTime, nanosToHrTime, isTimeInput, isTimeInputHrTime
-} from "./OpenTelemetry/internal/timeHelpers";
-export { isAttributeValue } from "./OpenTelemetry/internal/attributeHelpers";
+    addHrTimes, hrTimeToMicroseconds, zeroHrTime, nanosToHrTime, isTimeInput, isTimeInputHrTime, isTimeSpan
+} from "./OpenTelemetry/helpers/timeHelpers";
+export { isAttributeValue, isAttributeKey, sanitizeAttributes } from "./OpenTelemetry/helpers/attributeHelpers";
+export {
+    getSyntheticType, isSyntheticSource, serializeAttribute, getUrl, getPeerIp, getHttpMethod, getHttpUrl, getHttpHost, getHttpScheme,
+    getHttpTarget, getNetPeerName, getNetPeerPort, getUserAgent, getLocationIp, getHttpStatusCode, getHttpClientIp,
+    getDependencyTarget, isSqlDB
+} from "./OpenTelemetry/helpers/common";
 
 // OpenTelemetry Error Handlers
 export {
     handleAttribError, handleSpanError, handleDebug, handleWarn, handleError, handleNotImplemented
-} from "./OpenTelemetry/internal/commonUtils";
+} from "./OpenTelemetry/helpers/handleErrors";
 
 // OpenTelemetry Error Classes
 export { OpenTelemetryError, OpenTelemetryErrorConstructor, getOpenTelemetryError, throwOTelError } from "./OpenTelemetry/errors/OTelError";
 export { OTelInvalidAttributeError, throwOTelInvalidAttributeError } from "./OpenTelemetry/errors/OTelInvalidAttributeError";
-export { OTelNotImplementedError, throwOTelNotImplementedError } from "./OpenTelemetry/errors/OTelNotImplementedError";
 export { OTelSpanError, throwOTelSpanError } from "./OpenTelemetry/errors/OTelSpanError";

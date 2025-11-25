@@ -1156,6 +1156,18 @@ export class AITestClass {
         }
     }
 
+    protected _clearSessionStorage() {
+        if (window.sessionStorage) {
+            window.sessionStorage.clear();
+        }
+    }
+
+    protected _clearLocalStorage() {
+        if (window.localStorage) {
+            window.localStorage.clear();
+        }
+    }
+
     protected _disableDynProtoBaseFuncs(dynamicProtoInst: typeof dynamicProto = dynamicProto) {
         let defOpts = dynamicProtoInst["_dfOpts"];
         if (defOpts) {
@@ -1226,7 +1238,10 @@ export class AITestClass {
         let _self = this;
         // Initialize the sandbox similar to what is done in sinon.js "test()" override. See note on class.
         _self.sandbox = createSandbox(this.sandboxConfig);
-
+        // Clear out all cookies
+        _self._deleteAllCookies();
+        _self._clearSessionStorage();
+        _self._clearLocalStorage();
 
         if (_self.isEmulatingIe) {
             // Reset any previously cached values, which may have grabbed the mocked values

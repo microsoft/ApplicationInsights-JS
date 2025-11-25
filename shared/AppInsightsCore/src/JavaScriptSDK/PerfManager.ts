@@ -5,6 +5,7 @@ import { isArray, isFunction, objDefine, utcNow } from "@nevware21/ts-utils";
 import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
 import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
 import { IPerfManager, IPerfManagerProvider } from "../JavaScriptSDK.Interfaces/IPerfManager";
+import { _noopVoid } from "../OpenTelemetry/noop/noopHelpers";
 import { STR_GET_PERF_MGR } from "./InternalConstants";
 
 const strExecutionContextKey = "ctx";
@@ -130,7 +131,7 @@ export class PerfEvent implements IPerfEvent {
 
             _self.time = utcNow() - _self.start;
             _self.exTime = _self.time - childTime;
-            _self.complete = () => {};
+            _self.complete = _noopVoid;
         };
     }
 }
