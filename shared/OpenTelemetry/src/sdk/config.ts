@@ -38,11 +38,14 @@ export function loadDefaultConfig() {
     return {
         forceFlushTimeoutMillis: 30000,
         logRecordLimits: {
-            attributeValueLengthLimit:
-                getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT") ||
-                Infinity,
-            attributeCountLimit:
-                getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT") || 128,
+            attributeValueLengthLimit: (() => {
+                const configuredValue = getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT");
+                return configuredValue !== undefined ? configuredValue : Infinity;
+            })(),
+            attributeCountLimit: (() => {
+                const configuredValue = getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT");
+                return configuredValue !== undefined ? configuredValue : 128;
+            })(),
         },
         includeTraceContext: true
     };
@@ -56,22 +59,35 @@ export function loadDefaultConfig() {
 export function reconfigureLimits(
     logRecordLimits: IOTelLogRecordLimits
 ): Required<IOTelLogRecordLimits> {
+    const providedCount = logRecordLimits.attributeCountLimit;
+    const providedValueLength = logRecordLimits.attributeValueLengthLimit;
+
+    const envLogCount = getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT");
+    const envGeneralCount = getNumberFromEnv("OTEL_ATTRIBUTE_COUNT_LIMIT");
+
+    const envLogValueLength = getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT");
+    const envGeneralValueLength = getNumberFromEnv("OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT");
+
     return {
         /**
          * Reassign log record attribute count limit to use first non null value defined by user or use default value
          */
-        attributeCountLimit:
-            logRecordLimits.attributeCountLimit ||
-            getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT") ||
-            getNumberFromEnv("OTEL_ATTRIBUTE_COUNT_LIMIT") ||
-            128,
+        attributeCountLimit: providedCount !== undefined
+            ? providedCount
+            : envLogCount !== undefined
+                ? envLogCount
+                : envGeneralCount !== undefined
+                    ? envGeneralCount
+                    : 128,
         /**
          * Reassign log record attribute value length limit to use first non null value defined by user or use default value
          */
-        attributeValueLengthLimit:
-            logRecordLimits.attributeValueLengthLimit ||
-            getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT") ||
-            getNumberFromEnv("OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT") ||
-            Infinity
+        attributeValueLengthLimit: providedValueLength !== undefined
+            ? providedValueLength
+            : envLogValueLength !== undefined
+                ? envLogValueLength
+                : envGeneralValueLength !== undefined
+                    ? envGeneralValueLength
+                    : Infinity
     };
 }

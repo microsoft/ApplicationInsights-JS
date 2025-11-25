@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IPromise } from "@nevware21/ts-async";
 import { NOOP_LOGGER } from "../api/noop/noopLogger";
 import { IOTelLogger } from "../interfaces/logs/IOTelLogger";
 import { IOTelLoggerOptions } from "../interfaces/logs/IOTelLoggerOptions";
 import { IOTelLoggerProvider } from "../interfaces/logs/IOTelLoggerProvider";
 import { IOTelLoggerProviderConfig } from "../interfaces/logs/IOTelLoggerProviderConfig";
 import { LoggerProviderSharedState } from "../internal/LoggerProviderSharedState";
-import { Logger } from "./IOTelLogger";
 import { createResource } from "../resource/resource";
+import { Logger } from "./IOTelLogger";
 import { loadDefaultConfig, reconfigureLimits } from "./config";
 
 export const DEFAULT_LOGGER_NAME = "unknown";
@@ -72,9 +73,9 @@ export class LoggerProvider implements IOTelLoggerProvider {
     /**
      * Notifies all registered LogRecordProcessor to flush any buffered data.
      *
-     * Returns a promise which is resolved when all flushes are complete.
+     * Returns a ipromise which is resolved when all flushes are complete.
      */
-    public forceFlush(): Promise<void> {
+    public forceFlush(): IPromise<void> {
         // do not flush after shutdown
         if (this._isShutdown) {
             console.warn("invalid attempt to force flush after LoggerProvider shutdown");
@@ -89,7 +90,7 @@ export class LoggerProvider implements IOTelLoggerProvider {
      *
      * Returns a promise which is resolved when all flushes are complete.
      */
-    public shutdown(): Promise<void> {
+    public shutdown(): IPromise<void> {
         if (this._isShutdown) {
             console.warn("shutdown may only be called once per LoggerProvider");
             return Promise.resolve();

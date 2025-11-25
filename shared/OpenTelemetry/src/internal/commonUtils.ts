@@ -1,4 +1,5 @@
 
+import { IPromise } from "@nevware21/ts-async";
 import { dumpObj, fnApply } from "@nevware21/ts-utils";
 import { IOTelErrorHandlers } from "../interfaces/config/IOTelErrorHandlers";
 
@@ -128,7 +129,7 @@ export function callWithTimeout<T>(
     handlers: IOTelErrorHandlers,
     promise: Promise<T>,
     timeout: number
-): Promise<T> {
+): IPromise<T> {
     let timeoutHandle: ReturnType<typeof setTimeout>;
 
     const timeoutPromise = new Promise<never>(function timeoutFunction(_resolve, reject) {
