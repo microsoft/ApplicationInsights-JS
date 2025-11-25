@@ -16,6 +16,8 @@ import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import {
     dataSanitizeException, dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties, dataSanitizeString
 } from "./Common/DataSanitizer";
+import { ExceptionDataType } from "./DataTypes";
+import { ExceptionEnvelopeType } from "./EnvelopeTypes";
 
 // These Regex covers the following patterns
 // 1. Chrome/Firefox/IE/Edge:
@@ -535,9 +537,15 @@ export function _formatErrorCode(errorObj:any) {
 }
 
 export class Exception implements IExceptionData, ISerializable {
+    /**
+     * @deprecated Use the constant ExceptionEnvelopeType instead.
+     */
+    public static envelopeType = ExceptionEnvelopeType;
 
-    public static envelopeType = "Microsoft.ApplicationInsights.{0}.Exception";
-    public static dataType = "ExceptionData";
+    /**
+     * @deprecated Use the constant ExceptionDataType instead.
+     */
+    public static dataType = ExceptionDataType;
 
     public id?: string;
     public problemGroup?: string;

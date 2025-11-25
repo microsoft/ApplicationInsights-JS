@@ -56,7 +56,6 @@ export {
     Metric,
     PageView,
     PageViewPerformance,
-    RemoteDependencyData,
     Trace,
     DistributedTracingModes,
     IRequestHeaders,

@@ -9,6 +9,7 @@ import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
 import { IOTelSpanOptions } from "../OpenTelemetry/interfaces/trace/IOTelSpanOptions";
 import { IReadableSpan } from "../OpenTelemetry/interfaces/trace/IReadableSpan";
+import { ISpanScope } from "../applicationinsights-core-js";
 import { IChannelControls } from "./IChannelControls";
 import { IConfiguration } from "./IConfiguration";
 import { ICookieMgr } from "./ICookieMgr";
@@ -251,15 +252,20 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
     startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan | null;
 
     /**
-     * Return the current active span
+     * Return the current active span, if no trace provider is available null will be returned
+     * @returns The current active span or null if no trace provider is available
+     * @since 3.4.0
      */
     activeSpan?(): IReadableSpan | null;
 
     /**
-     * Set the current Active Span
+     * Set the current Active Span, if no trace provider is available the span will be not be set as the active span.
      * @param span - The span to set as the active span
+     * @returns An ISpanScope instance that provides the current scope, the span will always be the span passed in
+     * even when no trace provider is available
+     * @since 3.4.0
      */
-    setActiveSpan?(span: IReadableSpan): void
+    setActiveSpan?(span: IReadableSpan): ISpanScope<IAppInsightsCore<CfgType>>
 
     /**
      * Set the trace provider for creating spans.

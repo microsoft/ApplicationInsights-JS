@@ -1,13 +1,8 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { getGlobal } from "@nevware21/ts-utils";
 import { 
-    handleAttribError, 
-    handleSpanError, 
-    handleDebug, 
-    handleWarn, 
-    handleError, 
-    handleNotImplemented 
-} from "../../../../src/OpenTelemetry/internal/commonUtils";
+    handleAttribError, handleSpanError, handleDebug, handleWarn, handleError, handleNotImplemented
+} from "../../../../src/OpenTelemetry/helpers/handleErrors";
 import { IOTelErrorHandlers } from "../../../../src/OpenTelemetry/interfaces/config/IOTelErrorHandlers";
 
 export class CommonUtilsTests extends AITestClass {

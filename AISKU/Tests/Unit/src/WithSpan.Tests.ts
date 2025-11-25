@@ -1,20 +1,16 @@
 import { AITestClass, Assert } from '@microsoft/ai-test-framework';
 import { ApplicationInsights } from '../../../src/applicationinsights-web';
 import { 
-    IReadableSpan, IOTelSpanOptions, eOTelSpanKind, eOTelSpanStatusCode, newId, IDistributedTraceContext, withSpan
+    IReadableSpan, eOTelSpanKind, eOTelSpanStatusCode, withSpan, ITelemetryItem, ISpanScope
 } from "@microsoft/applicationinsights-core-js";
-import { 
-    ITraceTelemetry, eSeverityLevel
-} from '@microsoft/applicationinsights-common';
-
 export class WithSpanTests extends AITestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
     private static readonly _connectionString = `InstrumentationKey=${WithSpanTests._instrumentationKey}`;
 
     private _ai!: ApplicationInsights;
     
-    // Track calls to trackTrace for validation
-    private _trackTraceCalls: { trace: ITraceTelemetry, properties: any }[] = [];
+    // Track calls to track for validation
+    private _trackCalls: ITelemetryItem[] = [];
 
     constructor(testName?: string) {
         super(testName || "WithSpanTests");
@@ -23,7 +19,7 @@ export class WithSpanTests extends AITestClass {
     public testInitialize() {
         try {
             this.useFakeServer = false;
-            this._trackTraceCalls = [];
+            this._trackCalls = [];
 
             this._ai = new ApplicationInsights({
                 config: {
@@ -35,15 +31,15 @@ export class WithSpanTests extends AITestClass {
                 }
             });
 
-            // Hook trackTrace to capture calls
-            const originalTrackTrace = this._ai.trackTrace;
-            this._ai.trackTrace = (trace: ITraceTelemetry, customProperties?: any) => {
-                this._trackTraceCalls.push({ trace, properties: customProperties });
-                return originalTrackTrace.call(this._ai, trace, customProperties);
-            };
-
             // Initialize the SDK
             this._ai.loadAppInsights();
+
+            // Hook core.track to capture calls
+            const originalTrack = this._ai.core.track;
+            this._ai.core.track = (item: ITelemetryItem) => {
+                this._trackCalls.push(item);
+                return originalTrack.call(this._ai.core, item);
+            };
             
         } catch (e) {
             console.error('Failed to initialize WithSpan tests: ' + e);
@@ -105,7 +101,7 @@ export class WithSpanTests extends AITestClass {
             name: "WithSpan: should work with telemetry tracking inside span context",
             test: () => {
                 // Arrange
-                this._trackTraceCalls = [];
+                this._trackCalls = [];
                 const testSpan = this._ai.startSpan("withSpan-telemetry-test", {
                     attributes: {
                         "operation.name": "telemetry-tracking"
@@ -140,10 +136,11 @@ export class WithSpanTests extends AITestClass {
                 // End the span to trigger trace generation
                 testSpan!.end();
                 
-                // Verify trace was generated for the span
-                Assert.equal(this._trackTraceCalls.length, 1, "Should have one trackTrace call from span ending");
-                const traceCall = this._trackTraceCalls[0];
-                Assert.ok(traceCall.trace.message.includes("withSpan-telemetry-test"), "Trace should include span name");
+                // Verify track was called for the span
+                Assert.equal(this._trackCalls.length, 3, "Should have one track call from span ending");
+                const item = this._trackCalls[2];
+                Assert.ok(item.baseData && item.baseData.properties, "Item should have properties");
+                Assert.equal("withSpan-telemetry-test", item.baseData.name, "Should include span name in properties");
             }
         });
 
@@ -328,7 +325,7 @@ export class WithSpanTests extends AITestClass {
             name: "WithSpan: should work with nested span operations and child spans",
             test: () => {
                 // Arrange
-                this._trackTraceCalls = [];
+                this._trackCalls = [];
                 const parentSpan = this._ai.startSpan("parent-operation", {
                     kind: eOTelSpanKind.SERVER,
                     attributes: {
@@ -364,17 +361,17 @@ export class WithSpanTests extends AITestClass {
                 // Assert
                 Assert.equal(result, "nested-operations-completed", "Nested operations should complete successfully");
                 
-                // End parent span to generate trace
+                // End parent span to generate telemetry
                 parentSpan!.end();
                 
-                // Should have 3 traces: parent + 2 children
-                Assert.equal(this._trackTraceCalls.length, 3, "Should have traces for parent and child spans");
+                // Should have 3 telemetry items: parent + 2 children
+                Assert.equal(this._trackCalls.length, 3, "Should have telemetry for parent and child spans");
                 
-                // Verify trace names
-                const traceNames = this._trackTraceCalls.map(call => call.trace.message);
-                Assert.ok(traceNames.some(name => name.includes("parent-operation")), "Should have parent span trace");
-                Assert.ok(traceNames.some(name => name.includes("child-operation-1")), "Should have child-1 span trace");
-                Assert.ok(traceNames.some(name => name.includes("child-operation-2")), "Should have child-2 span trace");
+                // Verify span names in properties
+                const spanNames = this._trackCalls.map(item => item.baseData?.name).filter(n => n);
+                Assert.ok(spanNames.some(name => name === "parent-operation"), "Should have parent span telemetry");
+                Assert.ok(spanNames.some(name => name === "child-operation-1"), "Should have child-1 span telemetry");
+                Assert.ok(spanNames.some(name => name === "child-operation-2"), "Should have child-2 span telemetry");
             }
         });
 
@@ -449,7 +446,7 @@ export class WithSpanTests extends AITestClass {
             name: "WithSpan: should integrate with AI telemetry correlation",
             test: () => {
                 // Arrange
-                this._trackTraceCalls = [];
+                this._trackCalls = [];
                 const operationSpan = this._ai.startSpan("user-operation", {
                     kind: eOTelSpanKind.SERVER,
                     attributes: {
@@ -518,14 +515,15 @@ export class WithSpanTests extends AITestClass {
                 Assert.equal(result.stepsCompleted, 3, "All processing steps should be completed");
                 Assert.equal(result.status, "success", "Operation should complete successfully");
                 
-                // Verify span trace was generated
-                Assert.equal(this._trackTraceCalls.length, 1, "Should have one trackTrace call from span ending");
-                const spanTrace = this._trackTraceCalls[0];
-                Assert.ok(spanTrace.trace.message.includes("user-operation"), "Trace should include span name");
+                // Verify span telemetry was generated
+                Assert.equal(this._trackCalls.length, 6, "Should have one track call from span ending");
+                const spanItem = this._trackCalls[5];
+                Assert.ok(spanItem.baseData && spanItem.baseData.properties, "Item should have properties");
+                Assert.equal("user-operation", spanItem.baseData.name, "Should include span name");
                 
-                // Verify span attributes are included in trace properties
-                Assert.equal(spanTrace.properties["user.id"], "user-123", "Span attributes should be included in trace");
-                Assert.equal(spanTrace.properties["operation.type"], "data-processing", "All span attributes should be preserved");
+                // Verify span attributes are included in properties
+                Assert.equal(spanItem.baseData.properties["user.id"], "user-123", "Span attributes should be included in telemetry");
+                Assert.equal(spanItem.baseData.properties["operation.type"], "data-processing", "All span attributes should be preserved");
             }
         });
 
@@ -561,6 +559,169 @@ export class WithSpanTests extends AITestClass {
                 
                 // Verify span is still valid
                 Assert.ok(testSpan!.isRecording(), "Span should still be recording after no-op functions");
+            }
+        });
+
+        this.testCase({
+            name: "WithSpan: should use ISpanScope as 'this' when no thisArg provided",
+            test: () => {
+                // Arrange
+                const span = this._ai.startSpan("test-span", {
+                    attributes: { "test.id": "withSpan-this-test" }
+                });
+                
+                let capturedThis: any = null;
+                let capturedCore: any = null;
+                let capturedSpan: any = null;
+
+                // Act - call withSpan without thisArg
+                const result = withSpan(this._ai.core, span!, function(this: ISpanScope, arg1: string, arg2: number) {
+                    capturedThis = this;
+                    capturedCore = this.core;
+                    capturedSpan = this.span;
+                    return `${arg1}-${arg2}`;
+                }, undefined, "test", 42);
+
+                // Assert
+                Assert.equal(result, "test-42", "Function should execute and return result");
+                Assert.ok(capturedThis, "'this' should be defined");
+                Assert.ok(capturedThis.core, "'this.core' should exist");
+                Assert.ok(capturedThis.span, "'this.span' should exist");
+                Assert.equal(capturedCore, this._ai.core, "'this.core' should be the AI core");
+                Assert.equal(capturedSpan, span, "'this.span' should be the passed span");
+                Assert.equal(capturedThis.span.name, "test-span", "'this.span.name' should match");
+
+                span!.end();
+            }
+        });
+
+        this.testCase({
+            name: "WithSpan: should use provided thisArg when specified",
+            test: () => {
+                // Arrange
+                const span = this._ai.startSpan("test-span-thisarg");
+                
+                const customContext = {
+                    contextId: "custom-123",
+                    multiplier: 10
+                };
+                
+                let capturedThis: any = null;
+
+                // Act - call withSpan with explicit thisArg
+                const result = withSpan(this._ai.core, span!, function(this: typeof customContext, arg1: number) {
+                    capturedThis = this;
+                    return arg1 * this.multiplier;
+                }, customContext, 5);
+
+                // Assert
+                Assert.equal(result, 50, "Function should execute with custom this context");
+                Assert.ok(capturedThis, "'this' should be defined");
+                Assert.equal(capturedThis, customContext, "'this' should be the custom context");
+                Assert.equal(capturedThis.contextId, "custom-123", "'this.contextId' should match");
+                Assert.equal(capturedThis.multiplier, 10, "'this.multiplier' should match");
+                Assert.ok(!capturedThis.core, "Custom this should not have core property");
+                Assert.ok(!capturedThis.span, "Custom this should not have span property");
+
+                span!.end();
+            }
+        });
+
+        this.testCase({
+            name: "WithSpan: arrow functions should not override 'this' binding",
+            test: () => {
+                // Arrange
+                const span = this._ai.startSpan("arrow-function-test");
+                
+                // Act - arrow functions capture their lexical 'this'
+                const result = withSpan(this._ai.core, span!, (arg: string) => {
+                    // Arrow function - 'this' is lexically bound to the test class instance
+                    Assert.ok(this._ai, "Arrow function should have access to test class 'this'");
+                    return `arrow-${arg}`;
+                }, undefined, "result");
+
+                // Assert
+                Assert.equal(result, "arrow-result", "Arrow function should execute correctly");
+                Assert.ok(this._ai, "Test class instance should still be accessible");
+
+                span!.end();
+            }
+        });
+
+        this.testCase({
+            name: "WithSpan: verify ISpanScope.restore() is called to restore previous active span",
+            test: () => {
+                // Arrange
+                const outerSpan = this._ai.startSpan("outer-span");
+                const innerSpan = this._ai.startSpan("inner-span");
+                
+                let activeSpanBeforeWithSpan: any = null;
+                let activeSpanInsideWithSpan: any = null;
+                let activeSpanAfterWithSpan: any = null;
+
+                // Act
+                activeSpanBeforeWithSpan = this._ai.core.activeSpan ? this._ai.core.activeSpan() : null;
+                
+                withSpan(this._ai.core, innerSpan!, () => {
+                    activeSpanInsideWithSpan = this._ai.core.activeSpan ? this._ai.core.activeSpan() : null;
+                    Assert.equal(activeSpanInsideWithSpan, innerSpan, "Active span inside withSpan should be inner span");
+                });
+                
+                activeSpanAfterWithSpan = this._ai.core.activeSpan ? this._ai.core.activeSpan() : null;
+
+                // Assert
+                // Active span should be restored after withSpan completes
+                Assert.equal(activeSpanAfterWithSpan, activeSpanBeforeWithSpan, 
+                    "Active span should be restored after withSpan completes");
+
+                innerSpan!.end();
+                outerSpan!.end();
+            }
+        });
+
+        this.testCase({
+            name: "WithSpan: 'this' binding with nested withSpan calls",
+            test: () => {
+                // Arrange
+                const outerSpan = this._ai.startSpan("outer-withspan");
+                const innerSpan = this._ai.startSpan("inner-withspan");
+                
+                const outerContext = {
+                    contextName: "outer",
+                    value: 100
+                };
+
+                let outerThisCapture: any = null;
+                let innerThisCapture: any = null;
+                let ai = this._ai;
+
+                // Act - nested withSpan calls with different thisArg
+                withSpan(ai.core, outerSpan!, function(this: typeof outerContext, arg: number) {
+                    outerThisCapture = this;
+                    Assert.equal(this.contextName, "outer", "Outer 'this' should be outer context");
+                    Assert.equal(this.value, 100, "Outer 'this.value' should match");
+                    
+                    withSpan(ai.core, innerSpan!, function(this: ISpanScope) {
+                        innerThisCapture = this;
+                        // Inner call without explicit thisArg - should be ISpanScope
+                        Assert.ok(this.core, "Inner 'this' should be ISpanScope");
+                        Assert.ok(this.span, "Inner 'this.span' should exist");
+                        Assert.equal(this.span.name, "inner-withspan", "Inner span name should match");
+                    });
+                    
+                    return arg * this.value;
+                }, outerContext, 2);
+
+                // Assert
+                Assert.ok(outerThisCapture, "Outer 'this' should be captured");
+                Assert.equal(outerThisCapture.contextName, "outer", "Outer context should be preserved");
+                
+                Assert.ok(innerThisCapture, "Inner 'this' should be captured");
+                Assert.ok(innerThisCapture.core, "Inner 'this' should have core");
+                Assert.ok(innerThisCapture.span, "Inner 'this' should have span");
+
+                innerSpan!.end();
+                outerSpan!.end();
             }
         });
     }

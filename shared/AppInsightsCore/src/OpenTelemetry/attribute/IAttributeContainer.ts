@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { IUnloadHook } from "../../JavaScriptSDK.Interfaces/IUnloadHook";
 import { eAttributeChangeOp } from "../enums/eAttributeChangeOp";
 import { IOTelAttributes, OTelAttributeValue } from "../interfaces/IOTelAttributes";

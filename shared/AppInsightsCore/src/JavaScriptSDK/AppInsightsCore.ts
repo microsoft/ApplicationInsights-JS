@@ -41,6 +41,7 @@ import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnl
 import { ITraceCfg } from "../OpenTelemetry/interfaces/config/ITraceCfg";
 import { IOTelSpanOptions } from "../OpenTelemetry/interfaces/trace/IOTelSpanOptions";
 import { IReadableSpan } from "../OpenTelemetry/interfaces/trace/IReadableSpan";
+import { ISpanScope } from "../applicationinsights-core-js";
 import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
 import { ChannelControllerPriority } from "./Constants";
 import { createCookieMgr } from "./CookieMgr";
@@ -302,6 +303,10 @@ function _getParentTraceCtx(mode: eTraceHeadersMode): IDistributedTraceContext |
     }
 
     return spanContext;
+}
+
+function _noOpFunc() {
+    // No-op function
 }
 
 /**
@@ -1049,11 +1054,34 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
              * Set the current Active Span
              * @param span - The span to set as the active span
              */
-            _self.setActiveSpan = (span: IReadableSpan): void => {
+            _self.setActiveSpan = (span: IReadableSpan): ISpanScope<IAppInsightsCore<CfgType>> => {
+                let activeSpan: IReadableSpan | null;
+                let restoreFn = _noOpFunc;
+                let scope: ISpanScope<IAppInsightsCore<CfgType>>;
+                
                 if (_traceProvider && _traceProvider.isAvailable()) {
-                    // No trace provider available or provider is not ready
+                    // Trace provider available or provider is not ready
+                    activeSpan = _traceProvider.activeSpan();
                     _traceProvider.setActiveSpan(span);
+                    restoreFn = () => {
+                        if (_traceProvider && _traceProvider.isAvailable()) {
+                            // Trace provider available or provider is not ready
+                            _traceProvider.setActiveSpan(activeSpan);
+                        }
+
+                        // Clear the restore function, so that multiple calls to restore do not have any effect
+                        scope.restore = _noOpFunc;
+                    };
                 }
+
+                scope = {
+                    core: _self,
+                    span: span,
+                    prvSpan: activeSpan,
+                    restore: restoreFn
+                };
+
+                return scope;
             };
 
             _self.setTraceProvider = (traceProvider: ITraceProvider): void => {
@@ -1766,7 +1794,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     }
 
     /**
-     * Return the current active span
+     * Return the current active span, if no trace provider is available null will be returned
+     * @returns The current active span or null if no trace provider is available
+     * @since 3.4.0
      */
     public activeSpan?(): IReadableSpan | null {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -1776,9 +1806,13 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     /**
      * Set the current Active Span
      * @param span - The span to set as the active span
+     * @returns An ISpanScope instance that provides the current scope, the span will always be the span passed in
+     * even when no trace provider is available
+     * @since 3.4.0
      */
-    public setActiveSpan?(span: IReadableSpan): void {
+    public setActiveSpan?(span: IReadableSpan): ISpanScope<IAppInsightsCore<CfgType>> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     /**

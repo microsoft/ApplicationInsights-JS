@@ -2,7 +2,7 @@ import { arrForEach, arrSlice, isArray, isObject, isString, objForEachKey } from
 import { createAttributeContainer } from "../attribute/attributeContainer";
 import { IOTelApi } from "../interfaces/IOTelApi";
 import { IOTelAttributes, OTelAttributeValue } from "../interfaces/IOTelAttributes";
-import { handleWarn } from "./commonUtils";
+import { handleWarn } from "./handleErrors";
 
 function _isSupportedType(theType: string): boolean {
     return theType === "number" || theType === "boolean" || theType === "string";
