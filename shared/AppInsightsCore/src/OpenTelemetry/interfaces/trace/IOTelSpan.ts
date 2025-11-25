@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDistributedTraceContext } from "../../../applicationinsights-core-js";
+import { IAttributeContainer, IDistributedTraceContext } from "../../../applicationinsights-core-js";
 import { IOTelAttributes, OTelAttributeValue } from "../IOTelAttributes";
 import { OTelException } from "../IOTelException";
 import { OTelTimeInput } from "../IOTelHrTime";
@@ -51,31 +51,31 @@ import { IOTelSpanStatus } from "./IOTelSpanStatus";
 export interface IOTelSpan {
     /**
      * Returns the span context object associated with this span.
-     * 
+     *
      * The span context is an immutable, serializable identifier that uniquely identifies
      * this span within a trace. It contains the trace ID, span ID, and trace flags that
      * can be used to create new child spans or propagate trace context across process boundaries.
-     * 
+     *
      * The returned span context remains valid even after the span has ended, making it
      * useful for asynchronous operations and cross-service communication.
-     * 
+     *
      * @returns The immutable span context associated with this span
-     * 
+     *
      * @remarks
      * - The span context is the primary mechanism for trace propagation
      * - Context can be serialized and transmitted across network boundaries
      * - Contains trace ID (unique to the entire trace) and span ID (unique to this span)
-     * 
+     *
      * @example
      * ```typescript
      * const span = tracer.startSpan('parent-operation');
      * const spanContext = span.spanContext();
-     * 
+     *
      * // Use context to create child spans in other parts of the system
      * const childSpan = tracer.startSpan('child-operation', {
      *   parent: spanContext
      * });
-     * 
+     *
      * // Context can be serialized for cross-service propagation
      * const traceId = spanContext.traceId;
      * const spanId = spanContext.spanId;
@@ -148,6 +148,17 @@ export interface IOTelSpan {
      */
     setAttributes(attributes: IOTelAttributes): this;
   
+    /**
+     * The {@link IAttributeContainer | attribute container} associated with this span, providing
+     * advanced attribute management capabilities. Rather than using the {@link IReadableSpan#attributes}
+     * directly which returns a readonly {@link IOTelAttributes} map that is a snapshot of the attributes at
+     * the time of access, the attribute container offers methods to get, set, delete, and iterate over attributes
+     * with fine-grained control.
+     * It is recommended that you only access the {@link IReadableSpan#attributes} property sparingly due to the
+     * performance cost of taking a snapshot of all attributes.
+     */
+    readonly attribContainer: IAttributeContainer;
+
     // /**
     //  * Adds an event to the span with optional attributes and timestamp.
     //  * 

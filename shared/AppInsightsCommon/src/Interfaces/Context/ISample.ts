@@ -8,6 +8,5 @@ export interface ISample {
      * Sample rate
      */
     sampleRate: number;
-
     isSampledIn(envelope: ITelemetryItem): boolean;
 }

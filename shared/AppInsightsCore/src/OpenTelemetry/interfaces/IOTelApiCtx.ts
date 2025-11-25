@@ -1,11 +1,15 @@
-import { IAppInsightsCore } from "../../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IOTelConfig } from "./config/IOTelConfig";
+import { ITraceHost } from "../../JavaScriptSDK.Interfaces/ITraceProvider";
 
 /**
- * The context for the current IOTelApi instance and it's configuration
+ * The context for the current IOTelApi instance linking it to the core SDK instance,
+ * including access to the core dynamic configuration.
+ *
+ * Note: Passing the core instance within a context object to allow future expansion
+ * without breaking changes or modifying signatures. Also allows easier mocking for tests.
  */
 export interface IOTelApiCtx {
-    core: IAppInsightsCore;
-
-    otelCfg: IOTelConfig;
+    /**
+     * The host instance associated with this OTel API instance
+     */
+    host: ITraceHost;
 }

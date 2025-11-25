@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { IDistributedTraceContext } from "../../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
+import { OTelSpanKind } from "../../enums/trace/OTelSpanKind";
 import { IOTelAttributes } from "../IOTelAttributes";
 import { IOTelHrTime } from "../IOTelHrTime";
 import { IOTelSpan } from "./IOTelSpan";
-import { OTelSpanKind } from "./IOTelSpanOptions";
 import { IOTelSpanStatus } from "./IOTelSpanStatus";
 
 /**
@@ -35,6 +35,14 @@ export interface IReadableSpan extends IOTelSpan {
     readonly startTime: IOTelHrTime;
     readonly endTime: IOTelHrTime;
     readonly status: IOTelSpanStatus;
+
+    /**
+     * Provides a snapshot of the span's attributes at the time this span was ended.
+     * @returns A read-only snapshot of the span's attributes
+     * @remarks
+     * It is recommended that you only access this property sparingly due to the
+     * performance cost of taking a snapshot of all attributes.
+     */
     readonly attributes: IOTelAttributes;
     // readonly links: IOTelLink[];
     // readonly events: IOTelTimedEvent[];

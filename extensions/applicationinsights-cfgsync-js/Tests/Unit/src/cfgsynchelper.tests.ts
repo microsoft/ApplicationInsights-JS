@@ -111,16 +111,17 @@ export class CfgSyncHelperTests extends AITestClass {
                         generalLimits: {
                             attributeCountLimit: 128
                         },
-                        spanLimits: {
-                            attributeCountLimit: 128,
-                            linkCountLimit: 128,
-                            eventCountLimit: 128,
-                            attributePerEventCountLimit: 128,
-                            attributePerLinkCountLimit: 128
-                        },
+                        // spanLimits: {
+                        //     attributeCountLimit: 128,
+                        //     linkCountLimit: 128,
+                        //     eventCountLimit: 128,
+                        //     attributePerEventCountLimit: 128,
+                        //     attributePerLinkCountLimit: 128
+                        // },
                         serviceName: null,
                         suppressTracing: false
                     },
+                    errorHandlers: {},
                     enableDebug: false
                 };
 
@@ -138,7 +139,6 @@ export class CfgSyncHelperTests extends AITestClass {
                 this.clock.tick(1);
                 coreCfg = core.config;
                 Assert.deepEqual(JSON.stringify(coreCfg), JSON.stringify(expectedCoreCfg), "core config should be updated as expected");
-
             }
 
         });

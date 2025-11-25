@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Insights - Span API Manual E2E Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .config-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        .test-button:hover {
+            background: #5568d3;
+        }
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .output .success { color: #4ec9b0; }
+        .output .error { color: #f48771; }
+        .output .warning { color: #dcdcaa; }
+        .output .info { color: #569cd6; }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .portal-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #0078d4;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .portal-link:hover {
+            background: #106ebe;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-ready { background: #10b981; }
+        .status-waiting { background: #f59e0b; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .batch-actions-section {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            transition: background-color 0.3s ease;
+        }
+        .batch-actions-section[data-status="not-run"] {
+            background-color: #f3f4f6;
+            border: 2px solid #d1d5db;
+        }
+        .batch-actions-section[data-status="running"] {
+            background-color: #fef3c7;
+            border: 2px solid #fbbf24;
+        }
+        .batch-actions-section[data-status="all-pass"] {
+            background-color: #d1fae5;
+            border: 2px solid #10b981;
+        }
+        .batch-actions-section[data-status="has-failure"] {
+            background-color: #fee2e2;
+            border: 2px solid #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 Application Insights - Span API Manual E2E Test</h1>
+        <p>Send real telemetry to Azure Application Insights and verify in the portal</p>
+    </div>
+
+    <div class="config-section">
+        <h2>⚙️ Configuration</h2>
+        <div style="margin-bottom: 15px;">
+            <label for="instrumentationKey">Instrumentation Key or Connection String:</label>
+            <input type="text" id="instrumentationKey" placeholder="Enter your instrumentation key or connection string">
+            <p class="help-text">
+                Get this from: Azure Portal → Your Application Insights resource → Overview → Instrumentation Key
+            </p>
+        </div>
+        <button class="test-button" onclick="initializeSDK()">Initialize SDK</button>
+        <div id="sdkStatus" style="margin-top: 10px;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Test Scenarios</h2>
+        
+        <h3>Basic Tests</h3>
+        <button class="test-button" onclick="testBasicClientSpan()" disabled id="btn-basic-client">Basic CLIENT Span</button>
+        <button class="test-button" onclick="testBasicServerSpan()" disabled id="btn-basic-server">Basic SERVER Span</button>
+        <button class="test-button" onclick="testFailedSpan()" disabled id="btn-failed">Failed Span</button>
+
+        <h3>Distributed Trace Tests</h3>
+        <button class="test-button" onclick="testParentChild()" disabled id="btn-parent-child">Parent-Child Trace</button>
+        <button class="test-button" onclick="testNestedHierarchy()" disabled id="btn-nested">3-Level Nested Trace</button>
+
+        <h3>Dependency Tests</h3>
+        <button class="test-button" onclick="testHttpDependency()" disabled id="btn-http">HTTP Dependencies</button>
+        <button class="test-button" onclick="testDatabaseDependencies()" disabled id="btn-db">Database Dependencies</button>
+
+        <h3>Complex Scenarios</h3>
+        <button class="test-button" onclick="testEcommerceCheckout()" disabled id="btn-ecommerce">E-commerce Checkout</button>
+        <button class="test-button" onclick="testMixedResults()" disabled id="btn-mixed">Mixed Success/Failure</button>
+        <button class="test-button" onclick="testRichProperties()" disabled id="btn-rich">Rich Custom Properties</button>
+
+        <h3>Batch Actions</h3>
+        <div id="batch-actions-container" class="batch-actions-section" data-status="not-run">
+            <button class="test-button" onclick="runAllTests()" disabled id="btn-all">Run All Tests</button>
+            <button class="test-button" onclick="resetTestStatus()">Reset Test Status</button>
+        </div>
+        
+        <h3>Utilities</h3>
+        <button class="test-button" onclick="clearOutput()">Clear Output</button>
+        <button class="test-button" onclick="exportLogs()">Export Logs</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Statistics</h2>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-spans">0</div>
+                <div class="stat-label">Spans Created</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-dependencies">0</div>
+                <div class="stat-label">Dependencies</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-requests">0</div>
+                <div class="stat-label">Requests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-traces">0</div>
+                <div class="stat-label">Trace IDs</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📝 Output Log</h2>
+        <div id="output" class="output">
+            <span class="info">Ready to start testing. Initialize the SDK first.</span>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔗 View Results</h2>
+        <p>After running tests, wait 1-2 minutes for telemetry to appear in the portal.</p>
+        <a href="https://portal.azure.com/#view/Microsoft_Azure_Monitoring/AzureMonitoringBrowseBlade/~/overview" 
+           target="_blank" class="portal-link">Open Azure Portal</a>
+        
+        <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">
+            <strong>💡 Tips for viewing in portal:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Go to Application Insights → Performance to see requests and dependencies</li>
+                <li>Use the Search feature to find specific operations by custom properties</li>
+                <li>Click "View in End-to-End Transaction" to see distributed traces</li>
+                <li>Use the Timeline view to see span relationships</li>
+                <li>Filter by operation name like "E2E-CheckoutRequest"</li>
+                <li>Check custom dimensions for test.scenario and test.timestamp</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Load Application Insights SDK -->
+    <script src="../../browser/es5/ai.3.js"></script>
+    
+    <script>
+        let appInsights = null;
+        let stats = {
+            spans: 0,
+            dependencies: 0,
+            requests: 0,
+            traceIds: new Set()
+        };
+        let flushTimer = null;
+        let testResults = {
+            total: 0,
+            passed: 0,
+            failed: 0
+        };         
+
+        if (sessionStorage) {
+            let value = sessionStorage.getItem('AISKU_Test_InstrumentationKey');
+            if (value) {
+                document.getElementById('instrumentationKey').value = value;
+            }
+        }
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type;
+            output.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function updateBatchStatus() {
+            const container = document.getElementById('batch-actions-container');
+            if (!container) return;
+            
+            if (testResults.total === 0) {
+                container.setAttribute('data-status', 'not-run');
+            } else if (testResults.failed > 0) {
+                container.setAttribute('data-status', 'has-failure');
+            } else if (testResults.passed === testResults.total) {
+                container.setAttribute('data-status', 'all-pass');
+            } else {
+                container.setAttribute('data-status', 'running');
+            }
+        }
+
+        function recordTestResult(success) {
+            testResults.total++;
+            if (success) {
+                testResults.passed++;
+            } else {
+                testResults.failed++;
+            }
+            updateBatchStatus();
+        }
+
+        function resetTestStatus() {
+            testResults.total = 0;
+            testResults.passed = 0;
+            testResults.failed = 0;
+            updateBatchStatus();
+            log('🔄 Test status reset', 'info');
+        }
+        
+        function updateStats() {
+            document.getElementById('stat-spans').textContent = stats.spans;
+            document.getElementById('stat-dependencies').textContent = stats.dependencies;
+            document.getElementById('stat-requests').textContent = stats.requests;
+            document.getElementById('stat-traces').textContent = stats.traceIds.size;
+        }
+
+        function enableButtons() {
+            const buttons = document.querySelectorAll('.test-button');
+            buttons.forEach(btn => {
+                if (btn.id && btn.id.startsWith('btn-')) {
+                    btn.disabled = false;
+                }
+            });
+        }
+
+        function randomWait(cb, min = 100, max = 500) {
+            setTimeout(cb, Math.floor(Math.random() * (max - min + 1)) + min);
+        }
+
+        function scheduleFlush() {
+            if (flushTimer) {
+                clearTimeout(flushTimer);
+            }
+
+            flushTimer = setTimeout(() => {
+                flushTimer = null;
+                if (appInsights) {
+                    appInsights.flush();
+                }
+            }, 2500);
+        }
+
+        function initializeSDK() {
+            const keyOrConnectionString = document.getElementById('instrumentationKey').value.trim();
+            
+            if (!keyOrConnectionString) {
+                log('❌ Please enter an instrumentation key or connection string', 'error');
+                return;
+            }
+
+            if (sessionStorage) {
+                sessionStorage.setItem('AISKU_Test_InstrumentationKey', keyOrConnectionString);
+            }
+
+            try {
+                const config = keyOrConnectionString.includes('InstrumentationKey=') 
+                    ? { connectionString: keyOrConnectionString }
+                    : { instrumentationKey: keyOrConnectionString };
+
+                appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({
+                    config: {
+                        ...config,
+                        disableAjaxTracking: false,
+                        disableFetchTracking: false,
+                        enableAutoRouteTracking: false,
+                        maxBatchInterval: 2000,
+                        enableDebug: true,
+                        loggingLevelConsole: 2
+                    }
+                });
+
+                appInsights.loadAppInsights();
+                appInsights.trackPageView();
+                recordTestResult(true);
+
+                log('✅ SDK initialized successfully', 'success');
+                log(`📍 Instrumentation Key: ${keyOrConnectionString.substring(0, 20)}...`, 'info');
+                
+                const statusDiv = document.getElementById('sdkStatus');
+                statusDiv.innerHTML = '<span class="status-indicator status-ready"></span>SDK Ready';
+                
+                enableButtons();
+            } catch (error) {
+                log(`❌ Failed to initialize SDK: ${error.message}`, 'error');
+            }
+        }
+
+        function testBasicClientSpan() {
+            if (!appInsights) return;
+            
+            const span = appInsights.startSpan('E2E-Manual-BasicClient', {
+                kind: 1, // CLIENT
+                attributes: {
+                    'test.scenario': 'basic-client',
+                    'test.timestamp': new Date().toISOString(),
+                    'test.source': 'manual-html'
+                }
+            });
+
+            randomWait(() => {
+                if (span) {
+                    span.setStatus({ code: 1 }); // OK
+                    span.end();
+                    stats.spans++;
+                    stats.dependencies++;
+                    updateStats();
+                    log('✅ Basic CLIENT span sent → Check Dependencies in portal', 'success');
+                }
+
+                scheduleFlush();
+            });
+        }
+
+        function testBasicServerSpan() {
+            if (!appInsights) return;
+            
+            const span = appInsights.startSpan('E2E-Manual-BasicServer', {
+                kind: 2, // SERVER
+                attributes: {
+                    'http.method': 'GET',
+                    'http.url': 'https://example.com/api/manual-test',
+                    'http.status_code': 200,
+                    'test.scenario': 'basic-server',
+                    'test.timestamp': new Date().toISOString()
+                }
+            });
+
+            randomWait(() => {
+                if (span) {
+                    span.setStatus({ code: 1 });
+                    span.end();
+                    stats.spans++;
+                    stats.requests++;
+                    const ctx = span.spanContext();
+                    if (ctx) stats.traceIds.add(ctx.traceId);
+                    recordTestResult(true);
+                    updateStats();
+                    log('✅ Basic SERVER span sent → Check Requests in portal', 'success');
+                }
+                
+                scheduleFlush();
+            });
+        }
+
+        function testFailedSpan() {
+            if (!appInsights) return;
+            
+            const span = appInsights.startSpan('E2E-Manual-Failed', {
+                kind: 1,
+                attributes: {
+                    'test.scenario': 'failure',
+                    'test.timestamp': new Date().toISOString()
+                }
+            });
+
+            randomWait(() => {
+                if (span) {
+                    span.setAttribute('error.type', 'TimeoutError');
+                    span.setStatus({ code: 2, message: 'Operation timed out' }); // ERROR
+                    span.end();
+                    stats.spans++;
+                    recordTestResult(true);
+                    stats.dependencies++;
+                    updateStats();
+                    log('✅ Failed span sent → Should show success=false', 'success');
+                }
+                
+                scheduleFlush();
+            });
+        }
+
+        function testParentChild() {
+            if (!appInsights) return;
+            
+            const parent = appInsights.startSpan('E2E-Manual-Parent', {
+                kind: 2,
+                attributes: { 'test.scenario': 'distributed-trace' }
+            });
+
+            const parentCtx = parent?.spanContext();
+            if (parentCtx) stats.traceIds.add(parentCtx.traceId);
+
+            randomWait(() => {
+                const child1 = appInsights.startSpan('E2E-Manual-Child1', {
+                    kind: 1,
+                    attributes: { 'child.index': 1 }
+                }, parentCtx);
+
+                randomWait(() => {
+                    const child2 = appInsights.startSpan('E2E-Manual-Child2', {
+                        kind: 1,
+                        attributes: { 'child.index': 2 }
+                    }, parentCtx);
+
+                    if (child1) { child1.setStatus({ code: 1 }); child1.end(); stats.spans++; stats.dependencies++; }
+
+                    randomWait(() => {
+                        if (child2) { child2.setStatus({ code: 1 }); child2.end(); stats.spans++; stats.dependencies++; }
+
+                        randomWait(() => {
+                            if (parent) { parent.setStatus({ code: 1 }); parent.end(); stats.spans++; stats.requests++; }
+recordTestResult(true);
+                            
+                            updateStats();
+                            log(`✅ Parent-child trace sent (${parentCtx?.traceId?.substring(0, 16)}...) → Check End-to-End Transaction`, 'success');
+                
+                            scheduleFlush();
+                        });
+                    });
+                });
+            });
+        }
+
+        function testNestedHierarchy() {
+            if (!appInsights) return;
+            
+            const root = appInsights.startSpan('E2E-Manual-Root', {
+                kind: 2,        // CLIENT
+                attributes: { 'span.level': 1 }
+            });
+            const rootCtx = root?.spanContext();
+            if (rootCtx) stats.traceIds.add(rootCtx.traceId);
+
+            randomWait(() => {
+                const level2 = appInsights.startSpan('E2E-Manual-Level2', {
+                    kind: 0,        // INTERNAL
+                    attributes: { 'span.level': 2 }
+                }, rootCtx);
+                const level2Ctx = level2?.spanContext();
+
+                randomWait(() => {
+                    const level3 = appInsights.startSpan('E2E-Manual-Level3', {
+                        attributes: { 'span.level': 3 }
+                    }, level2Ctx);
+
+                    randomWait(() => {
+                        if (level3) { level3.setStatus({ code: 1 }); level3.end(); stats.spans++; stats.dependencies++; }
+
+                        randomWait(() => {
+                            if (level2) { level2.setStatus({ code: 1 }); level2.end(); stats.spans++; stats.dependencies++; }
+
+                            randomWait(() => {
+                                if (root) { root.setStatus({ code: 1 }); root.end(); stats.spans++; stats.requests++; }
+recordTestResult(true);
+                                
+                                updateStats();
+                                log('✅ 3-level nested trace sent → Check transaction timeline', 'success');
+                
+                                scheduleFlush();
+                            });
+                        });
+                    });
+                });
+            });
+        }
+
+        function testHttpDependency() {
+            if (!appInsights) return;
+            
+            const methods = ['GET', 'POST', 'PUT', 'DELETE'];
+            const statusCodes = [200, 201, 400, 500];
+
+            methods.forEach((method, i) => {
+                const span = appInsights.startSpan(`E2E-Manual-HTTP-${method}`, {
+                    kind: 1,
+                    attributes: {
+                        'http.method': method,
+                        'http.url': `https://api.example.com/test/${method.toLowerCase()}`,
+                        'http.status_code': statusCodes[i]
+                    }
+                });
+
+                if (span) {
+                    span.setStatus({ code: statusCodes[i] < 400 ? 1 : 2 });
+                    span.end();
+                    stats.spans++;
+                    stats.dependencies++;
+                }
+            recordTestResult(true);
+            });
+
+            updateStats();
+            log(`✅ ${methods.length} HTTP dependencies sent → Check Dependencies with different methods`, 'success');
+                
+            scheduleFlush();
+        }
+
+        function testDatabaseDependencies() {
+            if (!appInsights) return;
+            
+            const databases = [
+                { system: 'mysql', statement: 'SELECT * FROM users' },
+                { system: 'postgresql', statement: 'INSERT INTO logs VALUES ($1)' },
+                { system: 'mongodb', statement: 'db.products.find({})' },
+                { system: 'redis', statement: 'GET user:123' }
+            ];
+
+            databases.forEach(db => {
+                const span = appInsights.startSpan(`E2E-Manual-DB-${db.system}`, {
+                    kind: 1,
+                    attributes: {
+                        'db.system': db.system,
+                        'db.statement': db.statement
+                    }
+                });
+
+                if (span) {
+                    span.setStatus({ code: 1 });
+                    span.end();
+                    stats.spans++;
+                    stats.dependencies++;
+                }
+            recordTestResult(true);
+            });
+
+            updateStats();
+            log(`✅ ${databases.length} database dependencies sent → Check Dependencies with SQL/NoSQL types`, 'success');
+                
+            scheduleFlush();
+        }
+
+        function testEcommerceCheckout() {
+            if (!appInsights) return;
+            
+            const checkout = appInsights.startSpan('E2E-Manual-Checkout', {
+                kind: 2,
+                attributes: {
+                    'test.scenario': 'ecommerce',
+                    'cart.items': 3,
+                    'cart.total': 299.97
+                }
+            });
+
+            const checkoutCtx = checkout?.spanContext();
+            if (checkoutCtx) stats.traceIds.add(checkoutCtx.traceId);
+
+            // Inventory check
+            const inventory = appInsights.startSpan('E2E-Manual-Inventory', {
+                kind: 1,
+                attributes: { 'http.url': 'https://inventory.example.com/check' }
+            }, checkoutCtx);
+
+            randomWait(() => {
+                if (inventory) { inventory.setStatus({ code: 1 }); inventory.end(); stats.spans++; stats.dependencies++; }
+
+                // Payment
+                const payment = appInsights.startSpan('E2E-Manual-Payment', {
+                    kind: 1,
+                    attributes: { 
+                        'http.url': 'https://payments.example.com/charge',
+                        'payment.amount': 299.97
+                    }
+                }, checkoutCtx);
+
+                randomWait(() => {
+                    if (payment) { payment.setStatus({ code: 1 }); payment.end(); stats.spans++; stats.dependencies++; }
+
+                    // Database
+                    const db = appInsights.startSpan('E2E-Manual-CreateOrder', {
+                        kind: 1,
+                        attributes: { 
+                            'db.system': 'postgresql',
+                            'db.statement': 'INSERT INTO orders...'
+                        }
+                    }, checkoutCtx);
+
+                    randomWait(() => {
+                        if (db) { db.setStatus({ code: 1 }); db.end(); stats.spans++; stats.dependencies++; }
+
+                        randomWait(() => {
+                            recordTestResult(true);
+                            if (checkout) { checkout.setStatus({ code: 1 }); checkout.end(); stats.spans++; stats.requests++; }
+
+                            updateStats();
+                            log(`✅ E-commerce checkout scenario sent (${checkoutCtx?.traceId?.substring(0, 16)}...) → Check complete flow`, 'success');
+                
+                            scheduleFlush();
+                        });
+                    });
+                });
+            });
+        }
+
+        function testMixedResults() {
+            if (!appInsights) return;
+            
+            const operation = appInsights.startSpan('E2E-Manual-MixedResults', {
+                kind: 2,
+                attributes: { 'test.scenario': 'mixed-results' }
+            });
+
+            const opCtx = operation?.spanContext();
+            if (opCtx) stats.traceIds.add(opCtx.traceId);
+
+            const success1 = appInsights.startSpan('E2E-Manual-Success1', {
+                kind: 1,
+                attributes: { 'http.status_code': 200 }
+            }, opCtx);
+            if (success1) { success1.setStatus({ code: 1 }); success1.end(); stats.spans++; stats.dependencies++; }
+
+            const failed = appInsights.startSpan('E2E-Manual-Failed', {
+                kind: 1,
+                attributes: { 'http.status_code': 500 }
+            }, opCtx);
+            if (failed) { failed.setStatus({ code: 2 }); failed.end(); stats.spans++; stats.dependencies++; }
+
+            const success2 = appInsights.startSpan('E2E-Manual-Success2', {
+                kind: 1,
+                attributes: { 'http.status_code': 200 }
+            }, opCtx);
+            if (success2) { success2.setStatus({ code: 1 }); success2.end(); stats.spans++; stats.dependencies++; }
+recordTestResult(true);
+            
+            if (operation) { operation.setStatus({ code: 1 }); operation.end(); stats.spans++; stats.requests++; }
+
+            updateStats();
+            log('✅ Mixed success/failure sent → Check for 2 successful + 1 failed', 'success');
+            scheduleFlush();
+        }
+
+        function testRichProperties() {
+            if (!appInsights) return;
+            
+            const span = appInsights.startSpan('E2E-Manual-RichProperties', {
+                kind: 2,
+                attributes: {
+                    'test.scenario': 'rich-properties',
+                    'business.tenant': 'manual-test-corp',
+                    'business.region': 'us-west-2',
+                    'user.id': 'manual_user_123',
+                    'user.subscription': 'premium',
+                    'feature.new.ui': true,
+                    'performance.queries': 5,
+                    'metrics.items.processed': 42
+                }
+            });
+
+            if (span) {
+                span.setStatus({ code: 1 });
+                recordTestResult(true);
+                span.end();
+                stats.spans++;
+                stats.requests++;
+                updateStats();
+                log('✅ Span with rich properties sent → Use Search to filter by custom properties', 'success');
+            }
+                
+            scheduleFlush();
+        }
+
+        async function runAllTests() {
+            resetTestStatus();
+            const container = document.getElementById('batch-actions-container');
+            container.setAttribute('data-status', 'running');
+            if (!appInsights) {
+                log('❌ Please initialize the SDK first', 'error');
+                return;
+            }
+
+            log('🚀 Running all tests...', 'info');
+            
+            testBasicClientSpan();
+            await sleep(100);
+            testBasicServerSpan();
+            await sleep(100);
+            testFailedSpan();
+            await sleep(100);
+            testParentChild();
+            await sleep(100);
+            testNestedHierarchy();
+            await sleep(100);
+            testHttpDependency();
+            await sleep(100);
+            testDatabaseDependencies();
+            await sleep(100);
+            testEcommerceCheckout();
+            await sleep(100);
+            testMixedResults();
+            await sleep(100);
+            testRichProperties();
+
+            log('✨ All tests completed! Wait 1-2 minutes and check the portal.', 'success');
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '<span class="info">Output cleared.</span>';
+        }
+
+        function exportLogs() {
+            const output = document.getElementById('output');
+            const text = output.innerText;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `span-e2e-logs-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            log('📥 Logs exported', 'info');
+        }
+    </script>
+</body>
+</html>

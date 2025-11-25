@@ -4,8 +4,8 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IPromise, createPromise, createSyncAllSettledPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
-    ITimerHandler, arrAppend, arrForEach, arrIndexOf, createTimeout, deepExtend, hasDocument, isFunction, isNullOrUndefined, isPlainObject,
-    isPromiseLike, objDeepFreeze, objDefine, objForEachKey, objFreeze, objHasOwn, scheduleTimeout, throwError
+    ICachedValue, ITimerHandler, arrAppend, arrForEach, arrIndexOf, createTimeout, deepExtend, hasDocument, isFunction, isNullOrUndefined,
+    isPlainObject, isPromiseLike, objAssign, objDeepFreeze, objDefine, objForEachKey, objFreeze, objHasOwn, scheduleTimeout, throwError
 } from "@nevware21/ts-utils";
 import { cfgDfMerge } from "../Config/ConfigDefaultHelpers";
 import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
@@ -41,6 +41,7 @@ import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnl
 import { ITraceCfg } from "../OpenTelemetry/interfaces/config/ITraceCfg";
 import { IOTelSpanOptions } from "../OpenTelemetry/interfaces/trace/IOTelSpanOptions";
 import { IReadableSpan } from "../OpenTelemetry/interfaces/trace/IReadableSpan";
+import { ISpanScope } from "../applicationinsights-core-js";
 import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
 import { ChannelControllerPriority } from "./Constants";
 import { createCookieMgr } from "./CookieMgr";
@@ -56,7 +57,9 @@ import { PerfManager, doPerf, getGblPerfMgr } from "./PerfManager";
 import {
     createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext, createTelemetryProxyChain
 } from "./ProcessTelemetryContext";
-import { _getPluginState, createDistributedTraceContext, initializePlugins, sortPlugins } from "./TelemetryHelpers";
+import {
+    _getPluginState, createDistributedTraceContext, initializePlugins, isDistributedTraceContext, sortPlugins
+} from "./TelemetryHelpers";
 import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
 import { IUnloadHookContainer, createUnloadHookContainer } from "./UnloadHookContainer";
@@ -110,20 +113,53 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
             attributeValueLengthLimit: undefined,
             attributeCountLimit: maxAttributeCount
         }),
-        spanLimits: cfgDfMerge({
-            attributeValueLengthLimit: undefined,
-            attributeCountLimit: maxAttributeCount,
-            linkCountLimit: maxAttributeCount,
-            eventCountLimit: maxAttributeCount,
-            attributePerEventCountLimit: maxAttributeCount,
-            attributePerLinkCountLimit: maxAttributeCount
-        }),
+        // spanLimits: cfgDfMerge({
+        //     attributeValueLengthLimit: undefined,
+        //     attributeCountLimit: maxAttributeCount,
+        //     linkCountLimit: maxAttributeCount,
+        //     eventCountLimit: maxAttributeCount,
+        //     attributePerEventCountLimit: maxAttributeCount,
+        //     attributePerLinkCountLimit: maxAttributeCount
+        // }),
         // idGenerator: null,
         serviceName: null,
         suppressTracing: false
     })
     // _sdk: { rdOnly: true, ref: true, v: defaultSdkConfig }
 });
+
+function _getDefaultConfig<CfgType>(core: IAppInsightsCore): IConfigDefaults<CfgType> {
+    let handlers = {
+        // Dynamic Default Error Handlers
+        errorHandlers: cfgDfMerge({
+            attribError: (message: string, key: string, value: any) => {
+                core.logger.throwInternal(eLoggingSeverity.WARNING, _eInternalMessageId.AttributeError, message, {
+                    attribName: key,
+                    value: value
+                });
+            },
+            spanError: (message: string, spanName: string) => {
+                core.logger.throwInternal(eLoggingSeverity.WARNING, _eInternalMessageId.SpanError, message, {
+                    spanName: spanName
+                });
+            },
+            debug: (message: string) => {
+                core.logger.debugToConsole(message);
+            },
+            warn: (message: string) => {
+                core.logger.warnToConsole(message)
+            },
+            error: (message: string) => {
+                core.logger.throwInternal(eLoggingSeverity.CRITICAL, _eInternalMessageId.TraceError, message);
+            },
+            notImplemented: (message: string) => {
+                core.logger.throwInternal(eLoggingSeverity.CRITICAL, _eInternalMessageId.NotImplementedError, message);
+            }
+        })
+    };
+    
+    return objDeepFreeze(objAssign({}, defaultConfig as any, handlers));
+}
 
 /**
  * Helper to create the default performance manager
@@ -304,6 +340,10 @@ function _getParentTraceCtx(mode: eTraceHeadersMode): IDistributedTraceContext |
     return spanContext;
 }
 
+function _noOpFunc() {
+    // No-op function
+}
+
 /**
  * @group Classes
  * @group Entrypoint
@@ -358,7 +398,8 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _hookContainer: IUnloadHookContainer;
         let _debugListener: INotificationListener | null;
         let _traceCtx: IDistributedTraceContext | null;
-        let _traceProvider: ITraceProvider | null;
+        let _traceProvider: ICachedValue<ITraceProvider> | null;
+        let _activeSpan: IReadableSpan | null;
         let _instrumentationKey: string | null;
         let _cfgListeners: { rm: () => void, w: WatcherFunction<CfgType>}[];
         let _extensions: IPlugin[];
@@ -409,7 +450,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                     throwError("Core cannot be initialized more than once");
                 }
 
-                _configHandler = createDynamicConfig<CfgType>(config, defaultConfig as any, logger || _self.logger, false);
+                _configHandler = createDynamicConfig<CfgType>(config, _getDefaultConfig<CfgType>(_self), logger || _self.logger, false);
 
                 // Re-assigning the local config property so we don't have any references to the passed value and it can be garbage collected
                 config = _configHandler.cfg;
@@ -1025,43 +1066,129 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             };
 
             _self.startSpan = (name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan | null => {
-                if (!_traceProvider || !_traceProvider.isAvailable()) {
+                if (!_traceProvider || !_traceProvider.v || !_traceProvider.v.isAvailable()) {
                     // No trace provider available or provider is not ready
                     return null;
                 }
 
-                return _traceProvider.createSpan(name, options, parent || _self.getTraceCtx());
+                return _traceProvider.v.createSpan(name, options, parent || _self.getTraceCtx());
             };
 
             /**
              * Return the current active span
+             * @param createNew - Optional flag to create a non-recording span if no active span exists, defaults to true
              */
-            _self.activeSpan = (): IReadableSpan | null => {
-                if (!_traceProvider || !_traceProvider.isAvailable()) {
-                    // No trace provider available or provider is not ready
-                    return null;
+            _self.getActiveSpan = (createNew?: boolean): IReadableSpan | null => {
+                // Special case for when there is no active span but there is a trace provider
+                if (createNew !== false && _traceProvider && !_activeSpan && _traceProvider.v) {
+                    // Now that we have a trace provider, ensure that we return an active span (non-recording)
+                    _activeSpan = _traceProvider.v.createSpan(_traceProvider.v.getProviderId(), {
+                        recording: false,
+                        root: true
+                    });
                 }
 
-                return _traceProvider.activeSpan();
+                return _activeSpan;
             };
 
             /**
              * Set the current Active Span
              * @param span - The span to set as the active span
              */
-            _self.setActiveSpan = (span: IReadableSpan): void => {
-                if (_traceProvider && _traceProvider.isAvailable()) {
-                    // No trace provider available or provider is not ready
-                    _traceProvider.setActiveSpan(span);
+            _self.setActiveSpan = (span: IReadableSpan): ISpanScope => {
+                let theSpanContext: IDistributedTraceContext | null = null;
+                let currentCtx: IDistributedTraceContext = _self.getTraceCtx();
+                let currentSpan: IReadableSpan | null = _activeSpan;
+                let scope: ISpanScope;
+
+                if (span) {
+                    let otelSpanContext: IDistributedTraceContext = null;
+                    if (span.spanContext) {
+                        // May be a valid IDistributedTraceContext or an OpenTelemetry SpanContext
+                        otelSpanContext = span.spanContext();
+                    } else if ((span as any).context) {
+                        // Legacy OpenTelemetry API support (Note: The returned context won't be a valid IDistributedTraceContext)
+                        otelSpanContext = (span as any).context();
+                    }
+
+                    if (otelSpanContext) {
+                        if (isDistributedTraceContext(otelSpanContext)) {
+                            theSpanContext = otelSpanContext;
+                        } else {
+                            // Support Spans from other libraries that may not be using the IDistributedTraceContext
+                            // If the spanContext is not a valid IDistributedTraceContext then we need to create a new one
+                            // and optionally set the parentSpanContext if it exists
+
+                            // Create a new context using the current trace context as the parent
+                            theSpanContext = createDistributedTraceContext(currentCtx);
+
+                            let parentContext: any = span.parentSpanContext;
+                            if (!parentContext) {
+                                if (span.parentSpanId) {
+                                    parentContext = {
+                                        traceId: (otelSpanContext as any).traceId,
+                                        spanId: span.parentSpanId
+                                    };
+                                }
+                            }
+
+                            // Was there a defined parent context and is it different from the current basic context
+                            if (parentContext && parentContext.traceId !== theSpanContext.traceId &&
+                                    parentContext.spanId !== theSpanContext.spanId &&
+                                    parentContext.traceFlags !== theSpanContext.traceFlags) {
+
+                                // Assign the parent details to this new context
+                                theSpanContext.traceId = parentContext.traceId;
+                                theSpanContext.spanId = parentContext.spanId;
+                                theSpanContext.traceFlags = parentContext.traceFlags;
+
+                                // Now create a new "Child" context which is extending the parent context
+                                theSpanContext = createDistributedTraceContext(theSpanContext);
+                            }
+
+                            theSpanContext.traceId = (otelSpanContext as any).traceId;
+                            theSpanContext.spanId = (otelSpanContext as any).spanId;
+                            theSpanContext.traceFlags = (otelSpanContext as any).traceFlags;
+                        }
+                    }
                 }
+                
+                scope = {
+                    host: _self,
+                    span: span,
+                    prvSpan: currentSpan,
+                    restore: () => {
+                        // Restore the current span and trace context
+                        if (currentSpan) {
+                            _self.setActiveSpan(currentSpan);
+                        } else {
+                            _activeSpan = null;
+                            _self.setTraceCtx(currentCtx);
+                        }
+
+                        // Clear the restore function, so that multiple calls to restore do not have any effect
+                        scope.restore = _noOpFunc;
+                    }
+                };
+
+                // Change the active span to the new span
+                _activeSpan = span;
+
+                // Set the current trace context for the core SDK
+                // This is REQUIRED for the SDK to correctly associate telemetry with the current span context
+                if (theSpanContext) {
+                    _self.setTraceCtx(theSpanContext);
+                }
+
+                return scope;
             };
 
-            _self.setTraceProvider = (traceProvider: ITraceProvider): void => {
+            _self.setTraceProvider = (traceProvider: ICachedValue<ITraceProvider>): void => {
                 _traceProvider = traceProvider;
             };
 
             _self.getTraceProvider = (): ITraceProvider | null => {
-                return _traceProvider;
+                return _traceProvider ? _traceProvider.v : null;
             };
 
             _self.addUnloadHook = _addUnloadHook;
@@ -1766,9 +1893,15 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     }
 
     /**
-     * Return the current active span
+     * Return the current active span, if no trace provider is available null will be returned
+     * but when a trace provider is available a span instance will always be returned, even if
+     * there is no active span (in which case a non-recording span will be returned).
+     * @param createNew - Optional flag to create a non-recording span if no active span exists, defaults to true.
+     * When false, returns the existing active span or null without creating a non-recording span.
+     * @returns The current active span or null if no trace provider is available or if createNew is false and no active span exists
+     * @since 3.4.0
      */
-    public activeSpan?(): IReadableSpan | null {
+    public getActiveSpan(createNew?: boolean): IReadableSpan | null {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
@@ -1776,19 +1909,24 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     /**
      * Set the current Active Span
      * @param span - The span to set as the active span
+     * @returns An ISpanScope instance that provides the current scope, the span will always be the span passed in
+     * even when no trace provider is available
+     * @since 3.4.0
      */
-    public setActiveSpan?(span: IReadableSpan): void {
+    public setActiveSpan(span: IReadableSpan): ISpanScope {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     /**
      * Set the trace provider for creating spans.
      * This allows different SKUs to provide their own span implementations.
      *
-     * @param provider - The trace provider to use for span creation
+     * @param provider - The trace provider to use for span creation, it is passed as a cached value so that it may
+     * be implemented via a lazy / deferred initializer.
      * @since 3.4.0
      */
-    public setTraceProvider(provider: ITraceProvider): void {
+    public setTraceProvider(provider: ICachedValue<ITraceProvider>): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
