@@ -1,5 +1,5 @@
 
-import { IPromise } from "@nevware21/ts-async";
+import { IPromise, createPromise, doAwait } from "@nevware21/ts-async";
 import { dumpObj, fnApply } from "@nevware21/ts-utils";
 import { IOTelErrorHandlers } from "../interfaces/config/IOTelErrorHandlers";
 
@@ -106,17 +106,6 @@ export function handleNotImplemented(handlers: IOTelErrorHandlers, message: stri
 }
 
 /**
- * Error that is thrown on timeouts.
- */
-export class TimeoutError extends Error {
-    constructor(message?: string) {
-        super(message);
-
-        Object.setPrototypeOf(this, TimeoutError.prototype);
-    }
-}
-
-/**
  * Adds a timeout to a promise and rejects if the specified timeout has elapsed.
  * Reports the timeout through the configured error handlers before rejecting.
  *
@@ -130,23 +119,48 @@ export function callWithTimeout<T>(
     promise: Promise<T>,
     timeout: number
 ): IPromise<T> {
-    let timeoutHandle: ReturnType<typeof setTimeout>;
+    let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
+    let isSettled = false;
 
-    const timeoutPromise = new Promise<never>(function timeoutFunction(_resolve, reject) {
-        timeoutHandle = setTimeout(function timeoutHandler() {
-            handleError(handlers, "Operation timed out.");
-            reject(new TimeoutError("Operation timed out."));
-        }, timeout);
-    });
-
-    return Promise.race([promise, timeoutPromise]).then(
-        result => {
+    function _cleanup() {
+        if (timeoutHandle !== null) {
             clearTimeout(timeoutHandle);
-            return result;
-        },
-        reason => {
-            clearTimeout(timeoutHandle);
-            throw reason;
+            timeoutHandle = null;
         }
-    );
+    }
+
+    function _createTimeoutError(): Error {
+        const timeoutError = new Error("Operation timed out.");
+        timeoutError.name = "TimeoutError";
+        return timeoutError;
+    }
+
+    return createPromise<T>(function (resolve, reject) {
+        timeoutHandle = setTimeout(function timeoutHandler() {
+            if (!isSettled) {
+                isSettled = true;
+                _cleanup();
+                handleError(handlers, "Operation timed out.");
+                reject(_createTimeoutError());
+            }
+        }, timeout);
+
+        doAwait(
+            promise,
+            function (result) {
+                if (!isSettled) {
+                    isSettled = true;
+                    _cleanup();
+                    resolve(result);
+                }
+            },
+            function (reason) {
+                if (!isSettled) {
+                    isSettled = true;
+                    _cleanup();
+                    reject(reason);
+                }
+            }
+        );
+    });
 }

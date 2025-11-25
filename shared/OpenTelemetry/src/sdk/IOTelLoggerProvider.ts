@@ -73,7 +73,7 @@ export class LoggerProvider implements IOTelLoggerProvider {
     /**
      * Notifies all registered LogRecordProcessor to flush any buffered data.
      *
-     * Returns a ipromise which is resolved when all flushes are complete.
+     * Returns a IPromise which is resolved when all flushes are complete.
      */
     public forceFlush(): IPromise<void> {
         // do not flush after shutdown

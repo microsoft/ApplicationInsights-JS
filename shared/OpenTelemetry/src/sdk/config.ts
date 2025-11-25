@@ -45,7 +45,7 @@ export function loadDefaultConfig() {
             attributeCountLimit: (() => {
                 const configuredValue = getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT");
                 return configuredValue !== undefined ? configuredValue : 128;
-            })(),
+            })()
         },
         includeTraceContext: true
     };
