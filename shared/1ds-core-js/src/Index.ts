@@ -27,7 +27,7 @@ export {
 
 export {
     IAppInsightsCore, IChannelControls, IPlugin, INotificationManager, NotificationManager, INotificationListener,
-    IConfiguration, ITelemetryItem, ITelemetryPlugin, BaseTelemetryPlugin, IProcessTelemetryContext, ProcessTelemetryContext, ITelemetryPluginChain,
+    IConfiguration, ITelemetryItem, ITelemetryPlugin, BaseTelemetryPlugin, IProcessTelemetryContext, ITelemetryPluginChain,
     MinChannelPriorty, EventsDiscardedReason, IDiagnosticLogger, DiagnosticLogger, LoggingSeverity, SendRequestReason,
     IPerfEvent, IPerfManager, IPerfManagerProvider, PerfEvent, PerfManager, doPerf, ICustomProperties, Tags,
     AppInsightsCore as InternalAppInsightsCore, _InternalLogMessage, _InternalMessageId, eActiveStatus, ActiveStatus,
@@ -85,3 +85,5 @@ export {
     openXhr,
     isGreaterThanZero
 } from "./Utils";
+
+export { createExtendedTelemetryItemFromSpan } from "./spanUtils";

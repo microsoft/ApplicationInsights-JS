@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IPromise } from "@nevware21/ts-async";
-import { IAppInsightsCore } from "../../JavaScriptSDK.Interfaces/IAppInsightsCore";
+import { ITraceHost } from "../../JavaScriptSDK.Interfaces/ITraceProvider";
 import { IOTelTracer } from "../interfaces/trace/IOTelTracer";
 import { IOTelTracerProvider } from "../interfaces/trace/IOTelTracerProvider";
 import { createTracer } from "./tracer";
@@ -13,15 +13,15 @@ import { createTracer } from "./tracer";
  * @returns A trace object
  * @internal
  */
-export function createTracerProvider(core: IAppInsightsCore): IOTelTracerProvider {
+export function createTracerProvider(host: ITraceHost): IOTelTracerProvider {
     let tracers: { [key: string]: IOTelTracer } = {};
 
     return {
         getTracer(name: string, version?: string): IOTelTracer {
-            const tracerKey = `${name|| "ai-web"}@${version || "unknown"}`;
+            const tracerKey = (name|| "ai-web") + "@" + (version || "unknown");
             
             if (!tracers[tracerKey]) {
-                tracers[tracerKey] = createTracer(core);
+                tracers[tracerKey] = createTracer(host);
             }
             
             return tracers[tracerKey];
@@ -33,8 +33,8 @@ export function createTracerProvider(core: IAppInsightsCore): IOTelTracerProvide
         shutdown(): IPromise<void> | void {
             // Just clear the locally cached IOTelTracer instances so they can be garbage collected
             tracers = {};
-            core = null;
+            host = null;
             return;
-        }            
+        }
     };
 }

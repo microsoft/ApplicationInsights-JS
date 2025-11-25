@@ -121,6 +121,7 @@ export class CfgSyncHelperTests extends AITestClass {
                         serviceName: null,
                         suppressTracing: false
                     },
+                    errorHandlers: {},
                     enableDebug: false
                 };
 

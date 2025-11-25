@@ -5,7 +5,17 @@ import {
 import { SinonStub, SinonSpy } from 'sinon';
 import { 
     Exception, SeverityLevel, Event, Trace, PageViewPerformance, IConfig, IExceptionInternal, 
-    AnalyticsPluginIdentifier, IAppInsights, Metric, PageView, RemoteDependencyData, utlCanUseLocalStorage, createDomEvent 
+    AnalyticsPluginIdentifier, IAppInsights, Metric, PageView, RemoteDependencyData, utlCanUseLocalStorage, createDomEvent, 
+    ExceptionDataType,
+    TraceDataType,
+    PageViewPerformanceDataType,
+    RemoteDependencyDataType,
+    PageViewDataType,
+    MetricDataType,
+    EventDataType,
+    ExceptionEnvelopeType,
+    TraceEnvelopeType,
+    PageViewPerformanceEnvelopeType
 } from "@microsoft/applicationinsights-common";
 import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj, __getRegisteredEvents, createCookieMgr, findAllScripts } from "@microsoft/applicationinsights-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js"
@@ -711,10 +721,10 @@ export class AnalyticsPluginTests extends AITestClass {
                 };
 
                 // Test
-                test(() => appInsights.trackException({exception: new Error(), severityLevel: SeverityLevel.Critical}), Exception.envelopeType, Exception.dataType)
-                test(() => appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical}), Exception.envelopeType, Exception.dataType)
-                test(() => appInsights.trackTrace({message: "some string"}), Trace.envelopeType, Trace.dataType);
-                test(() => appInsights.trackPageViewPerformance({name: undefined, uri: undefined, measurements: {somefield: 123}}, {vpHeight: 123}), PageViewPerformance.envelopeType, PageViewPerformance.dataType, () => {
+                test(() => appInsights.trackException({exception: new Error(), severityLevel: SeverityLevel.Critical}), ExceptionEnvelopeType, ExceptionDataType)
+                test(() => appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical}), ExceptionEnvelopeType, ExceptionDataType)
+                test(() => appInsights.trackTrace({message: "some string"}), TraceEnvelopeType, TraceDataType);
+                test(() => appInsights.trackPageViewPerformance({name: undefined, uri: undefined, measurements: {somefield: 123}}, {vpHeight: 123}), PageViewPerformanceEnvelopeType, PageViewPerformanceDataType, () => {
                     Assert.deepEqual(undefined, envelope.baseData.properties, 'Properties does not exist in Part B');
                 });
             }
@@ -1812,7 +1822,7 @@ export class AnalyticsPluginTests extends AITestClass {
                     // to access/ modify the contents of an envelope.
                     initializer: (envelope) => {
                         if (envelope.baseType ===
-                            Trace.dataType) {
+                            TraceDataType) {
                             const telemetryItem = envelope.baseData;
                             telemetryItem.message = messageOverride;
                             telemetryItem.properties = telemetryItem.properties || {};
@@ -2201,19 +2211,19 @@ export class AnalyticsPluginTests extends AITestClass {
                         const baseType = payload.data.baseType;
                         // call the appropriate Validate depending on the baseType
                         switch (baseType) {
-                            case Event.dataType:
+                            case EventDataType:
                                 return EventValidator.EventValidator.Validate(payload, baseType);
-                            case Trace.dataType:
+                            case TraceDataType:
                                 return TraceValidator.TraceValidator.Validate(payload, baseType);
-                            case Exception.dataType:
+                            case ExceptionDataType:
                                 return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
-                            case Metric.dataType:
+                            case MetricDataType:
                                 return MetricValidator.MetricValidator.Validate(payload, baseType);
-                            case PageView.dataType:
+                            case PageViewDataType:
                                 return PageViewValidator.PageViewValidator.Validate(payload, baseType);
-                            case PageViewPerformance.dataType:
+                            case PageViewPerformanceDataType:
                                 return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
-                            case RemoteDependencyData.dataType:
+                            case RemoteDependencyDataType:
                                 return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
         
                             default:

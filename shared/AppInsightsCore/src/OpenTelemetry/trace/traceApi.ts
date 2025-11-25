@@ -1,7 +1,7 @@
 import { fnBind } from "@nevware21/ts-utils";
+import { IDistributedTraceContext } from "../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
 import { setProtoTypeName } from "../../JavaScriptSDK/HelperFuncs";
 import { UNDEFINED_VALUE } from "../../JavaScriptSDK/InternalConstants";
-import { IDistributedTraceContext } from "../../applicationinsights-core-js";
 import { throwOTelError } from "../errors/OTelError";
 import { IOTelApi } from "../interfaces/IOTelApi";
 import { IOTelTracerProvider } from "../interfaces/trace/IOTelTracerProvider";
@@ -14,16 +14,13 @@ import { isSpanContextValid, wrapSpanContext } from "./utils";
  * provided instance of the traceProvider (the {@link IOTelApi} instance),
  * to "change" (setGlobalTraceProvider) you MUST create a new instance of this API.
  * @param otelApi - The IOTelApi instance associated with this instance
- * @param dfTraceName - The default tracer name
  * @returns A new instance of the ITraceApi for the provided ITelApi
  */
-export function createTraceApi(otelApi: IOTelApi, dfTraceName: string): ITraceApi {
+export function createTraceApi(otelApi: IOTelApi): ITraceApi {
     let traceProvider: IOTelTracerProvider = otelApi;
     if (!traceProvider) {
         throwOTelError("Must provide an otelApi instance");
     }
-
-    let activeSpan: IReadableSpan = null;
 
     let traceApi: ITraceApi = setProtoTypeName({
         getTracer: fnBind(traceProvider.getTracer, traceProvider),
@@ -34,11 +31,11 @@ export function createTraceApi(otelApi: IOTelApi, dfTraceName: string): ITraceAp
         isSpanContextValid: isSpanContextValid,
 
         getActiveSpan: (): IReadableSpan | undefined | null => {
-            return activeSpan;
+            return otelApi.host ? otelApi.host.activeSpan() : null;
         },
         setActiveSpan(span: IReadableSpan | undefined | null) {
-            activeSpan = span;
-        },
+            return otelApi.host ? otelApi.host.setActiveSpan(span) : null;
+        }
     }, "TraceApi");
 
     return traceApi;

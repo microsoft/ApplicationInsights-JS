@@ -10,17 +10,17 @@ import {
     AnalyticsPluginIdentifier, ConnectionString, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
     IEventTelemetry, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
     ITelemetryContext as Common_ITelemetryContext, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, ITraceTelemetry,
-    PropertiesPluginIdentifier, ThrottleMgr, eSeverityLevel, parseConnectionString
+    PropertiesPluginIdentifier, ThrottleMgr, parseConnectionString
 } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, FeatureOptInMode, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties,
     IDiagnosticLogger, IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, INotificationManager, IOTelApi, IOTelApiCtx,
-    IOTelSpanOptions, IPlugin, IReadableSpan, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState,
-    ITraceApi, ITraceCfg, IUnloadHook, UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal, addPageHideEventListener,
-    addPageUnloadEventListener, cfgDfMerge, cfgDfValidate, createDynamicConfig, createOTelApi, createProcessTelemetryContext,
-    createUniqueNamespace, doPerf, eLoggingSeverity, eOTelSpanStatusCode, hasDocument, hasWindow, hrTimeToMilliseconds, hrTimeToTimeStamp,
-    isArray, isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, proxyAssign,
-    proxyFunctions, removePageHideEventListener, removePageUnloadEventListener
+    IOTelSpanOptions, IPlugin, IReadableSpan, ISpanScope, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin,
+    ITelemetryUnloadState, ITraceApi, ITraceProvider, IUnloadHook, UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal,
+    addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate, createDynamicConfig, createOTelApi,
+    createProcessTelemetryContext, createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray,
+    isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions,
+    removePageHideEventListener, removePageUnloadEventListener, useSpan
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
@@ -29,18 +29,18 @@ import {
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { IPromise, createPromise, createSyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
-    ILazyValue, arrForEach, arrIndexOf, createDeferredCachedValue, dumpObj, getDeferred, isPromiseLike, objAssign, objDefine, objForEachKey,
-    strIndexOf, throwUnsupported
+    ILazyValue, arrForEach, arrIndexOf, createDeferredCachedValue, dumpObj, getDeferred, isPromiseLike, objDefine, objForEachKey, strIndexOf,
+    throwUnsupported
 } from "@nevware21/ts-utils";
 import { IApplicationInsights } from "./IApplicationInsights";
 import {
-    CONFIG_ENDPOINT_URL, STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EMPTY, STR_EVT_NAMESPACE,
-    STR_GET_COOKIE_MGR, STR_GET_PLUGIN, STR_POLL_INTERNAL_LOGS, STR_SET_AUTHENTICATED_USER_CONTEXT, STR_SNIPPET, STR_START_TRACK_EVENT,
-    STR_START_TRACK_PAGE, STR_STOP_TRACK_EVENT, STR_STOP_TRACK_PAGE, STR_TRACK_DEPENDENCY_DATA, STR_TRACK_EVENT, STR_TRACK_EXCEPTION,
-    STR_TRACK_METRIC, STR_TRACK_PAGE_VIEW, STR_TRACK_TRACE, UNDEFINED_VALUE
+    CONFIG_ENDPOINT_URL, STR_ADD_TELEMETRY_INITIALIZER, STR_CLEAR_AUTHENTICATED_USER_CONTEXT, STR_EVT_NAMESPACE, STR_GET_COOKIE_MGR,
+    STR_GET_PLUGIN, STR_POLL_INTERNAL_LOGS, STR_SET_AUTHENTICATED_USER_CONTEXT, STR_SNIPPET, STR_START_TRACK_EVENT, STR_START_TRACK_PAGE,
+    STR_STOP_TRACK_EVENT, STR_STOP_TRACK_PAGE, STR_TRACK_DEPENDENCY_DATA, STR_TRACK_EVENT, STR_TRACK_EXCEPTION, STR_TRACK_METRIC,
+    STR_TRACK_PAGE_VIEW, STR_TRACK_TRACE, UNDEFINED_VALUE
 } from "./InternalConstants";
 import { Snippet } from "./Snippet";
-import { _createTraceProvider } from "./internal/trace/traceProvider";
+import { createTelemetryItemFromSpan } from "./internal/trace/spanUtils";
 
 export { IRequestHeaders };
 
@@ -137,49 +137,18 @@ function _parseCs(config: IConfiguration & IConfig, configCs: string | IPromise<
     });
 }
 
-function _initOTel(core: IAppInsightsCore, traceName: string, traceCfg: ITraceCfg, onEnd: (span: IReadableSpan) => void): ILazyValue<IOTelApi> {
+function _initOTel(sku: AppInsightsSku, traceName: string, onEnd: (span: IReadableSpan) => void): ILazyValue<IOTelApi> {
     let otelApi = createDeferredCachedValue(() => {
-        let otelCfg = {
-            traceCfg: traceCfg,
-            errorHandlers: {
-                attribError: (message: string, key: string, value: any) => {
-                    core.logger.throwInternal(eLoggingSeverity.WARNING, _eInternalMessageId.AttributeError, message, {
-                        attribName: key,
-                        value: value
-                    });
-                },
-                spanError: (message: string, spanName: string) => {
-                    core.logger.throwInternal(eLoggingSeverity.WARNING, _eInternalMessageId.SpanError, message, {
-                        spanName: spanName
-                    });
-                },
-                debug: (message: string) => {
-                    core.logger.debugToConsole(message);
-                },
-                warn: (message: string) => {
-                    core.logger.warnToConsole(message)
-                },
-                error: (message: string) => {
-                    core.logger.throwInternal(eLoggingSeverity.CRITICAL, _eInternalMessageId.TraceError, message);
-                },
-                notImplemented: (message: string) => {
-                    core.logger.throwInternal(eLoggingSeverity.CRITICAL, _eInternalMessageId.NotImplementedError, message);
-                }
-            }
-        }
+        
         let otelApiCtx: IOTelApiCtx = {
-            core: core,
-            otelCfg: otelCfg
+            host: sku
         };
 
-        // make the config lookup readonly
-        objDefine(otelApiCtx, "otelCfg", { g: () => otelCfg });
-
-        return createOTelApi(otelApiCtx, traceName)
+        return createOTelApi(otelApiCtx)
     });
 
     // Create the initial default traceProvider
-    core.setTraceProvider(_createTraceProvider(core, traceName, otelApi, onEnd));
+    sku.core.setTraceProvider(createTraceProvider(sku, traceName, otelApi, onEnd));
 
     return otelApi;
 }
@@ -189,7 +158,7 @@ function _initOTel(core: IAppInsightsCore, traceName: string, traceCfg: ITraceCf
  * @group Entrypoint
  * @group Classes
  */
-export class AppInsightsSku implements IApplicationInsights {
+export class AppInsightsSku implements IApplicationInsights<IConfiguration & IConfig> {
     public snippet: Snippet;
 
     /**
@@ -284,20 +253,18 @@ export class AppInsightsSku implements IApplicationInsights {
                 }
             });
 
-            _otelApi = _initOTel(_core, "aisku", _config.traceCfg, _onEnd);
-            _lazyTraceApi = getDeferred(() => {
-                return _otelApi.v.trace;
-            });
-
             objDefine(_self, "otelApi", {
-                l: _otelApi
+                g: function() {
+                    return _otelApi ? _otelApi.v : null;
+                }
             });
 
             objDefine(_self, "trace", {
-                l: _lazyTraceApi
+                g: function() {
+                    return _lazyTraceApi ? _lazyTraceApi.v : null;
+                }
             });
-
-
+            
             // Will get recalled if any referenced values are changed
             _addUnloadHook(onConfigChange(cfgHandler, () => {
                 let configCs = _config.connectionString;
@@ -430,6 +397,16 @@ export class AppInsightsSku implements IApplicationInsights {
                 doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
                     // initialize core
                     _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin], logger, notificationManager);
+
+                    // Initialize the initial OTel API
+                    _otelApi = createDeferredCachedValue(() => {
+                        _otelApi = _initOTel(_self, "aisku", _onEnd);
+                        _lazyTraceApi = getDeferred(() => {
+                            return _otelApi.v.trace;
+                        });
+
+                        return _otelApi.v;
+                    });
                     
                     objDefine(_self, "context", {
                         g: () => properties.context
@@ -611,7 +588,22 @@ export class AppInsightsSku implements IApplicationInsights {
                     if (!unloadDone) {
                         unloadDone = true;
 
+                        // Reset OTel API to clean up all trace state before unloading core
+                        if (_core) {
+                            // Clear the trace provider to stop any active spans
+                            _core.setTraceProvider(null);
+
+                            // Reset the OTel API instances - this will be recreated on next init
+                            if (_otelApi) {
+                                _otelApi.v.shutdown();
+                            }
+
+                            _otelApi = null;
+                            _lazyTraceApi = null;
+                        }
+
                         _initDefaults();
+
                         unloadComplete && unloadComplete(unloadState);
                     }
                 }
@@ -654,10 +646,16 @@ export class AppInsightsSku implements IApplicationInsights {
                 "addPlugin",
                 STR_EVT_NAMESPACE,
                 "addUnloadCb",
-                "getTraceCtx",
                 "updateCfg",
                 "onCfgChange",
-                "startSpan"
+                // ITraceHost Proxy
+                "getTraceCtx",
+                "setTraceCtx",
+                "startSpan",
+                "activeSpan",
+                "setActiveSpan",
+                "setTraceProvider",
+                "getTraceProvider"
             ]);
 
             proxyFunctions(_self, () => {
@@ -670,67 +668,24 @@ export class AppInsightsSku implements IApplicationInsights {
 
             // Handle span end event - create telemetry from span data
             function _onEnd(span: IReadableSpan) {
-                const name = span ? span.name : STR_EMPTY;
-                if (span.isRecording() && name && !_otelApi.v.cfg.traceCfg.suppressTracing) {
-                    try {
-                        // Generate a trace message from the span
-                        const message = "Span " + name;
-                        let severityLevel = eSeverityLevel.Information;
+                if (_otelApi && span && span.isRecording() && !_otelApi.v.cfg.traceCfg.suppressTracing) {
 
-                        // Set severity level based on span status
-                        if (span.status && span.status.code === eOTelSpanStatusCode.ERROR) {
-                            severityLevel = eSeverityLevel.Error;
-                        } else if (span.status && span.status.code === eOTelSpanStatusCode.UNSET) {
-                            severityLevel = eSeverityLevel.Warning;
-                        }
-
-                        // Create trace telemetry
-                        let traceTelemetry: ITraceTelemetry = {
-                            message: message,
-                            severityLevel: severityLevel
-                        };
-
-                        // TODO : Map these properly
-                        // Convert span attributes to custom properties
-                        const customProperties: ICustomProperties = objAssign({}, span.attributes);
-
-                        customProperties.spanId = span.spanContext().spanId;
-                        customProperties.traceId = span.spanContext().traceId;
-                        customProperties.startTime = hrTimeToTimeStamp(span.startTime);
-                        customProperties.endTime = hrTimeToTimeStamp(span.endTime);
-                        customProperties.duration = hrTimeToMilliseconds(span.duration);
-
-                        // Add status information if available
-                        if (span.status) {
-                            customProperties["otel.span.status.code"] = span.status.code;
-                            if (span.status.message) {
-                                customProperties["otel.span.status.message"] = span.status.message;
+                    // Flip this span to be the "current" span during processing, so any telemetry created during the span processing
+                    // is associated with this span
+                    useSpan(_core, span, () => {
+                        try {
+                            // Create trace telemetry for the span
+                            let telemetryItem: ITelemetryItem = createTelemetryItemFromSpan(_core, span);
+                            if (telemetryItem) {
+                                _self.core.track(telemetryItem);
                             }
+                        } catch (error) {
+                            // Log any errors during trace processing but don't let them break the span lifecycle
+                            _throwInternal(_core.logger, eLoggingSeverity.WARNING,
+                                _eInternalMessageId.TelemetryInitializerFailed,
+                                "Error processing span - " + dumpObj(error));
                         }
-
-                        // ????
-                        // // Add span metadata to custom properties
-                        // customProperties["otel.span.name"] = span.name;
-                        // customProperties["otel.span.kind"] = span.kind;
-                        // customProperties["otel.span.traceId"] = span.spanContext().traceId;
-                        // customProperties["otel.span.spanId"] = span.spanContext().spanId;
-                        // customProperties["otel.span.ended"] = span.ended;
-                        
-                        // // Add duration if available
-                        // if (span.duration) {
-                        //     const durationMs = span.duration[0] * 1000 + span.duration[1] / 1000000;
-                        //     customProperties["otel.span.duration_ms"] = durationMs;
-                        // }
-
-
-                        // Create trace telemetry for the span
-                        _self.trackTrace(traceTelemetry, customProperties);
-                    } catch (error) {
-                        // Log any errors during trace processing but don't let them break the span lifecycle
-                        _throwInternal(_core.logger, eLoggingSeverity.WARNING,
-                            _eInternalMessageId.TelemetryInitializerFailed,
-                            "Error processing span - " + dumpObj(error));
-                    }
+                    });
                 }
             }
 
@@ -751,8 +706,6 @@ export class AppInsightsSku implements IApplicationInsights {
                 _cdnSentMessage = false;
                 _sdkVerSentMessage = false;
                 _cfgSyncPlugin = new CfgSyncPlugin();
-                _otelApi = null;
-                _lazyTraceApi = null; // Reset lazy trace instance during teardown
             }
 
             function _removePageEventHandlers() {
@@ -1082,9 +1035,16 @@ export class AppInsightsSku implements IApplicationInsights {
     /**
      * Gets the current distributed trace context for this instance if available
      */
-    public getTraceCtx(): IDistributedTraceContext | null | undefined {
+    public getTraceCtx(): IDistributedTraceContext | null {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
+    }
+
+    /**
+     * Sets the current distributed trace context for this instance if available
+     */
+    public setTraceCtx(newTraceCtx: IDistributedTraceContext | null | undefined): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
@@ -1112,6 +1072,50 @@ export class AppInsightsSku implements IApplicationInsights {
      * @since 3.4.0
      */
     public startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan | null {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Return the current active span, if no trace provider is available null will be returned
+     * @returns The current active span or null if no trace provider is available
+     * @since 3.4.0
+     */
+    public activeSpan(): IReadableSpan | null {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Set the current Active Span, if no trace provider is available the span will be not be set as the active span.
+     * @param span - The span to set as the active span
+     * @returns An ISpanScope instance that provides the current scope, the span will always be the span passed in
+     * even when no trace provider is available
+     * @since 3.4.0
+     */
+    public setActiveSpan(span: IReadableSpan): ISpanScope {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Set the trace provider for creating spans.
+     * This allows different SKUs to provide their own span implementations.
+     *
+     * @param provider - The trace provider to use for span creation
+     * @since 3.4.0
+     */
+    public setTraceProvider(provider: ITraceProvider): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Get the current trace provider.
+     *
+     * @returns The current trace provider, or null if none is set
+     * @since 3.4.0
+     */
+    public getTraceProvider(): ITraceProvider | null {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }

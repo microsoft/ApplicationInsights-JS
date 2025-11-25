@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { fnApply, isFunction } from "@nevware21/ts-utils";
-import { IAppInsightsCore } from "../../JavaScriptSDK.Interfaces/IAppInsightsCore";
+import { ITraceHost } from "../../JavaScriptSDK.Interfaces/ITraceProvider";
 import { setProtoTypeName } from "../../JavaScriptSDK/HelperFuncs";
 import { STR_EMPTY } from "../../JavaScriptSDK/InternalConstants";
 import { IOTelSpanOptions } from "../interfaces/trace/IOTelSpanOptions";
@@ -11,16 +11,16 @@ import { IReadableSpan } from "../interfaces/trace/IReadableSpan";
 
 /**
  * Create a tracer implementation.
- * @param core - The ApplicationInsights core instance
+ * @param host - The ApplicationInsights core instance
  * @returns A tracer object
  * @internal
  */
-export function createTracer(core: IAppInsightsCore, name?: string): IOTelTracer {
+export function createTracer(host: ITraceHost, name?: string): IOTelTracer {
     let tracer: IOTelTracer = setProtoTypeName({
         startSpan(spanName: string, options?: IOTelSpanOptions): IReadableSpan | null {
             // Note: context is not used / needed for Application Insights / 1DS
-            if (core) {
-                return core.startSpan(spanName, options);
+            if (host) {
+                return host.startSpan(spanName, options);
             }
 
             return null;

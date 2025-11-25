@@ -1,11 +1,6 @@
 import { AITestClass, Assert } from '@microsoft/ai-test-framework';
 import { ApplicationInsights } from '../../../src/applicationinsights-web';
-import { 
-    IReadableSpan, IOTelSpanOptions, eOTelSpanKind, eOTelSpanStatusCode, newId, IDistributedTraceContext
-} from "@microsoft/applicationinsights-core-js";
-import { 
-    ITraceTelemetry, eSeverityLevel
-} from '@microsoft/applicationinsights-common';
+import { eOTelSpanKind, eOTelSpanStatusCode, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 
 export class StartSpanTests extends AITestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -13,8 +8,8 @@ export class StartSpanTests extends AITestClass {
 
     private _ai!: ApplicationInsights;
     
-    // Track calls to trackTrace
-    private _trackTraceCalls: { trace: ITraceTelemetry, properties: any }[] = [];
+    // Track calls to track
+    private _trackCalls: ITelemetryItem[] = [];
 
     constructor(testName?: string) {
         super(testName || "StartSpanTests");
@@ -23,7 +18,7 @@ export class StartSpanTests extends AITestClass {
     public testInitialize() {
         try {
             this.useFakeServer = false;
-            this._trackTraceCalls = [];
+            this._trackCalls = [];
 
             this._ai = new ApplicationInsights({
                 config: {
@@ -35,15 +30,15 @@ export class StartSpanTests extends AITestClass {
                 }
             });
 
-            // Hook trackTrace to capture calls
-            const originalTrackTrace = this._ai.trackTrace;
-            this._ai.trackTrace = (trace: ITraceTelemetry, customProperties?: any) => {
-                this._trackTraceCalls.push({ trace, properties: customProperties });
-                return originalTrackTrace.call(this._ai, trace, customProperties);
-            };
-
             // Initialize the SDK
             this._ai.loadAppInsights();
+
+            // Hook core.track to capture calls
+            const originalTrack = this._ai.core.track;
+            this._ai.core.track = (item: ITelemetryItem) => {
+                this._trackCalls.push(item);
+                return originalTrack.call(this._ai.core, item);
+            };
             
         } catch (e) {
             console.error('Failed to initialize tests: ' + e);
@@ -98,10 +93,10 @@ export class StartSpanTests extends AITestClass {
         });
 
         this.testCase({
-            name: "StartSpan: Recording span should trigger trackTrace when span ends",
+            name: "StartSpan: Recording span should trigger track when span ends",
             test: () => {
                 // Clear previous calls
-                this._trackTraceCalls = [];
+                this._trackCalls = [];
 
                 // Create a recording span using startSpan
                 const span = this._ai.startSpan("test-recording-span", {
@@ -117,31 +112,30 @@ export class StartSpanTests extends AITestClass {
                 // Verify it's a recording span
                 Assert.ok(span!.isRecording(), "Span should be recording");
 
-                // End the span - this should trigger trackTrace via the onEnd callback
+                // End the span - this should trigger track via the onEnd callback
                 span!.end();
 
-                // Verify that trackTrace was called
-                Assert.equal(1, this._trackTraceCalls.length, "trackTrace should have been called once for recording span");
+                // Verify that track was called
+                Assert.equal(1, this._trackCalls.length, "track should have been called once for recording span");
                 
-                // Add defensive check for the call object
-                Assert.ok(this._trackTraceCalls.length > 0, "Should have at least one trackTrace call");
-                const call = this._trackTraceCalls[0];
-                Assert.ok(call, "Call object should exist");
-                Assert.ok(call.trace, "Trace telemetry should be present");
-                Assert.ok(call.trace.message, "Trace message should be present");
-                Assert.ok(call.trace.message.includes("test-recording-span"), "Trace message should include span name");
+                // Add defensive check for the telemetry item
+                Assert.ok(this._trackCalls.length > 0, "Should have at least one track call");
+                const item = this._trackCalls[0];
+                Assert.ok(item, "Telemetry item should exist");
+                Assert.ok(item.name, "Item name should be present");
+                Assert.ok(item.baseData, "Base data should be present");
                 
-                Assert.ok(call.properties, "Custom properties should be present");
-                Assert.equal("test-value", call.properties["test.attribute"], "Should include span attributes");
-                Assert.equal("http", call.properties["operation.type"], "Should include all span attributes");
+                Assert.ok(item.baseData.properties, "Custom properties should be present");
+                Assert.equal("test-value", item.baseData.properties["test.attribute"], "Should include span attributes");
+                Assert.equal("http", item.baseData.properties["operation.type"], "Should include all span attributes");
             }
         });
 
         this.testCase({
-            name: "StartSpan: Non-recording span should NOT trigger trackTrace when span ends",
+            name: "StartSpan: Non-recording span should NOT trigger track when span ends",
             test: () => {
                 // Clear previous calls
-                this._trackTraceCalls = [];
+                this._trackCalls = [];
 
                 // NOTE: Currently all spans are recording by default
                 // When the recording: false option is implemented, this test will need to be updated
@@ -154,28 +148,29 @@ export class StartSpanTests extends AITestClass {
                 });
 
                 Assert.ok(span, "Span should be created");
-                if (!span) return;
 
                 // Currently, all spans are recording by default
-                Assert.ok(span.isRecording(), "Span should be recording (default behavior)");
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                Assert.ok(span!.isRecording(), "Span should be recording (default behavior)");
 
-                // End the span - this WILL trigger trackTrace since it's recording
-                span.end();
+                // End the span - this WILL trigger track since it's recording
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                span!.end();
 
                 // Currently expecting 1 call since all spans are recording
                 // When non-recording spans are implemented, this should be 0
-                Assert.equal(1, this._trackTraceCalls.length, "trackTrace should be called for recording span (current default behavior)");
+                Assert.equal(1, this._trackCalls.length, "track should be called for recording span (current default behavior)");
                 
                 // TODO: Update this test when recording: false option is implemented
-                // The test should then use recording: false and expect 0 trackTrace calls
+                // The test should then use recording: false and expect 0 track calls
             }
         });
 
         this.testCase({
-            name: "StartSpan: Multiple recording spans should each trigger trackTrace",
+            name: "StartSpan: Multiple recording spans should each trigger track",
             test: () => {
                 // Clear previous calls
-                this._trackTraceCalls = [];
+                this._trackCalls = [];
 
                 // Create multiple recording spans
                 const span1 = this._ai.startSpan("span-1", {
@@ -191,64 +186,66 @@ export class StartSpanTests extends AITestClass {
                 span1!.end();
                 span2!.end();
 
-                // Should have two trackTrace calls
-                Assert.equal(2, this._trackTraceCalls.length, "trackTrace should have been called twice");
+                // Should have two track calls
+                Assert.equal(2, this._trackCalls.length, "track should have been called twice");
                 
                 // Verify both calls have the correct data
-                const call1 = this._trackTraceCalls.find(call => 
-                    call.trace.message && call.trace.message.includes("span-1"));
-                const call2 = this._trackTraceCalls.find(call => 
-                    call.trace.message && call.trace.message.includes("span-2"));
+                const item1 = this._trackCalls.find(item => 
+                    item.baseData && item.baseData.properties && item.baseData.name === "span-1");
+                const item2 = this._trackCalls.find(item => 
+                    item.baseData && item.baseData.properties && item.baseData.name === "span-2");
 
-                Assert.ok(call1, "Should have call for span-1");
-                Assert.ok(call2, "Should have call for span-2");
+                Assert.ok(item1, "Should have item for span-1");
+                Assert.ok(item2, "Should have item for span-2");
                 
-                if (call1 && call2) {
-                    Assert.equal(1, call1.properties["span.number"], "First span should have correct attribute");
-                    Assert.equal(2, call2.properties["span.number"], "Second span should have correct attribute");
+                if (item1 && item2) {
+                    Assert.equal(1, item1.baseData.properties["span.number"], "First span should have correct attribute");
+                    Assert.equal(2, item2.baseData.properties["span.number"], "Second span should have correct attribute");
                 }
             }
         });
 
         this.testCase({
-            name: "StartSpan: Error recording spans should generate traces with error severity",
+            name: "StartSpan: Error recording spans should generate telemetry with error status",
             test: () => {
                 // Clear previous calls
-                this._trackTraceCalls = [];
+                this._trackCalls = [];
 
                 // Create an error span
                 const span = this._ai.startSpan("error-span", {
-                kind: eOTelSpanKind.CLIENT,
-                attributes: {
-                    "error": true,
-                    "error.message": "Something went wrong"
-                }
-            });
+                    kind: eOTelSpanKind.CLIENT,
+                    attributes: {
+                        "error": true,
+                        "error.message": "Something went wrong"
+                    }
+                });
 
-            Assert.ok(span, "Span should be created");
-            if (!span) return;
+                Assert.ok(span, "Span should be created");
 
-            // Set error status on the span
-            span.setStatus({
-                code: eOTelSpanStatusCode.ERROR,
-                message: "Test error occurred"
-            });
+                // Set error status on the span
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                span!.setStatus({
+                    code: eOTelSpanStatusCode.ERROR,
+                    message: "Test error occurred"
+                });
 
-            // End the span
-            span.end();
+                // End the span
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                span!.end();
 
-            // Verify trackTrace was called with error severity
-            Assert.equal(1, this._trackTraceCalls.length, "trackTrace should have been called once");
-            
-            const call = this._trackTraceCalls[0];
-            Assert.ok(call.trace, "Trace telemetry should be present");
-            Assert.equal(eSeverityLevel.Error, call.trace.severityLevel, "Should have error severity level");
-            Assert.ok(call.trace.message.includes("error-span"), "Should include span name in message");
+                // Verify track was called
+                Assert.equal(1, this._trackCalls.length, "track should have been called once");
+                
+                const item = this._trackCalls[0];
+                Assert.ok(item, "Telemetry item should be present");
+                Assert.ok(item.baseData, "Base data should be present");
+                Assert.ok(item.baseData.properties, "Properties should be present");
+                Assert.equal("error-span", item.baseData.name, "Should include span name");
             
                 
-                Assert.ok(call.properties, "Custom properties should be present");
-                Assert.equal(true, call.properties["error"], "Should include error attribute");
-                Assert.equal("Something went wrong", call.properties["error.message"], "Should include error message");
+                Assert.ok(item.baseData.properties, "Custom properties should be present");
+                Assert.equal(true, item.baseData.properties["error"], "Should include error attribute");
+                Assert.equal("Something went wrong", item.baseData.properties["error.message"], "Should include error message");
             }
         });
 
@@ -256,7 +253,7 @@ export class StartSpanTests extends AITestClass {
             name: "StartSpan: startSpan with parent context should work",
             test: () => {
                 // Clear previous calls
-                this._trackTraceCalls = [];
+                this._trackCalls = [];
 
                 // Create span with optional parent context parameter
                 // (We'll pass null for now since we're not testing context propagation yet)
@@ -268,18 +265,19 @@ export class StartSpanTests extends AITestClass {
                 });
 
                 Assert.ok(span, "Span should be created with parent context");
-                if (!span) return;
 
                 // End the span
-                span.end();
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                span!.end();
 
-                // Verify trackTrace was called
-                Assert.equal(1, this._trackTraceCalls.length, "trackTrace should have been called once");
+                // Verify track was called
+                Assert.equal(1, this._trackCalls.length, "track should have been called once");
                 
-                const call = this._trackTraceCalls[0];
-                Assert.ok(call.trace, "Trace telemetry should be present");
-                Assert.ok(call.trace.message.includes("child-span"), "Should include span name");
-                Assert.equal(false, call.properties["has.parent"], "Should include span attributes");
+                const item = this._trackCalls[0];
+                Assert.ok(item, "Telemetry item should be present");
+                Assert.ok(item.baseData && item.baseData.properties, "Properties should be present");
+                Assert.equal("child-span", item.baseData.name, "Should include span name");
+                Assert.equal(false, item.baseData.properties["has.parent"], "Should include span attributes");
             }
         });
 

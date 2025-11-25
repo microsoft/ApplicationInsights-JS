@@ -50,7 +50,7 @@ export interface IOTelErrorHandlers {
      * - Unsupported attribute value type
      * - Attribute count exceeds limits
      * 
-     * @defaultBehavior Throws an `OTelInvalidAttributeError`
+     * @default Throws an `OTelInvalidAttributeError`
      * 
      * @example
      * ```typescript
@@ -76,7 +76,7 @@ export interface IOTelErrorHandlers {
      * - Span processor errors
      * - Context propagation failures
      * 
-     * @defaultBehavior Logs to console or calls the warn handler
+     * @default Logs to console or calls the warn handler
      * 
      * @example
      * ```typescript
@@ -102,7 +102,7 @@ export interface IOTelErrorHandlers {
      * - Performance metrics
      * - Development-time diagnostics
      * 
-     * @defaultBehavior Logs to console.log
+     * @default Logs to console.log
      * 
      * @example
      * ```typescript
@@ -128,7 +128,7 @@ export interface IOTelErrorHandlers {
      * - Deprecated API usage
      * - Resource limit approaches
      * 
-     * @defaultBehavior Logs to console.warn
+     * @default Logs to console.warn
      * 
      * @example
      * ```typescript
@@ -153,7 +153,7 @@ export interface IOTelErrorHandlers {
      * - Resource allocation failures
      * - Unexpected runtime conditions
      * 
-     * @defaultBehavior Logs to console.error
+     * @default Logs to console.error
      * 
      * @example
      * ```typescript
@@ -179,7 +179,7 @@ export interface IOTelErrorHandlers {
      * - Platform-specific functionality not available
      * - Optional features not included in the configuration
      * 
-     * @defaultBehavior Logs to console.error
+     * @default Logs to console.error
      * 
      * @example
      * ```typescript

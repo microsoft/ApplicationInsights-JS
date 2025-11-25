@@ -19,6 +19,8 @@ import { OpenTelemetryErrorsTests } from './OpenTelemetry/errors.Tests';
 import { SpanTests } from './OpenTelemetry/span.Tests';
 import { AttributeContainerTests } from './OpenTelemetry/attributeContainer.Tests';
 import { W3cTraceStateTests } from './W3TraceState.Tests';
+import { OTelNegativeTests } from './OpenTelemetry/otelNegative.Tests';
+import { TraceUtilsTests } from './OpenTelemetry/traceUtils.Tests';
 
 export function runTests() {
     new GlobalTestHooks().registerTests();
@@ -40,6 +42,8 @@ export function runTests() {
     new SpanTests().registerTests();
     new AttributeContainerTests().registerTests();
     new W3cTraceStateTests().registerTests();
+    new TraceUtilsTests().registerTests();
+    new OTelNegativeTests().registerTests();
     // new StatsBeatTests(false).registerTests();
     // new StatsBeatTests(true).registerTests();
     new SendPostManagerTests().registerTests();
