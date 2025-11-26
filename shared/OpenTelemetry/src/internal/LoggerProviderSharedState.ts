@@ -1,32 +1,41 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { createNoopLogRecordProcessor } from "../api/noop/noopLogRecordProcessor";
 import { IOTelLogRecordLimits } from "../interfaces/logs/IOTelLogRecordLimits";
 import { IOTelLogRecordProcessor } from "../interfaces/logs/IOTelLogRecordProcessor";
 import { IOTelLogger } from "../interfaces/logs/IOTelLogger";
-import { NoopLogRecordProcessor } from "../interfaces/logs/IOTelNoopLogRecordProcessor";
 import { IOTelResource } from "../interfaces/resources/IOTelResource";
-import { MultiLogRecordProcessor } from "../sdk/IOTelMultiLogRecordProcessor";
+import { createMultiLogRecordProcessor } from "../sdk/IOTelMultiLogRecordProcessor";
 
-export class LoggerProviderSharedState {
-    readonly loggers: Map<string, IOTelLogger> = new Map();
+export interface LoggerProviderSharedState {
+    readonly loggers: Map<string, IOTelLogger>;
     activeProcessor: IOTelLogRecordProcessor;
-    readonly registeredLogRecordProcessors: IOTelLogRecordProcessor[] = [];
+    readonly registeredLogRecordProcessors: IOTelLogRecordProcessor[];
+    readonly resource: IOTelResource;
+    readonly forceFlushTimeoutMillis: number;
+    readonly logRecordLimits: Required<IOTelLogRecordLimits>;
+}
 
-    constructor(
-    readonly resource: IOTelResource,
-    readonly forceFlushTimeoutMillis: number,
-    readonly logRecordLimits: Required<IOTelLogRecordLimits>,
-    readonly processors: IOTelLogRecordProcessor[]
-    ) {
-        if (processors.length > 0) {
-            this.registeredLogRecordProcessors = processors;
-            this.activeProcessor = new MultiLogRecordProcessor(
-                this.registeredLogRecordProcessors,
-                this.forceFlushTimeoutMillis
-            );
-        } else {
-            this.activeProcessor = new NoopLogRecordProcessor();
-        }
-    }
+export function createLoggerProviderSharedState(
+    resource: IOTelResource,
+    forceFlushTimeoutMillis: number,
+    logRecordLimitsConfig: Required<IOTelLogRecordLimits>,
+    processors: IOTelLogRecordProcessor[]
+): LoggerProviderSharedState {
+    const loggers = new Map<string, IOTelLogger>();
+    const registeredLogRecordProcessors: IOTelLogRecordProcessor[] = processors;
+    const hasProcessors = registeredLogRecordProcessors.length > 0;
+    const activeProcessor = hasProcessors
+        ? createMultiLogRecordProcessor(registeredLogRecordProcessors, forceFlushTimeoutMillis)
+        : createNoopLogRecordProcessor();
+
+    return {
+        loggers,
+        activeProcessor,
+        registeredLogRecordProcessors,
+        resource,
+        forceFlushTimeoutMillis,
+        logRecordLimits: logRecordLimitsConfig
+    };
 }

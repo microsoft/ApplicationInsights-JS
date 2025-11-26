@@ -1,13 +1,14 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { createPromise, IPromise } from "@nevware21/ts-async";
 
-import { NoopLogger } from "../../../../src/api/noop/noopLogger";
+import { createNoopLogger } from "../../../../src/api/noop/noopLogger";
 import { IOTelAttributes } from "../../../../src/interfaces/IOTelAttributes";
-import { NoopLogRecordProcessor } from "../../../../src/interfaces/logs/IOTelNoopLogRecordProcessor";
+import { IOTelLogRecord } from "../../../../src/interfaces/logs/IOTelLogRecord";
+import { createNoopLogRecordProcessor } from "../../../../src/api/noop/noopLogRecordProcessor";
 import { LoggerProviderSharedState } from "../../../../src/internal/LoggerProviderSharedState";
-import { DEFAULT_LOGGER_NAME, LoggerProvider } from "../../../../src/sdk/IOTelLoggerProvider";
-import { Logger } from "../../../../src/sdk/IOTelLogger";
-import { MultiLogRecordProcessor } from "../../../../src/sdk/IOTelMultiLogRecordProcessor";
+import { DEFAULT_LOGGER_NAME, IOTelLoggerProviderInstance, createLoggerProvider } from "../../../../src/sdk/IOTelLoggerProvider";
+import { IOTelLoggerInstance } from "../../../../src/sdk/IOTelLogger";
+import { IOTelMultiLogRecordProcessorInstance } from "../../../../src/sdk/IOTelMultiLogRecordProcessor";
 import { loadDefaultConfig } from "../../../../src/sdk/config";
 import { IOTelResource, OTelRawResourceAttribute } from "../../../../src/interfaces/resources/IOTelResource";
 
@@ -25,30 +26,33 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: constructor without options should construct an instance",
             test: () => {
-                const provider = new LoggerProvider();
-                Assert.ok(provider instanceof LoggerProvider, "Should construct a LoggerProvider instance");
+                const provider = createLoggerProvider();
+                Assert.equal(typeof provider.getLogger, "function", "Should create a LoggerProvider instance");
+                const sharedState = provider._sharedState;
+                Assert.ok(sharedState.loggers instanceof Map, "Should expose shared state instance");
             }
         });
 
         this.testCase({
             name: "LoggerProvider: constructor without options should use noop processor by default",
-            test: () => {
-                const provider = new LoggerProvider();
+            test: (): IPromise<void> => {
+                const provider = createLoggerProvider();
                 const sharedState = this._getSharedState(provider);
-                Assert.ok(sharedState.activeProcessor instanceof NoopLogRecordProcessor, "Expected the default processor to be NoopLogRecordProcessor");
+                Assert.equal(sharedState.registeredLogRecordProcessors.length, 0, "Expected no processors to be registered by default");
+                const flushResult = sharedState.activeProcessor.forceFlush();
+                return flushResult.then(() => undefined);
             }
         });
 
         this.testCase({
             name: "LoggerProvider: constructor should register provided processors",
             test: () => {
-                const logRecordProcessor = new NoopLogRecordProcessor();
-                const provider = new LoggerProvider({
+                const logRecordProcessor = createNoopLogRecordProcessor();
+                const provider = createLoggerProvider({
                     processors: [logRecordProcessor]
                 });
                 const sharedState = this._getSharedState(provider);
-                const activeProcessor = sharedState.activeProcessor as MultiLogRecordProcessor;
-                Assert.ok(activeProcessor instanceof MultiLogRecordProcessor, "Expected MultiLogRecordProcessor to be active when processors are provided");
+                const activeProcessor = sharedState.activeProcessor as IOTelMultiLogRecordProcessorInstance;
                 Assert.equal(activeProcessor.processors.length, 1, "Should register one processor");
                 Assert.equal(activeProcessor.processors[0], logRecordProcessor, "Should use the provided processor instance");
             }
@@ -57,7 +61,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: constructor should use default resource when not provided",
             test: () => {
-                const provider = new LoggerProvider();
+                const provider = createLoggerProvider();
                 const sharedState = this._getSharedState(provider);
                 const resource = sharedState.resource;
                 Assert.ok(!!resource, "Should have a resource available");
@@ -69,7 +73,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
             name: "LoggerProvider: constructor should honor provided resource",
             test: () => {
                 const passedInResource = this._createTestResource({ foo: "bar" });
-                const provider = new LoggerProvider({
+                const provider = createLoggerProvider({
                     resource: passedInResource
                 });
                 const sharedState = this._getSharedState(provider);
@@ -80,7 +84,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: constructor should use default forceFlushTimeoutMillis when omitted",
             test: () => {
-                const provider = new LoggerProvider();
+                const provider = createLoggerProvider();
                 const sharedState = this._getSharedState(provider);
                 Assert.equal(sharedState.forceFlushTimeoutMillis, loadDefaultConfig().forceFlushTimeoutMillis, "Should use default forceFlush timeout");
             }
@@ -89,7 +93,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: logRecordLimits should default values when not provided",
             test: () => {
-                const provider = new LoggerProvider();
+                const provider = createLoggerProvider();
                 const sharedState = this._getSharedState(provider);
                 Assert.deepEqual(sharedState.logRecordLimits, {
                     attributeCountLimit: 128,
@@ -101,7 +105,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: logRecordLimits should respect provided attributeCountLimit",
             test: () => {
-                const provider = new LoggerProvider({
+                const provider = createLoggerProvider({
                     logRecordLimits: {
                         attributeCountLimit: 100
                     }
@@ -114,7 +118,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: logRecordLimits should respect provided attributeValueLengthLimit",
             test: () => {
-                const provider = new LoggerProvider({
+                const provider = createLoggerProvider({
                     logRecordLimits: {
                         attributeValueLengthLimit: 10
                     }
@@ -127,7 +131,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: logRecordLimits should allow negative attributeValueLengthLimit",
             test: () => {
-                const provider = new LoggerProvider({
+                const provider = createLoggerProvider({
                     logRecordLimits: {
                         attributeValueLengthLimit: -10
                     }
@@ -140,7 +144,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: logRecordLimits should use default attributeValueLengthLimit when omitted",
             test: () => {
-                const provider = new LoggerProvider();
+                const provider = createLoggerProvider();
                 const sharedState = this._getSharedState(provider);
                 Assert.equal(sharedState.logRecordLimits.attributeValueLengthLimit, Infinity, "Should default attributeValueLengthLimit to Infinity");
             }
@@ -149,7 +153,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: logRecordLimits should use default attributeCountLimit when omitted",
             test: () => {
-                const provider = new LoggerProvider();
+                const provider = createLoggerProvider();
                 const sharedState = this._getSharedState(provider);
                 Assert.equal(sharedState.logRecordLimits.attributeCountLimit, 128, "Should default attributeCountLimit to 128");
             }
@@ -158,8 +162,8 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: getLogger should default name when invalid",
             test: () => {
-                const provider = new LoggerProvider();
-                const logger = provider.getLogger("") as Logger;
+                const provider = createLoggerProvider();
+                const logger = provider.getLogger("") as IOTelLoggerInstance;
                 Assert.equal(logger.instrumentationScope.name, DEFAULT_LOGGER_NAME, "Should use default logger name when name is invalid");
             }
         });
@@ -167,7 +171,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: getLogger should create new logger when name not seen",
             test: () => {
-                const provider = new LoggerProvider();
+                const provider = createLoggerProvider();
                 const sharedState = this._getSharedState(provider);
                 Assert.equal(sharedState.loggers.size, 0, "Should start with no loggers");
                 provider.getLogger("test name");
@@ -181,7 +185,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
                 const testName = "test name";
                 const testVersion = "test version";
                 const testSchemaUrl = "test schema url";
-                const provider = new LoggerProvider();
+                const provider = createLoggerProvider();
                 const sharedState = this._getSharedState(provider);
 
                 Assert.equal(sharedState.loggers.size, 0, "Should start with no loggers");
@@ -200,7 +204,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
                 const testName = "test name";
                 const testVersion = "test version";
                 const testSchemaUrl = "test schema url";
-                const provider = new LoggerProvider();
+                const provider = createLoggerProvider();
                 const sharedState = this._getSharedState(provider);
 
                 Assert.equal(sharedState.loggers.size, 0, "Should start with no loggers");
@@ -210,7 +214,10 @@ export class IOTelLoggerProviderTests extends AITestClass {
                 Assert.equal(sharedState.loggers.size, 2, "Should add scoped logger");
                 const logger2 = provider.getLogger(testName, testVersion, { schemaUrl: testSchemaUrl });
                 Assert.equal(sharedState.loggers.size, 2, "Should not add duplicate scoped logger");
-                Assert.ok(logger2 instanceof Logger, "Should return a Logger instance");
+                const scopedLogger = logger2 as IOTelLoggerInstance;
+                Assert.equal(scopedLogger.instrumentationScope.name, testName, "Should expose instrumentation scope name");
+                Assert.equal(scopedLogger.instrumentationScope.version, testVersion, "Should expose instrumentation scope version");
+                Assert.equal(scopedLogger.instrumentationScope.schemaUrl, testSchemaUrl, "Should expose instrumentation scope schemaUrl");
                 Assert.equal(logger1, logger2, "Should reuse existing scoped logger");
             }
         });
@@ -218,15 +225,17 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: forceFlush should invoke all registered processors",
             test: (): IPromise<void> => {
-                const forceFlushStub = this.sandbox.stub(NoopLogRecordProcessor.prototype, "forceFlush").resolves();
-                const provider = new LoggerProvider({
-                    processors: [new NoopLogRecordProcessor(), new NoopLogRecordProcessor()]
-                });
+                const processor1 = createNoopLogRecordProcessor();
+                const processor2 = createNoopLogRecordProcessor();
+                const forceFlushStub1 = this.sandbox.stub(processor1, "forceFlush").resolves();
+                const forceFlushStub2 = this.sandbox.stub(processor2, "forceFlush").resolves();
+                const provider = createLoggerProvider({ processors: [processor1, processor2] });
 
                 return createPromise((resolve, reject) => {
                     provider.forceFlush().then(() => {
                         try {
-                            Assert.equal(forceFlushStub.callCount, 2, "Should call forceFlush on each processor");
+                            Assert.equal(forceFlushStub1.callCount, 1, "Should call forceFlush on first processor once");
+                            Assert.equal(forceFlushStub2.callCount, 1, "Should call forceFlush on second processor once");
                             resolve();
                         } catch (e) {
                             reject(e);
@@ -239,17 +248,19 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: forceFlush should propagate processor errors",
             test: (): IPromise<void> => {
-                const forceFlushStub = this.sandbox.stub(NoopLogRecordProcessor.prototype, "forceFlush").rejects("Error");
-                const provider = new LoggerProvider({
-                    processors: [new NoopLogRecordProcessor(), new NoopLogRecordProcessor()]
-                });
+                const processor1 = createNoopLogRecordProcessor();
+                const processor2 = createNoopLogRecordProcessor();
+                const forceFlushStub1 = this.sandbox.stub(processor1, "forceFlush").rejects("Error");
+                const forceFlushStub2 = this.sandbox.stub(processor2, "forceFlush").rejects("Error");
+                const provider = createLoggerProvider({ processors: [processor1, processor2] });
 
                 return createPromise((resolve, reject) => {
                     provider.forceFlush().then(() => {
                         reject(new Error("Successful forceFlush not expected"));
                     }).catch(() => {
                         try {
-                            Assert.equal(forceFlushStub.callCount, 2, "Should attempt to forceFlush each processor even when errors occur");
+                            Assert.equal(forceFlushStub1.callCount, 1, "Should attempt to forceFlush first processor even when errors occur");
+                            Assert.equal(forceFlushStub2.callCount, 1, "Should attempt to forceFlush second processor even when errors occur");
                             resolve();
                         } catch (e) {
                             reject(e);
@@ -262,9 +273,9 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: shutdown should invoke processor shutdown",
             test: (): IPromise<void> => {
-                const processor = new NoopLogRecordProcessor();
+                const processor = createNoopLogRecordProcessor();
                 const shutdownStub = this.sandbox.stub(processor, "shutdown").resolves();
-                const provider = new LoggerProvider({ processors: [processor] });
+                const provider = createLoggerProvider({ processors: [processor] });
 
                 return createPromise((resolve, reject) => {
                     provider.shutdown().then(() => {
@@ -282,12 +293,21 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: shutdown should return noop logger for new requests",
             test: (): IPromise<void> => {
-                const provider = new LoggerProvider();
+                const provider = createLoggerProvider();
                 return createPromise((resolve, reject) => {
                     provider.shutdown().then(() => {
                         try {
                             const logger = provider.getLogger("default", "1.0.0");
-                            Assert.ok(logger instanceof NoopLogger, "Logger should be NoopLogger after shutdown");
+                            const expectedNoopLogger = createNoopLogger();
+                            Assert.equal(typeof logger.emit, "function", "Logger should expose noop emit function after shutdown");
+                            Assert.equal(logger.emit.length, expectedNoopLogger.emit.length, "Noop emit signature should match expected noop logger");
+                            let threw = false;
+                            try {
+                                logger.emit({} as IOTelLogRecord);
+                            } catch (e) {
+                                threw = true;
+                            }
+                            Assert.ok(!threw, "Noop logger emit should not throw after shutdown");
                             resolve();
                         } catch (e) {
                             reject(e);
@@ -300,8 +320,8 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: forceFlush after shutdown should not call processors",
             test: (): IPromise<void> => {
-                const logRecordProcessor = new NoopLogRecordProcessor();
-                const provider = new LoggerProvider({ processors: [logRecordProcessor] });
+                const logRecordProcessor = createNoopLogRecordProcessor();
+                const provider = createLoggerProvider({ processors: [logRecordProcessor] });
                 const forceFlushStub = this.sandbox.stub(logRecordProcessor, "forceFlush").resolves();
                 const warnStub = this.sandbox.stub(console, "warn");
 
@@ -324,8 +344,8 @@ export class IOTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: second shutdown should not re-run processor shutdown",
             test: (): IPromise<void> => {
-                const logRecordProcessor = new NoopLogRecordProcessor();
-                const provider = new LoggerProvider({ processors: [logRecordProcessor] });
+                const logRecordProcessor = createNoopLogRecordProcessor();
+                const provider = createLoggerProvider({ processors: [logRecordProcessor] });
                 const shutdownStub = this.sandbox.stub(logRecordProcessor, "shutdown").resolves();
                 const warnStub = this.sandbox.stub(console, "warn");
 
@@ -346,8 +366,8 @@ export class IOTelLoggerProviderTests extends AITestClass {
         });
     }
 
-    private _getSharedState(provider: LoggerProvider): LoggerProviderSharedState {
-        return (provider as unknown as { _sharedState: LoggerProviderSharedState })._sharedState;
+    private _getSharedState(provider: IOTelLoggerProviderInstance): LoggerProviderSharedState {
+        return provider._sharedState;
     }
 
     private _createTestResource(attributes: IOTelAttributes = {} as IOTelAttributes): IOTelResource {

@@ -2,100 +2,103 @@
 // Licensed under the MIT License.
 
 import { IPromise } from "@nevware21/ts-async";
-import { NOOP_LOGGER } from "../api/noop/noopLogger";
+import { createNoopLogger } from "../api/noop/noopLogger";
 import { IOTelLogger } from "../interfaces/logs/IOTelLogger";
 import { IOTelLoggerOptions } from "../interfaces/logs/IOTelLoggerOptions";
 import { IOTelLoggerProvider } from "../interfaces/logs/IOTelLoggerProvider";
 import { IOTelLoggerProviderConfig } from "../interfaces/logs/IOTelLoggerProviderConfig";
-import { LoggerProviderSharedState } from "../internal/LoggerProviderSharedState";
+import { LoggerProviderSharedState, createLoggerProviderSharedState } from "../internal/LoggerProviderSharedState";
 import { createResource } from "../resource/resource";
-import { Logger } from "./IOTelLogger";
+import { createLogger } from "./IOTelLogger";
 import { loadDefaultConfig, reconfigureLimits } from "./config";
 
 export const DEFAULT_LOGGER_NAME = "unknown";
 
-export class LoggerProvider implements IOTelLoggerProvider {
-    private _isShutdown: boolean = false;
-    private readonly _sharedState: LoggerProviderSharedState;
+export interface IOTelLoggerProviderInstance extends IOTelLoggerProvider {
+    forceFlush(): IPromise<void>;
+    shutdown(): IPromise<void>;
+    readonly _sharedState: LoggerProviderSharedState;
+}
 
-    constructor(config: IOTelLoggerProviderConfig = {}) {
-        const defaults = loadDefaultConfig();
-        const forceFlushTimeoutMillis = config.forceFlushTimeoutMillis !== undefined
-            ? config.forceFlushTimeoutMillis
-            : defaults.forceFlushTimeoutMillis;
-        const logRecordLimits = config.logRecordLimits || defaults.logRecordLimits;
+export function createLoggerProvider(
+    config: IOTelLoggerProviderConfig = {}
+): IOTelLoggerProviderInstance {
+    const defaults = loadDefaultConfig();
+    const forceFlushTimeoutMillis = config.forceFlushTimeoutMillis !== undefined
+        ? config.forceFlushTimeoutMillis
+        : defaults.forceFlushTimeoutMillis;
+    const logRecordLimits = config.logRecordLimits || defaults.logRecordLimits;
 
-        let resource = config.resource;
-        if (!resource) {
-            resource = createResource({ cfg: { errorHandlers: {} }, attribs: [] });
-        }
-
-        this._sharedState = new LoggerProviderSharedState(
-            resource,
-            forceFlushTimeoutMillis,
-            reconfigureLimits(logRecordLimits),
-            config && config.processors ? config.processors : []
-        );
+    let resource = config.resource;
+    if (!resource) {
+        resource = createResource({ cfg: { errorHandlers: {} }, attribs: [] });
     }
 
-    /**
-     * Get a logger with the configuration of the LoggerProvider.
-     */
-    public getLogger(
+    const sharedState = createLoggerProviderSharedState(
+        resource,
+        forceFlushTimeoutMillis,
+        reconfigureLimits(logRecordLimits),
+        config && config.processors ? config.processors : []
+    );
+
+    let isShutdown = false;
+
+    function getLogger(
         name: string,
         version?: string,
         options?: IOTelLoggerOptions
     ): IOTelLogger {
-        if (this._isShutdown) {
+        if (isShutdown) {
             console.warn("A shutdown LoggerProvider cannot provide a Logger");
-            return NOOP_LOGGER;
+            return createNoopLogger();
         }
 
         if (!name) {
             console.warn("Logger requested without instrumentation scope name.");
         }
+
         const loggerName = name || DEFAULT_LOGGER_NAME;
         const schemaUrl = options && options.schemaUrl;
         const key = `${loggerName}@${version || ""}:${schemaUrl || ""}`;
-        if (!this._sharedState.loggers.has(key)) {
-            this._sharedState.loggers.set(
+        if (!sharedState.loggers.has(key)) {
+            sharedState.loggers.set(
                 key,
-                new Logger(
+                createLogger(
                     { name: loggerName, version, schemaUrl },
-                    this._sharedState
+                    sharedState
                 )
             );
         }
+
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return this._sharedState.loggers.get(key)!;
+        return sharedState.loggers.get(key)!;
     }
 
-    /**
-     * Notifies all registered LogRecordProcessor to flush any buffered data.
-     *
-     * Returns a IPromise which is resolved when all flushes are complete.
-     */
-    public forceFlush(): IPromise<void> {
-        // do not flush after shutdown
-        if (this._isShutdown) {
+    function forceFlush(): IPromise<void> {
+        if (isShutdown) {
             console.warn("invalid attempt to force flush after LoggerProvider shutdown");
             return Promise.resolve();
         }
-        return this._sharedState.activeProcessor.forceFlush();
+
+        return sharedState.activeProcessor.forceFlush();
     }
 
-    /**
-     * Flush all buffered data and shut down the LoggerProvider and all registered
-     * LogRecordProcessor.
-     *
-     * Returns a promise which is resolved when all flushes are complete.
-     */
-    public shutdown(): IPromise<void> {
-        if (this._isShutdown) {
+    function shutdown(): IPromise<void> {
+        if (isShutdown) {
             console.warn("shutdown may only be called once per LoggerProvider");
             return Promise.resolve();
         }
-        this._isShutdown = true;
-        return this._sharedState.activeProcessor.shutdown();
+
+        isShutdown = true;
+        return sharedState.activeProcessor.shutdown();
     }
+
+    return {
+        getLogger,
+        forceFlush,
+        shutdown,
+        get _sharedState(): LoggerProviderSharedState {
+            return sharedState;
+        }
+    };
 }

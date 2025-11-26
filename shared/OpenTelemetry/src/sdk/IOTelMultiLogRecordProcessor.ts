@@ -8,34 +8,35 @@ import { IOTelErrorHandlers } from "../interfaces/config/IOTelErrorHandlers";
 import { IOTelContext } from "../interfaces/context/IOTelContext";
 import { callWithTimeout } from "../internal/commonUtils";
 
+export interface IOTelMultiLogRecordProcessorInstance extends IOTelLogRecordProcessor {
+    readonly processors: IOTelLogRecordProcessor[];
+    readonly forceFlushTimeoutMillis: number;
+}
+
 /**
  * Implementation of the {@link IOTelLogRecordProcessor} that forwards all events
  * to each configured processor.
  */
-export class MultiLogRecordProcessor implements IOTelLogRecordProcessor {
-    private readonly _errorHandlers: IOTelErrorHandlers;
+export function createMultiLogRecordProcessor(
+    processors: IOTelLogRecordProcessor[],
+    forceFlushTimeoutMillis: number,
+    errorHandlers?: IOTelErrorHandlers
+): IOTelMultiLogRecordProcessorInstance {
+    const registeredProcessors = processors;
+    const timeout = forceFlushTimeoutMillis;
+    const handlers = errorHandlers || {};
 
-    constructor(
-        public readonly processors: IOTelLogRecordProcessor[],
-        public readonly forceFlushTimeoutMillis: number,
-        errorHandlers?: IOTelErrorHandlers
-    ) {
-        this._errorHandlers = errorHandlers || {};
-    }
-
-    public forceFlush(): IPromise<void> {
-        const processors = this.processors;
-        if (processors.length === 0) {
+    function forceFlush(): IPromise<void> {
+        if (registeredProcessors.length === 0) {
             return createSyncPromise(function (resolve) {
                 resolve();
             });
         }
 
-        const timeout = this.forceFlushTimeoutMillis;
         const operations: PromiseLike<void>[] = [];
 
-        for (let idx = 0; idx < processors.length; idx++) {
-            const processor = processors[idx];
+        for (let idx = 0; idx < registeredProcessors.length; idx++) {
+            const processor = registeredProcessors[idx];
             if (!processor) {
                 continue;
             }
@@ -47,7 +48,7 @@ export class MultiLogRecordProcessor implements IOTelLogRecordProcessor {
                 return createRejectedPromise(error);
             }
 
-            operations.push(callWithTimeout(this._errorHandlers, flushPromise, timeout));
+            operations.push(callWithTimeout(handlers, flushPromise, timeout));
         }
 
         if (operations.length === 0) {
@@ -61,19 +62,17 @@ export class MultiLogRecordProcessor implements IOTelLogRecordProcessor {
         });
     }
 
-    public onEmit(logRecord: IOTelSdkLogRecord, context?: IOTelContext): void {
-        const processors = this.processors;
-        for (let idx = 0; idx < processors.length; idx++) {
-            const processor = processors[idx];
+    function onEmit(logRecord: IOTelSdkLogRecord, context?: IOTelContext): void {
+        for (let idx = 0; idx < registeredProcessors.length; idx++) {
+            const processor = registeredProcessors[idx];
             if (processor) {
                 processor.onEmit(logRecord, context);
             }
         }
     }
 
-    public shutdown(): IPromise<void> {
-        const processors = this.processors;
-        if (processors.length === 0) {
+    function shutdown(): IPromise<void> {
+        if (registeredProcessors.length === 0) {
             return createSyncPromise(function (resolve) {
                 resolve();
             });
@@ -81,8 +80,8 @@ export class MultiLogRecordProcessor implements IOTelLogRecordProcessor {
 
         const operations: PromiseLike<void>[] = [];
 
-        for (let idx = 0; idx < processors.length; idx++) {
-            const processor = processors[idx];
+        for (let idx = 0; idx < registeredProcessors.length; idx++) {
+            const processor = registeredProcessors[idx];
             if (!processor) {
                 continue;
             }
@@ -104,4 +103,16 @@ export class MultiLogRecordProcessor implements IOTelLogRecordProcessor {
             return undefined;
         });
     }
+
+    return {
+        get processors(): IOTelLogRecordProcessor[] {
+            return registeredProcessors;
+        },
+        get forceFlushTimeoutMillis(): number {
+            return timeout;
+        },
+        forceFlush,
+        onEmit,
+        shutdown
+    };
 }

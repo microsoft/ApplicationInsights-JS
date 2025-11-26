@@ -16,114 +16,105 @@ import { isAttributeValue } from "../internal/attributeHelpers";
 import { timeInputToHrTime } from "../internal/timeHelpers";
 import { IOTelSpanContext } from "../otel-core-js";
 
-export class IOTelLogRecordImpl implements ReadableLogRecord {
-    readonly hrTime: IOTelHrTime;
-    readonly hrTimeObserved: IOTelHrTime;
-    readonly spanContext?: IOTelSpanContext;
-    readonly resource: IOTelResource;
-    readonly instrumentationScope: IOTelInstrumentationScope;
-    readonly attributes: LogAttributes = {};
-    private _severityText?: string;
-    private _severityNumber?: OTelSeverityNumber;
-    private _body?: LogBody;
-    private _eventName?: string;
-    private totalAttributesCount: number = 0;
+export interface IOTelLogRecordInstance extends ReadableLogRecord {
+    setAttribute(key: string, value?: OTelAnyValue): IOTelLogRecordInstance;
+    setAttributes(attributes: LogAttributes): IOTelLogRecordInstance;
+    setBody(body: LogBody): IOTelLogRecordInstance;
+    setEventName(eventName: string): IOTelLogRecordInstance;
+    setSeverityNumber(severityNumber: OTelSeverityNumber): IOTelLogRecordInstance;
+    setSeverityText(severityText: string): IOTelLogRecordInstance;
+    _makeReadonly(): void;
+}
 
-    private _isReadonly: boolean = false;
-    private readonly _logRecordLimits: Required<IOTelLogRecordLimits>;
+export function createLogRecord(
+    sharedState: LoggerProviderSharedState,
+    instrumentationScope: IOTelInstrumentationScope,
+    logRecord: IOTelLogRecord
+): IOTelLogRecordInstance {
+    const {
+        timestamp,
+        observedTimestamp,
+        eventName,
+        severityNumber,
+        severityText,
+        body,
+        attributes,
+        context
+    } = logRecord;
 
-    set severityText(severityText: string | undefined) {
-        if (this._isLogRecordReadonly()) {
-            return;
+    const logAttributes = attributes || {};
+    const now = Date.now();
+    const hrTime = timeInputToHrTime(timestamp || now);
+    const hrTimeObserved = timeInputToHrTime(observedTimestamp || now);
+    const resource = sharedState.resource;
+    const logRecordLimits: Required<IOTelLogRecordLimits> = sharedState.logRecordLimits;
+
+    let spanContext: IOTelSpanContext | undefined;
+    if (context) {
+        const activeSpanContext = getContextActiveSpanContext(context);
+        if (activeSpanContext && isSpanContextValid(activeSpanContext)) {
+            spanContext = activeSpanContext;
         }
-        this._severityText = severityText;
-    }
-    get severityText(): string | undefined {
-        return this._severityText;
     }
 
-    set severityNumber(severityNumber: OTelSeverityNumber | undefined) {
-        if (this._isLogRecordReadonly()) {
-            return;
+    const recordAttributes: LogAttributes = {};
+    let storedSeverityText: string | undefined = severityText;
+    let storedSeverityNumber: OTelSeverityNumber | undefined = severityNumber;
+    let storedBody: LogBody | undefined = body;
+    let storedEventName: string | undefined = eventName;
+    let totalAttributesCount = 0;
+    let isReadonly = false;
+
+    let logRecordInstance: IOTelLogRecordInstance;
+
+    function getDroppedAttributesCount(): number {
+        return totalAttributesCount - Object.keys(recordAttributes).length;
+    }
+
+    function truncateToLimit(value: string, limit: number): string {
+        if (value.length <= limit) {
+            return value;
         }
-        this._severityNumber = severityNumber;
-    }
-    get severityNumber(): OTelSeverityNumber | undefined {
-        return this._severityNumber;
+        return value.substring(0, limit);
     }
 
-    set body(body: LogBody | undefined) {
-        if (this._isLogRecordReadonly()) {
-            return;
+    function truncateToSize(value: OTelAttributeValue): OTelAttributeValue {
+        const limit = logRecordLimits.attributeValueLengthLimit;
+        if (limit <= 0) {
+            console.warn("Attribute value limit must be positive, got " + limit);
+            return value;
         }
-        this._body = body;
-    }
-    get body(): LogBody | undefined {
-        return this._body;
-    }
 
-    get eventName(): string | undefined {
-        return this._eventName;
-    }
-    set eventName(eventName: string | undefined) {
-        if (this._isLogRecordReadonly()) {
-            return;
+        if (typeof value === "string") {
+            return truncateToLimit(value, limit);
         }
-        this._eventName = eventName;
-    }
 
-    get droppedAttributesCount(): number {
-        return this.totalAttributesCount - Object.keys(this.attributes).length;
-    }
-
-    constructor(
-        _sharedState: LoggerProviderSharedState,
-        instrumentationScope: IOTelInstrumentationScope,
-        logRecord: IOTelLogRecord
-    ) {
-        const {
-            timestamp,
-            observedTimestamp,
-            eventName,
-            severityNumber,
-            severityText,
-            body,
-            attributes,
-            context
-        } = logRecord;
-
-        const logAttributes = attributes || {};
-
-        const now = Date.now();
-        this.hrTime = timeInputToHrTime(timestamp || now);
-        this.hrTimeObserved = timeInputToHrTime(observedTimestamp || now);
-
-        if (context) {
-            const spanContext = getContextActiveSpanContext(context);
-            if (spanContext && isSpanContextValid(spanContext)) {
-                this.spanContext = spanContext;
-            }
+        if (Array.isArray(value)) {
+            return (value as []).map(function (val) {
+                return typeof val === "string" ? truncateToLimit(val, limit) : val;
+            });
         }
-        this.severityNumber = severityNumber;
-        this.severityText = severityText;
-        this.body = body;
-        this.resource = _sharedState.resource;
-        this.instrumentationScope = instrumentationScope;
-        this._logRecordLimits = _sharedState.logRecordLimits;
-        this._eventName = eventName;
-        this.setAttributes(logAttributes);
+
+        return value;
     }
 
-    public setAttribute(key: string, value?: OTelAnyValue) {
-        if (this._isLogRecordReadonly()) {
-            return this;
+    function isLogRecordReadonly(): boolean {
+        if (isReadonly) {
+            console.warn("Can not execute the operation on emitted log record");
+        }
+        return isReadonly;
+    }
+
+    function setAttributeInternal(key: string, value?: OTelAnyValue): IOTelLogRecordInstance {
+        if (isLogRecordReadonly()) {
+            return logRecordInstance;
         }
         if (value === null) {
-            return this;
+            return logRecordInstance;
         }
         if (key.length === 0) {
-            console.warn(`Invalid attribute key: ${key}`);
-            return this;
+            console.warn("Invalid attribute key: " + key);
+            return logRecordInstance;
         }
         if (
             !isAttributeValue(value) &&
@@ -133,101 +124,157 @@ export class IOTelLogRecordImpl implements ReadableLogRecord {
                 Object.keys(value).length > 0
             )
         ) {
-            console.warn(`Invalid attribute value set for key: ${key}`);
-            return this;
+            console.warn("Invalid attribute value set for key: " + key);
+            return logRecordInstance;
         }
-        this.totalAttributesCount += 1;
+
+        totalAttributesCount += 1;
         if (
-            Object.keys(this.attributes).length >=
-                this._logRecordLimits.attributeCountLimit &&
-            !Object.prototype.hasOwnProperty.call(this.attributes, key)
+            Object.keys(recordAttributes).length >= logRecordLimits.attributeCountLimit &&
+            !Object.prototype.hasOwnProperty.call(recordAttributes, key)
         ) {
-            // This logic is to create drop message at most once per LogRecord to prevent excessive logging.
-            if (this.droppedAttributesCount === 1) {
+            if (getDroppedAttributesCount() === 1) {
                 console.warn("Dropping extra attributes.");
             }
-            return this;
+            return logRecordInstance;
         }
+
         if (isAttributeValue(value)) {
-            this.attributes[key] = this._truncateToSize(value);
+            recordAttributes[key] = truncateToSize(value);
         } else {
-            this.attributes[key] = value;
-        }
-        return this;
-    }
-
-    public setAttributes(attributes: LogAttributes) {
-        for (const [k, v] of Object.entries(attributes)) {
-            this.setAttribute(k, v);
-        }
-        return this;
-    }
-
-    public setBody(body: LogBody) {
-        this.body = body;
-        return this;
-    }
-
-    public setEventName(eventName: string) {
-        this.eventName = eventName;
-        return this;
-    }
-
-    public setSeverityNumber(severityNumber: OTelSeverityNumber) {
-        this.severityNumber = severityNumber;
-        return this;
-    }
-
-    public setSeverityText(severityText: string) {
-        this.severityText = severityText;
-        return this;
-    }
-
-    /**
-     * @internal
-     * A LogRecordProcessor may freely modify logRecord for the duration of the OnEmit call.
-     * If logRecord is needed after OnEmit returns (i.e. for asynchronous processing) only reads are permitted.
-     */
-    _makeReadonly() {
-        this._isReadonly = true;
-    }
-
-    private _truncateToSize(value: OTelAttributeValue): OTelAttributeValue {
-        const limit = this._logRecordLimits.attributeValueLengthLimit;
-        // Check limit
-        if (limit <= 0) {
-        // Negative values are invalid, so do not truncate
-            console.warn(`Attribute value limit must be positive, got ${limit}`);
-            return value;
+            recordAttributes[key] = value;
         }
 
-        // String
-        if (typeof value === "string") {
-            return this._truncateToLimitUtil(value, limit);
-        }
-
-        // Array of strings
-        if (Array.isArray(value)) {
-            return (value as []).map(val =>
-                typeof val === "string" ? this._truncateToLimitUtil(val, limit) : val
-            );
-        }
-
-        // Other types, no need to apply value length limit
-        return value;
+        return logRecordInstance;
     }
 
-    private _truncateToLimitUtil(value: string, limit: number): string {
-        if (value.length <= limit) {
-            return value;
+    function setAttributesInternal(attributesToSet: LogAttributes): IOTelLogRecordInstance {
+        const entries = Object.entries(attributesToSet);
+        for (let idx = 0; idx < entries.length; idx++) {
+            const attribute = entries[idx];
+            const attributeKey = attribute[0];
+            const attributeValue = attribute.length > 1 ? attribute[1] : undefined;
+            setAttributeInternal(attributeKey, attributeValue);
         }
-        return value.substring(0, limit);
+        return logRecordInstance;
     }
 
-    private _isLogRecordReadonly(): boolean {
-        if (this._isReadonly) {
-            console.warn("Can not execute the operation on emitted log record");
+    function setBodyInternal(value: LogBody): IOTelLogRecordInstance {
+        if (isLogRecordReadonly()) {
+            return logRecordInstance;
         }
-        return this._isReadonly;
+        storedBody = value;
+        return logRecordInstance;
     }
+
+    function setEventNameInternal(value: string): IOTelLogRecordInstance {
+        if (isLogRecordReadonly()) {
+            return logRecordInstance;
+        }
+        storedEventName = value;
+        return logRecordInstance;
+    }
+
+    function setSeverityNumberInternal(value: OTelSeverityNumber): IOTelLogRecordInstance {
+        if (isLogRecordReadonly()) {
+            return logRecordInstance;
+        }
+        storedSeverityNumber = value;
+        return logRecordInstance;
+    }
+
+    function setSeverityTextInternal(value: string): IOTelLogRecordInstance {
+        if (isLogRecordReadonly()) {
+            return logRecordInstance;
+        }
+        storedSeverityText = value;
+        return logRecordInstance;
+    }
+
+    function makeReadonly(): void {
+        isReadonly = true;
+    }
+
+    logRecordInstance = {
+        get hrTime(): IOTelHrTime {
+            return hrTime;
+        },
+        get hrTimeObserved(): IOTelHrTime {
+            return hrTimeObserved;
+        },
+        get spanContext(): IOTelSpanContext | undefined {
+            return spanContext;
+        },
+        get resource(): IOTelResource {
+            return resource;
+        },
+        get instrumentationScope(): IOTelInstrumentationScope {
+            return instrumentationScope;
+        },
+        get attributes(): LogAttributes {
+            return recordAttributes;
+        },
+        get severityText(): string | undefined {
+            return storedSeverityText;
+        },
+        set severityText(value: string | undefined) {
+            if (value === undefined) {
+                if (!isLogRecordReadonly()) {
+                    storedSeverityText = undefined;
+                }
+            } else {
+                setSeverityTextInternal(value);
+            }
+        },
+        get severityNumber(): OTelSeverityNumber | undefined {
+            return storedSeverityNumber;
+        },
+        set severityNumber(value: OTelSeverityNumber | undefined) {
+            if (value === undefined) {
+                if (!isLogRecordReadonly()) {
+                    storedSeverityNumber = undefined;
+                }
+            } else {
+                setSeverityNumberInternal(value);
+            }
+        },
+        get body(): LogBody | undefined {
+            return storedBody;
+        },
+        set body(value: LogBody | undefined) {
+            if (value === undefined) {
+                if (!isLogRecordReadonly()) {
+                    storedBody = undefined;
+                }
+            } else {
+                setBodyInternal(value);
+            }
+        },
+        get eventName(): string | undefined {
+            return storedEventName;
+        },
+        set eventName(value: string | undefined) {
+            if (value === undefined) {
+                if (!isLogRecordReadonly()) {
+                    storedEventName = undefined;
+                }
+            } else {
+                setEventNameInternal(value);
+            }
+        },
+        get droppedAttributesCount(): number {
+            return getDroppedAttributesCount();
+        },
+        setAttribute: setAttributeInternal,
+        setAttributes: setAttributesInternal,
+        setBody: setBodyInternal,
+        setEventName: setEventNameInternal,
+        setSeverityNumber: setSeverityNumberInternal,
+        setSeverityText: setSeverityTextInternal,
+        _makeReadonly: makeReadonly
+    };
+
+    setAttributesInternal(logAttributes);
+
+    return logRecordInstance;
 }

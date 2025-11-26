@@ -1,9 +1,8 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
-import { LoggerProvider } from "../../../../src/sdk/IOTelLoggerProvider";
-import { NoopLogRecordProcessor } from "../../../../src/interfaces/logs/IOTelNoopLogRecordProcessor";
-import { IOTelLogRecordImpl } from "../../../../src/sdk/IOTelLogRecordImpl";
+import { createLoggerProvider } from "../../../../src/sdk/IOTelLoggerProvider";
+import { createNoopLogRecordProcessor } from "../../../../src/api/noop/noopLogRecordProcessor";
 import { createContext } from "../../../../src/api/context/context";
-import { Logger } from "../../../../src/sdk/IOTelLogger";
+import { IOTelLoggerInstance } from "../../../../src/sdk/IOTelLogger";
 import { IOTelLogRecord } from "../../../../src/interfaces/logs/IOTelLogRecord";
 import { IOTelSpanContext } from "../../../../src/interfaces/trace/IOTelSpanContext";
 import { eW3CTraceFlags } from "@microsoft/applicationinsights-common";
@@ -20,23 +19,25 @@ export class IOTelLoggerTests extends AITestClass {
     }
 
     private setup() {
-        const logProcessor = new NoopLogRecordProcessor();
-        const provider = new LoggerProvider({
+        const logProcessor = createNoopLogRecordProcessor();
+        const provider = createLoggerProvider({
             processors: [logProcessor]
         });
         const logger = provider.getLogger("test name", "test version", {
             schemaUrl: "test schema url"
-        }) as Logger;
+        }) as IOTelLoggerInstance;
         return { logger, logProcessor };
     }
 
     public registerTests() {
         
         this.testCase({
-            name: "Logger: constructor",
+            name: "Logger: factory returns logger instance",
             test: () => {
                 const { logger } = this.setup();
-                Assert.ok(logger instanceof Logger, "Should create a Logger instance");
+                Assert.equal(logger.instrumentationScope.name, "test name", "Should set instrumentation scope name");
+                Assert.equal(logger.instrumentationScope.version, "test version", "Should set instrumentation scope version");
+                Assert.equal(typeof logger.emit, "function", "Should expose emit implementation");
             }
         });
 
@@ -56,13 +57,19 @@ export class IOTelLoggerTests extends AITestClass {
         this.testCase({
             name: "Logger: should make log record instance readonly after emit it",
             test: () => {
-                const { logger } = this.setup();
-                const makeOnlySpy = this.sandbox.spy(IOTelLogRecordImpl.prototype, "_makeReadonly");
+                const { logger, logProcessor } = this.setup();
+                let readonlyCalled = false;
+                this.sandbox.stub(logProcessor, "onEmit").callsFake((logRecord) => {
+                    const originalMakeReadonly = logRecord._makeReadonly;
+                    logRecord._makeReadonly = () => {
+                        readonlyCalled = true;
+                        originalMakeReadonly.call(logRecord);
+                    };
+                });
                 logger.emit({
                     body: "test log body"
                 });
-                Assert.ok(makeOnlySpy.called, "_makeReadonly should be called");
-                makeOnlySpy.restore();
+                Assert.ok(readonlyCalled, "_makeReadonly should be called");
             }
         });
 

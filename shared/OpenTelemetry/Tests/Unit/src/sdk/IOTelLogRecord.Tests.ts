@@ -1,9 +1,9 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 
 import { IOTelLogRecord } from "../../../../src/interfaces/logs/IOTelLogRecord";
-import { LoggerProviderSharedState } from "../../../../src/internal/LoggerProviderSharedState";
+import { createLoggerProviderSharedState } from "../../../../src/internal/LoggerProviderSharedState";
 import { reconfigureLimits } from "../../../../src/sdk/config";
-import { IOTelLogRecordImpl } from "../../../../src/sdk/IOTelLogRecordImpl";
+import { IOTelLogRecordInstance, createLogRecord } from "../../../../src/sdk/IOTelLogRecordImpl";
 import { IOTelLogRecordLimits } from "../../../../src/interfaces/logs/IOTelLogRecordLimits";
 
 const setup = (logRecordLimits?: IOTelLogRecordLimits, data?: IOTelLogRecord) => {
@@ -12,13 +12,13 @@ const setup = (logRecordLimits?: IOTelLogRecordLimits, data?: IOTelLogRecord) =>
         version: "test version",
         schemaUrl: "test schema url"
     };
-    const sharedState = new LoggerProviderSharedState(
+    const sharedState = createLoggerProviderSharedState(
         undefined as any,
         Infinity,
         reconfigureLimits(logRecordLimits ?? {}),
         []
     );
-    const logRecord = new IOTelLogRecordImpl(
+    const logRecord = createLogRecord(
         sharedState,
         instrumentationScope,
         data ?? {}
@@ -40,7 +40,7 @@ export class IOTelLogRecordTests extends AITestClass {
             name: "LogRecord: constructor - should create an instance",
             test: () => {
                 const { logRecord } = setup();
-                Assert.ok(logRecord instanceof IOTelLogRecordImpl, "LogRecord should be created");
+                Assert.ok(logRecord && typeof logRecord === "object", "LogRecord should be created");
             }
         });
 
@@ -150,7 +150,7 @@ export class IOTelLogRecordTests extends AITestClass {
                 };
                 const { logRecord } = setup(undefined, logRecordData);
                 const newBody = "this is a new body";
-                logRecord.body = newBody;
+                logRecord.setBody(newBody);
                 Assert.equal(logRecord.body, newBody, "Body should be updated");
             }
         });
@@ -177,7 +177,7 @@ export class IOTelLogRecordTests extends AITestClass {
                 const { logRecord } = setup(undefined, logRecordData);
                 logRecord._makeReadonly();
                 const newBody = "this is a new body";
-                logRecord.body = newBody;
+                logRecord.setBody(newBody);
                 Assert.equal(logRecord.body, logRecordData.body, "Body should not be changed after makeReadonly");
             }
         });

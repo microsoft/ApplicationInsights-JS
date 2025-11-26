@@ -4,8 +4,8 @@ import { createPromise, IPromise } from "@nevware21/ts-async";
 import { IOTelContext } from "../../../../src/interfaces/context/IOTelContext";
 import { IOTelLogRecordProcessor } from "../../../../src/interfaces/logs/IOTelLogRecordProcessor";
 import { IOTelSdkLogRecord } from "../../../../src/interfaces/logs/IOTelSdkLogRecord";
-import { LoggerProvider } from "../../../../src/sdk/IOTelLoggerProvider";
-import { MultiLogRecordProcessor } from "../../../../src/sdk/IOTelMultiLogRecordProcessor";
+import { createLoggerProvider } from "../../../../src/sdk/IOTelLoggerProvider";
+import { createMultiLogRecordProcessor } from "../../../../src/sdk/IOTelMultiLogRecordProcessor";
 import { loadDefaultConfig } from "../../../../src/sdk/config";
 
 class TestProcessor implements IOTelLogRecordProcessor {
@@ -39,7 +39,7 @@ class TestProcessor implements IOTelLogRecordProcessor {
 
 const setup = (processors?: IOTelLogRecordProcessor[]) => {
     const { forceFlushTimeoutMillis } = loadDefaultConfig();
-    const multiProcessor = new MultiLogRecordProcessor(
+    const multiProcessor = createMultiLogRecordProcessor(
         processors || [],
         forceFlushTimeoutMillis
     );
@@ -60,7 +60,9 @@ export class IOTelMultiLogRecordProcessorTests extends AITestClass {
             name: "MultiLogRecordProcessor: constructor - should create an instance",
             test: () => {
                 const { multiProcessor } = setup();
-                Assert.ok(multiProcessor instanceof MultiLogRecordProcessor, "Should create MultiLogRecordProcessor instance");
+                Assert.ok(!!multiProcessor, "Should create MultiLogRecordProcessor instance");
+                Assert.equal(typeof multiProcessor.forceFlush, "function", "Should expose forceFlush method");
+                Assert.equal(typeof multiProcessor.shutdown, "function", "Should expose shutdown method");
             }
         });
 
@@ -68,7 +70,7 @@ export class IOTelMultiLogRecordProcessorTests extends AITestClass {
             name: "MultiLogRecordProcessor: onEmit - should no-op when no processors registered",
             test: () => {
                 const { multiProcessor } = setup();
-                const provider = new LoggerProvider({ processors: [multiProcessor] });
+                const provider = createLoggerProvider({ processors: [multiProcessor] });
                 const logger = provider.getLogger("default");
                 logger.emit({ body: "message" });
                 Assert.ok(true, "Emit should not throw when no processors registered");
@@ -80,7 +82,7 @@ export class IOTelMultiLogRecordProcessorTests extends AITestClass {
             test: () => {
                 const processor = new TestProcessor();
                 const { multiProcessor } = setup([processor]);
-                const provider = new LoggerProvider({ processors: [multiProcessor] });
+                const provider = createLoggerProvider({ processors: [multiProcessor] });
                 const logger = provider.getLogger("default");
                 Assert.equal(processor.logRecords.length, 0, "Processor should start with no records");
                 logger.emit({ body: "one" });
@@ -94,7 +96,7 @@ export class IOTelMultiLogRecordProcessorTests extends AITestClass {
                 const processor1 = new TestProcessor();
                 const processor2 = new TestProcessor();
                 const { multiProcessor } = setup([processor1, processor2]);
-                const provider = new LoggerProvider({ processors: [multiProcessor] });
+                const provider = createLoggerProvider({ processors: [multiProcessor] });
                 const logger = provider.getLogger("default");
 
                 Assert.equal(processor1.logRecords.length, 0, "Processor1 should start empty");
@@ -206,7 +208,7 @@ export class IOTelMultiLogRecordProcessorTests extends AITestClass {
                 const processor1 = new TestProcessor();
                 const processor2 = new TestProcessor();
                 const { multiProcessor } = setup([processor1, processor2]);
-                const provider = new LoggerProvider({ processors: [multiProcessor] });
+                const provider = createLoggerProvider({ processors: [multiProcessor] });
                 const logger = provider.getLogger("default");
 
                 logger.emit({ body: "one" });

@@ -6,15 +6,17 @@ import { IOTelLogRecord } from "../interfaces/logs/IOTelLogRecord";
 import { IOTelLogger } from "../interfaces/logs/IOTelLogger";
 import { IOTelInstrumentationScope } from "../interfaces/trace/IOTelInstrumentationScope";
 import { LoggerProviderSharedState } from "../internal/LoggerProviderSharedState";
-import { IOTelLogRecordImpl } from "./IOTelLogRecordImpl";
+import { createLogRecord } from "./IOTelLogRecordImpl";
 
-export class Logger implements IOTelLogger {
-    constructor(
-    public readonly instrumentationScope: IOTelInstrumentationScope,
-    private _sharedState: LoggerProviderSharedState
-    ) {}
+export interface IOTelLoggerInstance extends IOTelLogger {
+    readonly instrumentationScope: IOTelInstrumentationScope;
+}
 
-    public emit(logRecord: IOTelLogRecord): void {
+export function createLogger(
+    instrumentationScope: IOTelInstrumentationScope,
+    sharedState: LoggerProviderSharedState
+): IOTelLoggerInstance {
+    function emit(logRecord: IOTelLogRecord): void {
         const contextManager = createContextManager();
         const currentContext = logRecord.context || contextManager.active();
         /**
@@ -33,20 +35,23 @@ export class Logger implements IOTelLogger {
             attributes: logRecord.attributes
         };
 
-        const logRecordInstance = new IOTelLogRecordImpl(
-            this._sharedState,
-            this.instrumentationScope,
-            logRecordData
-        );
+        const logRecordInstance = createLogRecord(sharedState, instrumentationScope, logRecordData);
         /**
          * the explicitly passed Context,
          * the current Context, or an empty Context if the Logger was obtained with include_trace_context=false
          */
-        this._sharedState.activeProcessor.onEmit(logRecordInstance, currentContext);
+        sharedState.activeProcessor.onEmit(logRecordInstance, currentContext);
         /**
          * A LogRecordProcessor may freely modify logRecord for the duration of the OnEmit call.
          * If logRecord is needed after OnEmit returns (i.e. for asynchronous processing) only reads are permitted.
          */
         logRecordInstance._makeReadonly();
     }
+
+    return {
+        get instrumentationScope(): IOTelInstrumentationScope {
+            return instrumentationScope;
+        },
+        emit
+    };
 }
