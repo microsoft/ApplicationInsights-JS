@@ -1,4 +1,5 @@
 
+import { IPromise, createPromise, doAwait } from "@nevware21/ts-async";
 import { dumpObj, fnApply } from "@nevware21/ts-utils";
 import { IOTelErrorHandlers } from "../interfaces/config/IOTelErrorHandlers";
 
@@ -102,4 +103,64 @@ export function handleNotImplemented(handlers: IOTelErrorHandlers, message: stri
             fnApply(fn, console, [message]);
         }
     }
+}
+
+/**
+ * Adds a timeout to a promise and rejects if the specified timeout has elapsed.
+ * Reports the timeout through the configured error handlers before rejecting.
+ *
+ * @param handlers - The configured error handlers to notify.
+ * @param promise - The promise to guard with the timeout.
+ * @param timeout - Timeout in milliseconds before the promise is rejected.
+ */
+
+export function callWithTimeout<T>(
+    handlers: IOTelErrorHandlers,
+    promise: Promise<T>,
+    timeout: number
+): IPromise<T> {
+    let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
+    let isSettled = false;
+
+    function _cleanup() {
+        if (timeoutHandle !== null) {
+            clearTimeout(timeoutHandle);
+            timeoutHandle = null;
+        }
+    }
+
+    function _createTimeoutError(): Error {
+        const timeoutError = new Error("Operation timed out.");
+        timeoutError.name = "TimeoutError";
+        return timeoutError;
+    }
+
+    return createPromise<T>(function (resolve, reject) {
+        timeoutHandle = setTimeout(function timeoutHandler() {
+            if (!isSettled) {
+                isSettled = true;
+                _cleanup();
+                handleError(handlers, "Operation timed out.");
+                reject(_createTimeoutError());
+            }
+        }, timeout);
+
+        doAwait(
+            promise,
+            function (result) {
+                if (!isSettled) {
+                    isSettled = true;
+                    _cleanup();
+                    resolve(result);
+                }
+            },
+            function (reason) {
+                if (!isSettled) {
+                    isSettled = true;
+                    _cleanup();
+                    reject(reason);
+                }
+            }
+        );
+    });
 }
