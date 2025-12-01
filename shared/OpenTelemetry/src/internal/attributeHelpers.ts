@@ -40,7 +40,6 @@ export function isAttributeKey(key: unknown): key is string {
   
 export function isAttributeValue(val: unknown): val is OTelAttributeValue {
     let result = (val === null || _isSupportedType(typeof val));
-
     if (!val && isArray(val)) {
         result = _isHomogeneousArray(val);
     }
