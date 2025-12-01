@@ -7,7 +7,9 @@ import { IOTelLogger } from "../interfaces/logs/IOTelLogger";
 import { IOTelLoggerOptions } from "../interfaces/logs/IOTelLoggerOptions";
 import { IOTelLoggerProvider } from "../interfaces/logs/IOTelLoggerProvider";
 import { IOTelLoggerProviderConfig } from "../interfaces/logs/IOTelLoggerProviderConfig";
-import { LoggerProviderSharedState, createLoggerProviderSharedState } from "../internal/LoggerProviderSharedState";
+import { IOTelLoggerProviderSharedState, createLoggerProviderSharedState } from "../internal/IOTelLoggerProviderSharedState";
+import { handleWarn } from "../internal/commonUtils";
+import { IOTelErrorHandlers } from "../otel-core-js";
 import { createResource } from "../resource/resource";
 import { createLogger } from "./IOTelLogger";
 import { loadDefaultConfig, reconfigureLimits } from "./config";
@@ -17,7 +19,7 @@ export const DEFAULT_LOGGER_NAME = "unknown";
 export interface IOTelLoggerProviderInstance extends IOTelLoggerProvider {
     forceFlush(): IPromise<void>;
     shutdown(): IPromise<void>;
-    readonly _sharedState: LoggerProviderSharedState;
+    readonly _sharedState: IOTelLoggerProviderSharedState;
 }
 
 export function createLoggerProvider(
@@ -42,6 +44,7 @@ export function createLoggerProvider(
     );
 
     let isShutdown = false;
+    const handlers: IOTelErrorHandlers = {};
 
     function getLogger(
         name: string,
@@ -49,12 +52,12 @@ export function createLoggerProvider(
         options?: IOTelLoggerOptions
     ): IOTelLogger {
         if (isShutdown) {
-            console.warn("A shutdown LoggerProvider cannot provide a Logger");
+            handleWarn(handlers, "A shutdown LoggerProvider cannot provide a Logger");
             return createNoopLogger();
         }
 
         if (!name) {
-            console.warn("Logger requested without instrumentation scope name.");
+            handleWarn(handlers, "Logger requested without instrumentation scope name.");
         }
 
         const loggerName = name || DEFAULT_LOGGER_NAME;
@@ -76,7 +79,7 @@ export function createLoggerProvider(
 
     function forceFlush(): IPromise<void> {
         if (isShutdown) {
-            console.warn("invalid attempt to force flush after LoggerProvider shutdown");
+            handleWarn(handlers, "invalid attempt to force flush after LoggerProvider shutdown");
             return Promise.resolve();
         }
 
@@ -85,7 +88,7 @@ export function createLoggerProvider(
 
     function shutdown(): IPromise<void> {
         if (isShutdown) {
-            console.warn("shutdown may only be called once per LoggerProvider");
+            handleWarn(handlers, "shutdown may only be called once per LoggerProvider");
             return Promise.resolve();
         }
 
@@ -97,7 +100,7 @@ export function createLoggerProvider(
         getLogger,
         forceFlush,
         shutdown,
-        get _sharedState(): LoggerProviderSharedState {
+        get _sharedState(): IOTelLoggerProviderSharedState {
             return sharedState;
         }
     };

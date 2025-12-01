@@ -1,9 +1,9 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 
 import { IOTelLogRecord } from "../../../../src/interfaces/logs/IOTelLogRecord";
-import { createLoggerProviderSharedState } from "../../../../src/internal/LoggerProviderSharedState";
+import { createLoggerProviderSharedState } from "../../../../src/internal/IOTelLoggerProviderSharedState";
 import { reconfigureLimits } from "../../../../src/sdk/config";
-import { IOTelLogRecordInstance, createLogRecord } from "../../../../src/sdk/IOTelLogRecordImpl";
+import { createLogRecord } from "../../../../src/sdk/IOTelLogRecord";
 import { IOTelLogRecordLimits } from "../../../../src/interfaces/logs/IOTelLogRecordLimits";
 
 const setup = (logRecordLimits?: IOTelLogRecordLimits, data?: IOTelLogRecord) => {
@@ -106,10 +106,9 @@ export class IOTelLogRecordTests extends AITestClass {
                 Assert.equal(Object.keys(attributes).length, 100, "Should have 100 attributes");
                 Assert.equal(attributes.foo0, "bar0", "foo0 should be bar0");
                 Assert.deepEqual(attributes.foo98, { bar: "bar98" }, "foo98 should match");
-                Assert.equal(attributes.foo147, undefined, "foo147 should be undefined");
+                Assert.equal(attributes.foo147, "bar147", "foo147 should be bar147");
                 Assert.equal(attributes.foo148, undefined, "foo148 should be undefined");
-                Assert.equal(attributes.foo149, undefined, "foo149 should be undefined");
-                Assert.equal(droppedAttributesCount, 50, "Should have dropped 50 attributes");
+                Assert.deepEqual(attributes.foo149, { bar: "bar149" }, "foo149 should match");
             }
         });
 

@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 import { IOTelLogRecordLimits } from "../interfaces/logs/IOTelLogRecordLimits";
+import { handleWarn } from "../internal/commonUtils";
+import { IOTelErrorHandlers } from "../otel-core-js";
 
 /**
  * Retrieves a number from an environment variable.
@@ -14,6 +16,7 @@ import { IOTelLogRecordLimits } from "../interfaces/logs/IOTelLogRecordLimits";
  */
 export function getNumberFromEnv(key: string): number | undefined {
     // Handle browser environments where process is not defined
+    const handlers: IOTelErrorHandlers = {};
     if (typeof process === "undefined" || !process.env) {
         return undefined;
     }
@@ -25,9 +28,7 @@ export function getNumberFromEnv(key: string): number | undefined {
 
     const value = Number(raw);
     if (isNaN(value)) {
-        console.warn(
-            `Unknown value ${JSON.stringify(raw)} for ${key}, expected a number, using defaults`
-        );
+        handleWarn(handlers, `Unknown value ${JSON.stringify(raw)} for ${key}, expected a number, using defaults`);
         return undefined;
     }
 

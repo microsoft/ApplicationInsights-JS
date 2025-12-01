@@ -1,5 +1,5 @@
 
-import { IPromise, createPromise, doAwait } from "@nevware21/ts-async";
+import { IPromise, createRacePromise, createTimeoutPromise } from "@nevware21/ts-async";
 import { dumpObj, fnApply } from "@nevware21/ts-utils";
 import { IOTelErrorHandlers } from "../interfaces/config/IOTelErrorHandlers";
 
@@ -119,48 +119,21 @@ export function callWithTimeout<T>(
     promise: Promise<T>,
     timeout: number
 ): IPromise<T> {
-    let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
-    let isSettled = false;
+    const timeoutMessage = "Operation timed out.";
+    const timeoutError = new Error(timeoutMessage);
+    timeoutError.name = "TimeoutError";
+    (timeoutError as { __otelTimeout?: boolean }).__otelTimeout = true;
 
-    function _cleanup() {
-        if (timeoutHandle !== null) {
-            clearTimeout(timeoutHandle);
-            timeoutHandle = null;
+    const racedPromise = createRacePromise<T>([
+        promise,
+        createTimeoutPromise<Error>(timeout, false, timeoutError) as unknown as PromiseLike<T>
+    ]);
+
+    return racedPromise.catch((error) => {
+        if (error && (error === timeoutError || (error as { __otelTimeout?: boolean }).__otelTimeout)) {
+            handleError(handlers, timeoutMessage);
         }
-    }
 
-    function _createTimeoutError(): Error {
-        const timeoutError = new Error("Operation timed out.");
-        timeoutError.name = "TimeoutError";
-        return timeoutError;
-    }
-
-    return createPromise<T>(function (resolve, reject) {
-        timeoutHandle = setTimeout(function timeoutHandler() {
-            if (!isSettled) {
-                isSettled = true;
-                _cleanup();
-                handleError(handlers, "Operation timed out.");
-                reject(_createTimeoutError());
-            }
-        }, timeout);
-
-        doAwait(
-            promise,
-            function (result) {
-                if (!isSettled) {
-                    isSettled = true;
-                    _cleanup();
-                    resolve(result);
-                }
-            },
-            function (reason) {
-                if (!isSettled) {
-                    isSettled = true;
-                    _cleanup();
-                    reject(reason);
-                }
-            }
-        );
+        throw error;
     });
 }

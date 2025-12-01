@@ -5,7 +5,7 @@ import { createNoopLogger } from "../../../../src/api/noop/noopLogger";
 import { IOTelAttributes } from "../../../../src/interfaces/IOTelAttributes";
 import { IOTelLogRecord } from "../../../../src/interfaces/logs/IOTelLogRecord";
 import { createNoopLogRecordProcessor } from "../../../../src/api/noop/noopLogRecordProcessor";
-import { LoggerProviderSharedState } from "../../../../src/internal/LoggerProviderSharedState";
+import { IOTelLoggerProviderSharedState } from "../../../../src/internal/IOTelLoggerProviderSharedState";
 import { DEFAULT_LOGGER_NAME, IOTelLoggerProviderInstance, createLoggerProvider } from "../../../../src/sdk/IOTelLoggerProvider";
 import { IOTelLoggerInstance } from "../../../../src/sdk/IOTelLogger";
 import { IOTelMultiLogRecordProcessorInstance } from "../../../../src/sdk/IOTelMultiLogRecordProcessor";
@@ -366,7 +366,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
         });
     }
 
-    private _getSharedState(provider: IOTelLoggerProviderInstance): LoggerProviderSharedState {
+    private _getSharedState(provider: IOTelLoggerProviderInstance): IOTelLoggerProviderSharedState {
         return provider._sharedState;
     }
 

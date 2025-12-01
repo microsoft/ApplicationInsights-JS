@@ -11,10 +11,11 @@ import { ReadableLogRecord } from "../interfaces/logs/IOTelReadableLogRecord";
 import { IOTelResource } from "../interfaces/resources/IOTelResource";
 import { IOTelHrTime } from "../interfaces/time";
 import { IOTelInstrumentationScope } from "../interfaces/trace/IOTelInstrumentationScope";
-import { LoggerProviderSharedState } from "../internal/LoggerProviderSharedState";
+import { IOTelLoggerProviderSharedState } from "../internal/IOTelLoggerProviderSharedState";
 import { isAttributeValue } from "../internal/attributeHelpers";
+import { handleWarn } from "../internal/commonUtils";
 import { timeInputToHrTime } from "../internal/timeHelpers";
-import { IOTelSpanContext } from "../otel-core-js";
+import { IOTelErrorHandlers, IOTelSpanContext } from "../otel-core-js";
 
 export interface IOTelLogRecordInstance extends ReadableLogRecord {
     setAttribute(key: string, value?: OTelAnyValue): IOTelLogRecordInstance;
@@ -27,7 +28,7 @@ export interface IOTelLogRecordInstance extends ReadableLogRecord {
 }
 
 export function createLogRecord(
-    sharedState: LoggerProviderSharedState,
+    sharedState: IOTelLoggerProviderSharedState,
     instrumentationScope: IOTelInstrumentationScope,
     logRecord: IOTelLogRecord
 ): IOTelLogRecordInstance {
@@ -48,6 +49,7 @@ export function createLogRecord(
     const hrTimeObserved = timeInputToHrTime(observedTimestamp || now);
     const resource = sharedState.resource;
     const logRecordLimits: Required<IOTelLogRecordLimits> = sharedState.logRecordLimits;
+    const handlers: IOTelErrorHandlers = {};
 
     let spanContext: IOTelSpanContext | undefined;
     if (context) {
@@ -81,7 +83,7 @@ export function createLogRecord(
     function truncateToSize(value: OTelAttributeValue): OTelAttributeValue {
         const limit = logRecordLimits.attributeValueLengthLimit;
         if (limit <= 0) {
-            console.warn("Attribute value limit must be positive, got " + limit);
+            handleWarn(handlers, "Attribute value limit must be positive, got " + limit);
             return value;
         }
 
@@ -100,7 +102,7 @@ export function createLogRecord(
 
     function isLogRecordReadonly(): boolean {
         if (isReadonly) {
-            console.warn("Can not execute the operation on emitted log record");
+            handleWarn(handlers, "Can not execute the operation on emitted log record");
         }
         return isReadonly;
     }
@@ -113,7 +115,7 @@ export function createLogRecord(
             return logRecordInstance;
         }
         if (key.length === 0) {
-            console.warn("Invalid attribute key: " + key);
+            handleWarn(handlers, "Invalid attribute key: " + key);
             return logRecordInstance;
         }
         if (
@@ -124,7 +126,7 @@ export function createLogRecord(
                 Object.keys(value).length > 0
             )
         ) {
-            console.warn("Invalid attribute value set for key: " + key);
+            handleWarn(handlers, "Invalid attribute value set for key: " + key);
             return logRecordInstance;
         }
 
@@ -134,7 +136,7 @@ export function createLogRecord(
             !Object.prototype.hasOwnProperty.call(recordAttributes, key)
         ) {
             if (getDroppedAttributesCount() === 1) {
-                console.warn("Dropping extra attributes.");
+                handleWarn(handlers, "Dropping extra attributes.");
             }
             return logRecordInstance;
         }

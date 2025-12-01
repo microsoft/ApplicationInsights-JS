@@ -39,15 +39,13 @@ export function isAttributeKey(key: unknown): key is string {
 }
   
 export function isAttributeValue(val: unknown): val is OTelAttributeValue {
-    if (val === null || val === undefined) {
-        return true;
+    let result = (val === null || _isSupportedType(typeof val));
+
+    if (!val && isArray(val)) {
+        result = _isHomogeneousArray(val);
     }
 
-    if (isArray(val)) {
-        return _isHomogeneousArray(val as unknown[]);
-    }
-
-    return _isSupportedType(typeof val);
+    return result;
 }
 
 export function sanitizeAttributes(otelApi: IOTelApi, attributes: unknown): IOTelAttributes {

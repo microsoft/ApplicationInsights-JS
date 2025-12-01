@@ -8,7 +8,7 @@ import { IOTelLogger } from "../interfaces/logs/IOTelLogger";
 import { IOTelResource } from "../interfaces/resources/IOTelResource";
 import { createMultiLogRecordProcessor } from "../sdk/IOTelMultiLogRecordProcessor";
 
-export interface LoggerProviderSharedState {
+export interface IOTelLoggerProviderSharedState {
     readonly loggers: Map<string, IOTelLogger>;
     activeProcessor: IOTelLogRecordProcessor;
     readonly registeredLogRecordProcessors: IOTelLogRecordProcessor[];
@@ -22,7 +22,7 @@ export function createLoggerProviderSharedState(
     forceFlushTimeoutMillis: number,
     logRecordLimitsConfig: Required<IOTelLogRecordLimits>,
     processors: IOTelLogRecordProcessor[]
-): LoggerProviderSharedState {
+): IOTelLoggerProviderSharedState {
     const loggers = new Map<string, IOTelLogger>();
     const registeredLogRecordProcessors: IOTelLogRecordProcessor[] = processors;
     const hasProcessors = registeredLogRecordProcessors.length > 0;

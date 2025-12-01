@@ -5,8 +5,8 @@ import { createContextManager } from "../api/context/contextManager";
 import { IOTelLogRecord } from "../interfaces/logs/IOTelLogRecord";
 import { IOTelLogger } from "../interfaces/logs/IOTelLogger";
 import { IOTelInstrumentationScope } from "../interfaces/trace/IOTelInstrumentationScope";
-import { LoggerProviderSharedState } from "../internal/LoggerProviderSharedState";
-import { createLogRecord } from "./IOTelLogRecordImpl";
+import { IOTelLoggerProviderSharedState } from "../internal/IOTelLoggerProviderSharedState";
+import { createLogRecord } from "./IOTelLogRecord";
 
 export interface IOTelLoggerInstance extends IOTelLogger {
     readonly instrumentationScope: IOTelInstrumentationScope;
@@ -14,7 +14,7 @@ export interface IOTelLoggerInstance extends IOTelLogger {
 
 export function createLogger(
     instrumentationScope: IOTelInstrumentationScope,
-    sharedState: LoggerProviderSharedState
+    sharedState: IOTelLoggerProviderSharedState
 ): IOTelLoggerInstance {
     function emit(logRecord: IOTelLogRecord): void {
         const contextManager = createContextManager();
