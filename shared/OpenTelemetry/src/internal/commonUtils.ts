@@ -1,4 +1,5 @@
 
+import { IPromise, createRacePromise, createTimeoutPromise } from "@nevware21/ts-async";
 import { dumpObj, fnApply } from "@nevware21/ts-utils";
 import { IOTelErrorHandlers } from "../interfaces/config/IOTelErrorHandlers";
 
@@ -102,4 +103,37 @@ export function handleNotImplemented(handlers: IOTelErrorHandlers, message: stri
             fnApply(fn, console, [message]);
         }
     }
+}
+
+/**
+ * Adds a timeout to a promise and rejects if the specified timeout has elapsed.
+ * Reports the timeout through the configured error handlers before rejecting.
+ *
+ * @param handlers - The configured error handlers to notify.
+ * @param promise - The promise to guard with the timeout.
+ * @param timeout - Timeout in milliseconds before the promise is rejected.
+ */
+
+export function callWithTimeout<T>(
+    handlers: IOTelErrorHandlers,
+    promise: Promise<T>,
+    timeout: number
+): IPromise<T> {
+    const timeoutMessage = "Operation timed out.";
+    const timeoutError = new Error(timeoutMessage);
+    timeoutError.name = "TimeoutError";
+    (timeoutError as { __otelTimeout?: boolean }).__otelTimeout = true;
+
+    const racedPromise = createRacePromise<T>([
+        promise,
+        createTimeoutPromise<Error>(timeout, false, timeoutError) as unknown as PromiseLike<T>
+    ]);
+
+    return racedPromise.catch((error) => {
+        if (error && (error === timeoutError || (error as { __otelTimeout?: boolean }).__otelTimeout)) {
+            handleError(handlers, timeoutMessage);
+        }
+
+        throw error;
+    });
 }
