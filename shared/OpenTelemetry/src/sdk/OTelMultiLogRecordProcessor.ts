@@ -8,11 +8,6 @@ import { IOTelErrorHandlers } from "../interfaces/config/IOTelErrorHandlers";
 import { IOTelContext } from "../interfaces/context/IOTelContext";
 import { callWithTimeout } from "../internal/commonUtils";
 
-export interface IOTelMultiLogRecordProcessorInstance extends IOTelLogRecordProcessor {
-    readonly processors: IOTelLogRecordProcessor[];
-    readonly forceFlushTimeoutMillis: number;
-}
-
 /**
  * Implementation of the {@link IOTelLogRecordProcessor} that forwards all events
  * to each configured processor.
@@ -21,7 +16,10 @@ export function createMultiLogRecordProcessor(
     processors: IOTelLogRecordProcessor[],
     forceFlushTimeoutMillis: number,
     errorHandlers?: IOTelErrorHandlers
-): IOTelMultiLogRecordProcessorInstance {
+): IOTelLogRecordProcessor & {
+    readonly processors: IOTelLogRecordProcessor[];
+    readonly forceFlushTimeoutMillis: number;
+} {
     const registeredProcessors = processors;
     const timeout = forceFlushTimeoutMillis;
     const handlers = errorHandlers || {};

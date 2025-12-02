@@ -4,8 +4,8 @@ import { createPromise, IPromise } from "@nevware21/ts-async";
 import { IOTelContext } from "../../../../src/interfaces/context/IOTelContext";
 import { IOTelLogRecordProcessor } from "../../../../src/interfaces/logs/IOTelLogRecordProcessor";
 import { IOTelSdkLogRecord } from "../../../../src/interfaces/logs/IOTelSdkLogRecord";
-import { createLoggerProvider } from "../../../../src/sdk/IOTelLoggerProvider";
-import { createMultiLogRecordProcessor } from "../../../../src/sdk/IOTelMultiLogRecordProcessor";
+import { createLoggerProvider } from "../../../../src/sdk/OTelLoggerProvider";
+import { createMultiLogRecordProcessor } from "../../../../src/sdk/OTelMultiLogRecordProcessor";
 import { loadDefaultConfig } from "../../../../src/sdk/config";
 
 class TestProcessor implements IOTelLogRecordProcessor {
@@ -46,7 +46,7 @@ const setup = (processors?: IOTelLogRecordProcessor[]) => {
     return { multiProcessor, forceFlushTimeoutMillis };
 };
 
-export class IOTelMultiLogRecordProcessorTests extends AITestClass {
+export class OTelMultiLogRecordProcessorTests extends AITestClass {
     public testInitialize() {
         super.testInitialize();
     }

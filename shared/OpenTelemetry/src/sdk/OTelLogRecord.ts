@@ -6,26 +6,16 @@ import { getContextActiveSpanContext, isSpanContextValid } from "../api/trace/ut
 import { OTelSeverityNumber } from "../enums/logs/eOTelSeverityNumber";
 import { OTelAttributeValue } from "../interfaces/IOTelAttributes";
 import { IOTelLogRecord, LogAttributes, LogBody } from "../interfaces/logs/IOTelLogRecord";
+import { IOTelLogRecordInstance } from "../interfaces/logs/IOTelLogRecordInstance";
 import { IOTelLogRecordLimits } from "../interfaces/logs/IOTelLogRecordLimits";
-import { ReadableLogRecord } from "../interfaces/logs/IOTelReadableLogRecord";
+import { IOTelLoggerProviderSharedState } from "../interfaces/logs/IOTelLoggerProviderSharedState";
 import { IOTelResource } from "../interfaces/resources/IOTelResource";
 import { IOTelHrTime } from "../interfaces/time";
 import { IOTelInstrumentationScope } from "../interfaces/trace/IOTelInstrumentationScope";
-import { IOTelLoggerProviderSharedState } from "../internal/IOTelLoggerProviderSharedState";
 import { isAttributeValue } from "../internal/attributeHelpers";
 import { handleWarn } from "../internal/commonUtils";
 import { timeInputToHrTime } from "../internal/timeHelpers";
 import { IOTelErrorHandlers, IOTelSpanContext } from "../otel-core-js";
-
-export interface IOTelLogRecordInstance extends ReadableLogRecord {
-    setAttribute(key: string, value?: OTelAnyValue): IOTelLogRecordInstance;
-    setAttributes(attributes: LogAttributes): IOTelLogRecordInstance;
-    setBody(body: LogBody): IOTelLogRecordInstance;
-    setEventName(eventName: string): IOTelLogRecordInstance;
-    setSeverityNumber(severityNumber: OTelSeverityNumber): IOTelLogRecordInstance;
-    setSeverityText(severityText: string): IOTelLogRecordInstance;
-    _makeReadonly(): void;
-}
 
 export function createLogRecord(
     sharedState: IOTelLoggerProviderSharedState,

@@ -7,24 +7,23 @@ import { IOTelLogger } from "../interfaces/logs/IOTelLogger";
 import { IOTelLoggerOptions } from "../interfaces/logs/IOTelLoggerOptions";
 import { IOTelLoggerProvider } from "../interfaces/logs/IOTelLoggerProvider";
 import { IOTelLoggerProviderConfig } from "../interfaces/logs/IOTelLoggerProviderConfig";
-import { IOTelLoggerProviderSharedState, createLoggerProviderSharedState } from "../internal/IOTelLoggerProviderSharedState";
+import { IOTelLoggerProviderSharedState } from "../interfaces/logs/IOTelLoggerProviderSharedState";
+import { createLoggerProviderSharedState } from "../internal/LoggerProviderSharedState";
 import { handleWarn } from "../internal/commonUtils";
 import { IOTelErrorHandlers } from "../otel-core-js";
 import { createResource } from "../resource/resource";
-import { createLogger } from "./IOTelLogger";
+import { createLogger } from "./OTelLogger";
 import { loadDefaultConfig, reconfigureLimits } from "./config";
 
 export const DEFAULT_LOGGER_NAME = "unknown";
 
-export interface IOTelLoggerProviderInstance extends IOTelLoggerProvider {
+export function createLoggerProvider(
+    config: IOTelLoggerProviderConfig = {}
+): IOTelLoggerProvider & {
     forceFlush(): IPromise<void>;
     shutdown(): IPromise<void>;
     readonly _sharedState: IOTelLoggerProviderSharedState;
-}
-
-export function createLoggerProvider(
-    config: IOTelLoggerProviderConfig = {}
-): IOTelLoggerProviderInstance {
+} {
     const defaults = loadDefaultConfig();
     const forceFlushTimeoutMillis = config.forceFlushTimeoutMillis !== undefined
         ? config.forceFlushTimeoutMillis

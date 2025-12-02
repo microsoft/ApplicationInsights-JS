@@ -1,0 +1,33 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { createNoopLogRecordProcessor } from "../../src/api/noop/noopLogRecordProcessor";
+import { IOTelLogRecordLimits } from "../../src/interfaces/logs/IOTelLogRecordLimits";
+import { IOTelLogRecordProcessor } from "../../src/interfaces/logs/IOTelLogRecordProcessor"
+import { IOTelLogger } from "../../src/interfaces/logs/IOTelLogger";
+import { IOTelResource } from "../../src/interfaces/resources/IOTelResource";
+import { createMultiLogRecordProcessor } from "./OTelMultiLogRecordProcessor";
+import { IOTelLoggerProviderSharedState } from "../interfaces/logs/IOTelLoggerProviderSharedState";
+
+export function createLoggerProviderSharedState(
+    resource: IOTelResource,
+    forceFlushTimeoutMillis: number,
+    logRecordLimitsConfig: Required<IOTelLogRecordLimits>,
+    processors: IOTelLogRecordProcessor[]
+): IOTelLoggerProviderSharedState {
+    const loggers = new Map<string, IOTelLogger>();
+    const registeredLogRecordProcessors: IOTelLogRecordProcessor[] = processors;
+    const hasProcessors = registeredLogRecordProcessors.length > 0;
+    const activeProcessor = hasProcessors
+        ? createMultiLogRecordProcessor(registeredLogRecordProcessors, forceFlushTimeoutMillis)
+        : createNoopLogRecordProcessor();
+
+    return {
+        loggers,
+        activeProcessor,
+        registeredLogRecordProcessors,
+        resource,
+        forceFlushTimeoutMillis,
+        logRecordLimits: logRecordLimitsConfig
+    };
+}

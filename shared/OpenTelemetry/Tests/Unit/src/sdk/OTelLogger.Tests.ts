@@ -1,15 +1,19 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
-import { createLoggerProvider } from "../../../../src/sdk/IOTelLoggerProvider";
+import { createLoggerProvider } from "../../../../src/sdk/OTelLoggerProvider";
 import { createNoopLogRecordProcessor } from "../../../../src/api/noop/noopLogRecordProcessor";
 import { createContext } from "../../../../src/api/context/context";
-import { IOTelLoggerInstance } from "../../../../src/sdk/IOTelLogger";
+import { IOTelLogger } from "../../../../src/interfaces/logs/IOTelLogger";
 import { IOTelLogRecord } from "../../../../src/interfaces/logs/IOTelLogRecord";
 import { IOTelSpanContext } from "../../../../src/interfaces/trace/IOTelSpanContext";
+import { IOTelInstrumentationScope } from "../../../../src/interfaces/trace/IOTelInstrumentationScope";
 import { eW3CTraceFlags } from "@microsoft/applicationinsights-common";
 import { createContextManager } from "../../../../src/api/context/contextManager";
 import { setContextSpanContext } from "../../../../src/api/trace/utils";
+import { createLogger } from "../../../../src/sdk/OTelLogger";
 
-export class IOTelLoggerTests extends AITestClass {
+type LoggerWithScope = IOTelLogger & { instrumentationScope: IOTelInstrumentationScope };
+
+export class OTelLoggerTests extends AITestClass {
     public testInitialize() {
         super.testInitialize();
     }
@@ -25,8 +29,8 @@ export class IOTelLoggerTests extends AITestClass {
         });
         const logger = provider.getLogger("test name", "test version", {
             schemaUrl: "test schema url"
-        }) as IOTelLoggerInstance;
-        return { logger, logProcessor };
+        }) as LoggerWithScope;
+        return { logger, logProcessor, provider };
     }
 
     public registerTests() {
@@ -34,7 +38,15 @@ export class IOTelLoggerTests extends AITestClass {
         this.testCase({
             name: "Logger: factory returns logger instance",
             test: () => {
-                const { logger } = this.setup();
+                const logProcessor = createNoopLogRecordProcessor();
+                const provider = createLoggerProvider({ processors: [logProcessor] });
+                const sharedState = provider._sharedState;
+                const scope: IOTelInstrumentationScope = {
+                    name: "test name",
+                    version: "test version",
+                    schemaUrl: "test schema url"
+                };
+                const logger = createLogger(scope, sharedState) as LoggerWithScope;
                 Assert.equal(logger.instrumentationScope.name, "test name", "Should set instrumentation scope name");
                 Assert.equal(logger.instrumentationScope.version, "test version", "Should set instrumentation scope version");
                 Assert.equal(typeof logger.emit, "function", "Should expose emit implementation");

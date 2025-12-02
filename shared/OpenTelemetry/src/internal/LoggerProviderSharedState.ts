@@ -5,17 +5,9 @@ import { createNoopLogRecordProcessor } from "../api/noop/noopLogRecordProcessor
 import { IOTelLogRecordLimits } from "../interfaces/logs/IOTelLogRecordLimits";
 import { IOTelLogRecordProcessor } from "../interfaces/logs/IOTelLogRecordProcessor";
 import { IOTelLogger } from "../interfaces/logs/IOTelLogger";
+import { IOTelLoggerProviderSharedState } from "../interfaces/logs/IOTelLoggerProviderSharedState";
 import { IOTelResource } from "../interfaces/resources/IOTelResource";
-import { createMultiLogRecordProcessor } from "../sdk/IOTelMultiLogRecordProcessor";
-
-export interface IOTelLoggerProviderSharedState {
-    readonly loggers: Map<string, IOTelLogger>;
-    activeProcessor: IOTelLogRecordProcessor;
-    readonly registeredLogRecordProcessors: IOTelLogRecordProcessor[];
-    readonly resource: IOTelResource;
-    readonly forceFlushTimeoutMillis: number;
-    readonly logRecordLimits: Required<IOTelLogRecordLimits>;
-}
+import { createMultiLogRecordProcessor } from "../sdk/OTelMultiLogRecordProcessor";
 
 export function createLoggerProviderSharedState(
     resource: IOTelResource,

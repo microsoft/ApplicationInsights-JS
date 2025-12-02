@@ -1,9 +1,9 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 
 import { IOTelLogRecord } from "../../../../src/interfaces/logs/IOTelLogRecord";
-import { createLoggerProviderSharedState } from "../../../../src/internal/IOTelLoggerProviderSharedState";
+import { createLoggerProviderSharedState } from "../../../../src/internal/LoggerProviderSharedState";
 import { reconfigureLimits } from "../../../../src/sdk/config";
-import { createLogRecord } from "../../../../src/sdk/IOTelLogRecord";
+import { createLogRecord } from "../../../../src/sdk/OTelLogRecord";
 import { IOTelLogRecordLimits } from "../../../../src/interfaces/logs/IOTelLogRecordLimits";
 
 const setup = (logRecordLimits?: IOTelLogRecordLimits, data?: IOTelLogRecord) => {
@@ -26,7 +26,7 @@ const setup = (logRecordLimits?: IOTelLogRecordLimits, data?: IOTelLogRecord) =>
     return { logRecord, instrumentationScope };
 };
 
-export class IOTelLogRecordTests extends AITestClass {
+export class OTelLogRecordTests extends AITestClass {
     public testInitialize() {
         super.testInitialize();
     }

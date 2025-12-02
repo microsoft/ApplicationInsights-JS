@@ -5,14 +5,19 @@ import { createNoopLogger } from "../../../../src/api/noop/noopLogger";
 import { IOTelAttributes } from "../../../../src/interfaces/IOTelAttributes";
 import { IOTelLogRecord } from "../../../../src/interfaces/logs/IOTelLogRecord";
 import { createNoopLogRecordProcessor } from "../../../../src/api/noop/noopLogRecordProcessor";
-import { IOTelLoggerProviderSharedState } from "../../../../src/internal/IOTelLoggerProviderSharedState";
-import { DEFAULT_LOGGER_NAME, IOTelLoggerProviderInstance, createLoggerProvider } from "../../../../src/sdk/IOTelLoggerProvider";
-import { IOTelLoggerInstance } from "../../../../src/sdk/IOTelLogger";
-import { IOTelMultiLogRecordProcessorInstance } from "../../../../src/sdk/IOTelMultiLogRecordProcessor";
+import { IOTelLoggerProviderSharedState } from "../../../../src/interfaces/logs/IOTelLoggerProviderSharedState";
+import { DEFAULT_LOGGER_NAME, createLoggerProvider } from "../../../../src/sdk/OTelLoggerProvider";
+import { IOTelLogger } from "../../../../src/interfaces/logs/IOTelLogger";
+import { IOTelInstrumentationScope } from "../../../../src/interfaces/trace/IOTelInstrumentationScope";
+import { createMultiLogRecordProcessor } from "../../../../src/sdk/OTelMultiLogRecordProcessor";
 import { loadDefaultConfig } from "../../../../src/sdk/config";
 import { IOTelResource, OTelRawResourceAttribute } from "../../../../src/interfaces/resources/IOTelResource";
 
-export class IOTelLoggerProviderTests extends AITestClass {
+type LoggerProviderInstance = ReturnType<typeof createLoggerProvider>;
+type MultiLogRecordProcessorInstance = ReturnType<typeof createMultiLogRecordProcessor>;
+type LoggerWithScope = IOTelLogger & { instrumentationScope: IOTelInstrumentationScope };
+
+export class OTelLoggerProviderTests extends AITestClass {
     public testInitialize() {
         super.testInitialize();
         // No global OpenTelemetry APIs are mutated by LoggerProvider, so no global stubs required here.
@@ -52,7 +57,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
                     processors: [logRecordProcessor]
                 });
                 const sharedState = this._getSharedState(provider);
-                const activeProcessor = sharedState.activeProcessor as IOTelMultiLogRecordProcessorInstance;
+                const activeProcessor = sharedState.activeProcessor as MultiLogRecordProcessorInstance;
                 Assert.equal(activeProcessor.processors.length, 1, "Should register one processor");
                 Assert.equal(activeProcessor.processors[0], logRecordProcessor, "Should use the provided processor instance");
             }
@@ -163,7 +168,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
             name: "LoggerProvider: getLogger should default name when invalid",
             test: () => {
                 const provider = createLoggerProvider();
-                const logger = provider.getLogger("") as IOTelLoggerInstance;
+                const logger = provider.getLogger("") as LoggerWithScope;
                 Assert.equal(logger.instrumentationScope.name, DEFAULT_LOGGER_NAME, "Should use default logger name when name is invalid");
             }
         });
@@ -214,7 +219,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
                 Assert.equal(sharedState.loggers.size, 2, "Should add scoped logger");
                 const logger2 = provider.getLogger(testName, testVersion, { schemaUrl: testSchemaUrl });
                 Assert.equal(sharedState.loggers.size, 2, "Should not add duplicate scoped logger");
-                const scopedLogger = logger2 as IOTelLoggerInstance;
+                const scopedLogger = logger2 as LoggerWithScope;
                 Assert.equal(scopedLogger.instrumentationScope.name, testName, "Should expose instrumentation scope name");
                 Assert.equal(scopedLogger.instrumentationScope.version, testVersion, "Should expose instrumentation scope version");
                 Assert.equal(scopedLogger.instrumentationScope.schemaUrl, testSchemaUrl, "Should expose instrumentation scope schemaUrl");
@@ -366,7 +371,7 @@ export class IOTelLoggerProviderTests extends AITestClass {
         });
     }
 
-    private _getSharedState(provider: IOTelLoggerProviderInstance): IOTelLoggerProviderSharedState {
+    private _getSharedState(provider: LoggerProviderInstance): IOTelLoggerProviderSharedState {
         return provider._sharedState;
     }
 
