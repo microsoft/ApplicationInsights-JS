@@ -6,6 +6,7 @@ import { OfflineBatchHandlerTests } from "./offlinebatchhandler.tests";
 import { ChannelTests } from "./channel.tests";
 import { Offlinetimer } from "./offlinetimer.tests";
 import { GlobalTestHooks } from "./GlobalTestHooks.Test";
+import { OfflineCustomProviderTests } from "./customprovider.tests";
 
 export function runTests() {
     new GlobalTestHooks().registerTests();
@@ -16,4 +17,6 @@ export function runTests() {
     new ChannelTests().registerTests();
     new OfflineBatchHandlerTests().registerTests();
     new Offlinetimer().registerTests();
+    new OfflineCustomProviderTests().registerTests();
+    
 }

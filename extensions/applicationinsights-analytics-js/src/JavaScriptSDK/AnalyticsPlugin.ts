@@ -22,6 +22,7 @@ import {
     safeGetCookieMgr, strUndefined, throwError
 } from "@microsoft/applicationinsights-core-js";
 import { IAjaxMonitorPlugin } from "@microsoft/applicationinsights-dependencies-js";
+import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { IAnalyticsConfig } from "./Interfaces/IAnalyticsConfig";
 import { IAppInsightsInternal, IPageViewManager, createPageViewManager } from "./Telemetry/PageViewManager";

@@ -303,10 +303,29 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
                 return newProvider as any;
             }
 
+            function _tryGetCustomProvider(provider: IOfflineProvider, providerContext: ILocalStorageProviderContext, unload?: boolean): IOfflineProvider {
+                try {
+                    if (provider && provider.initialize(providerContext)) {
+                        return provider;
+                    }
+                } catch (e) {
+                    // eslint-disable-next-line no-empty
+                }
+                
+                return null;
+            }
+
             function _initProvider(providerContext: ILocalStorageProviderContext): IOfflineProvider {
-                let providers = providerContext.storageConfig.providers;
+                let storageConfig = providerContext.storageConfig;
+                let providers = storageConfig.providers;
                 let newProvider: IOfflineProvider = null;
                 let lp: number = 0;
+
+                // If custom provider is provided, use the custom one instead
+                let cmProvider = _tryGetCustomProvider(storageConfig.customProvider, providerContext);
+                let cmUnloadProvider = _tryGetCustomProvider(storageConfig.customUnloadProvider, providerContext);
+                newProvider = cmProvider;
+                _unloadProvider = cmUnloadProvider;
                 while (!newProvider && lp < providers.length && lp < MaxStorageProviderConfig) {
                     switch (providers[lp++]) {
                     case eStorageProviders.LocalStorage:
@@ -319,6 +338,13 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
                         break;
                     case eStorageProviders.IndexedDb:
                         newProvider = _tryGetIndexedDbProvider(providerContext);
+                        _unloadProvider = _tryGetWebStorageProvider("localStorage", providerContext);
+                    }
+                }
+                if (!_unloadProvider) {
+                    if (newProvider && newProvider.supportsSyncRequests && newProvider.supportsSyncRequests()) {
+                        _unloadProvider = newProvider;
+                    } else {
                         _unloadProvider = _tryGetWebStorageProvider("localStorage", providerContext);
                     }
                 }
@@ -368,7 +394,6 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
                 }
                 return false;
             }
-
 
         });
     }

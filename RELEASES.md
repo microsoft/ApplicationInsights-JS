@@ -111,6 +111,75 @@ This release enhances the cookie management behavior when cookies are disabled. 
   - **Behavior change**: `cookieMgr.set()` now returns `true` when disabled (cached) instead of `false`
   - **Behavior change**: `cookieMgr.get()` now returns cached values when disabled instead of empty strings
 
+<!-- ## Unreleased Changes -->
+
+
+### Changelog
+
+### Web snippet 1.2.3 (November 10, 2025)
+#2659 [Web-Snippet] [BUG] @microsoft/applicationinsights-web-snippet Fix Snippet Loader Error 
+
+## 3.3.10 (Sept 22nd, 2025)
+
+### Changelog
+
+- #2649 [Main][Task] 27922617: Provide Custom Provider Under Web Worker for Offline Channel
+- #2638 [Main][Task] 34470593: Update Async Tests Under Dependencies Extension To Use the Modern AsyncQueue Pattern 
+- #2637 [Main][Task] 34470593: Update AISKU Async Tests To Use the Modern AsyncQueue Pattern
+- #2636 Fix TypeError in Click Analytics Data Collector
+- #2633 Fix flush method root cause - handle async callbacks in _doSend with proper error handling
+- #2632 [Feature] Implement cookie caching when disabled and automatic flushing when enabled with backward compatibility option
+- #2625 Add Azure API Management proxy documentation to FAQ sections
+- #2607 Update Async Tests Under AISKULight to Use the Modern AsyncQueue Pattern
+- #2597 Fix TypeScript compatibility issue with ITelemetryPlugin interface
+- #2595 Fix trackPageView not resetting maxAjaxCallsPerView counter
+- #2583 Create IAnalyticsConfig interface to properly define AnalyticsPlugin configuration subset
+- #2625 Add Azure API Management proxy documentation to FAQ sections
+- #2627 Add weekly GitHub action to delete closed and merged branches
+- #2635 Fix issue #2634 moving the conditional check for filtering
+- #2549 Redacting urls before sending to telemetry data
+- #2622 Suppressed credentials inline to avoid credscan false positive
+
+### Potential breaking changes
+
+Renamed `flush` method parameter from `async` to `isAsync` in `IChannelControls` interface to avoid potential keyword conflicts (only affects code that relies on named parameters)
+  - Fixed return type of `flush` method to properly include `boolean` when callbacks complete synchronously
+  - Fixed root cause where `_doSend()` couldn't handle asynchronous callbacks from `preparePayload()` when compression is enabled
+  - `await applicationInsights.flush()` now works correctly with compression enabled
+  - Added proper error handling and promise rejection propagation through async callback chains
+  - Improved handling of both synchronous and asynchronous callback execution patterns
+  - No polling overhead - uses direct callback invocation for better performance
+
+**Interfaces change:**
+```typescript
+// Before:
+flush(async: boolean = true, callBack?: (flushComplete?: boolean) => void): void | IPromise<boolean>;
+
+// After: 
+flush(isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean>;
+```
+
+**This is only a breaking change if you rely on named parameters.** If you have custom channels or plugins that implement the `IChannelControls` interface directly and rely on passing named parameters, you will need to update the parameter name from `async` to `isAsync` in your implementation.
+
+
+This release also includes:
+- Support for custom providers for Offline Channel which has added `customProvider` and `customUnloadProvider` interfaces to the `IOfflineChannelConfiguration`.
+- `IAnalyticsConfig` is exported for Analytics extension.
+- `redactUrls` and `redactQueryParams` are added to `IConfiguration` to support URL redaction.
+
+
+### Potential behavioral changes
+
+This release enhances the cookie management behavior when cookies are disabled. Previously, when cookies were disabled, calls to `cookieMgr.set()` would return `false` and cookie values would be lost. Now, these operations are cached in memory and automatically applied when cookies are re-enabled to allow for cookie compliance banners and delayed approval.
+
+**Behavior changes:**
+- `cookieMgr.set()` now returns `true` when cookies are disabled (because values are cached), instead of `false`
+- `cookieMgr.get()` now returns cached values when cookies are disabled, instead of empty strings
+- `cookieMgr.del()` operations are now cached and applied when cookies are re-enabled
+- Applications can now recover cookie state after temporary cookie blocking scenarios
+
+**These changes improve data persistence and are considered enhancements rather than breaking changes.** If your application logic depends on the previous behavior of `set()` returning `false` when cookies are disabled, you may need to check `cookieMgr.isEnabled()` instead, or configure `disableCookieCache: true` in your `cookieCfg` to maintain the previous behavior.
+
 ## 3.3.9 (June 25th, 2025)
 
 This release contains an important fix for a change introduced in v3.3.7 that caused the `autoCaptureHandler` to incorrectly evaluate elements within `trackElementsType`, resulting in some click events not being auto-captured. See more details [here](https://github.com/microsoft/ApplicationInsights-JS/issues/2589).

@@ -146,4 +146,13 @@ export class Assert {
     public static throws(block: () => any, expected?: any, message?: string): any {
         return QUnit.assert.throws(block, expected, message || expectedToString(expected));
     }
+
+    /**
+     * Fails a test with the given message.
+     *
+     * @param message - Message to display for the failure
+     */
+    public static fail(message?: string): any {
+        return QUnit.assert.ok(false, message || "Test failed");
+    }
 }
