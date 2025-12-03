@@ -11,6 +11,7 @@ import {
     PageViewPerformance, RemoteDependencyData, Trace, createDomEvent, createTelemetryItem, dataSanitizeString, eSeverityLevel,
     isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
+import { IAjaxMonitorPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IExceptionConfig,
     IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem,

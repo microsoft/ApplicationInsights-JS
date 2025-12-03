@@ -751,8 +751,6 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                                 }
                             }
                         }
-
-                        return xhr;
                     }
                 }
 
