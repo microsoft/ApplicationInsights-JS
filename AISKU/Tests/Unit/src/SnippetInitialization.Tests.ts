@@ -13,7 +13,7 @@ import {
 } from "@microsoft/applicationinsights-common";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { IPropTelemetryContext } from "@microsoft/applicationinsights-properties-js";
-import { dumpObj, objHasOwnProperty, strSubstring } from "@nevware21/ts-utils";
+import { dumpObj, isPromiseLike, objHasOwnProperty, strSubstring } from "@nevware21/ts-utils";
 import { AppInsightsSku } from "../../../src/AISku";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
