@@ -457,6 +457,7 @@ export declare const enum EventBatchNotificationReason {
     SizeLimitExceeded = 8003,           // EventsDiscardedReason.SizeLimitExceeded
     KillSwitch = 8004,                  // EventsDiscardedReason.KillSwitch,
     QueueFull = 8005,                   // EventsDiscardedReason.QueueFull
+    BeaconSendFailure = 8006,           // EventsDiscardedReason.BeaconSendFailure
     EventsDroppedMax = 8999,
 
     /**
