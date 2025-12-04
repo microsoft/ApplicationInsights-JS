@@ -111,10 +111,11 @@ export class NotificationManager implements INotificationManager {
              * @param events - The array of events that have been discarded by the SDK.
              * @param reason - The reason for which the SDK discarded the events. The EventsDiscardedReason
              * constant should be used to check the different values.
+             * @param sendType - [Optional] The send type used when the events were discarded.
              */
-            _self.eventsDiscarded = (events: ITelemetryItem[], reason: number): void => {
+            _self.eventsDiscarded = (events: ITelemetryItem[], reason: number, sendType?: number): void => {
                 _runListeners(_listeners, STR_EVENTS_DISCARDED, _asyncNotifications, (listener) => {
-                    listener.eventsDiscarded(events, reason);
+                    listener.eventsDiscarded(events, reason, sendType);
                 });
             };
 
