@@ -6,7 +6,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     CtxTagKeys, Extensions, IApplication, IDevice, IInternal, ILocation, IOperatingSystem, ISession, ISessionManager, ITelemetryTrace,
-    IUserContext, IWeb, PageView, dataSanitizeString
+    IUserContext, IWeb, PageViewDataType, dataSanitizeString
 } from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IDistributedTraceContext, IProcessTelemetryContext, ITelemetryItem, IUnloadHookContainer, _InternalLogMessage,
@@ -252,7 +252,7 @@ export class TelemetryContext implements IPropTelemetryContext {
                     setValue(tags, CtxTagKeys.internalAgentVersion, internal.agentVersion, isString); // not mapped in CS 4.0
                     setValue(tags, CtxTagKeys.internalSdkVersion, dataSanitizeString(logger, internal.sdkVersion, 64), isString);
             
-                    if (evt.baseType === _InternalLogMessage.dataType || evt.baseType === PageView.dataType) {
+                    if (evt.baseType === _InternalLogMessage.dataType || evt.baseType === PageViewDataType) {
                         setValue(tags, CtxTagKeys.internalSnippet, internal.snippetVer, isString);
                         setValue(tags, CtxTagKeys.internalSdkSrc, internal.sdkSrc, isString);
                     }

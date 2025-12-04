@@ -82,6 +82,7 @@ export {
     ITraceTelemetry,
     IMetricTelemetry,
     IEventTelemetry,
+    IRequestTelemetry,
     IAppInsights,
     eSeverityLevel,
     IRequestHeaders,

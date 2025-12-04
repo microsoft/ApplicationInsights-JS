@@ -1,7 +1,7 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { Sample } from "../../../src/TelemetryProcessors/Sample";
 import { ITelemetryItem, isBeaconsSupported, newId } from "@microsoft/applicationinsights-core-js";
-import { PageView, TelemetryItemCreator, IPageViewTelemetry } from "@microsoft/applicationinsights-common";
+import { PageView, TelemetryItemCreator, IPageViewTelemetry, PageViewDataType, PageViewEnvelopeType } from "@microsoft/applicationinsights-common";
 import { HashCodeScoreGenerator } from "../../../src/TelemetryProcessors/SamplingScoreGenerators/HashCodeScoreGenerator";
 
 export class SampleTests extends AITestClass {
@@ -147,7 +147,7 @@ export class SampleTests extends AITestClass {
         return TelemetryItemCreator.create<IPageViewTelemetry>({
             name: 'some page',
             uri: 'some uri'
-        }, PageView.dataType, PageView.envelopeType, null);
+        }, PageViewDataType, PageViewEnvelopeType, null);
     }
 
     private getMetricItem(): ITelemetryItem {
