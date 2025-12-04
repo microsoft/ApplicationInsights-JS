@@ -1,6 +1,6 @@
 import { SinonStub } from "sinon";
 import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
-import { createAsyncResolvedPromise, createSyncPromise } from "@nevware21/ts-async";
+import { createAllPromise, createAsyncResolvedPromise, createPromise, createSyncPromise, createTimeoutPromise } from "@nevware21/ts-async";
 import { AjaxMonitor } from "../../../src/ajax";
 import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders, IDependencyTelemetry, IRequestContext, formatTraceParent, createTraceParent, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-common";
 import {
@@ -1184,14 +1184,14 @@ export class AjaxTests extends AITestClass {
                                     statusText: "Hello",
                                     trailer: null,
                                     type: "basic",
-                                    url: "https://httpbin.org/status/200"
+                                    url: "http://localhost:9001/shared/"
                                 });
                             }, 0);
                         });
 
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
-                        return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: true}).then(() => {
+                        return fetch("http://localhost:9001/shared/", {method: "post", [DisabledPropertyName]: true}).then(() => {
                             // Assert
                             Assert.ok(fetchSpy.notCalled, "The request was not tracked");
                         }, () => {
@@ -1320,7 +1320,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -1334,11 +1334,11 @@ export class AjaxTests extends AITestClass {
                     .add(() => {
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
-                        return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: true}).then(() => {
+                        return fetch("http://localhost:9001/shared/", {method: "post", [DisabledPropertyName]: true}).then(() => {
                             // Assert
                             Assert.ok(fetchSpy.notCalled, "The initial request was not tracked");
 
-                            return fetch("https://httpbin.org/status/200", {method: "post" }).then(() => {
+                            return fetch("http://localhost:9001/shared/", {method: "post" }).then(() => {
                                 // Assert
                                 Assert.ok(fetchSpy.notCalled, "The follow up request should also not have been tracked");
                             }, () => {
@@ -1367,26 +1367,29 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                const ExcludeRequestRegex = ["bin"];
+                const ExcludeRequestRegex = ["localhost"];
                 let coreConfig = { instrumentationKey: "", disableFetchTracking: false, excludeRequestFromAutoTrackingPatterns: ExcludeRequestRegex };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                // Flush any initial requests made during initialization
+                appInsightsCore.flush(false);
+
                 let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
 
                 return this._asyncQueue()
                     .add(() => {
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
-                        return fetch("https://httpbin.org/status/200", {method: "post"}).then(() => {
+                        return fetch("http://localhost:9001/shared/", {method: "post"}).then(() => {
                             // Assert
                             Assert.ok(fetchSpy.notCalled, "The initial request was not tracked");
 
-                            return fetch("https://httpbin.org/status/200", {method: "post" }).then(() => {
+                            return fetch("http://localhost:9001/shared/", {method: "post" }).then(() => {
                                 // Assert
                                 Assert.ok(fetchSpy.notCalled, "The follow up request should also not have been tracked");
                             }, () => {
@@ -1415,7 +1418,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -1440,14 +1443,14 @@ export class AjaxTests extends AITestClass {
                     .add(() => {
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
-                        return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                        return fetch("http://localhost:9001/shared/", {method: "post", [DisabledPropertyName]: false}).then(() => {
                             // assert
                             Assert.ok(fetchSpy.calledOnce, "track is called");
                             let data = fetchSpy.args[0][0].baseData;
                             Assert.equal("Fetch", data.type, "request is Fetch type");
                             Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
                             Assert.equal("Fetch context", data.properties.test, "Fetch request's request context is added when customer configures addRequestContext.");
-                            Assert.equal("https://httpbin.org/status/200", data.properties.fetchRequestUrl, "Fetch request is captured.");
+                            Assert.equal("http://localhost:9001/shared/", data.properties.fetchRequestUrl, "Fetch request is captured.");
                             Assert.equal("basic", data.properties.fetchResponseType, "Fetch response is captured.");
                         }, () => {
                             Assert.ok(false, "fetch failed!");
@@ -1472,7 +1475,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -1488,7 +1491,7 @@ export class AjaxTests extends AITestClass {
                     .add(() => {
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
-                        return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                        return fetch("http://localhost:9001/shared/", {method: "post", [DisabledPropertyName]: false}).then(() => {
                             // Assert
                             Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
                             let data = fetchSpy.args[0][0].baseData;
@@ -1519,7 +1522,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Blocked",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -1543,7 +1546,7 @@ export class AjaxTests extends AITestClass {
                         let dependencyFields = this._context.dependencyFields;
                         
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
-                        return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                        return fetch("http://localhost:9001/shared/", {method: "post", [DisabledPropertyName]: false}).then(() => {
                             // Assert
                             Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
                             let data = fetchSpy.args[0][0].baseData;
@@ -1576,7 +1579,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Blocked",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -1600,7 +1603,7 @@ export class AjaxTests extends AITestClass {
                         let dependencyFields = this._context.dependencyFields;
                         
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
-                        return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                        return fetch("http://localhost:9001/shared/", {method: "post", [DisabledPropertyName]: false}).then(() => {
                             // Assert
                             Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
                             let data = fetchSpy.args[0][0].baseData;
@@ -1634,7 +1637,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -1663,7 +1666,7 @@ export class AjaxTests extends AITestClass {
                     .add(() => {
                         // Act
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
-                        return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                        return fetch("http://localhost:9001/shared/", {method: "post", [DisabledPropertyName]: false}).then(() => {
                             // Assert
                             Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
                             let data = fetchSpy.args[0][0].baseData;
@@ -1696,7 +1699,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -1719,7 +1722,7 @@ export class AjaxTests extends AITestClass {
                         // Act
                         
                         Assert.ok(fetchSpy.notCalled, "No fetch called yet");
-                        return fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                        return fetch("http://localhost:9001/shared/", {method: "post", [DisabledPropertyName]: false}).then(() => {
                             // Assert
                             Assert.ok(initializerCalled, "Initializer was not called");
                             Assert.ok(fetchSpy.notCalled, "track was not called");
@@ -1748,7 +1751,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -1829,7 +1832,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -1904,7 +1907,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -1978,7 +1981,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -2062,7 +2065,7 @@ export class AjaxTests extends AITestClass {
                         method: 'get',
                         headers: headers
                     };
-                    const url = 'https://httpbin.org/status/200';
+                    const url = 'http://localhost:9001/shared/';
 
                     let headerSpy = this.sandbox.spy(this._ajax, "includeCorrelationHeaders");
 
@@ -2127,6 +2130,51 @@ export class AjaxTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Fetch: fetch keeps custom headers when correlation headers are discarded by dependencyListeners",
+            test: () => {
+                hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve();
+                    }, 0);
+                });
+
+                
+                this._ajax = new AjaxMonitor();
+                this._ajax.addDependencyListener((details: IDependencyListenerDetails) => {
+                    return false;
+                });
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "",
+                    disableFetchTracking: false,
+                    disableAjaxTracking: true
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(window, "fetch");
+
+                // Setup
+                let headers = new Headers();
+                headers.append('My-Header', 'Header field');
+                let init = {
+                    method: 'get',
+                    headers: headers
+                };
+                const url = 'http://localhost:9001/shared/';
+
+                let headerSpy = this.sandbox.spy(this._ajax, "includeCorrelationHeaders");
+
+                // Act
+                Assert.ok(fetchSpy.notCalled);
+                fetch(url, init);
+
+                // Assert
+                Assert.ok(fetchSpy.calledOnce);
+                Assert.ok(headerSpy.calledOnce);
+                Assert.deepEqual(init, headerSpy.returnValue || headerSpy.returnValues[0]);
+            }
+        });
+
+        this.testCase({
             name: "Fetch: should create and pass a traceparent header if ai and w3c is enabled with custom headers",
             timeout: 10000,
             test: () => {
@@ -2142,7 +2190,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -2164,7 +2212,7 @@ export class AjaxTests extends AITestClass {
                 this._context["trackStub"] = trackSpy;
 
                 // Use test hook to simulate the correct url location
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
 
                 return this._asyncQueue()
                     .add(() => {
@@ -2177,7 +2225,7 @@ export class AjaxTests extends AITestClass {
                             method: 'get',
                             headers: headers
                         };
-                        const url = 'https://httpbin.org/status/200';
+                        const url = 'http://localhost:9001/shared/';
 
                         // Act
                         Assert.ok(trackSpy.notCalled, "No fetch called yet");
@@ -2227,7 +2275,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -2249,9 +2297,9 @@ export class AjaxTests extends AITestClass {
                 this._context["trackStub"] = trackSpy;
 
                 // Use test hook to simulate the correct url location
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
                     
-                const url = 'https://httpbin.org/status/200';
+                const url = 'http://localhost:9001/shared/';
 
                 return this._asyncQueue()
                     .add(() => {
@@ -2303,7 +2351,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -2326,7 +2374,7 @@ export class AjaxTests extends AITestClass {
                 this._context["trackStub"] = trackSpy;
 
                 // Use test hook to simulate the correct url location
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
 
                 // Setup
                 let headers = new Headers();
@@ -2335,7 +2383,7 @@ export class AjaxTests extends AITestClass {
                     method: 'get',
                     headers: headers
                 };
-                const url = 'https://httpbin.org/status/200';
+                const url = 'http://localhost:9001/shared/';
                 return this._asyncQueue()
                     .add(() => {
                         // Act
@@ -2388,7 +2436,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -2412,10 +2460,10 @@ export class AjaxTests extends AITestClass {
                 this._context["fetchCalls"] = fetchCalls;
 
                 // Use test hook to simulate the correct url location
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
 
                 // Setup
-                const url = 'https://httpbin.org/status/200';
+                const url = 'http://localhost:9001/shared/';
 
                 return this._asyncQueue()
                     .add(() => {
@@ -2467,7 +2515,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -2491,7 +2539,7 @@ export class AjaxTests extends AITestClass {
                 this._context["fetchCalls"] = fetchCalls;
 
                 // Use test hook to simulate the correct url location
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
 
                 // Setup
                 let headers = new Headers();
@@ -2500,7 +2548,7 @@ export class AjaxTests extends AITestClass {
                     method: 'get',
                     headers: headers
                 };
-                const url = 'https://httpbin.org/status/200';
+                const url = 'http://localhost:9001/shared/';
 
                 return this._asyncQueue()
                     .add(() => {
@@ -2552,7 +2600,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -2576,9 +2624,9 @@ export class AjaxTests extends AITestClass {
                 this._context["fetchCalls"] = fetchCalls;
 
                 // Use test hook to simulate the correct url location
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
                 // Setup
-                const url = 'https://httpbin.org/status/200';
+                const url = 'http://localhost:9001/shared/';
 
                 return this._asyncQueue()
                     .add(() => {
@@ -2629,7 +2677,7 @@ export class AjaxTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -2653,7 +2701,7 @@ export class AjaxTests extends AITestClass {
                 this._context["trackStub"] = trackSpy;
 
                 // Use test hook to simulate the correct url location
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
 
                 // Setup
                 let headers = new Headers();
@@ -2663,7 +2711,7 @@ export class AjaxTests extends AITestClass {
                     method: 'get',
                     headers: headers
                 };
-                const url = 'https://httpbin.org/status/200';
+                const url = 'http://localhost:9001/shared/';
 
                 return this._asyncQueue()
                     .add(() => {
@@ -3242,7 +3290,7 @@ export class AjaxTests extends AITestClass {
                 });
 
                 // Use test hook to simulate the correct url location
-                _ajax2["_currentWindowHost"] = "www.example.com";
+                _ajax2["_currentWindowHost"] = "localhost:9001";
 
 
                 this._ajax = new AjaxMonitor();
@@ -3269,25 +3317,41 @@ export class AjaxTests extends AITestClass {
                 Assert.notEqual(firstTraceId, coreTraceId, "Make sure that the traceId's are different");
 
                 // Use test hook to simulate the correct url location
-                this._ajax["_currentWindowHost"] = "www.example.com";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
 
-                // Act
-                var xhr = new XMLHttpRequest();
-                var spy = this.sandbox.spy(xhr, "setRequestHeader");
-                xhr.open("GET", "http://www.example.com");
-                xhr.send();
+                return createPromise<void>((resolve) => {
+                    // Act
+                    var xhr = new XMLHttpRequest();
+                    var spy = this.sandbox.spy(xhr, "setRequestHeader");
+                    xhr.open("GET", "http://localhost:9001/shared/");
+                    xhr.onload = () => {
+                        try {
+                            if (xhr && xhr.readyState === 4) {
+                                resolve();
+                            }
+                        } catch (e) {
+                            resolve();
+                        }
+                    };
+                    xhr.onerror = () => {
+                        resolve();
+                    };
+                    
+                    xhr.send();
 
-                // Assert that both headers are sent and that it was only called by the first instances (3 headers one only)
-                Assert.equal(3, spy.callCount, "setRequestHeader called multiple times");
-                Assert.equal(true, spy.calledWith(RequestHeaders.requestIdHeader)); // AI
-                Assert.equal(true, spy.calledWith(RequestHeaders.traceParentHeader)); // W3C
+                    // Assert that both headers are sent and that it was only called by the first instances (3 headers one only)
+                    Assert.equal(3, spy.callCount, "setRequestHeader called multiple times");
+                    Assert.equal(true, spy.calledWith(RequestHeaders.requestIdHeader)); // AI
+                    Assert.equal(true, spy.calledWith(RequestHeaders.traceParentHeader)); // W3C
 
-                // Assert that the W3C header is included
-                Assert.equal(RequestHeaders.traceParentHeader, spy.args[2][0], "Validate the actual header sent");
-                Assert.ok(spy.args[2][1].indexOf("00-" + firstTraceId) != -1, "Validate the actual header sent - actual: [" + spy.args[2][1] + "], expected parent [" + firstExpectedTraceParent + "] - alt: " + coreExpectedTraceParent);
+                    // Assert that the W3C header is included
+                    Assert.equal(RequestHeaders.traceParentHeader, spy.args[2][0], "Validate the actual header sent");
+                    Assert.ok(spy.args[2][1].indexOf("00-" + firstTraceId) != -1, "Validate the actual header sent - actual: [" + spy.args[2][1] + "], expected parent [" + firstExpectedTraceParent + "] - alt: " + coreExpectedTraceParent);
 
-                Assert.equal(RequestHeaders.requestIdHeader, spy.args[0][0], "Validate the actual header sent");
-                Assert.ok(spy.args[0][1].indexOf("|" + firstTraceId + ".") != -1, "Validate the actual header sent - actual: [" + spy.args[0][1] + "], expected parent [" + firstExpectedTraceParent + "] - alt: " + coreExpectedTraceParent);
+                    Assert.equal(RequestHeaders.requestIdHeader, spy.args[0][0], "Validate the actual header sent");
+                    Assert.ok(spy.args[0][1].indexOf("|" + firstTraceId + ".") != -1, "Validate the actual header sent - actual: [" + spy.args[0][1] + "], expected parent [" + firstExpectedTraceParent + "] - alt: " + coreExpectedTraceParent);
+                    // Emulate response so perf monitoring is cleaned up
+                });
             }
         });
 
@@ -3635,7 +3699,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                     }
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
 
                 // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
                 this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
@@ -3646,7 +3710,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                         var xhr = new XMLHttpRequest();
 
                         // trigger the request that should cause a track event once the xhr request is complete
-                        xhr.open("GET", "https://httpbin.org/status/200");
+                        xhr.open("GET", "http://localhost:9001/shared/");
                         xhr.send();
                         Assert.equal(false, markSpy.called, "The code should not have called mark()");
                     })
@@ -3683,7 +3747,11 @@ export class AjaxPerfTrackTests extends AITestClass {
                     }
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
+
+                this.onDone(() => {
+                    appInsightsCore.unload(false);
+                });
 
                 // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
                 this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
@@ -3694,13 +3762,13 @@ export class AjaxPerfTrackTests extends AITestClass {
                         var xhr = new XMLHttpRequest();
 
                         // trigger the request that should cause a track event once the xhr request is complete
-                        xhr.open("GET", "https://httpbin.org/status/200");
+                        xhr.open("GET", "http://localhost:9001/shared/");
                         xhr.send();
                         Assert.equal(true, markSpy.called, "The code should have called been mark()");
                         this.addPerfEntry({
                             entryType: "resource",
                             initiatorType: "xmlhttprequest",
-                            name: "https://httpbin.org/status/200",
+                            name: "http://localhost:9001/shared/",
                             startTime: getPerformance().now(),
                             duration: 10
                         });
@@ -3743,7 +3811,11 @@ export class AjaxPerfTrackTests extends AITestClass {
                     }
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
+
+                this.onDone(() => {
+                    appInsightsCore.unload(false);
+                });
 
                 // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
                 this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
@@ -3754,13 +3826,13 @@ export class AjaxPerfTrackTests extends AITestClass {
                         var xhr = new XMLHttpRequest();
 
                         // trigger the request that should cause a track event once the xhr request is complete
-                        xhr.open("GET", "https://httpbin.org/status/200");
+                        xhr.open("GET", "http://localhost:9001/shared/");
                         xhr.send();
                         Assert.equal(true, markSpy.called, "The code should have called been mark()");
                         this.addPerfEntry({
                             entryType: "resource",
                             initiatorType: "xmlhttprequest",
-                            name: "https://httpbin.org/status/200",
+                            name: "http://localhost:9001/shared/",
                             startTime: getPerformance().now(),
                             duration: 10,
                             serverTiming: [
@@ -3813,21 +3885,55 @@ export class AjaxPerfTrackTests extends AITestClass {
                     }
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
+                this.onDone(() => {
+                    appInsightsCore.unload(false);
+                });
                 // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
                 this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
 
+                let xhr = new XMLHttpRequest();
+
+                let resolve1Promise = createPromise<void>((resolve) => {
+                    xhr.onreadystatechange = () => {
+                        try {
+                            if (xhr.readyState === 4) {
+                                resolve();
+                            }
+                        } catch (e) {
+                            resolve();
+                        }
+                    };
+
+                    xhr.onerror = () => {
+                        resolve();
+                    };
+                });
+
+                var xhr2 = new XMLHttpRequest();
+                let resolve2Promise = createPromise<void>((resolve) => {
+                    xhr2.onreadystatechange = () => {
+                        try {
+                            if (xhr2.readyState === 4) {
+                                resolve();
+                            }
+                        } catch (e) {
+                            resolve();
+                        }
+                    };
+
+                    xhr2.onerror = () => {
+                        resolve();
+                    };
+                });
+
                 return this._asyncQueue()
                     .add(() => {
-                        // Act
-                        var xhr = new XMLHttpRequest();
-
                         // trigger the request that should cause a track event once the xhr request is complete
-                        xhr.open("GET", "https://httpbin.org/status/200");
+                        xhr.open("GET", "http://localhost:9001/shared/");
                         xhr.send();
 
-                        var xhr2 = new XMLHttpRequest();
-                        xhr2.open("GET", "https://httpbin.org/anything");
+                        xhr2.open("GET", "https://localhost:9001/anything");
                         xhr2.send();
 
                         Assert.equal(true, markSpy.called, "The code should have called been mark()");
@@ -3838,9 +3944,17 @@ export class AjaxPerfTrackTests extends AITestClass {
                         Assert.equal(prefix2.indexOf("ajaxData"), 0, "Prefix2 should start with 'ajaxData'");
 
                         let ajaxCountOne = parseInt(prefix1.substring(prefix1.indexOf('#') + 1), 10);
-                        let ajaxCountTwo = parseInt(prefix2.substring(prefix1.indexOf('#') + 1), 10);
+                        let ajaxCountTwo = parseInt(prefix2.substring(prefix2.indexOf('#') + 1), 10);
                         Assert.equal(1, ajaxCountTwo-ajaxCountOne, "the count should increase by 1");
-                    })
+                    }).add(() => {
+                        return createAllPromise([resolve1Promise, resolve2Promise]).then(() => {
+                            // Wait a bit for the track to be called
+                            return createTimeoutPromise(250).then(() => {
+                                let trackStub = this._context["trackStub"] as SinonStub;
+                                Assert.ok(trackStub.calledTwice, "track is called twice");
+                            });
+                        });
+                    });
             }
         });
 
@@ -3863,7 +3977,11 @@ export class AjaxPerfTrackTests extends AITestClass {
                     }
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
+
+                this.onDone(() => {
+                    appInsightsCore.unload(false);
+                });
 
                 // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
                 this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
@@ -3873,7 +3991,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                         // Act
                         var xhr = new XMLHttpRequest();
                         // trigger the request that should cause a track event once the xhr request is complete
-                        xhr.open("GET", "https://httpbin.org/status/200");
+                        xhr.open("GET", "http://localhost:9001/shared/");
                         xhr.send();
                         Assert.equal(true, markSpy.called, "The code should have called been mark()");
                     })
@@ -3920,7 +4038,11 @@ export class AjaxPerfTrackTests extends AITestClass {
                     }
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
+
+                this.onDone(() => {
+                    appInsightsCore.unload(false);
+                });
 
                 let trackSpy = this.sandbox.spy(appInsightsCore, "track");
                 this._context["trackStub"] = trackSpy;
@@ -3929,7 +4051,7 @@ export class AjaxPerfTrackTests extends AITestClass {
 
                         // Send fetch request that should trigger a track event when complete
                         Assert.ok(trackSpy.notCalled, "No fetch called yet");
-                        fetch("https://httpbin.org/status/200", {method: "post",  }).then((value) => {
+                        fetch("http://localhost:9001/shared/", {method: "post",  }).then((value) => {
                             this._context["fetchComplete"] = true;
                             return value;
                         });
@@ -3967,7 +4089,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -3997,10 +4119,9 @@ export class AjaxPerfTrackTests extends AITestClass {
                     .add(() => {
                         // Send fetch request that should trigger a track event when complete
                         Assert.ok(trackSpy.notCalled, "No fetch called yet");
-                        fetch("https://httpbin.org/status/200", {method: "post" });
+                        fetch("http://localhost:9001/shared/", {method: "post" });
                         Assert.equal(true, markSpy.called, "The code should have called been mark()");
-                            })
-                            .add(PollingAssert.asyncTaskPollingAssert(() => {
+                    }).add(PollingAssert.asyncTaskPollingAssert(() => {
                         let trackStub = this._context["trackStub"] as SinonStub;
                         if (trackStub.called) {
                             window.console && window.console.warn("Performance Entries: " + window.performance.getEntries().length);
@@ -4042,7 +4163,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 500);
                 });
@@ -4072,7 +4193,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                     .add(() => {
                         // Send fetch request that should trigger a track event when complete
                         Assert.ok(trackSpy.notCalled, "No fetch called yet");
-                        fetch("https://httpbin.org/status/200", { method: "post" });
+                        fetch("http://localhost:9001/shared/", { method: "post" });
                         Assert.equal(true, markSpy.called, "The code should have called been mark()");
                     })
                     .add(PollingAssert.asyncTaskPollingAssert(() => {
@@ -4117,7 +4238,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                             statusText: "Hello",
                             trailer: null,
                             type: "basic",
-                            url: "https://httpbin.org/status/200"
+                            url: "http://localhost:9001/shared/"
                         });
                     }, 0);
                 });
@@ -4142,7 +4263,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                 this._context["fetchCalls"] = fetchCalls;
 
                 // Use test hook to simulate the correct url location
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
 
                 // Setup
                 let headers = new Headers();
@@ -4151,7 +4272,7 @@ export class AjaxPerfTrackTests extends AITestClass {
                     method: 'get',
                     headers
                 };
-                const url = 'https://httpbin.org/status/200';
+                const url = 'http://localhost:9001/shared/';
 
                 return this._asyncQueue()
                     .add(() => {
@@ -4250,7 +4371,7 @@ export class AjaxFrozenTests extends AITestClass {
                     }
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
-                this._ajax["_currentWindowHost"] = "httpbin.org";
+                this._ajax["_currentWindowHost"] = "localhost:9001";
 
                 // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
                 this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
@@ -4267,7 +4388,7 @@ export class AjaxFrozenTests extends AITestClass {
                 }
 
                 // trigger the request that should cause a track event once the xhr request is complete
-                xhr.open("GET", "https://httpbin.org/status/200");
+                xhr.open("GET", "http://localhost:9001/shared/");
                 xhr.send();
 
                 return this._asyncQueue()

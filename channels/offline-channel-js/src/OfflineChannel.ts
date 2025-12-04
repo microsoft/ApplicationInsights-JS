@@ -441,13 +441,13 @@ export class OfflineChannel extends BaseTelemetryPlugin implements IChannelContr
             }
 
             function _setSendNextTimer() {
-                let isOnline = _offlineListener && _offlineListener.isOnline();
+                const isOnline = _offlineListener && _offlineListener.isOnline();
            
                 if(!_sendNextBatchTimer) {
                     let retryInterval = _retryAt ? mathMax(0, _retryAt - dateNow()) : 0;
                     let timerValue = mathMax(_maxBatchInterval, retryInterval);
                     _sendNextBatchTimer = scheduleTimeout(() => {
-                        if (isOnline) {
+                        if (_offlineListener && _offlineListener.isOnline()) {
                             // is no isCompletelyIdle function is available, assume we can send
                             if(isFunction(_sender.isCompletelyIdle) && !_sender.isCompletelyIdle()) {
                                 _sendNextBatchTimer && _sendNextBatchTimer.refresh();
