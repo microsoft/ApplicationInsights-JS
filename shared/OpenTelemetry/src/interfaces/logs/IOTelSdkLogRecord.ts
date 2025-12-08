@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { OTelSeverityNumber } from "../../enums/logs/eOTelSeverityNumber";
 import { OTelAnyValue } from "../../OTelTypes/OTelAnyValue";
+import { OTelSeverityNumber } from "../../enums/logs/eOTelSeverityNumber";
 import { IOTelResource } from "../resources/IOTelResource";
 import { IOTelHrTime } from "../time";
 import { IOTelInstrumentationScope } from "../trace/IOTelInstrumentationScope";
