@@ -1,5 +1,6 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { createPromise, IPromise } from "@nevware21/ts-async";
+import { isFunction } from "@nevware21/ts-utils";
 
 import { IOTelContext } from "../../../../src/interfaces/context/IOTelContext";
 import { IOTelLogRecordProcessor } from "../../../../src/interfaces/logs/IOTelLogRecordProcessor";
@@ -61,8 +62,8 @@ export class OTelMultiLogRecordProcessorTests extends AITestClass {
             test: () => {
                 const { multiProcessor } = setup();
                 Assert.ok(!!multiProcessor, "Should create MultiLogRecordProcessor instance");
-                Assert.equal(typeof multiProcessor.forceFlush, "function", "Should expose forceFlush method");
-                Assert.equal(typeof multiProcessor.shutdown, "function", "Should expose shutdown method");
+                Assert.equal(isFunction(multiProcessor.forceFlush), true, "Should expose forceFlush method");
+                Assert.equal(isFunction(multiProcessor.shutdown), true, "Should expose shutdown method");
             }
         });
 

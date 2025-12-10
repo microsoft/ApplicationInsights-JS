@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { isArray, isObject, isString } from "@nevware21/ts-utils";
 import { OTelAnyValue } from "../OTelTypes/OTelAnyValue";
 import { getContextActiveSpanContext, isSpanContextValid } from "../api/trace/utils";
+import { createAttributeContainer, isAttributeContainer } from "../attribute/attributeContainer";
 import { OTelSeverityNumber } from "../enums/logs/eOTelSeverityNumber";
 import { OTelAttributeValue } from "../interfaces/IOTelAttributes";
 import { IOTelLogRecord, LogAttributes, LogBody } from "../interfaces/logs/IOTelLogRecord";
@@ -33,13 +35,28 @@ export function createLogRecord(
         context
     } = logRecord;
 
-    const logAttributes = attributes || {};
+    const hasAttributeContainer = isAttributeContainer(attributes as any);
+    const logAttributes = (!hasAttributeContainer && attributes) ? attributes : {};
     const now = Date.now();
     const hrTime = timeInputToHrTime(timestamp || now);
     const hrTimeObserved = timeInputToHrTime(observedTimestamp || now);
     const resource = sharedState.resource;
     const logRecordLimits: Required<IOTelLogRecordLimits> = sharedState.logRecordLimits;
     const handlers: IOTelErrorHandlers = {};
+    const attributeContainer = createAttributeContainer<any>(
+        {
+            traceCfg: {
+                generalLimits: {
+                    attributeCountLimit: logRecordLimits.attributeCountLimit,
+                    attributeValueLengthLimit: logRecordLimits.attributeValueLengthLimit
+                }
+            },
+            errorHandlers: handlers
+        },
+        instrumentationScope.name,
+        hasAttributeContainer ? (attributes as any) : undefined,
+        logRecordLimits
+    );
 
     let spanContext: IOTelSpanContext | undefined;
     if (context) {
@@ -49,18 +66,16 @@ export function createLogRecord(
         }
     }
 
-    const recordAttributes: LogAttributes = {};
     let storedSeverityText: string | undefined = severityText;
     let storedSeverityNumber: OTelSeverityNumber | undefined = severityNumber;
     let storedBody: LogBody | undefined = body;
     let storedEventName: string | undefined = eventName;
-    let totalAttributesCount = 0;
     let isReadonly = false;
 
     let logRecordInstance: IOTelLogRecordInstance;
 
     function getDroppedAttributesCount(): number {
-        return totalAttributesCount - Object.keys(recordAttributes).length;
+        return attributeContainer.droppedAttributes;
     }
 
     function truncateToLimit(value: string, limit: number): string {
@@ -77,13 +92,13 @@ export function createLogRecord(
             return value;
         }
 
-        if (typeof value === "string") {
+        if (isString(value)) {
             return truncateToLimit(value, limit);
         }
 
-        if (Array.isArray(value)) {
+        if (isArray(value)) {
             return (value as []).map(function (val) {
-                return typeof val === "string" ? truncateToLimit(val, limit) : val;
+                return isString(val) ? truncateToLimit(val, limit) : val;
             });
         }
 
@@ -111,8 +126,8 @@ export function createLogRecord(
         if (
             !isAttributeValue(value) &&
             !(
-                typeof value === "object" &&
-                !Array.isArray(value) &&
+                isObject(value) &&
+                !isArray(value) &&
                 Object.keys(value).length > 0
             )
         ) {
@@ -120,27 +135,19 @@ export function createLogRecord(
             return logRecordInstance;
         }
 
-        totalAttributesCount += 1;
-        if (
-            Object.keys(recordAttributes).length >= logRecordLimits.attributeCountLimit &&
-            !Object.prototype.hasOwnProperty.call(recordAttributes, key)
-        ) {
-            if (getDroppedAttributesCount() === 1) {
-                handleWarn(handlers, "Dropping extra attributes.");
-            }
-            return logRecordInstance;
+        if (isAttributeValue(value)) {
+            value = truncateToSize(value);
         }
 
-        if (isAttributeValue(value)) {
-            recordAttributes[key] = truncateToSize(value);
-        } else {
-            recordAttributes[key] = value;
-        }
+        attributeContainer.set(key, value as any);
 
         return logRecordInstance;
     }
 
     function setAttributesInternal(attributesToSet: LogAttributes): IOTelLogRecordInstance {
+        if (!attributesToSet) {
+            return logRecordInstance;
+        }
         const entries = Object.entries(attributesToSet);
         for (let idx = 0; idx < entries.length; idx++) {
             const attribute = entries[idx];
@@ -204,7 +211,7 @@ export function createLogRecord(
             return instrumentationScope;
         },
         get attributes(): LogAttributes {
-            return recordAttributes;
+            return attributeContainer.attributes as unknown as LogAttributes;
         },
         get severityText(): string | undefined {
             return storedSeverityText;
@@ -266,7 +273,9 @@ export function createLogRecord(
         _makeReadonly: makeReadonly
     };
 
-    setAttributesInternal(logAttributes);
+    if (!hasAttributeContainer) {
+        setAttributesInternal(logAttributes);
+    }
 
     return logRecordInstance;
 }

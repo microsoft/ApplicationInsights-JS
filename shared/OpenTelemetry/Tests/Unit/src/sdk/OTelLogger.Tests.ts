@@ -10,6 +10,7 @@ import { eW3CTraceFlags } from "@microsoft/applicationinsights-common";
 import { createContextManager } from "../../../../src/api/context/contextManager";
 import { setContextSpanContext } from "../../../../src/api/trace/utils";
 import { createLogger } from "../../../../src/sdk/OTelLogger";
+import { isFunction } from "@nevware21/ts-utils";
 
 type LoggerWithScope = IOTelLogger & { instrumentationScope: IOTelInstrumentationScope };
 
@@ -49,7 +50,7 @@ export class OTelLoggerTests extends AITestClass {
                 const logger = createLogger(scope, sharedState) as LoggerWithScope;
                 Assert.equal(logger.instrumentationScope.name, "test name", "Should set instrumentation scope name");
                 Assert.equal(logger.instrumentationScope.version, "test version", "Should set instrumentation scope version");
-                Assert.equal(typeof logger.emit, "function", "Should expose emit implementation");
+                Assert.equal(isFunction(logger.emit), true, "Should expose emit implementation");
             }
         });
 

@@ -5,6 +5,7 @@ import { createLoggerProviderSharedState } from "../../../../src/internal/Logger
 import { reconfigureLimits } from "../../../../src/sdk/config";
 import { createLogRecord } from "../../../../src/sdk/OTelLogRecord";
 import { IOTelLogRecordLimits } from "../../../../src/interfaces/logs/IOTelLogRecordLimits";
+import { isObject } from "@nevware21/ts-utils";
 
 const setup = (logRecordLimits?: IOTelLogRecordLimits, data?: IOTelLogRecord) => {
     const instrumentationScope = {
@@ -40,7 +41,7 @@ export class OTelLogRecordTests extends AITestClass {
             name: "LogRecord: constructor - should create an instance",
             test: () => {
                 const { logRecord } = setup();
-                Assert.ok(logRecord && typeof logRecord === "object", "LogRecord should be created");
+                Assert.ok(logRecord && isObject(logRecord), "LogRecord should be created");
             }
         });
 
