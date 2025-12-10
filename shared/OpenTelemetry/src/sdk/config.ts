@@ -57,38 +57,31 @@ export function loadDefaultConfig() {
  * configures the model specific limits by using the values from the general ones.
  * @param logRecordLimits User provided limits configuration
  */
-export function reconfigureLimits(
-    logRecordLimits: IOTelLogRecordLimits
-): Required<IOTelLogRecordLimits> {
-    const providedCount = logRecordLimits.attributeCountLimit;
-    const providedValueLength = logRecordLimits.attributeValueLengthLimit;
+export function reconfigureLimits(logRecordLimits?: IOTelLogRecordLimits): Required<IOTelLogRecordLimits> {
+    const limits = logRecordLimits || {};
+    const providedCount = limits.attributeCountLimit;
+    const providedValueLength = limits.attributeValueLengthLimit;
 
     const envLogCount = getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT");
     const envGeneralCount = getNumberFromEnv("OTEL_ATTRIBUTE_COUNT_LIMIT");
-
     const envLogValueLength = getNumberFromEnv("OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT");
     const envGeneralValueLength = getNumberFromEnv("OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT");
 
-    return {
-        /**
-         * Reassign log record attribute count limit to use first non null value defined by user or use default value
-         */
-        attributeCountLimit: providedCount !== undefined
-            ? providedCount
-            : envLogCount !== undefined
-                ? envLogCount
-                : envGeneralCount !== undefined
-                    ? envGeneralCount
-                    : 128,
-        /**
-         * Reassign log record attribute value length limit to use first non null value defined by user or use default value
-         */
-        attributeValueLengthLimit: providedValueLength !== undefined
-            ? providedValueLength
-            : envLogValueLength !== undefined
-                ? envLogValueLength
-                : envGeneralValueLength !== undefined
-                    ? envGeneralValueLength
-                    : Infinity
-    };
+    limits.attributeCountLimit = providedCount !== undefined
+        ? providedCount
+        : envLogCount !== undefined
+            ? envLogCount
+            : envGeneralCount !== undefined
+                ? envGeneralCount
+                : 128;
+
+    limits.attributeValueLengthLimit = providedValueLength !== undefined
+        ? providedValueLength
+        : envLogValueLength !== undefined
+            ? envLogValueLength
+            : envGeneralValueLength !== undefined
+                ? envGeneralValueLength
+                : Infinity;
+
+    return limits as Required<IOTelLogRecordLimits>;
 }

@@ -5,6 +5,7 @@ import { eAttributeFilter, IAttributeChangeInfo } from "../../../../src/attribut
 import { IOTelConfig } from "../../../../src/interfaces/config/IOTelConfig";
 import { IOTelAttributes } from "../../../../src/interfaces/IOTelAttributes";
 import { eAttributeChangeOp } from "../../../../src/enums/eAttributeChangeOp";
+import { isFunction } from "@nevware21/ts-utils";
 
 export class AttributeContainerTests extends AITestClass {
 
@@ -528,8 +529,8 @@ export class AttributeContainerTests extends AITestClass {
                 Assert.ok(isAttributeContainer(snapshotContainer), "Should identify snapshot child container as valid");
                 
                 // Verify that child containers have the required methods and properties
-                Assert.ok(typeof childContainer.child === "function", "Child container should have child method");
-                Assert.ok(typeof childContainer.listen === "function", "Child container should have listen method");
+                Assert.equal(isFunction(childContainer.child), true, "Child container should have child method");
+                Assert.equal(isFunction(childContainer.listen), true, "Child container should have listen method");
                 Assert.ok("id" in childContainer, "Child container should have id property");
                 Assert.ok("size" in childContainer, "Child container should have size property");
             }

@@ -22,7 +22,7 @@ export function createLogger(
          * the LogRecords it emits MUST automatically include the Trace Context from the active Context,
          * if Context has not been explicitly set.
          */
-        const logRecordData: IOTelLogRecord = {
+        let logRecordData: IOTelLogRecord = {
             context: currentContext,
             timestamp: logRecord.timestamp,
             observedTimestamp: logRecord.observedTimestamp,

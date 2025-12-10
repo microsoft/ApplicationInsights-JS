@@ -12,6 +12,7 @@ import { IOTelInstrumentationScope } from "../../../../src/interfaces/trace/IOTe
 import { createMultiLogRecordProcessor } from "../../../../src/sdk/OTelMultiLogRecordProcessor";
 import { loadDefaultConfig } from "../../../../src/sdk/config";
 import { IOTelResource, OTelRawResourceAttribute } from "../../../../src/interfaces/resources/IOTelResource";
+import { isFunction } from "@nevware21/ts-utils";
 
 type LoggerProviderInstance = ReturnType<typeof createLoggerProvider>;
 type MultiLogRecordProcessorInstance = ReturnType<typeof createMultiLogRecordProcessor>;
@@ -32,7 +33,7 @@ export class OTelLoggerProviderTests extends AITestClass {
             name: "LoggerProvider: constructor without options should construct an instance",
             test: () => {
                 const provider = createLoggerProvider();
-                Assert.equal(typeof provider.getLogger, "function", "Should create a LoggerProvider instance");
+                Assert.equal(isFunction(provider.getLogger), true, "Should create a LoggerProvider instance");
                 const sharedState = provider._sharedState;
                 Assert.ok(sharedState.loggers instanceof Map, "Should expose shared state instance");
             }
@@ -304,7 +305,7 @@ export class OTelLoggerProviderTests extends AITestClass {
                         try {
                             const logger = provider.getLogger("default", "1.0.0");
                             const expectedNoopLogger = createNoopLogger();
-                            Assert.equal(typeof logger.emit, "function", "Logger should expose noop emit function after shutdown");
+                            Assert.equal(isFunction(logger.emit), true, "Logger should expose noop emit function after shutdown");
                             Assert.equal(logger.emit.length, expectedNoopLogger.emit.length, "Noop emit signature should match expected noop logger");
                             let threw = false;
                             try {
