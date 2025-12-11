@@ -5,6 +5,10 @@ import { FieldType } from "../../Enums";
 import { IData } from "../../Interfaces/Contracts/IData";
 import { ISerializable } from "../../Interfaces/Telemetry/ISerializable";
 
+/**
+ * @deprecated - will be removed in future releases as this was only used by the applicationinsights-channel-js package.
+ * And it no longer uses this class.
+ */
 export class Data<TDomain> implements IData<TDomain>, ISerializable {
 
     /**

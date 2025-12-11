@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ISample, Metric } from "@microsoft/applicationinsights-common";
+import { ISample, MetricDataType } from "@microsoft/applicationinsights-common";
 import {
     IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, eLoggingSeverity, safeGetLogger
 } from "@microsoft/applicationinsights-core-js";
@@ -38,7 +38,7 @@ export class Sample implements ISample {
 
         if (samplingPercentage === null || samplingPercentage === undefined || samplingPercentage >= 100) {
             return true;
-        } else if (envelope.baseType === Metric.dataType) {
+        } else if (envelope.baseType === MetricDataType) {
             // exclude MetricData telemetry from sampling
             return true;
         }

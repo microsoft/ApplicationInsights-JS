@@ -8,11 +8,19 @@ import { IMessageData } from "../Interfaces/Contracts/IMessageData";
 import { SeverityLevel } from "../Interfaces/Contracts/SeverityLevel";
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import { dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties } from "./Common/DataSanitizer";
+import { TraceDataType } from "./DataTypes";
+import { TraceEnvelopeType } from "./EnvelopeTypes";
 
 export class Trace implements IMessageData, ISerializable {
+    /**
+     * @deprecated Use the constant TraceEnvelopeType instead.
+     */
+    public static envelopeType = TraceEnvelopeType;
 
-    public static envelopeType = "Microsoft.ApplicationInsights.{0}.Message";
-    public static dataType = "MessageData";
+    /**
+     * @deprecated Use the constant TraceDataType instead.
+     */
+    public static dataType = TraceDataType;
 
     public aiDataContract = {
         ver: FieldType.Required,

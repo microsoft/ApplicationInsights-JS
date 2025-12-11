@@ -5,7 +5,7 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, IConfig, IPropertiesPlugin, PageView, PropertiesPluginIdentifier, utlSetStoragePrefix
+    BreezeChannelIdentifier, IConfig, IPropertiesPlugin, PageView, PageViewEnvelopeType, PropertiesPluginIdentifier, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-common";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
@@ -74,7 +74,7 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 if (!isNullOrUndefined(event)) {
                     itemCtx = _self._getTelCtx(itemCtx);
                     // If the envelope is PageView, reset the internal message count so that we can send internal telemetry for the new page.
-                    if (event.name === PageView.envelopeType) {
+                    if (event.name === PageViewEnvelopeType) {
                         itemCtx.diagLog().resetInternalMessageCount();
                     }
 
