@@ -1,13 +1,19 @@
 import {
-    CtxTagKeys, Data, Envelope, Event, Exception, HttpMethod, IDependencyTelemetry, IEnvelope, IExceptionInternal,
-    IPageViewPerformanceTelemetry, IPageViewTelemetryInternal, IWeb, Metric, PageView, PageViewPerformance, RemoteDependencyData, SampleRate,
-    Trace, dataSanitizeString
+    AIData, CtxTagKeys, Envelope, Event, EventDataType, EventEnvelopeType, Exception, ExceptionDataType, ExceptionEnvelopeType, HttpMethod,
+    IDependencyTelemetry, IEnvelope, IExceptionInternal, IPageViewPerformanceTelemetry, IPageViewTelemetryInternal, IRemoteDependencyData,
+    IRequestTelemetry, ISerializable, IWeb, Metric, MetricDataType, MetricEnvelopeType, PageView, PageViewDataType, PageViewEnvelopeType,
+    PageViewPerformance, PageViewPerformanceDataType, PageViewPerformanceEnvelopeType, RemoteDependencyDataType, RequestDataType, SampleRate,
+    Trace, TraceDataType, TraceEnvelopeType, dataSanitizeString
 } from "@microsoft/applicationinsights-common";
 import {
-    IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, _throwInternal, _warnToConsole, eLoggingSeverity, getJSON, hasJSON,
+    IDiagnosticLogger, ITelemetryItem, Tags, _eInternalMessageId, _throwInternal, _warnToConsole, eLoggingSeverity, getJSON, hasJSON, isDate,
     isNullOrUndefined, isNumber, isString, isTruthy, objForEachKey, optimizeObject, setValue, toISOString
 } from "@microsoft/applicationinsights-core-js";
+import { IRequestData } from "./Interfaces/Contracts/IRequestData";
 import { STR_DURATION } from "./InternalConstants";
+import { _createData } from "./Telemetry/Common/Data";
+import { RemoteDependencyEnvelopeType, createRemoteDependencyData } from "./Telemetry/RemoteDependencyData";
+import { createRequestData } from "./Telemetry/RequestData";
 
 // these two constants are used to filter out properties not needed when trying to extract custom properties and measurements from the incoming payload
 const strBaseType = "baseType";
@@ -26,7 +32,7 @@ function _extractPartAExtensions(logger: IDiagnosticLogger, item: ITelemetryItem
     // todo: switch to keys from common in this method
     let envTags = env.tags = env.tags || {};
     let itmExt = item.ext = item.ext || {};
-    let itmTags = item.tags = item.tags || [];
+    let itmTags = item.tags = item.tags || {} as Tags;
 
     let extUser = itmExt.user;
     if (extUser) {
@@ -95,7 +101,7 @@ function _extractPartAExtensions(logger: IDiagnosticLogger, item: ITelemetryItem
     //     ]
     //   }
 
-    const tgs = {};
+    const tgs: Tags = {};
     // deals with tags.push({object})
     for(let i = itmTags.length - 1; i >= 0; i--){
         const tg = itmTags[i];
@@ -143,15 +149,18 @@ function _convertPropsUndefinedToCustomDefinedValue(properties: { [key: string]:
 }
 
 // TODO: Do we want this to take logger as arg or use this._logger as nonstatic?
-function _createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, telemetryItem: ITelemetryItem, data: Data<T>): IEnvelope {
+function _createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, telemetryItem: ITelemetryItem, data: AIData<T>): IEnvelope {
     const envelope = new Envelope(logger, data, envelopeType);
 
-    _setValueIf(envelope, "sampleRate", telemetryItem[SampleRate]);
-    if ((telemetryItem[strBaseData] || {}).startTime) {
+    _setValueIf(envelope, "sampleRate", (telemetryItem as any)[SampleRate]);
+
+    let startTime = (telemetryItem[strBaseData] || {}).startTime;
+    if (isDate(startTime)) {
         // Starting from Version 3.0.3, the time property will be assigned by the startTime value,
         // which records the loadEvent time for the pageView event.
-        envelope.time = toISOString(telemetryItem[strBaseData].startTime);
+        envelope.time = toISOString(startTime);
     }
+
     envelope.iKey = telemetryItem.iKey;
     const iKeyNoDashes = telemetryItem.iKey.replace(/-/g, "");
     envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
@@ -193,21 +202,37 @@ export function DependencyEnvelopeCreator(logger: IDiagnosticLogger, telemetryIt
     }
 
     const method = bd[strProperties] && bd[strProperties][HttpMethod] ? bd[strProperties][HttpMethod] : "GET";
-    const remoteDepData = new RemoteDependencyData(logger, bd.id, bd.target, bd.name, bd.duration, bd.success, bd.responseCode, method, bd.type, bd.correlationContext, customProperties, customMeasurements);
-    const data = new Data<RemoteDependencyData>(RemoteDependencyData.dataType, remoteDepData);
-    return _createEnvelope<RemoteDependencyData>(logger, RemoteDependencyData.envelopeType, telemetryItem, data);
+    const remoteDepData = createRemoteDependencyData(logger, bd.id, bd.target, bd.name, bd.duration, bd.success, bd.responseCode, method, bd.type, bd.correlationContext, customProperties, customMeasurements);
+    const data = _createData<IRemoteDependencyData>(RemoteDependencyDataType, remoteDepData);
+    return _createEnvelope<IRemoteDependencyData>(logger, RemoteDependencyEnvelopeType, telemetryItem, data);
 }
+
+export function RequestEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
+    EnvelopeCreatorInit(logger, telemetryItem);
+
+    const customMeasurements = telemetryItem[strBaseData].measurements || {};
+    const customProperties = telemetryItem[strBaseData][strProperties] || {};
+    _extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
+    if (!isNullOrUndefined(customUndefinedValue)) {
+        _convertPropsUndefinedToCustomDefinedValue(customProperties, customUndefinedValue);
+    }
+    const bd = telemetryItem[strBaseData] as IRequestTelemetry;
+    const requestData = createRequestData(logger, bd.id, bd.name, bd.duration, bd.success, bd.responseCode, bd.source, bd.url, customProperties, customMeasurements);
+    const data = _createData<IRequestData & ISerializable>(RequestDataType, requestData);
+    return _createEnvelope<IRequestData & ISerializable>(logger, RequestDataType, telemetryItem, data);
+}
+
 
 export function EventEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
     EnvelopeCreatorInit(logger, telemetryItem);
 
-    let customProperties = {};
+    let customProperties = {} as { [key: string]: any };
     let customMeasurements = {};
-    if (telemetryItem[strBaseType] !== Event.dataType) {
-        customProperties["baseTypeSource"] = telemetryItem[strBaseType]; // save the passed in base type as a property
+    if (telemetryItem[strBaseType] !== EventDataType) {
+        (customProperties as any)["baseTypeSource"] = telemetryItem[strBaseType]; // save the passed in base type as a property
     }
 
-    if (telemetryItem[strBaseType] === Event.dataType) { // take collection
+    if (telemetryItem[strBaseType] === EventDataType) { // take collection
         customProperties = telemetryItem[strBaseData][strProperties] || {};
         customMeasurements = telemetryItem[strBaseData].measurements || {};
     } else { // if its not a known type, convert to custom event
@@ -223,8 +248,8 @@ export function EventEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: I
     }
     const eventName = telemetryItem[strBaseData].name;
     const eventData = new Event(logger, eventName, customProperties, customMeasurements);
-    const data = new Data<Event>(Event.dataType, eventData);
-    return _createEnvelope<Event>(logger, Event.envelopeType, telemetryItem, data);
+    const data = _createData<Event>(EventDataType, eventData);
+    return _createEnvelope<Event>(logger, EventEnvelopeType, telemetryItem, data);
 }
 
 export function ExceptionEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
@@ -239,8 +264,8 @@ export function ExceptionEnvelopeCreator(logger: IDiagnosticLogger, telemetryIte
     }
     const bd = telemetryItem[strBaseData] as IExceptionInternal;
     const exData = Exception.CreateFromInterface(logger, bd, customProperties, customMeasurements);
-    const data = new Data<Exception>(Exception.dataType, exData);
-    return _createEnvelope<Exception>(logger, Exception.envelopeType, telemetryItem, data);
+    const data = _createData<Exception>(ExceptionDataType, exData);
+    return _createEnvelope<Exception>(logger, ExceptionEnvelopeType, telemetryItem, data);
 }
 
 export function MetricEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
@@ -254,8 +279,8 @@ export function MetricEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: 
         _convertPropsUndefinedToCustomDefinedValue(props, customUndefinedValue);
     }
     const baseMetricData = new Metric(logger, baseData.name, baseData.average, baseData.sampleCount, baseData.min, baseData.max, baseData.stdDev, props, measurements);
-    const data = new Data<Metric>(Metric.dataType, baseMetricData);
-    return _createEnvelope<Metric>(logger, Metric.envelopeType, telemetryItem, data);
+    const data = _createData<Metric>(MetricDataType, baseMetricData);
+    return _createEnvelope<Metric>(logger, MetricEnvelopeType, telemetryItem, data);
 }
 
 export function PageViewEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
@@ -316,8 +341,8 @@ export function PageViewEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem
         _convertPropsUndefinedToCustomDefinedValue(properties, customUndefinedValue);
     }
     const pageViewData = new PageView(logger, name, url, duration, properties, measurements, id);
-    const data = new Data<PageView>(PageView.dataType, pageViewData);
-    return _createEnvelope<PageView>(logger, PageView.envelopeType, telemetryItem, data);
+    const data = _createData<PageView>(PageViewDataType, pageViewData);
+    return _createEnvelope<PageView>(logger, PageViewEnvelopeType, telemetryItem, data);
 }
 
 export function PageViewPerformanceEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
@@ -333,8 +358,8 @@ export function PageViewPerformanceEnvelopeCreator(logger: IDiagnosticLogger, te
         _convertPropsUndefinedToCustomDefinedValue(properties, customUndefinedValue);
     }
     const baseData = new PageViewPerformance(logger, name, url, undefined, properties, measurements, bd);
-    const data = new Data<PageViewPerformance>(PageViewPerformance.dataType, baseData);
-    return _createEnvelope<PageViewPerformance>(logger, PageViewPerformance.envelopeType, telemetryItem, data);
+    const data = _createData<PageViewPerformance>(PageViewPerformanceDataType, baseData);
+    return _createEnvelope<PageViewPerformance>(logger, PageViewPerformanceEnvelopeType, telemetryItem, data);
 }
 
 export function TraceEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
@@ -349,6 +374,6 @@ export function TraceEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem: I
         _convertPropsUndefinedToCustomDefinedValue(props, customUndefinedValue);
     }
     const baseData = new Trace(logger, message, severityLevel, props, measurements);
-    const data = new Data<Trace>(Trace.dataType, baseData);
-    return _createEnvelope<Trace>(logger, Trace.envelopeType, telemetryItem, data);
+    const data = _createData<Trace>(TraceDataType, baseData);
+    return _createEnvelope<Trace>(logger, TraceEnvelopeType, telemetryItem, data);
 }

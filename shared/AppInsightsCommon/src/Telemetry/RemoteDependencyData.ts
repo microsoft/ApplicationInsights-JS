@@ -8,11 +8,23 @@ import { IRemoteDependencyData } from "../Interfaces/Contracts/IRemoteDependency
 import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import { AjaxHelperParseDependencyPath } from "../Util";
 import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl } from "./Common/DataSanitizer";
+import { RemoteDependencyDataType } from "./DataTypes";
+import { RemoteDependencyEnvelopeType } from "./EnvelopeTypes";
 
+/**
+ * @deprecated - will be removed in future releases as this was only used by the applicationinsights-channel-js package.
+ * And it no longer uses this class.
+ */
 export class RemoteDependencyData implements IRemoteDependencyData, ISerializable {
+    /**
+     * @deprecated Use the constant RemoteDependencyEnvelopeType instead.
+     */
+    public static envelopeType = RemoteDependencyEnvelopeType;
 
-    public static envelopeType = "Microsoft.ApplicationInsights.{0}.RemoteDependency";
-    public static dataType = "RemoteDependencyData";
+    /**
+     * @deprecated Use the constant RemoteDependencyDataType instead.
+     */
+    public static dataType = RemoteDependencyDataType;
 
     public aiDataContract = {
         id: FieldType.Required,
@@ -104,7 +116,7 @@ export class RemoteDependencyData implements IRemoteDependencyData, ISerializabl
         _self.id = id;
         _self.duration = msToTimeSpan(value);
         _self.success = success;
-        _self.resultCode = resultCode + "";
+        _self.resultCode = "" + resultCode;
 
         _self.type = dataSanitizeString(logger, requestAPI);
 

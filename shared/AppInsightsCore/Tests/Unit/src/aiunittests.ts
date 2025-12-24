@@ -14,7 +14,13 @@ import { DynamicConfigTests } from "./DynamicConfig.Tests";
 import { SendPostManagerTests } from './SendPostManager.Tests';
 // import { StatsBeatTests } from './StatsBeat.Tests';
 import { OTelTraceApiTests } from './OpenTelemetry/traceState.Tests';
+import { CommonUtilsTests } from './OpenTelemetry/commonUtils.Tests';
+import { OpenTelemetryErrorsTests } from './OpenTelemetry/errors.Tests';
+import { SpanTests } from './OpenTelemetry/span.Tests';
+import { AttributeContainerTests } from './OpenTelemetry/attributeContainer.Tests';
 import { W3cTraceStateTests } from './W3TraceState.Tests';
+import { OTelNegativeTests } from './OpenTelemetry/otelNegative.Tests';
+import { TraceUtilsTests } from './OpenTelemetry/traceUtils.Tests';
 
 export function runTests() {
     new GlobalTestHooks().registerTests();
@@ -31,7 +37,13 @@ export function runTests() {
     new EventsDiscardedReasonTests().registerTests();
     new W3cTraceParentTests().registerTests();
     new OTelTraceApiTests().registerTests();
+    new CommonUtilsTests().registerTests();
+    new OpenTelemetryErrorsTests().registerTests();
+    new SpanTests().registerTests();
+    new AttributeContainerTests().registerTests();
     new W3cTraceStateTests().registerTests();
+    new TraceUtilsTests().registerTests();
+    new OTelNegativeTests().registerTests();
     // new StatsBeatTests(false).registerTests();
     // new StatsBeatTests(true).registerTests();
     new SendPostManagerTests().registerTests();
