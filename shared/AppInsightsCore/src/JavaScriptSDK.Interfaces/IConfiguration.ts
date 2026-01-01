@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { IPromise } from "@nevware21/ts-async";
 import { eTraceHeadersMode } from "../JavaScriptSDK.Enums/TraceHeadersMode";
+import { IOTelConfig } from "../OpenTelemetry/interfaces/config/IOTelConfig";
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IChannelControls } from "./IChannelControls";
 import { ICookieMgrConfig } from "./ICookieMgr";
@@ -14,7 +15,7 @@ import { ITelemetryPlugin } from "./ITelemetryPlugin";
 /**
  * Configuration provided to SDK core
  */
-export interface IConfiguration {
+export interface IConfiguration extends IOTelConfig {
     /**
      * Instrumentation key of resource. Either this or connectionString must be specified.
      */

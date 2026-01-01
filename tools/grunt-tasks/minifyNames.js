@@ -29,7 +29,7 @@ var defaultInternalConstants = [
 
 var defaultIgnoreConst = [ ];
 var defaultIgnoreNames = [ 
-    "_e[A-Z]*", "e[A-Z]*", "[A-Z]*Type", "[A-Z]*Value", "[A-Z]*Reason", "chrome.*"
+    "_e[A-Z]*", "e[A-Z]*", "[A-Z]*Type", "[A-Z]*Value", "[A-Z]*Reason", "chrome.*", "WellKnownSymbols"
 ];
 
 function _createEnumWildcardRegEx(value) {

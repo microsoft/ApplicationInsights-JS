@@ -1,20 +1,32 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-"use strict";
-
 import { AnalyticsPlugin } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { IAppInsights, IPropertiesPlugin, IRequestHeaders } from "@microsoft/applicationinsights-common";
 import {
-    IConfiguration, ILoadedPlugin, IPlugin, ITelemetryPlugin, ITelemetryUnloadState, UnloadHandler
+    IConfiguration, ILoadedPlugin, IOTelApi, IPlugin, ITelemetryPlugin, ITelemetryUnloadState, ITraceApi, ITraceHost, UnloadHandler
 } from "@microsoft/applicationinsights-core-js";
 import { IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import { IPromise } from "@nevware21/ts-async";
 
 export { IRequestHeaders };
 
-export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
+export interface IApplicationInsights<CfgType extends IConfiguration = IConfiguration> extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin, ITraceHost<CfgType> {
     appInsights: AnalyticsPlugin;
+
+    /**
+     * The OpenTelemetry API instance associated with this instance
+     * Unlike OpenTelemetry, this API does not return a No-Op implementation and returns null if the SDK has been torn
+     * down or not yet initialized.
+     */
+    readonly otelApi: IOTelApi | null;
+
+    /**
+     * OpenTelemetry trace API for creating spans.
+     * Unlike OpenTelemetry, this API does not return a No-Op implementation and returns null if the SDK has been torn
+     * down or not yet initialized.
+     */
+    readonly trace: ITraceApi | null;
 
     /**
      * Attempt to flush data immediately; If executing asynchronously (the default) and
@@ -59,7 +71,7 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
 
     /**
      * Find and return the (first) plugin with the specified identifier if present
-     * @param pluginIdentifier
+     * @param pluginIdentifier - The identifier of the plugin to find
      */
     getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T>;
   
