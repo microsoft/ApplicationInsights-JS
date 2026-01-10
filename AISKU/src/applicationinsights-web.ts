@@ -4,6 +4,9 @@ export { AppInsightsSku as ApplicationInsights } from "./AISku";
 
 export { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
 
+// OpenTelemetry trace API exports (public interfaces only)
+export { IOTelTracerProvider, IOTelTracer, IAttributeContainer, IOTelAttributes, IReadableSpan } from "@microsoft/applicationinsights-core-js";
+
 // Re-exports
 export {
     IConfiguration,
@@ -30,7 +33,11 @@ export {
     INotificationManager,
     IProcessTelemetryContext,
     Tags,
-    ILoadedPlugin
+    ILoadedPlugin,
+    IOTelSpan,
+    eOTelSpanKind,
+    OTelSpanKind,
+    IOTelSpanOptions
 } from "@microsoft/applicationinsights-core-js";
 export {
     IConfig,
@@ -50,7 +57,6 @@ export {
     Metric,
     PageView,
     PageViewPerformance,
-    RemoteDependencyData,
     Trace,
     DistributedTracingModes,
     IRequestHeaders,

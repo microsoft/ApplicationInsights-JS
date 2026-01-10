@@ -27,7 +27,7 @@ export {
 
 export {
     IAppInsightsCore, IChannelControls, IPlugin, INotificationManager, NotificationManager, INotificationListener,
-    IConfiguration, ITelemetryItem, ITelemetryPlugin, BaseTelemetryPlugin, IProcessTelemetryContext, ProcessTelemetryContext, ITelemetryPluginChain,
+    IConfiguration, ITelemetryItem, ITelemetryPlugin, BaseTelemetryPlugin, IProcessTelemetryContext, ITelemetryPluginChain,
     MinChannelPriorty, EventsDiscardedReason, IDiagnosticLogger, DiagnosticLogger, LoggingSeverity, SendRequestReason,
     IPerfEvent, IPerfManager, IPerfManagerProvider, PerfEvent, PerfManager, doPerf, ICustomProperties, Tags,
     AppInsightsCore as InternalAppInsightsCore, _InternalLogMessage, _InternalMessageId, eActiveStatus, ActiveStatus,
@@ -67,7 +67,7 @@ export {
     IWatchDetails, IWatcherHandler, WatcherFunction,
     createDynamicConfig, onConfigChange, getDynamicConfigHandler, blockDynamicConversion, forceDynamicConversion,
     IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction, IInternalOfflineSupport, _ISendPostMgrConfig, IBackendResponse, _ISenderOnComplete, SenderPostManager,
-    getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports, parseResponse, convertAllHeadersToMap, _getAllResponseHeaders, _appendHeader, _IInternalXhrOverride,
+    getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports, parseResponse, _getAllResponseHeaders, _appendHeader, _IInternalXhrOverride,
     _ITimeoutOverrideWrapper, IXDomainRequest, isFeatureEnabled, FeatureOptInMode,
     TransportType,
 
@@ -85,3 +85,5 @@ export {
     openXhr,
     isGreaterThanZero
 } from "./Utils";
+
+export { createExtendedTelemetryItemFromSpan } from "./extSpanUtils";

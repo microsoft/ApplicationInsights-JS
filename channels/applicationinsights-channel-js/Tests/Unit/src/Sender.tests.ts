@@ -1,6 +1,6 @@
 import { AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
 import { Sender } from "../../../src/Sender";
-import { IOfflineListener, createOfflineListener, utlGetSessionStorageKeys, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
+import { ExceptionDataType, IOfflineListener, createOfflineListener, utlGetSessionStorageKeys, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
 import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
 import { Exception, CtxTagKeys, isBeaconApiSupported, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
 import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, safeGetLogger, isString, isArray, arrForEach, isBeaconsSupported, IXHROverride, IPayloadData,TransportType, getWindow, ActiveStatus } from "@microsoft/applicationinsights-core-js";
@@ -3664,7 +3664,7 @@ export class SenderTests extends AITestClass {
                     name: "test",
                     time: new Date("2018-06-12").toISOString(),
                     iKey: "iKey",
-                    baseType: Exception.dataType,
+                    baseType: ExceptionDataType,
                     baseData: bd,
                     data: {
                         "property3": "val3",
@@ -4325,7 +4325,7 @@ export class SenderTests extends AITestClass {
                     name: "test",
                     time: new Date("2018-06-12").toISOString(),
                     iKey: "iKey",
-                    baseType: Exception.dataType,
+                    baseType: ExceptionDataType,
                     baseData: bd,
                     data: {
                         "property3": "val3",

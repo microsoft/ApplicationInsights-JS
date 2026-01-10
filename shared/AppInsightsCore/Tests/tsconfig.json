@@ -5,7 +5,7 @@
     "noImplicitAny": false,
     "module": "amd",
     "moduleResolution": "node",
-    "target": "es6",
+    "target": "es2017",
     "importHelpers": true,
     "noEmitHelpers": true,
     "skipLibCheck": true,

@@ -22,6 +22,14 @@
             "syntaxKind": "block"
         },
         {
+            "tagName": "@defaultBehavior",
+            "syntaxKind": "block"
+        },
+        {
+            "tagName": "@function",
+            "syntaxKind": "block"
+        },
+        {
             "tagName": "@property",
             "syntaxKind": "block"
         },
@@ -57,6 +65,8 @@
       "@since": true,
       "@returns": true,
       "@default": true,
+      "@defaultBehavior": true,
+      "@function": true,
       "@property": true,
       "@type": true,
       "@export": true,
