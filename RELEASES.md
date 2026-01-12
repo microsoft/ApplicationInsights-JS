@@ -25,7 +25,7 @@
 
 ### Web snippet 1.2.3 (November 10, 2025)
 
-- 2659 [Web-Snippet] [BUG] @microsoft/applicationinsights-web-snippet Fix Snippet Loader Error 
+- #2659 [Web-Snippet] [BUG] @microsoft/applicationinsights-web-snippet Fix Snippet Loader Error 
 
 ## 3.3.10 (Sept 22nd, 2025)
 
