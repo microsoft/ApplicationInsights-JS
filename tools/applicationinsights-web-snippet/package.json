@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web-snippet",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "description": "Microsoft Application Insights Web Snippet",
     "main": "dist/es5/node/applicationinsights-web-snippet.js",
     "module": "dist-es5/applicationinsights-web-snippet.js",
@@ -34,8 +34,8 @@
     "devDependencies": {
         "@types/qunit": "^2.19.3",
         "@microsoft/ai-test-framework": "0.0.1",
-        "@microsoft/applicationinsights-web": "3.3.10",
-        "@microsoft/applicationinsights-common": "3.3.10",
+        "@microsoft/applicationinsights-web": "3.3.11",
+        "@microsoft/applicationinsights-common": "3.3.11",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es5": "1.0.2",
         "@microsoft/dynamicproto-js": "^2.0.3",
