@@ -7,8 +7,25 @@
 
 ### Changelog
 
+## 3.3.11 (January 12th, 2026)
+
+### Changelog
+
+- #2642 Separate BeaconSendFailure and BeaconSendFailure from SizeLimitExceeded
+- #2675 Fix offline channel recovery for Offline -> Online (#2674)
+- #2666 Fix unload() to return promise when called without parameters
+- #2667 Add a check to prevent non-string URLs from being passed to fieldRedaction method
+
+#### Infrastructure changes
+
+- #2684 Fix minor issue with E2E test
+- #2681 Add redact URL configuration in readme
+- #2676 Fix Flakey Ajax test which has race condition
+- #2670 Fix static web CDN test assertion (Fixes failing CI tests)
+
 ### Web snippet 1.2.3 (November 10, 2025)
-#2659 [Web-Snippet] [BUG] @microsoft/applicationinsights-web-snippet Fix Snippet Loader Error 
+
+- 2659 [Web-Snippet] [BUG] @microsoft/applicationinsights-web-snippet Fix Snippet Loader Error 
 
 ## 3.3.10 (Sept 22nd, 2025)
 
