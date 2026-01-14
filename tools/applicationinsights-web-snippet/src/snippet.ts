@@ -62,7 +62,7 @@ declare var cfg:ISnippetConfig;
         let appInsights: (Snippet & {cookie?:any, core?:any, extensions?:any, initialize?: boolean, isInitialized?: () => boolean;}) = {
             initialize: true,   // initialize sdk on download
             queue: [],
-            sv: "9",       // Track the actual snippet version for reporting.
+            sv: "10",       // Track the actual snippet version for reporting.
             config: aiConfig,
             version: 2.0,
             extensions: aiExtensions

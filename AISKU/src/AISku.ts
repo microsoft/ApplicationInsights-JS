@@ -517,7 +517,7 @@ export class AppInsightsSku implements IApplicationInsights {
             _self.unload = (isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState> => {
                 let unloadDone = false;
                 let result: IPromise<ITelemetryUnloadState>;
-                if (isAsync && !unloadComplete) {
+                if (isAsync !== false && !unloadComplete) {
                     result = createPromise<ITelemetryUnloadState>((resolve) => {
                         // Set the callback to the promise resolve callback
                         unloadComplete = resolve;

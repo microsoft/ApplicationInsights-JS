@@ -30,7 +30,11 @@ export const enum eEventsDiscardedReason {
      /**
       * The event queue is full.
       */
-     QueueFull = 5
+     QueueFull = 5,
+     /**
+      * The sendBeacon API call failed for reasons other than size limits.
+      */
+     BeaconSendFailure = 6
  }
 
 /**
@@ -65,7 +69,12 @@ export const EventsDiscardedReason = (/* @__PURE__ */ createEnumStyle<typeof eEv
     /**
      * The event queue is full.
      */
-    QueueFull: eEventsDiscardedReason.QueueFull
+    QueueFull: eEventsDiscardedReason.QueueFull,
+
+    /**
+     * The sendBeacon API call failed for reasons other than size limits.
+     */
+    BeaconSendFailure: eEventsDiscardedReason.BeaconSendFailure
 }));
 
 export type EventsDiscardedReason = number | eEventsDiscardedReason;

@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-common",
-    "version": "3.3.9",
+    "version": "3.3.11",
     "description": "Microsoft Application Insights Common JavaScript Library",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",

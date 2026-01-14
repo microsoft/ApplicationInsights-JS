@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { ISnippetConfig, SdkLoaderConfig } from "./type";
-import { _ensureBoolean, _ensureNumber, _escapeUnsupportedChars } from "./common/utils";
+import { _ensureBoolean, _ensureNumber, _escapeUnsupportedChars, _getSourceMap } from "./common/utils";
 
 const originSnippet = "##replaceOriginSnippet##";
 export const webSnippet = "##replaceIKeySnippet##";
@@ -35,6 +35,16 @@ export function getSdkLoaderScript(config: SdkLoaderConfig): string {
         snippetConfig.cfg.connectionString = _escapeUnsupportedChars(config.connectionString);
     }
 
+    let sourceMap = _getSourceMap(originSnippet);
+    let sourcemapComment = sourceMap[0];
+    let cleanedSnippet = sourceMap[1];
+   
     let configString: string = JSON.stringify(snippetConfig);
-    return "!(function (cfg){" + originSnippet + "}})(\n" + configString + "\n);";
+    let result = "!(function (cfg){" + cleanedSnippet + "})(\n" + configString + "\n);";
+    
+    // Append sourcemap comment at the end if it exists
+    if (sourcemapComment) {
+        result += "\n" + sourcemapComment;
+    }
+    return result;
 }

@@ -1,10 +1,10 @@
 import { IOTelConfig } from "./config/IOTelConfig";
 import { IOTelContextManager } from "./context/IOTelContextManager";
-import { IOTelMetricsApi } from "./metrics/IOTelMetricsApi";
-import { IOTelPropagationApi } from "./propagation/IOTelPropagationApi";
 import { IOTelTraceApi } from "./trace/IOTelTraceApi";
 import { IOTelTracerProvider } from "./trace/IOTelTracerProvider";
 
+// import { IOTelMetricsApi } from "./metrics/IOTelMetricsApi";
+// import { IOTelPropagationApi } from "./propagation/IOTelPropagationApi";
 export interface IOTelApi extends IOTelTracerProvider {
     cfg: IOTelConfig;
 
@@ -22,7 +22,7 @@ export interface IOTelApi extends IOTelTracerProvider {
      */
     trace: IOTelTraceApi;
 
-    propagation?: IOTelPropagationApi;
+    // propagation?: IOTelPropagationApi;
 
-    metrics?: IOTelMetricsApi;
+    // metrics?: IOTelMetricsApi;
 }

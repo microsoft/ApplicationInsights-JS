@@ -11,8 +11,9 @@ import {
     BreezeChannelIdentifier, ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders,
     utlRemoveSessionStorage, utlSetSessionStorage
 } from "@microsoft/applicationinsights-common";
+import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { IPropTelemetryContext } from "@microsoft/applicationinsights-properties-js";
-import { dumpObj, objHasOwnProperty, strSubstring } from "@nevware21/ts-utils";
+import { dumpObj, isPromiseLike, objHasOwnProperty, strSubstring } from "@nevware21/ts-utils";
 import { AppInsightsSku } from "../../../src/AISku";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -1016,6 +1017,47 @@ export class SnippetInitializationTests extends AITestClass {
                 Assert.equal(envelope.sampleRate, 50, "sampleRate is generated");
             }
         })
+
+        this.testCase({
+            name: 'Unload: unload() without parameters should return a promise',
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                const result = theSnippet.unload();
+                Assert.ok(result, "unload() should return a promise when called without parameters");
+                Assert.ok(isPromiseLike(result), "returned value should be promise-like");
+            }
+        });
+
+        this.testCase({
+            name: 'Unload: unload(true) should return a promise',
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                const result = theSnippet.unload(true);
+                Assert.ok(result, "unload(true) should return a promise");
+                Assert.ok(isPromiseLike(result), "returned value should be promise-like");
+            }
+        });
+
+        this.testCase({
+            name: 'Unload: unload(false) should not return a promise',
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                const result = theSnippet.unload(false);
+                Assert.equal(result, undefined, "unload(false) should return undefined");
+            }
+        });
+
+        this.testCase({
+            name: 'Unload: unload with callback should not return a promise',
+            test: () => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                let callbackCalled = false;
+                const result = theSnippet.unload(true, () => {
+                    callbackCalled = true;
+                });
+                Assert.equal(result, undefined, "unload with callback should return undefined");
+            }
+        });
     }
 
     private _initializeSnippet(snippet: Snippet): IApplicationInsights {

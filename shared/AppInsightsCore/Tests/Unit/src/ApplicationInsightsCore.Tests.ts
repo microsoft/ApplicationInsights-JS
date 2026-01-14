@@ -3,8 +3,7 @@ import {
     IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, IAppInsightsCore, normalizeJsName,
     random32, mwcRandomSeed, newId, randomValue, mwcRandom32, isNullOrUndefined, SenderPostManager,
     OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig, fieldRedaction,
-    _InternalLogMessage,
-    DiagnosticLogger
+    _InternalLogMessage, DiagnosticLogger, isString
 } from "../../../src/applicationinsights-core-js"
 import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
 import { IChannelControls } from "@microsoft/applicationinsights-common";
@@ -2104,6 +2103,38 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 const redactedLocation = fieldRedaction(url, config);
                 Assert.equal(redactedLocation, "https://example.com/path with spaces?param=value with spaces", 
                     "URL with spaces should be returned unchanged");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should return non-string values unchanged without processing",
+            test: () => {
+                
+                let config = {} as IConfiguration;
+                // Test with null - should return null unchanged
+                const nullUrl = null;
+                const redactedLocation = fieldRedaction(nullUrl as any, config);
+                Assert.strictEqual(redactedLocation, null, "fieldRedaction should return null unchanged");
+                
+                // Test with number - should return the number unchanged
+                const numberUrl = 12345;
+                const redactedNumber = fieldRedaction(numberUrl as any, config);
+                Assert.strictEqual(redactedNumber, 12345, "fieldRedaction should return number unchanged");
+                
+                // Test with object - should return the object unchanged
+                const objectUrl = { url: "https://example.com" };
+                const redactedObject = fieldRedaction(objectUrl as any, config);
+                Assert.strictEqual(redactedObject, objectUrl, "fieldRedaction should return object unchanged");
+                
+                // Test with array - should return the array unchanged
+                const arrayUrl = ["https://example.com"];
+                const redactedArray = fieldRedaction(arrayUrl as any, config);
+                Assert.strictEqual(redactedArray, arrayUrl, "fieldRedaction should return array unchanged");
+                
+                // Test with boolean - should return the boolean unchanged
+                const boolUrl = true;
+                const redactedBool = fieldRedaction(boolUrl as any, config);
+                Assert.strictEqual(redactedBool, true, "fieldRedaction should return boolean unchanged");
             }
         });
 

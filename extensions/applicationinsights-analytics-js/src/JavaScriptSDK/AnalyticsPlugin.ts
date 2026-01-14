@@ -124,7 +124,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         let _extConfig: IAnalyticsConfig;
         let _autoTrackPageVisitTime: boolean;
         let _expCfg: IExceptionConfig;
-
+    
         // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
         let _prevUri: string; // Assigned in the constructor
         let _currUri: string;
@@ -628,7 +628,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             _self["_getDbgPlgTargets"] = () => {
                 return [_errorHookCnt, _autoExceptionInstrumented];
             };
-
+            
             function _resetAjaxAttempts() {
                 // Reset ajax attempts counter for the new page view
                 if (_self.core) {
@@ -638,7 +638,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     }
                 }
             }
-
+            
             function _populateDefaults(config: IConfiguration) {
                 // it is used for 1DS as well, so config type should be IConfiguration only
                 let identifier = _self.identifier;
@@ -900,7 +900,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                 // Reset ajax attempts counter
                 _resetAjaxAttempts();
-
+            
                 // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
                 let location = getLocation(true);
                 _prevUri = location && location.href || "";

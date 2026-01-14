@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-web",
     "description": "Microsoft Application Insights JavaScript SDK",
-    "version": "3.3.9",
+    "version": "3.3.11",
     "keywords": [
         "browser performance monitoring",
         "script errors",
@@ -14,9 +14,9 @@
         "build": "node common/scripts/install-run-rush.js rebuild",
         "rebuild": "npm run build && npm run api-docs",
         "testx": "rush test --verbose",
-        "test": "node common/scripts/install-run-rush.js test",
-        "mintest": "node common/scripts/install-run-rush.js mintest",
-        "lint": "node common/scripts/install-run-rush.js lint",
+        "test": "node common/scripts/install-run-rush.js test --verbose",
+        "mintest": "node common/scripts/install-run-rush.js mintest --verbose",
+        "lint": "node common/scripts/install-run-rush.js lint --verbose",
         "lint-fix": "npm run ai-restore && grunt lint-fix",
         "perftest": "node common/scripts/install-run-rush.js perftest --verbose",
         "rollupes5": "grunt rollupes5",

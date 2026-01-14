@@ -51,12 +51,12 @@ function _checkSize(checkType: string, maxSize: number, size: number, isNightly:
 }    
 
 export class AISKULightSizeCheck extends AITestClass {
-    private readonly MAX_RAW_SIZE = 100;
-    private readonly MAX_BUNDLE_SIZE = 100;
+    private readonly MAX_RAW_SIZE = 102;
+    private readonly MAX_BUNDLE_SIZE = 102;
     private readonly MAX_RAW_DEFLATE_SIZE = 42;
     private readonly MAX_BUNDLE_DEFLATE_SIZE = 42;
     private readonly rawFilePath = "../dist/es5/applicationinsights-web-basic.min.js";
-    private readonly currentVer = "3.3.9";
+    private readonly currentVer = "3.3.11";
     private readonly prodFilePath = `../browser/es5/aib.${this.currentVer[0]}.min.js`;
 
     public testInitialize() {

@@ -75,6 +75,7 @@
                 "AddAttributeResult",
                 "eAttributeFilter",
                 "eAttributeChangeOp",
+                "eOTelSeverityNumber",
                 "eOTelSamplingDecision",
                 "eOTelSpanKind",
                 "eOTelSpanStatusCode",

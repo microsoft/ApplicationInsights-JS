@@ -50,19 +50,19 @@
         },
         "applicationinsights-web-config": {
             "package": "tools/config/package.json",
-            "release": "1.0.5"
+            "release": "1.0.6"
         },
         "@microsoft/applicationinsights-teechannel-js": {
             "package": "channels/tee-channel-js/package.json",
-            "release": "3.3.9"
+            "release": "3.3.11"
         },
         "@microsoft/applicationinsights-test-module-type-check": {
             "package": "AISKU/Tests/es6-module-type-check/package.json",
-            "release": "3.3.9"
+            "release": "3.3.11"
         },
         "@microsoft/applicationinsights-cfgsync-js": {
             "package": "extensions/applicationinsights-cfgsync-js/package.json",
-            "release": "3.3.9"
+            "release": "3.3.11"
         },
         "@microsoft/applicationinsights-web-snippet": {
             "package": "tools/applicationinsights-web-snippet/package.json",
