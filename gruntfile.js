@@ -278,7 +278,7 @@ module.exports = function (grunt) {
     // const perfTestVersions = ["2.0.0","2.0.1","2.1.0","2.2.0","2.2.1","2.2.2","2.3.0","2.3.1",
     // "2.4.1","2.4.3","2.4.4","2.5.2","2.5.3","2.5.4","2.5.5","2.5.6","2.5.7","2.5.8","2.5.9","2.5.10","2.5.11",
     // "2.6.0","2.6.1","2.6.2","2.6.3","2.6.4","2.6.5","2.7.0"];
-    const perfTestVersions=["3.3.9"];
+    const perfTestVersions=["3.3.11"];
 
     function buildConfig(modules) {
         var buildCmds = {
@@ -1026,7 +1026,7 @@ module.exports = function (grunt) {
         function getLintFixTasks() {
             let packages = [
                 "core", "common", "appinsights", "aisku", "aiskulite", "perfmarkmeasure", "properties",
-                "cfgsync", "deps", "debugplugin", "aichannel", "offlinechannel", "teechannel", 
+                "cfgsync", "deps", "debugplugin", "aichannel", "teechannel", 
                 "rollupuglify", "rollupes5", "shims", // "chrome-debug-extension", -- Removed due to missing file-saver dependency
                 "applicationinsights-web-snippet", "clickanalytics", "osplugin"
             ];
@@ -1125,12 +1125,6 @@ module.exports = function (grunt) {
         grunt.registerTask("aichanneltest", tsTestActions("aichannel"));
         grunt.registerTask("aichannel-mintest", tsTestActions("aichannel", true));
 
-        grunt.registerTask("offlinechannel", tsBuildActions("offlinechannel"));
-        grunt.registerTask("offlinechannel-min", minTasks("offlinechannel"));
-        grunt.registerTask("offlinechannel-restore", restoreTasks("offlinechannel"));
-        grunt.registerTask("offlinechanneltest", tsTestActions("offlinechannel"));
-        grunt.registerTask("offlinechannel-mintest", tsTestActions("offlinechannel", true));
-
         grunt.registerTask("teechannel", tsBuildActions("teechannel"));
         grunt.registerTask("teechannel-min", minTasks("teechannel"));
         grunt.registerTask("teechannel-restore", restoreTasks("teechannel"));
@@ -1196,20 +1190,20 @@ module.exports = function (grunt) {
         grunt.registerTask("tst-framework", tsBuildActions("tst-framework"));
         grunt.registerTask("serve", ["connect:server:keepalive"]);
 
-         grunt.registerTask("copy-config", ["copy:config"]);
-         grunt.registerTask("copy-testConfig", ["copy:testConfig"]);
+        grunt.registerTask("copy-config", ["copy:config"]);
+        grunt.registerTask("copy-testConfig", ["copy:testConfig"]);
 
-         grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
-         grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
-         grunt.registerTask("example-cfgsync", tsBuildActions("example-cfgsync"));
+        grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
+        grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
+        grunt.registerTask("example-cfgsync", tsBuildActions("example-cfgsync"));
 
         // Register the lint-fix task to run ESLint fix on all packages
         grunt.registerTask("lint-fix", getLintFixTasks());
-     } catch (e) {
-         console.error(e);
-         console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
-     }
+    } catch (e) {
+        console.error(e);
+        console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
+    }
 
     console.log("***  " + JSON.stringify(theBuildConfig, null, 2) + "  ***");
- };
+};
  

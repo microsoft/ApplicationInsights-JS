@@ -79,11 +79,13 @@ let _notificationListener: INotificationListener = {
      * @param events - The array of events that have been discarded.
      * @param reason - The reason for discarding the events. The EventsDiscardedReason
      * constant should be used to check the different values.
+     * @param sendType - [Optional] The send type used when the events were discarded.
      */
-    eventsDiscarded: (events: ITelemetryItem[], reason: number) => {
+    eventsDiscarded: (events: ITelemetryItem[], reason: number, sendType?: number) => {
         _sendMessage(MessageType.Notification, MessageSource.EventsDiscardedNotification, "Notification:eventsDiscarded", {
             reason,
-            events
+            events,
+            sendType
         });
     },
 
