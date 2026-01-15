@@ -860,7 +860,6 @@ export class ApplicationInsightsTests extends AITestClass {
                         Assert.fail("Fetch failed with status: " + dumpObj(res));
                     }
                 } catch (e) {
-                    this._ctx.err = e;
                     Assert.fail("Fetch Error: " + dumpObj(e));
                 }
             }
