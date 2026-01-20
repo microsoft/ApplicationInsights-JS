@@ -110,8 +110,8 @@ export class SnippetTests extends AITestClass {
                 let sourcemapPattern = "snippet.min.js.map";
                 let firstIndex = theSnippet.indexOf(sourcemapPattern);
                 let lastIndex = theSnippet.lastIndexOf(sourcemapPattern);
-                QUnit.assert.ok(firstIndex !== -1, "Make sure snippet.min.js.ma exists in the snippet");
-                QUnit.assert.equal(firstIndex, lastIndex, "Make sure snippet.min.js.ma appears only once");
+                QUnit.assert.ok(firstIndex !== -1, "Make sure snippet.min.js.map exists in the snippet");
+                QUnit.assert.equal(firstIndex, lastIndex, "Make sure snippet.min.js.map appears only once");
                 
                 // Test that snippet.min.js.ma is at the end of the snippet
                 let trimmedSnippet = theSnippet.trim();

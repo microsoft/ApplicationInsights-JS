@@ -520,17 +520,6 @@ export interface IAjaxMonitorPlugin extends IPlugin, IDependenciesPlugin, IInstr
     resetAjaxAttempts(): void;
 }
 
-/**
- * Interface for the Ajax Monitor Plugin that extends IPlugin and includes ajax specific functionality.
- * This interface is used for proper typing when retrieving the plugin via getPlugin().
- */
-export interface IAjaxMonitorPlugin extends IPlugin, IDependenciesPlugin, IInstrumentationRequirements, IDependencyListenerContainer {
-    /**
-     * Resets the ajax attempts counter. This is typically called on page view to allow a fresh set of ajax calls to be tracked.
-     */
-    resetAjaxAttempts(): void;
-}
-
 const _defaultConfig: IConfigDefaults<ICorrelationConfig> = objFreeze({
     maxAjaxCallsPerView: 500,
     disableAjaxTracking: false,
