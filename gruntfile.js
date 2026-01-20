@@ -733,7 +733,7 @@ module.exports = function (grunt) {
                                         unitTestName: "aicommon.tests.js"
                                     },
             "otelCore":                 {
-                                        path: "./shared/OpenTelemetry",
+                                        path: "./shared/otel-core",
                                         unitTestName: "otel.unittests.js"
                                     },
     
@@ -1204,6 +1204,6 @@ module.exports = function (grunt) {
         console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
     }
 
-    console.log("***  " + JSON.stringify(theBuildConfig, null, 2) + "  ***");
+    // console.log("***  " + JSON.stringify(theBuildConfig, null, 2) + "  ***");
 };
  

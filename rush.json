@@ -26,7 +26,7 @@
     },
      {
       "packageName": "@microsoft/otel-core-js",
-      "projectFolder": "shared/OpenTelemetry",
+      "projectFolder": "shared/otel-core",
       "shouldPublish": true
     },
     {
