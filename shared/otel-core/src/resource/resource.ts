@@ -99,7 +99,7 @@ export function createResource(resourceCtx: IOTelResourceCtx): IOTelResource {
         if (!theAttributes) {
             let hasOutstandingAsync = false;
             if (waitingPromiseCnt > 0 || awaitingPromise) {
-                handleError(resourceCtx.cfg.errorHandlers, "Accessing resources before async attributes have resolved");
+                handleError(resourceCtx.cfg.errorHandlers, "Accessing resources before asynchronous attributes have resolved");
                 hasOutstandingAsync = true;
             }
 

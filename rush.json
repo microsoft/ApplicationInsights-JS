@@ -30,6 +30,11 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@microsoft/otel-noop-js",
+      "projectFolder": "shared/otel-noop",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@microsoft/applicationinsights-core-js",
       "projectFolder": "shared/AppInsightsCore",
       "shouldPublish": true

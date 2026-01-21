@@ -736,6 +736,10 @@ module.exports = function (grunt) {
                                         path: "./shared/otel-core",
                                         unitTestName: "otel.unittests.js"
                                     },
+            "otelNoop":                 {
+                                        path: "./shared/otel-noop",
+                                        unitTestName: "otel-noop.unittests.js"
+                                    },
     
             // SKUs
             "aisku":                { 
@@ -1181,6 +1185,13 @@ module.exports = function (grunt) {
         grunt.registerTask("otelCoreunittest", tsTestActions("otelCore"));
         grunt.registerTask("otelCore-mintest", tsTestActions("otelCore", true));
         //grunt.registerTask("otelperftest", ["connect", "ts:core-perftest", "qunit:core-perf"]);
+
+        grunt.registerTask("otelNoop", tsBuildActions("otelNoop", true));
+        grunt.registerTask("otelNoop-min", minTasks("otelNoop"));
+        grunt.registerTask("otelNoop-restore", restoreTasks("otelNoop"));
+        grunt.registerTask("otelNoop-lint-fix", ["otelNoop-restore"]);
+        grunt.registerTask("otelNoopunittest", tsTestActions("otelNoop"));
+        grunt.registerTask("otelNoop-mintest", tsTestActions("otelNoop", true));
 
 
 

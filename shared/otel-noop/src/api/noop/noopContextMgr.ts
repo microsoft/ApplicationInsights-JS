@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IOTelContext, IOTelContextManager } from "@microsoft/otel-core-js";
 import { arrSlice, fnApply } from "@nevware21/ts-utils";
-import { IOTelContext } from "../../interfaces/context/IOTelContext";
-import { IOTelContextManager } from "../../interfaces/context/IOTelContextManager";
 import { _noopThis } from "./noopHelpers";
 import { createNoopProxy } from "./noopProxy";
 

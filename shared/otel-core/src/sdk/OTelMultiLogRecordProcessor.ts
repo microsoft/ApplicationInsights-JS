@@ -20,7 +20,7 @@ export function createMultiLogRecordProcessor(
     readonly processors: IOTelLogRecordProcessor[];
     readonly forceFlushTimeoutMillis: number;
 } {
-    const registeredProcessors = processors;
+    const registeredProcessors = processors || [];
     const timeout = forceFlushTimeoutMillis;
     const handlers = errorHandlers || {};
 

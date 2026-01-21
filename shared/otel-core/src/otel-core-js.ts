@@ -37,9 +37,6 @@ export { IOTelTraceCfg } from "./interfaces/config/IOTelTraceCfg";
 export { IOTelContextManager } from "./interfaces/context/IOTelContextManager";
 export { IOTelContext } from "./interfaces/context/IOTelContext";
 
-// Noop Support
-export { INoopProxyConfig } from "./interfaces/noop/INoopProxyConfig";
-
 // Resources
 export { IOTelResource, OTelMaybePromise, OTelRawResourceAttribute } from "./interfaces/resources/IOTelResource";
 
@@ -76,12 +73,6 @@ export {IOTelSpanCtx} from "./interfaces/trace/IOTelSpanCtx";
 
 export {createTraceApi} from "./api/trace/traceApi";
 
-// Noop
-export { createNoopContextMgr } from "./api/noop/noopContextMgr";
-export { _noopThis, _noopVoid } from "./api/noop/noopHelpers";
-export { createNoopProxy } from "./api/noop/noopProxy";
-export { createNoopTracerProvider } from "./api/noop/noopTracerProvider";
-
 // Trace
 export { createNonRecordingSpan } from "./api/trace/nonRecordingSpan";
 export { isSpanContext, wrapDistributedTrace, createOTelSpanContext } from "./api/trace/spanContext";
@@ -101,3 +92,20 @@ export { OTelSpanError, throwOTelSpanError } from "./api/errors/OTelSpanError";
 export { IOTelAttributes, OTelAttributeValue, ExtendedOTelAttributeValue } from "./interfaces/IOTelAttributes";
 export { OTelException, IOTelExceptionWithCode, IOTelExceptionWithMessage, IOTelExceptionWithName } from "./interfaces/IException";
 export { IOTelHrTime, OTelTimeInput } from "./interfaces/time";
+
+// Logs
+export { IOTelLogger } from "./interfaces/logs/IOTelLogger";
+export { IOTelLogRecord, LogBody, LogAttributes } from "./interfaces/logs/IOTelLogRecord";
+export { IOTelLogRecordProcessor } from "./interfaces/logs/IOTelLogRecordProcessor";
+export { ReadableLogRecord } from "./interfaces/logs/IOTelReadableLogRecord";
+export { IOTelSdkLogRecord } from "./interfaces/logs/IOTelSdkLogRecord";
+export { IOTelLoggerProvider } from "./interfaces/logs/IOTelLoggerProvider";
+export { IOTelLoggerOptions } from "./interfaces/logs/IOTelLoggerOptions";
+export { IOTelLoggerProviderSharedState } from "./interfaces/logs/IOTelLoggerProviderSharedState";
+export { IOTelLogRecordLimits } from "./interfaces/logs/IOTelLogRecordLimits";
+
+// SDK Logs
+export { createLoggerProvider, DEFAULT_LOGGER_NAME } from "./sdk/OTelLoggerProvider";
+export { createLogger } from "./sdk/OTelLogger";
+export { createMultiLogRecordProcessor } from "./sdk/OTelMultiLogRecordProcessor";
+export { loadDefaultConfig, reconfigureLimits } from "./sdk/config";

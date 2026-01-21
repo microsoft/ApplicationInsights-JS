@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IPromise } from "@nevware21/ts-async";
-import { createNoopLogger } from "../api/noop/noopLogger";
+import { IOTelLogRecord } from "../interfaces/logs/IOTelLogRecord";
 import { IOTelLogger } from "../interfaces/logs/IOTelLogger";
 import { IOTelLoggerOptions } from "../interfaces/logs/IOTelLoggerOptions";
 import { IOTelLoggerProvider } from "../interfaces/logs/IOTelLoggerProvider";
@@ -16,6 +16,15 @@ import { createLogger } from "./OTelLogger";
 import { loadDefaultConfig, reconfigureLimits } from "./config";
 
 export const DEFAULT_LOGGER_NAME = "unknown";
+
+// Inline noop logger for shutdown scenarios
+function _createInlineNoopLogger(): IOTelLogger {
+    return {
+        emit(_logRecord: IOTelLogRecord): void {
+            // noop - logger is shut down
+        }
+    };
+}
 
 export function createLoggerProvider(
     config: IOTelLoggerProviderConfig = {}
@@ -52,7 +61,7 @@ export function createLoggerProvider(
     ): IOTelLogger {
         if (isShutdown) {
             handleWarn(handlers, "A shutdown LoggerProvider cannot provide a Logger");
-            return createNoopLogger();
+            return _createInlineNoopLogger();
         }
 
         if (!name) {

@@ -9,6 +9,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
+        "@microsoft/applicationinsights-common": "3.3.9",
         "@microsoft/applicationinsights-offlinechannel-js": "0.3.11",
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -39,6 +40,7 @@
         "@rush-temp/applicationinsights-web-basic": "file:./projects/applicationinsights-web-basic.tgz",
         "@rush-temp/applicationinsights-web-config": "file:./projects/applicationinsights-web-config.tgz",
         "@rush-temp/otel-core-js": "file:./projects/otel-core-js.tgz",
+        "@rush-temp/otel-noop-js": "file:./projects/otel-noop-js.tgz",
         "@types/qunit": "^2.19.3",
         "@types/sinon": "4.3.3",
         "finalhandler": "^1.1.1",
@@ -453,13 +455,27 @@
       }
     },
     "node_modules/@microsoft/applicationinsights-common": {
-      "version": "3.3.11",
-      "resolved": "https://registry.npmjs.org/@microsoft/applicationinsights-common/-/applicationinsights-common-3.3.11.tgz",
-      "integrity": "sha512-OIe5vL56lkmIsRsI21QqbGpF8gF/UzUP4mlEhGWyG2UMskdtWrY+c+xAynyNDsAjhKKge+Rrs/xkpC0Fo0QrhQ==",
+      "version": "3.3.9",
+      "resolved": "https://registry.npmjs.org/@microsoft/applicationinsights-common/-/applicationinsights-common-3.3.9.tgz",
+      "integrity": "sha512-IgruOuDBxmBK9jYo7SqLJG7Z9OwmAmlvHET49srpN6pqQlEjRpjD1nfA3Ps4RSEbF89a/ad2phQaBp8jvm122g==",
       "dependencies": {
-        "@microsoft/applicationinsights-core-js": "3.3.11",
+        "@microsoft/applicationinsights-core-js": "3.3.9",
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/dynamicproto-js": "^2.0.3",
+        "@nevware21/ts-utils": ">= 0.11.8 < 2.x"
+      },
+      "peerDependencies": {
+        "tslib": ">= 1.0.0"
+      }
+    },
+    "node_modules/@microsoft/applicationinsights-common/node_modules/@microsoft/applicationinsights-core-js": {
+      "version": "3.3.9",
+      "resolved": "https://registry.npmjs.org/@microsoft/applicationinsights-core-js/-/applicationinsights-core-js-3.3.9.tgz",
+      "integrity": "sha512-xliiE9H09xCycndlua4QjajN8q5k/ET6VCv+e0Jjodxr9+cmoOP/6QY9dun9ptokuwR8TK0qOaIJ8z4fgslVSA==",
+      "dependencies": {
+        "@microsoft/applicationinsights-shims": "3.0.1",
+        "@microsoft/dynamicproto-js": "^2.0.3",
+        "@nevware21/ts-async": ">= 0.5.4 < 2.x",
         "@nevware21/ts-utils": ">= 0.11.8 < 2.x"
       },
       "peerDependencies": {
@@ -490,6 +506,20 @@
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/ts-async": ">= 0.5.4 < 2.x",
+        "@nevware21/ts-utils": ">= 0.11.8 < 2.x"
+      },
+      "peerDependencies": {
+        "tslib": ">= 1.0.0"
+      }
+    },
+    "node_modules/@microsoft/applicationinsights-offlinechannel-js/node_modules/@microsoft/applicationinsights-common": {
+      "version": "3.3.11",
+      "resolved": "https://registry.npmjs.org/@microsoft/applicationinsights-common/-/applicationinsights-common-3.3.11.tgz",
+      "integrity": "sha512-OIe5vL56lkmIsRsI21QqbGpF8gF/UzUP4mlEhGWyG2UMskdtWrY+c+xAynyNDsAjhKKge+Rrs/xkpC0Fo0QrhQ==",
+      "dependencies": {
+        "@microsoft/applicationinsights-core-js": "3.3.11",
+        "@microsoft/applicationinsights-shims": "3.0.1",
+        "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/ts-utils": ">= 0.11.8 < 2.x"
       },
       "peerDependencies": {
@@ -1237,6 +1267,38 @@
       "version": "0.0.0",
       "resolved": "file:projects/otel-core-js.tgz",
       "integrity": "sha512-qETsWmsvItUmTRrbyCnlEOyed/q3CKtSXkueukb4WLRFqGuUEpzjFkYSsNS+j3Y5zu4lRqQSjrKKg37gjjJizQ==",
+      "dependencies": {
+        "@microsoft/api-extractor": "^7.40.0",
+        "@microsoft/applicationinsights-shims": "3.0.1",
+        "@microsoft/dynamicproto-js": "^2.0.3",
+        "@nevware21/grunt-eslint-ts": "^0.5.1",
+        "@nevware21/grunt-ts-plugin": "^0.5.1",
+        "@nevware21/ts-async": ">= 0.5.4 < 2.x",
+        "@nevware21/ts-utils": ">= 0.11.8 < 2.x",
+        "@rollup/plugin-commonjs": "^24.0.0",
+        "@rollup/plugin-node-resolve": "^15.0.1",
+        "@rollup/plugin-replace": "^5.0.2",
+        "@rollup/plugin-typescript": "^12.1.2",
+        "globby": "^11.0.0",
+        "grunt": "^1.5.3",
+        "grunt-cli": "^1.4.3",
+        "grunt-rollup": "^12.0.0",
+        "magic-string": "^0.25.7",
+        "pako": "^2.0.3",
+        "qunit": "^2.11.2",
+        "rollup": "^3.20.0",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "rollup-plugin-sourcemaps": "^0.6.3",
+        "sinon": "^7.3.1",
+        "tslib": "^2.0.0",
+        "typedoc": "^0.26.6",
+        "typescript": "^4.9.3"
+      }
+    },
+    "node_modules/@rush-temp/otel-noop-js": {
+      "version": "0.0.0",
+      "resolved": "file:projects/otel-noop-js.tgz",
+      "integrity": "sha512-U7ZakIa9P0fYJQ4AAOwKDuLP8nFIIn2uW/vTJhVeNOjNKFgurQdZZkqAQW7+GNMJDUMYM3MYk3z9TWCenDkL5g==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/applicationinsights-shims": "3.0.1",
@@ -4020,9 +4082,9 @@
       }
     },
     "node_modules/lodash": {
-      "version": "4.17.21",
-      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz",
-      "integrity": "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg=="
+      "version": "4.17.23",
+      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.23.tgz",
+      "integrity": "sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w=="
     },
     "node_modules/lodash.merge": {
       "version": "4.6.2",

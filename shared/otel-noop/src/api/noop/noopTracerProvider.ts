@@ -1,18 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import {
+    IOTelContext, IOTelContextManager, IOTelSpan, IOTelSpanOptions, IOTelTracer, IOTelTracerCtx, IOTelTracerProvider, createNonRecordingSpan,
+    createTracer, getContextActiveSpanContext, isSpanContext, isSpanContextValid
+} from "@microsoft/otel-core-js";
 import { ILazyValue, createDeferredCachedValue, objDefineProps } from "@nevware21/ts-utils";
-import { IOTelContext } from "../../interfaces/context/IOTelContext";
-import { IOTelContextManager } from "../../interfaces/context/IOTelContextManager";
-import { IOTelSpan } from "../../interfaces/trace/IOTelSpan";
-import { IOTelSpanOptions } from "../../interfaces/trace/IOTelSpanOptions";
-import { IOTelTracer } from "../../interfaces/trace/IOTelTracer";
-import { IOTelTracerCtx } from "../../interfaces/trace/IOTelTracerCtx";
-import { IOTelTracerProvider } from "../../interfaces/trace/IOTelTracerProvider";
-import { createNonRecordingSpan } from "../trace/nonRecordingSpan";
-import { isSpanContext } from "../trace/spanContext";
-import { createTracer } from "../trace/tracer";
-import { getContextActiveSpanContext, isSpanContextValid } from "../trace/utils";
 import { createNoopContextMgr } from "./noopContextMgr";
 import { createNoopProxy } from "./noopProxy";
 

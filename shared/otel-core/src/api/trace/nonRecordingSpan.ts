@@ -7,18 +7,24 @@ import { IOTelSpanContext } from "../../interfaces/trace/IOTelSpanContext";
 import { IOTelSpanStatus } from "../../interfaces/trace/IOTelSpanStatus";
 import { IReadableSpan } from "../../interfaces/trace/IReadableSpan";
 import { UNDEFINED_VALUE } from "../../internal/InternalConstants";
-import { _noopThis, _noopVoid } from "../noop/noopHelpers";
-import { createNoopProxy } from "../noop/noopProxy";
 
-function _createNoopSpanContext() {
-    return createNoopProxy<IOTelSpanContext>({
-        props: {
-            traceId: { v: INVALID_TRACE_ID },
-            spanId: { v: INVALID_SPAN_ID },
-            traceFlags: { v: eW3CTraceFlags.None },
-            traceState: { v: UNDEFINED_VALUE },
-            isRemote: { v: UNDEFINED_VALUE }
-        }
+// Inline noop helpers - these don't need the full noop package
+function _noopThis<T>(this: T): T {
+    return this;
+}
+
+function _noopVoid<T>(this: T): void {
+    // noop
+}
+
+function _createNoopSpanContext(): IOTelSpanContext {
+    // Inline noop span context creation without using createNoopProxy
+    return objFreeze<IOTelSpanContext>({
+        traceId: INVALID_TRACE_ID,
+        spanId: INVALID_SPAN_ID,
+        traceFlags: eW3CTraceFlags.None,
+        traceState: UNDEFINED_VALUE,
+        isRemote: UNDEFINED_VALUE
     });
 }
 

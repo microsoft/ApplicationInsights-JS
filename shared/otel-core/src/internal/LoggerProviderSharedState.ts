@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createNoopLogRecordProcessor } from "../api/noop/noopLogRecordProcessor";
 import { IOTelLogRecordLimits } from "../interfaces/logs/IOTelLogRecordLimits";
 import { IOTelLogRecordProcessor } from "../interfaces/logs/IOTelLogRecordProcessor";
 import { IOTelLogger } from "../interfaces/logs/IOTelLogger";
@@ -16,11 +15,15 @@ export function createLoggerProviderSharedState(
     processors: IOTelLogRecordProcessor[]
 ): IOTelLoggerProviderSharedState {
     const loggers = new Map<string, IOTelLogger>();
-    const registeredLogRecordProcessors: IOTelLogRecordProcessor[] = processors;
+    const registeredLogRecordProcessors: IOTelLogRecordProcessor[] = processors || [];
     const hasProcessors = registeredLogRecordProcessors.length > 0;
-    const activeProcessor = hasProcessors
-        ? createMultiLogRecordProcessor(registeredLogRecordProcessors, forceFlushTimeoutMillis)
-        : createNoopLogRecordProcessor();
+    
+    if (!hasProcessors) {
+        // This was previously creating a noop processor, but to reduce bundle size we are no longer doing that automatically.
+        // So this forces the consumer to explicitly add a processor or use a noop processor if they want that behavior.
+    }
+    
+    const activeProcessor = createMultiLogRecordProcessor(registeredLogRecordProcessors, forceFlushTimeoutMillis);
 
     return {
         loggers,

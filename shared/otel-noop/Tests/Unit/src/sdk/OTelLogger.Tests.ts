@@ -1,17 +1,19 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
-import { createLoggerProvider } from "../../../../src/sdk/OTelLoggerProvider";
-import { createContext } from "../../../../src/api/context/context";
-import { IOTelLogger } from "../../../../src/interfaces/logs/IOTelLogger";
-import { IOTelLogRecord } from "../../../../src/interfaces/logs/IOTelLogRecord";
-import { IOTelSpanContext } from "../../../../src/interfaces/trace/IOTelSpanContext";
-import { IOTelInstrumentationScope } from "../../../../src/interfaces/trace/IOTelInstrumentationScope";
-import { IOTelLogRecordProcessor } from "../../../../src/interfaces/logs/IOTelLogRecordProcessor";
-import { createContextManager } from "../../../../src/api/context/contextManager";
-import { setContextSpanContext } from "../../../../src/api/trace/utils";
-import { createLogger } from "../../../../src/sdk/OTelLogger";
-import { createResolvedPromise } from "@nevware21/ts-async";
+import {
+    createLoggerProvider,
+    createContext,
+    IOTelLogger,
+    IOTelLogRecord,
+    IOTelSpanContext,
+    IOTelInstrumentationScope,
+    createContextManager,
+    setContextSpanContext,
+    createLogger,
+    IOTelLoggerProviderSharedState
+} from "@microsoft/otel-core-js";
+import { createNoopLogRecordProcessor } from "../../../../src/api/noop/noopLogRecordProcessor";
 
-// W3C trace flags constant for sampled traces
+// W3C TraceFlags - Sampled = 1
 const eW3CTraceFlags_Sampled = 1;
 
 type LoggerWithScope = IOTelLogger & { instrumentationScope: IOTelInstrumentationScope };
@@ -26,7 +28,7 @@ export class OTelLoggerTests extends AITestClass {
     }
 
     private setup() {
-        const logProcessor = this._createMockProcessor();
+        const logProcessor = createNoopLogRecordProcessor();
         const provider = createLoggerProvider({
             processors: [logProcessor]
         });
@@ -41,7 +43,7 @@ export class OTelLoggerTests extends AITestClass {
         this.testCase({
             name: "Logger: factory returns logger instance",
             test: () => {
-                const logProcessor = this._createMockProcessor();
+                const logProcessor = createNoopLogRecordProcessor();
                 const provider = createLoggerProvider({ processors: [logProcessor] });
                 const sharedState = provider._sharedState;
                 const scope: IOTelInstrumentationScope = {
@@ -126,17 +128,5 @@ export class OTelLoggerTests extends AITestClass {
                 callSpy.restore();
             }
         });
-    }
-
-    /**
-     * Creates a mock log record processor for testing purposes.
-     * This avoids dependency on the noop package.
-     */
-    private _createMockProcessor(): IOTelLogRecordProcessor {
-        return {
-            onEmit: () => {},
-            forceFlush: () => createResolvedPromise(undefined),
-            shutdown: () => createResolvedPromise(undefined)
-        };
     }
 }

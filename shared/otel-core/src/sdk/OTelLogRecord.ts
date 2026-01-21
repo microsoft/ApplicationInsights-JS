@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { objForEachKey, objKeys, utcNow } from "@nevware21/ts-utils";
 import { OTelAnyValue } from "../OTelTypes/OTelAnyValue";
 import { getContextActiveSpanContext, isSpanContextValid } from "../api/trace/utils";
 import { OTelSeverityNumber } from "../enums/logs/eOTelSeverityNumber";
@@ -34,7 +35,7 @@ export function createLogRecord(
     } = logRecord;
 
     const logAttributes = attributes || {};
-    const now = Date.now();
+    const now = utcNow();
     const hrTime = timeInputToHrTime(timestamp || now);
     const hrTimeObserved = timeInputToHrTime(observedTimestamp || now);
     const resource = sharedState.resource;
@@ -60,7 +61,7 @@ export function createLogRecord(
     let logRecordInstance: IOTelLogRecordInstance;
 
     function getDroppedAttributesCount(): number {
-        return totalAttributesCount - Object.keys(recordAttributes).length;
+        return totalAttributesCount - objKeys(recordAttributes).length;
     }
 
     function truncateToLimit(value: string, limit: number): string {
@@ -113,7 +114,7 @@ export function createLogRecord(
             !(
                 typeof value === "object" &&
                 !Array.isArray(value) &&
-                Object.keys(value).length > 0
+                objKeys(value).length > 0
             )
         ) {
             handleWarn(handlers, "Invalid attribute value set for key: " + key);
@@ -122,7 +123,7 @@ export function createLogRecord(
 
         totalAttributesCount += 1;
         if (
-            Object.keys(recordAttributes).length >= logRecordLimits.attributeCountLimit &&
+            objKeys(recordAttributes).length >= logRecordLimits.attributeCountLimit &&
             !Object.prototype.hasOwnProperty.call(recordAttributes, key)
         ) {
             if (getDroppedAttributesCount() === 1) {
@@ -141,13 +142,9 @@ export function createLogRecord(
     }
 
     function setAttributesInternal(attributesToSet: LogAttributes): IOTelLogRecordInstance {
-        const entries = Object.entries(attributesToSet);
-        for (let idx = 0; idx < entries.length; idx++) {
-            const attribute = entries[idx];
-            const attributeKey = attribute[0];
-            const attributeValue = attribute.length > 1 ? attribute[1] : undefined;
+        objForEachKey(attributesToSet, function (attributeKey, attributeValue) {
             setAttributeInternal(attributeKey, attributeValue);
-        }
+        });
         return logRecordInstance;
     }
 

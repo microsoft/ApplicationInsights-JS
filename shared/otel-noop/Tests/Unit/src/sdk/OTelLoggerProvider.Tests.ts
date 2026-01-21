@@ -1,17 +1,21 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { createPromise, IPromise } from "@nevware21/ts-async";
 
-import { IOTelAttributes } from "../../../../src/interfaces/IOTelAttributes";
-import { IOTelLogRecord } from "../../../../src/interfaces/logs/IOTelLogRecord";
-import { IOTelLoggerProviderSharedState } from "../../../../src/interfaces/logs/IOTelLoggerProviderSharedState";
-import { DEFAULT_LOGGER_NAME, createLoggerProvider } from "../../../../src/sdk/OTelLoggerProvider";
-import { IOTelLogger } from "../../../../src/interfaces/logs/IOTelLogger";
-import { IOTelInstrumentationScope } from "../../../../src/interfaces/trace/IOTelInstrumentationScope";
-import { createMultiLogRecordProcessor } from "../../../../src/sdk/OTelMultiLogRecordProcessor";
-import { loadDefaultConfig } from "../../../../src/sdk/config";
-import { IOTelResource, OTelRawResourceAttribute } from "../../../../src/interfaces/resources/IOTelResource";
-import { IOTelLogRecordProcessor } from "../../../../src/interfaces/logs/IOTelLogRecordProcessor";
-import { createResolvedPromise } from "@nevware21/ts-async";
+import { createNoopLogger } from "../../../../src/api/noop/noopLogger";
+import { createNoopLogRecordProcessor } from "../../../../src/api/noop/noopLogRecordProcessor";
+import {
+    IOTelAttributes,
+    IOTelLogRecord,
+    IOTelLoggerProviderSharedState,
+    DEFAULT_LOGGER_NAME,
+    createLoggerProvider,
+    IOTelLogger,
+    IOTelInstrumentationScope,
+    createMultiLogRecordProcessor,
+    loadDefaultConfig,
+    IOTelResource,
+    OTelRawResourceAttribute
+} from "@microsoft/otel-core-js";
 
 type LoggerProviderInstance = ReturnType<typeof createLoggerProvider>;
 type MultiLogRecordProcessorInstance = ReturnType<typeof createMultiLogRecordProcessor>;
@@ -52,7 +56,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: constructor should register provided processors",
             test: () => {
-                const logRecordProcessor = this._createMockProcessor();
+                const logRecordProcessor = createNoopLogRecordProcessor();
                 const provider = createLoggerProvider({
                     processors: [logRecordProcessor]
                 });
@@ -230,8 +234,8 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: forceFlush should invoke all registered processors",
             test: (): IPromise<void> => {
-                const processor1 = this._createMockProcessor();
-                const processor2 = this._createMockProcessor();
+                const processor1 = createNoopLogRecordProcessor();
+                const processor2 = createNoopLogRecordProcessor();
                 const forceFlushStub1 = this.sandbox.stub(processor1, "forceFlush").resolves();
                 const forceFlushStub2 = this.sandbox.stub(processor2, "forceFlush").resolves();
                 const provider = createLoggerProvider({ processors: [processor1, processor2] });
@@ -253,8 +257,8 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: forceFlush should propagate processor errors",
             test: (): IPromise<void> => {
-                const processor1 = this._createMockProcessor();
-                const processor2 = this._createMockProcessor();
+                const processor1 = createNoopLogRecordProcessor();
+                const processor2 = createNoopLogRecordProcessor();
                 const forceFlushStub1 = this.sandbox.stub(processor1, "forceFlush").rejects("Error");
                 const forceFlushStub2 = this.sandbox.stub(processor2, "forceFlush").rejects("Error");
                 const provider = createLoggerProvider({ processors: [processor1, processor2] });
@@ -278,7 +282,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: shutdown should invoke processor shutdown",
             test: (): IPromise<void> => {
-                const processor = this._createMockProcessor();
+                const processor = createNoopLogRecordProcessor();
                 const shutdownStub = this.sandbox.stub(processor, "shutdown").resolves();
                 const provider = createLoggerProvider({ processors: [processor] });
 
@@ -303,14 +307,16 @@ export class OTelLoggerProviderTests extends AITestClass {
                     provider.shutdown().then(() => {
                         try {
                             const logger = provider.getLogger("default", "1.0.0");
-                            Assert.equal(typeof logger.emit, "function", "Logger should expose emit function after shutdown");
+                            const expectedNoopLogger = createNoopLogger();
+                            Assert.equal(typeof logger.emit, "function", "Logger should expose noop emit function after shutdown");
+                            Assert.equal(logger.emit.length, expectedNoopLogger.emit.length, "Noop emit signature should match expected noop logger");
                             let threw = false;
                             try {
                                 logger.emit({} as IOTelLogRecord);
                             } catch (e) {
                                 threw = true;
                             }
-                            Assert.ok(!threw, "Logger emit should not throw after shutdown");
+                            Assert.ok(!threw, "Noop logger emit should not throw after shutdown");
                             resolve();
                         } catch (e) {
                             reject(e);
@@ -323,7 +329,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: forceFlush after shutdown should not call processors",
             test: (): IPromise<void> => {
-                const logRecordProcessor = this._createMockProcessor();
+                const logRecordProcessor = createNoopLogRecordProcessor();
                 const provider = createLoggerProvider({ processors: [logRecordProcessor] });
                 const forceFlushStub = this.sandbox.stub(logRecordProcessor, "forceFlush").resolves();
                 const warnStub = this.sandbox.stub(console, "warn");
@@ -347,7 +353,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: second shutdown should not re-run processor shutdown",
             test: (): IPromise<void> => {
-                const logRecordProcessor = this._createMockProcessor();
+                const logRecordProcessor = createNoopLogRecordProcessor();
                 const provider = createLoggerProvider({ processors: [logRecordProcessor] });
                 const shutdownStub = this.sandbox.stub(logRecordProcessor, "shutdown").resolves();
                 const warnStub = this.sandbox.stub(console, "warn");
@@ -390,17 +396,5 @@ export class OTelLoggerProviderTests extends AITestClass {
         };
 
         return resource;
-    }
-
-    /**
-     * Creates a mock log record processor for testing purposes.
-     * This avoids dependency on the noop package.
-     */
-    private _createMockProcessor(): IOTelLogRecordProcessor {
-        return {
-            onEmit: () => {},
-            forceFlush: () => createResolvedPromise(undefined),
-            shutdown: () => createResolvedPromise(undefined)
-        };
     }
 }

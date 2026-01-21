@@ -1,8 +1,8 @@
 import { IConfigDefaults, IDynamicConfigHandler } from "@microsoft/applicationinsights-common";
 import {
     IOTelApi, IOTelApiCtx, IOTelConfig, IOTelContext, IOTelContextManager, IOTelErrorHandlers, IOTelTraceApi, IOTelTraceCfg,
-    IOTelTracerProvider, createContext, createContextManager, createNoopTracerProvider, createTraceApi, throwOTelInvalidAttributeError,
-    throwOTelNotImplementedError, throwOTelSpanError
+    IOTelTracerProvider, createContext, createContextManager, createTraceApi, throwOTelInvalidAttributeError, throwOTelNotImplementedError,
+    throwOTelSpanError
 } from "@microsoft/otel-core-js";
 import { ILazyValue, createDeferredCachedValue, fnApply, objDeepFreeze, objDefineProps } from "@nevware21/ts-utils";
 import { cfgDfMerge } from "./Config/ConfigDefaultHelpers";
@@ -56,7 +56,7 @@ export function createOTelApi(otelApiCtx: IOTelApiCtx): IOTelApi {
 
     function _getTracer(name: string, version?: string) {
         if (!_traceProvider) {
-            _traceProvider = createNoopTracerProvider();
+            throwOTelNotImplementedError("No tracer provider configured - a tracer provider must be configured to retrieve tracers");
         }
 
         return _traceProvider.getTracer(name, version);

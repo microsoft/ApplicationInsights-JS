@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { strTrim } from "@nevware21/ts-utils";
 import { IOTelLogRecordLimits } from "../interfaces/logs/IOTelLogRecordLimits";
 import { handleWarn } from "../internal/commonUtils";
 import { IOTelErrorHandlers } from "../otel-core-js";
@@ -22,7 +23,7 @@ export function getNumberFromEnv(key: string): number | undefined {
     }
 
     const raw = process.env[key];
-    if (raw == null || raw.trim() === "") {
+    if (raw == null || strTrim(raw) === "") {
         return undefined;
     }
 
