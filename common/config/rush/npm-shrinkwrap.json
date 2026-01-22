@@ -468,24 +468,10 @@
         "tslib": ">= 1.0.0"
       }
     },
-    "node_modules/@microsoft/applicationinsights-common/node_modules/@microsoft/applicationinsights-core-js": {
+    "node_modules/@microsoft/applicationinsights-core-js": {
       "version": "3.3.9",
       "resolved": "https://registry.npmjs.org/@microsoft/applicationinsights-core-js/-/applicationinsights-core-js-3.3.9.tgz",
       "integrity": "sha512-xliiE9H09xCycndlua4QjajN8q5k/ET6VCv+e0Jjodxr9+cmoOP/6QY9dun9ptokuwR8TK0qOaIJ8z4fgslVSA==",
-      "dependencies": {
-        "@microsoft/applicationinsights-shims": "3.0.1",
-        "@microsoft/dynamicproto-js": "^2.0.3",
-        "@nevware21/ts-async": ">= 0.5.4 < 2.x",
-        "@nevware21/ts-utils": ">= 0.11.8 < 2.x"
-      },
-      "peerDependencies": {
-        "tslib": ">= 1.0.0"
-      }
-    },
-    "node_modules/@microsoft/applicationinsights-core-js": {
-      "version": "3.3.11",
-      "resolved": "https://registry.npmjs.org/@microsoft/applicationinsights-core-js/-/applicationinsights-core-js-3.3.11.tgz",
-      "integrity": "sha512-WlBY1sKDNL62T++NifgFCyDuOoNUNrVILfnHubOzgU/od7MFEQYWU8EZyDcBC/+Z8e3TD6jfixurYtWoUC+6Eg==",
       "dependencies": {
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -520,6 +506,20 @@
         "@microsoft/applicationinsights-core-js": "3.3.11",
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/dynamicproto-js": "^2.0.3",
+        "@nevware21/ts-utils": ">= 0.11.8 < 2.x"
+      },
+      "peerDependencies": {
+        "tslib": ">= 1.0.0"
+      }
+    },
+    "node_modules/@microsoft/applicationinsights-offlinechannel-js/node_modules/@microsoft/applicationinsights-core-js": {
+      "version": "3.3.11",
+      "resolved": "https://registry.npmjs.org/@microsoft/applicationinsights-core-js/-/applicationinsights-core-js-3.3.11.tgz",
+      "integrity": "sha512-WlBY1sKDNL62T++NifgFCyDuOoNUNrVILfnHubOzgU/od7MFEQYWU8EZyDcBC/+Z8e3TD6jfixurYtWoUC+6Eg==",
+      "dependencies": {
+        "@microsoft/applicationinsights-shims": "3.0.1",
+        "@microsoft/dynamicproto-js": "^2.0.3",
+        "@nevware21/ts-async": ">= 0.5.4 < 2.x",
         "@nevware21/ts-utils": ">= 0.11.8 < 2.x"
       },
       "peerDependencies": {
@@ -1298,9 +1298,10 @@
     "node_modules/@rush-temp/otel-noop-js": {
       "version": "0.0.0",
       "resolved": "file:projects/otel-noop-js.tgz",
-      "integrity": "sha512-U7ZakIa9P0fYJQ4AAOwKDuLP8nFIIn2uW/vTJhVeNOjNKFgurQdZZkqAQW7+GNMJDUMYM3MYk3z9TWCenDkL5g==",
+      "integrity": "sha512-T6AWUl6N1lhD6r50qoXRGqa7Gxqo15ScgK50z4Wd3GsT5Bh0M1PRWBz5xq9tXVKubRMesnEdxSpA43exYwPG3g==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
+        "@microsoft/applicationinsights-common": "3.3.9",
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.5.1",
@@ -1548,9 +1549,9 @@
       }
     },
     "node_modules/@types/node": {
-      "version": "25.0.9",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-25.0.9.tgz",
-      "integrity": "sha512-/rpCXHlCWeqClNBwUhDcusJxXYDjZTyE8v5oTO7WbL8eij2nKhUeU89/6xgjU7N4/Vh3He0BtyhJdQbDyhiXAw==",
+      "version": "25.0.10",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-25.0.10.tgz",
+      "integrity": "sha512-zWW5KPngR/yvakJgGOmZ5vTBemDoSqF3AcV/LrO5u5wTWyEAVVh+IT39G4gtyAkh3CtTZs8aX/yRM82OfzHJRg==",
       "optional": true,
       "dependencies": {
         "undici-types": "~7.16.0"

@@ -1,10 +1,10 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { objKeys } from "@nevware21/ts-utils";
-import { addAttributes, createAttributeContainer, createAttributeSnapshot, isAttributeContainer } from "../../../../src/attribute/attributeContainer";
-import { eAttributeFilter, IAttributeChangeInfo } from "../../../../src/attribute/IAttributeContainer";
-import { IOTelConfig } from "../../../../src/interfaces/config/IOTelConfig";
-import { IOTelAttributes } from "../../../../src/interfaces/IOTelAttributes";
-import { eAttributeChangeOp } from "../../../../src/enums/eAttributeChangeOp";
+import { addAttributes, createAttributeContainer, createAttributeSnapshot, isAttributeContainer } from "../../../../src/otel/attribute/attributeContainer";
+import { eAttributeFilter, IAttributeChangeInfo } from "../../../../src/interfaces/OTel/attribute/IAttributeContainer";
+import { IOTelConfig } from "../../../../src/interfaces/OTel/config/IOTelConfig";
+import { IOTelAttributes } from "../../../../src/interfaces/OTel/IOTelAttributes";
+import { eAttributeChangeOp } from "../../../../src/enums/OTel/eAttributeChangeOp";
 
 export class AttributeContainerTests extends AITestClass {
 

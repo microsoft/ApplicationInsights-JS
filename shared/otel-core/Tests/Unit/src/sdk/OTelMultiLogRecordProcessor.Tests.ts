@@ -1,12 +1,12 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { createPromise, IPromise } from "@nevware21/ts-async";
 
-import { IOTelContext } from "../../../../src/interfaces/context/IOTelContext";
-import { IOTelLogRecordProcessor } from "../../../../src/interfaces/logs/IOTelLogRecordProcessor";
-import { IOTelSdkLogRecord } from "../../../../src/interfaces/logs/IOTelSdkLogRecord";
-import { createLoggerProvider } from "../../../../src/sdk/OTelLoggerProvider";
-import { createMultiLogRecordProcessor } from "../../../../src/sdk/OTelMultiLogRecordProcessor";
-import { loadDefaultConfig } from "../../../../src/sdk/config";
+import { IOTelContext } from "../../../../src/interfaces/OTel/context/IOTelContext";
+import { IOTelLogRecordProcessor } from "../../../../src/interfaces/OTel/logs/IOTelLogRecordProcessor";
+import { IOTelSdkLogRecord } from "../../../../src/interfaces/OTel/logs/IOTelSdkLogRecord";
+import { createLoggerProvider } from "../../../../src/otel/sdk/OTelLoggerProvider";
+import { createMultiLogRecordProcessor } from "../../../../src/otel/sdk/OTelMultiLogRecordProcessor";
+import { loadDefaultConfig } from "../../../../src/otel/sdk/config";
 
 class TestProcessor implements IOTelLogRecordProcessor {
     public logRecords: IOTelSdkLogRecord[] = [];

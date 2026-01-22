@@ -1,16 +1,16 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { createPromise, IPromise } from "@nevware21/ts-async";
 
-import { IOTelAttributes } from "../../../../src/interfaces/IOTelAttributes";
-import { IOTelLogRecord } from "../../../../src/interfaces/logs/IOTelLogRecord";
-import { IOTelLoggerProviderSharedState } from "../../../../src/interfaces/logs/IOTelLoggerProviderSharedState";
-import { DEFAULT_LOGGER_NAME, createLoggerProvider } from "../../../../src/sdk/OTelLoggerProvider";
-import { IOTelLogger } from "../../../../src/interfaces/logs/IOTelLogger";
-import { IOTelInstrumentationScope } from "../../../../src/interfaces/trace/IOTelInstrumentationScope";
-import { createMultiLogRecordProcessor } from "../../../../src/sdk/OTelMultiLogRecordProcessor";
-import { loadDefaultConfig } from "../../../../src/sdk/config";
-import { IOTelResource, OTelRawResourceAttribute } from "../../../../src/interfaces/resources/IOTelResource";
-import { IOTelLogRecordProcessor } from "../../../../src/interfaces/logs/IOTelLogRecordProcessor";
+import { IOTelAttributes } from "../../../../src/interfaces/OTel/IOTelAttributes";
+import { IOTelLogRecord } from "../../../../src/interfaces/OTel/logs/IOTelLogRecord";
+import { IOTelLoggerProviderSharedState } from "../../../../src/interfaces/OTel/logs/IOTelLoggerProviderSharedState";
+import { DEFAULT_LOGGER_NAME, createLoggerProvider } from "../../../../src/otel/sdk/OTelLoggerProvider";
+import { IOTelLogger } from "../../../../src/interfaces/OTel/logs/IOTelLogger";
+import { IOTelInstrumentationScope } from "../../../../src/interfaces/OTel/trace/IOTelInstrumentationScope";
+import { createMultiLogRecordProcessor } from "../../../../src/otel/sdk/OTelMultiLogRecordProcessor";
+import { loadDefaultConfig } from "../../../../src/otel/sdk/config";
+import { IOTelResource, OTelRawResourceAttribute } from "../../../../src/interfaces/OTel/resources/IOTelResource";
+import { IOTelLogRecordProcessor } from "../../../../src/interfaces/OTel/logs/IOTelLogRecordProcessor";
 import { createResolvedPromise } from "@nevware21/ts-async";
 
 type LoggerProviderInstance = ReturnType<typeof createLoggerProvider>;

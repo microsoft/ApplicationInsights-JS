@@ -71,14 +71,14 @@
         },
         "@microsoft/otel-core-js": {
             "constEnums": [
+                "eAttributeChangeOp",
                 "eAttributeSource",
                 "AddAttributeResult",
-                "eAttributeFilter",
-                "eAttributeChangeOp",
                 "eOTelSeverityNumber",
                 "eOTelSamplingDecision",
                 "eOTelSpanKind",
                 "eOTelSpanStatusCode",
+                "eAttributeFilter",
                 "eValueType"
             ]
         },

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 // Trace Support
-// export { createOTelApi } from "./api/OTelApi";
-// export { OTelSdk } from "./sdk/OTelSdk";
+// export { createOTelApi } from "./otel/api/OTelApi";
+// export { OTelSdk } from "./otel/sdk/OTelSdk";
 
 
 
@@ -12,100 +12,100 @@
 // ==========================================================================
 
 // Context
-export { createContextManager } from "./api/context/contextManager";
-export { createContext } from "./api/context/context";
+export { createContextManager } from "./otel/api/context/contextManager";
+export { createContext } from "./otel/api/context/context";
 
 // Enums
-export { eOTelSamplingDecision, OTelSamplingDecision } from "./enums/trace/OTelSamplingDecision";
-export { eOTelSpanKind, OTelSpanKind } from "./enums/trace/OTelSpanKind";
-export { eOTelSpanStatusCode, OTelSpanStatusCode } from "./enums/trace/OTelSpanStatus";
+export { eOTelSamplingDecision, OTelSamplingDecision } from "./enums/OTel/trace/OTelSamplingDecision";
+export { eOTelSpanKind, OTelSpanKind } from "./enums/OTel/trace/OTelSpanKind";
+export { eOTelSpanStatusCode, OTelSpanStatusCode } from "./enums/OTel/trace/OTelSpanStatus";
 
 // OpenTelemetry Attribute Support
-export { eAttributeChangeOp, AttributeChangeOp } from "./enums/eAttributeChangeOp";
+export { eAttributeChangeOp, AttributeChangeOp } from "./enums/OTel/eAttributeChangeOp";
 
 // ---------------------------------------------------------------------------
 // Interfaces
 // ---------------------------------------------------------------------------
 
 // Config
-export { IOTelAttributeLimits } from "./interfaces/config/IOTelAttributeLimits";
-export { IOTelConfig } from "./interfaces/config/IOTelConfig";
-export { IOTelErrorHandlers } from "./interfaces/config/IOTelErrorHandlers";
-export { IOTelTraceCfg } from "./interfaces/config/IOTelTraceCfg";
+export { IOTelAttributeLimits } from "./interfaces/OTel/config/IOTelAttributeLimits";
+export { IOTelConfig } from "./interfaces/OTel/config/IOTelConfig";
+export { IOTelErrorHandlers } from "./interfaces/OTel/config/IOTelErrorHandlers";
+export { IOTelTraceCfg } from "./interfaces/OTel/config/IOTelTraceCfg";
 
 // Context
-export { IOTelContextManager } from "./interfaces/context/IOTelContextManager";
-export { IOTelContext } from "./interfaces/context/IOTelContext";
+export { IOTelContextManager } from "./interfaces/OTel/context/IOTelContextManager";
+export { IOTelContext } from "./interfaces/OTel/context/IOTelContext";
 
 // Resources
-export { IOTelResource, OTelMaybePromise, OTelRawResourceAttribute } from "./interfaces/resources/IOTelResource";
+export { IOTelResource, OTelMaybePromise, OTelRawResourceAttribute } from "./interfaces/OTel/resources/IOTelResource";
 
 // Baggage
-export { IOTelBaggage } from "./interfaces/baggage/IOTelBaggage";
-export { IOTelBaggageEntry } from "./interfaces/baggage/IOTelBaggageEntry";
-export { OTelBaggageEntryMetadata, otelBaggageEntryMetadataSymbol } from "./interfaces/baggage/OTelBaggageEntryMetadata";
+export { IOTelBaggage } from "./interfaces/OTel/baggage/IOTelBaggage";
+export { IOTelBaggageEntry } from "./interfaces/OTel/baggage/IOTelBaggageEntry";
+export { OTelBaggageEntryMetadata, otelBaggageEntryMetadataSymbol } from "./interfaces/OTel/baggage/OTelBaggageEntryMetadata";
 
 // Trace
-export { IOTelIdGenerator } from "./interfaces/trace/IOTelIdGenerator";
-export { IOTelInstrumentationScope } from "./interfaces/trace/IOTelInstrumentationScope";
-export { IOTelLink } from "./interfaces/trace/IOTelLink";
-export { IOTelTracerCtx } from "./interfaces/trace/IOTelTracerCtx";
-export { IOTelTraceState } from "./interfaces/trace/IOTelTraceState";
-export { IReadableSpan } from "./interfaces/trace/IReadableSpan";
-export { IOTelSampler } from "./interfaces/trace/IOTelSampler";
-export { IOTelSamplingResult } from "./interfaces/trace/IOTelSamplingResult";
-export { IOTelSpan } from "./interfaces/trace/IOTelSpan";
-export { IOTelSpanContext } from "./interfaces/trace/IOTelSpanContext";
-export { IOTelSpanOptions } from "./interfaces/trace/IOTelSpanOptions";
-export { IOTelSpanStatus } from "./interfaces/trace/IOTelSpanStatus";
-export { IOTelTimedEvent } from "./interfaces/trace/IOTelTimedEvent";
-export { IOTelTracerProvider } from "./interfaces/trace/IOTelTracerProvider";
-export { IOTelTracer } from "./interfaces/trace/IOTelTracer";
-export { IOTelTracerOptions } from "./interfaces/trace/IOTelTracerOptions";
+export { IOTelIdGenerator } from "./interfaces/OTel/trace/IOTelIdGenerator";
+export { IOTelInstrumentationScope } from "./interfaces/OTel/trace/IOTelInstrumentationScope";
+export { IOTelLink } from "./interfaces/OTel/trace/IOTelLink";
+export { IOTelTracerCtx } from "./interfaces/OTel/trace/IOTelTracerCtx";
+export { IOTelTraceState } from "./interfaces/OTel/trace/IOTelTraceState";
+export { IReadableSpan } from "./interfaces/OTel/trace/IReadableSpan";
+export { IOTelSampler } from "./interfaces/OTel/trace/IOTelSampler";
+export { IOTelSamplingResult } from "./interfaces/OTel/trace/IOTelSamplingResult";
+export { IOTelSpan } from "./interfaces/OTel/trace/IOTelSpan";
+export { IOTelSpanContext } from "./interfaces/OTel/trace/IOTelSpanContext";
+export { IOTelSpanOptions } from "./interfaces/OTel/trace/IOTelSpanOptions";
+export { IOTelSpanStatus } from "./interfaces/OTel/trace/IOTelSpanStatus";
+export { IOTelTimedEvent } from "./interfaces/OTel/trace/IOTelTimedEvent";
+export { IOTelTracerProvider } from "./interfaces/OTel/trace/IOTelTracerProvider";
+export { IOTelTracer } from "./interfaces/OTel/trace/IOTelTracer";
+export { IOTelTracerOptions } from "./interfaces/OTel/trace/IOTelTracerOptions";
 
-export { IOTelApi } from "./interfaces/IOTelApi";
-export { IOTelApiCtx } from "./interfaces/IOTelApiCtx";
-export { IOTelSdk } from "./interfaces/IOTelSdk";
-export { IOTelSdkCtx } from "./interfaces/IOTelSdkCtx";
+export { IOTelApi } from "./interfaces/OTel/IOTelApi";
+export { IOTelApiCtx } from "./interfaces/OTel/IOTelApiCtx";
+export { IOTelSdk } from "./interfaces/OTel/IOTelSdk";
+export { IOTelSdkCtx } from "./interfaces/OTel/IOTelSdkCtx";
 
-export {IOTelTraceApi} from "./interfaces/trace/IOTelTraceApi";
-export {IOTelSpanCtx} from "./interfaces/trace/IOTelSpanCtx";
+export { IOTelTraceApi } from "./interfaces/OTel/trace/IOTelTraceApi";
+export { IOTelSpanCtx } from "./interfaces/OTel/trace/IOTelSpanCtx";
 
-export {createTraceApi} from "./api/trace/traceApi";
+export { createTraceApi } from "./otel/api/trace/traceApi";
 
 // Trace
-export { createNonRecordingSpan } from "./api/trace/nonRecordingSpan";
-export { isSpanContext, wrapDistributedTrace, createOTelSpanContext } from "./api/trace/spanContext";
-export { createTracer } from "./api/trace/tracer";
-export { createOTelTraceState, isOTelTraceState } from "./api/trace/traceState";
+export { createNonRecordingSpan } from "./otel/api/trace/nonRecordingSpan";
+export { isSpanContext, wrapDistributedTrace, createOTelSpanContext } from "./otel/api/trace/spanContext";
+export { createTracer } from "./otel/api/trace/tracer";
+export { createOTelTraceState, isOTelTraceState } from "./otel/api/trace/traceState";
 export {
     deleteContextSpan, getContextSpan, setContextSpan, setContextSpanContext, getContextActiveSpanContext, isSpanContextValid, wrapSpanContext,
     isReadableSpan, isTracingSuppressed, suppressTracing, unsuppressTracing
-} from "./api/trace/utils";
+} from "./otel/api/trace/utils";
 
 // OpenTelemetry Error Classes
-export { OpenTelemetryError, OpenTelemetryErrorConstructor, getOpenTelemetryError, throwOTelError } from "./api/errors/OTelError";
-export { OTelInvalidAttributeError, throwOTelInvalidAttributeError } from "./api/errors/OTelInvalidAttributeError";
-export { OTelNotImplementedError, throwOTelNotImplementedError } from "./api/errors/OTelNotImplementedError";
-export { OTelSpanError, throwOTelSpanError } from "./api/errors/OTelSpanError";
+export { OpenTelemetryError, OpenTelemetryErrorConstructor, getOpenTelemetryError, throwOTelError } from "./otel/api/errors/OTelError";
+export { OTelInvalidAttributeError, throwOTelInvalidAttributeError } from "./otel/api/errors/OTelInvalidAttributeError";
+export { OTelNotImplementedError, throwOTelNotImplementedError } from "./otel/api/errors/OTelNotImplementedError";
+export { OTelSpanError, throwOTelSpanError } from "./otel/api/errors/OTelSpanError";
 
-export { IOTelAttributes, OTelAttributeValue, ExtendedOTelAttributeValue } from "./interfaces/IOTelAttributes";
-export { OTelException, IOTelExceptionWithCode, IOTelExceptionWithMessage, IOTelExceptionWithName } from "./interfaces/IException";
-export { IOTelHrTime, OTelTimeInput } from "./interfaces/time";
+export { IOTelAttributes, OTelAttributeValue, ExtendedOTelAttributeValue } from "./interfaces/OTel/IOTelAttributes";
+export { OTelException, IOTelExceptionWithCode, IOTelExceptionWithMessage, IOTelExceptionWithName } from "./interfaces/OTel/IException";
+export { IOTelHrTime, OTelTimeInput } from "./interfaces/OTel/time";
 
 // Logs
-export { IOTelLogger } from "./interfaces/logs/IOTelLogger";
-export { IOTelLogRecord, LogBody, LogAttributes } from "./interfaces/logs/IOTelLogRecord";
-export { IOTelLogRecordProcessor } from "./interfaces/logs/IOTelLogRecordProcessor";
-export { ReadableLogRecord } from "./interfaces/logs/IOTelReadableLogRecord";
-export { IOTelSdkLogRecord } from "./interfaces/logs/IOTelSdkLogRecord";
-export { IOTelLoggerProvider } from "./interfaces/logs/IOTelLoggerProvider";
-export { IOTelLoggerOptions } from "./interfaces/logs/IOTelLoggerOptions";
-export { IOTelLoggerProviderSharedState } from "./interfaces/logs/IOTelLoggerProviderSharedState";
-export { IOTelLogRecordLimits } from "./interfaces/logs/IOTelLogRecordLimits";
+export { IOTelLogger } from "./interfaces/OTel/logs/IOTelLogger";
+export { IOTelLogRecord, LogBody, LogAttributes } from "./interfaces/OTel/logs/IOTelLogRecord";
+export { IOTelLogRecordProcessor } from "./interfaces/OTel/logs/IOTelLogRecordProcessor";
+export { ReadableLogRecord } from "./interfaces/OTel/logs/IOTelReadableLogRecord";
+export { IOTelSdkLogRecord } from "./interfaces/OTel/logs/IOTelSdkLogRecord";
+export { IOTelLoggerProvider } from "./interfaces/OTel/logs/IOTelLoggerProvider";
+export { IOTelLoggerOptions } from "./interfaces/OTel/logs/IOTelLoggerOptions";
+export { IOTelLoggerProviderSharedState } from "./interfaces/OTel/logs/IOTelLoggerProviderSharedState";
+export { IOTelLogRecordLimits } from "./interfaces/OTel/logs/IOTelLogRecordLimits";
 
 // SDK Logs
-export { createLoggerProvider, DEFAULT_LOGGER_NAME } from "./sdk/OTelLoggerProvider";
-export { createLogger } from "./sdk/OTelLogger";
-export { createMultiLogRecordProcessor } from "./sdk/OTelMultiLogRecordProcessor";
-export { loadDefaultConfig, reconfigureLimits } from "./sdk/config";
+export { createLoggerProvider, DEFAULT_LOGGER_NAME } from "./otel/sdk/OTelLoggerProvider";
+export { createLogger } from "./otel/sdk/OTelLogger";
+export { createMultiLogRecordProcessor } from "./otel/sdk/OTelMultiLogRecordProcessor";
+export { loadDefaultConfig, reconfigureLimits } from "./otel/sdk/config";

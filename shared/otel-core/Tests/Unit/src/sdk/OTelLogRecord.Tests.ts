@@ -1,10 +1,10 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 
-import { IOTelLogRecord } from "../../../../src/interfaces/logs/IOTelLogRecord";
-import { createLoggerProviderSharedState } from "../../../../src/internal/LoggerProviderSharedState";
-import { reconfigureLimits } from "../../../../src/sdk/config";
-import { createLogRecord } from "../../../../src/sdk/OTelLogRecord";
-import { IOTelLogRecordLimits } from "../../../../src/interfaces/logs/IOTelLogRecordLimits";
+import { IOTelLogRecord } from "../../../../src/interfaces/OTel/logs/IOTelLogRecord";
+import { createLoggerProviderSharedState } from "../../../../src/internal/otel/LoggerProviderSharedState";
+import { reconfigureLimits } from "../../../../src/otel/sdk/config";
+import { createLogRecord } from "../../../../src/otel/sdk/OTelLogRecord";
+import { IOTelLogRecordLimits } from "../../../../src/interfaces/OTel/logs/IOTelLogRecordLimits";
 
 const setup = (logRecordLimits?: IOTelLogRecordLimits, data?: IOTelLogRecord) => {
     const instrumentationScope = {
