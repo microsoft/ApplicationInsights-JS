@@ -4,7 +4,7 @@ import { DataSanitizerValues, Exception } from "../../../../../src/index"
 import { IDiagnosticLogger, IInternalLogMessage } from "../../../../../src/interfaces/ai/IDiagnosticLogger";
 import { IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal } from "../../../../../src/interfaces/ai/IExceptionTelemetry";
 import { _createExceptionDetails, _createExDetailsFromInterface, _extractStackFrame, _parsedFrameToInterface, _IParsedStackFrame } from "../../../../../src/telemetry/ai/Exception";
-import { IStackFrame } from "../../../../../src/interfaces/ai/Contracts/IStackFrame";
+import { IStackFrame } from "../../../../../src/interfaces/ai/contracts/IStackFrame";
 
 class TestDiagnosticLogger implements IDiagnosticLogger {
     public queue: IInternalLogMessage[];
