@@ -6,8 +6,8 @@ import {
     isFunction, isNullOrUndefined, isString, objDefine, objDefineProps, safe, strSplit
 } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "../constants/InternalConstants";
-import { IW3cTraceState } from "../interfaces/AppInsights/IW3cTraceState";
-import { findMetaTags, findNamedServerTimings } from "../utils/AppInsights/EnvUtils";
+import { IW3cTraceState } from "../interfaces/ai/IW3cTraceState";
+import { findMetaTags, findNamedServerTimings } from "../utils/EnvUtils";
 
 const MAX_TRACE_STATE_MEMBERS = 32;
 const MAX_TRACE_STATE_LEN = 512;

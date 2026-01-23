@@ -3,10 +3,10 @@
 
 import { isNullOrUndefined, objForEachKey, throwError } from "@nevware21/ts-utils";
 import { strIkey, strNotSpecified } from "../constants/Constants";
-import { IDiagnosticLogger } from "../interfaces/AppInsights/IDiagnosticLogger";
-import { ITelemetryItem } from "../interfaces/AppInsights/ITelemetryItem";
-import { toISOString } from "../utils/AppInsights/HelperFuncsCore";
-import { dataSanitizeString } from "./AppInsights/Common/DataSanitizer";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { toISOString } from "../utils/HelperFuncsCore";
+import { dataSanitizeString } from "./ai/Common/DataSanitizer";
 
 /**
  * Create a telemetry item that the 1DS channel understands

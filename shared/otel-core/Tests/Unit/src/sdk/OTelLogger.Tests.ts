@@ -1,11 +1,11 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { createLoggerProvider } from "../../../../src/otel/sdk/OTelLoggerProvider";
 import { createContext } from "../../../../src/otel/api/context/context";
-import { IOTelLogger } from "../../../../src/interfaces/OTel/logs/IOTelLogger";
-import { IOTelLogRecord } from "../../../../src/interfaces/OTel/logs/IOTelLogRecord";
-import { IOTelSpanContext } from "../../../../src/interfaces/OTel/trace/IOTelSpanContext";
-import { IOTelInstrumentationScope } from "../../../../src/interfaces/OTel/trace/IOTelInstrumentationScope";
-import { IOTelLogRecordProcessor } from "../../../../src/interfaces/OTel/logs/IOTelLogRecordProcessor";
+import { IOTelLogger } from "../../../../src/interfaces/otel/logs/IOTelLogger";
+import { IOTelLogRecord } from "../../../../src/interfaces/otel/logs/IOTelLogRecord";
+import { IOTelSpanContext } from "../../../../src/interfaces/otel/trace/IOTelSpanContext";
+import { IOTelInstrumentationScope } from "../../../../src/interfaces/otel/trace/IOTelInstrumentationScope";
+import { IOTelLogRecordProcessor } from "../../../../src/interfaces/otel/logs/IOTelLogRecordProcessor";
 import { createContextManager } from "../../../../src/otel/api/context/contextManager";
 import { setContextSpanContext } from "../../../../src/otel/api/trace/utils";
 import { createLogger } from "../../../../src/otel/sdk/OTelLogger";

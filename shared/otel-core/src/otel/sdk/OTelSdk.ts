@@ -1,15 +1,18 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IAppInsightsCore } from "../../interfaces/AppInsights/IAppInsightsCore";
-import { IConfiguration } from "../../interfaces/AppInsights/IConfiguration";
-import { IProcessTelemetryContext } from "../../interfaces/AppInsights/IProcessTelemetryContext";
-import { ITelemetryItem } from "../../interfaces/AppInsights/ITelemetryItem";
-import { IPlugin } from "../../interfaces/AppInsights/ITelemetryPlugin";
-import { ITelemetryPluginChain } from "../../interfaces/AppInsights/ITelemetryPluginChain";
-import { IOTelApi } from "../../interfaces/OTel/IOTelApi";
-import { IOTelSdk } from "../../interfaces/OTel/IOTelSdk";
-import { IOTelConfig } from "../../interfaces/OTel/config/IOTelConfig";
-import { IOTelTracer } from "../../interfaces/OTel/trace/IOTelTracer";
-import { IOTelTracerOptions } from "../../interfaces/OTel/trace/IOTelTracerOptions";
+import { IAppInsightsCore } from "../../interfaces/ai/IAppInsightsCore";
+import { IConfiguration } from "../../interfaces/ai/IConfiguration";
+import { IProcessTelemetryContext } from "../../interfaces/ai/IProcessTelemetryContext";
+import { ITelemetryItem } from "../../interfaces/ai/ITelemetryItem";
+import { IPlugin } from "../../interfaces/ai/ITelemetryPlugin";
+import { ITelemetryPluginChain } from "../../interfaces/ai/ITelemetryPluginChain";
+import { IOTelApi } from "../../interfaces/otel/IOTelApi";
+import { IOTelSdk } from "../../interfaces/otel/IOTelSdk";
+import { IOTelConfig } from "../../interfaces/otel/config/IOTelConfig";
+import { IOTelTracer } from "../../interfaces/otel/trace/IOTelTracer";
+import { IOTelTracerOptions } from "../../interfaces/otel/trace/IOTelTracerOptions";
 
 // interface TraceList {
 //     name: string;

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { arrSlice, fnApply, isFunction, objDefine } from "@nevware21/ts-utils";
-import { IOTelContext } from "../../../interfaces/OTel/context/IOTelContext";
-import { IOTelContextManager } from "../../../interfaces/OTel/context/IOTelContextManager";
+import { IOTelContext } from "../../../interfaces/otel/context/IOTelContext";
+import { IOTelContextManager } from "../../../interfaces/otel/context/IOTelContextManager";
 
 /**
  * Create a context manager using the provided parent context as the root context

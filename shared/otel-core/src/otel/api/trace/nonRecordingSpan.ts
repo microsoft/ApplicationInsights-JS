@@ -1,13 +1,16 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { createDeferredCachedValue, objDefineProps, objFreeze } from "@nevware21/ts-utils";
-import { eW3CTraceFlags } from "../../../enums/AppInsights/W3CTraceFlags";
-import { eOTelSpanKind } from "../../../enums/OTel/trace/OTelSpanKind";
-import { eOTelSpanStatusCode } from "../../../enums/OTel/trace/OTelSpanStatus";
-import { IOTelSpan } from "../../../interfaces/OTel/trace/IOTelSpan";
-import { IOTelSpanContext } from "../../../interfaces/OTel/trace/IOTelSpanContext";
-import { IOTelSpanStatus } from "../../../interfaces/OTel/trace/IOTelSpanStatus";
-import { IReadableSpan } from "../../../interfaces/OTel/trace/IReadableSpan";
-import { UNDEFINED_VALUE } from "../../../internal/otel/InternalConstants";
-import { INVALID_SPAN_ID, INVALID_TRACE_ID } from "../../../utils/AppInsights/TraceParent";
+import { UNDEFINED_VALUE } from "../../../constants/InternalConstants";
+import { eW3CTraceFlags } from "../../../enums/W3CTraceFlags";
+import { eOTelSpanKind } from "../../../enums/otel/OTelSpanKind";
+import { eOTelSpanStatusCode } from "../../../enums/otel/OTelSpanStatus";
+import { IOTelSpan } from "../../../interfaces/otel/trace/IOTelSpan";
+import { IOTelSpanContext } from "../../../interfaces/otel/trace/IOTelSpanContext";
+import { IOTelSpanStatus } from "../../../interfaces/otel/trace/IOTelSpanStatus";
+import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
+import { INVALID_SPAN_ID, INVALID_TRACE_ID } from "../../../utils/TraceParent";
 
 // Inline noop helpers - these don't need the full noop package
 function _noopThis<T>(this: T): T {

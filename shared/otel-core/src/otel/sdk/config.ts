@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { strTrim } from "@nevware21/ts-utils";
-import { IOTelErrorHandlers } from "../../interfaces/OTel/config/IOTelErrorHandlers";
-import { IOTelLogRecordLimits } from "../../interfaces/OTel/logs/IOTelLogRecordLimits";
-import { handleWarn } from "../../internal/otel/commonUtils";
+import { IOTelErrorHandlers } from "../../interfaces/otel/config/IOTelErrorHandlers";
+import { IOTelLogRecordLimits } from "../../interfaces/otel/logs/IOTelLogRecordLimits";
+import { handleWarn } from "../../internal/commonUtils";
 
 /**
  * Retrieves a number from an environment variable.

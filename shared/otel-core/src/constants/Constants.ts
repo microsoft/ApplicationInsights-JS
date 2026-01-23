@@ -17,6 +17,9 @@ export const DEFAULT_BREEZE_PATH = "/v2/track";
 export const strNotSpecified = "not_specified";
 export const strIkey = "iKey";
 
+// Channel controller priority constant
+export const ChannelControllerPriority = 500;
+
 // String constants for event names
 export const STR_EVENTS_DISCARDED = "eventsDiscarded";
 export const STR_EVENTS_SEND_REQUEST = "eventsSendRequest";

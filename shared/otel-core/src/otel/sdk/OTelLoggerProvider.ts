@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 
 import { IPromise } from "@nevware21/ts-async";
-import { IOTelErrorHandlers } from "../../interfaces/OTel/config/IOTelErrorHandlers";
-import { IOTelLogRecord } from "../../interfaces/OTel/logs/IOTelLogRecord";
-import { IOTelLogger } from "../../interfaces/OTel/logs/IOTelLogger";
-import { IOTelLoggerOptions } from "../../interfaces/OTel/logs/IOTelLoggerOptions";
-import { IOTelLoggerProvider } from "../../interfaces/OTel/logs/IOTelLoggerProvider";
-import { IOTelLoggerProviderConfig } from "../../interfaces/OTel/logs/IOTelLoggerProviderConfig";
-import { IOTelLoggerProviderSharedState } from "../../interfaces/OTel/logs/IOTelLoggerProviderSharedState";
-import { createLoggerProviderSharedState } from "../../internal/otel/LoggerProviderSharedState";
-import { handleWarn } from "../../internal/otel/commonUtils";
+import { IOTelErrorHandlers } from "../../interfaces/otel/config/IOTelErrorHandlers";
+import { IOTelLogRecord } from "../../interfaces/otel/logs/IOTelLogRecord";
+import { IOTelLogger } from "../../interfaces/otel/logs/IOTelLogger";
+import { IOTelLoggerOptions } from "../../interfaces/otel/logs/IOTelLoggerOptions";
+import { IOTelLoggerProvider } from "../../interfaces/otel/logs/IOTelLoggerProvider";
+import { IOTelLoggerProviderConfig } from "../../interfaces/otel/logs/IOTelLoggerProviderConfig";
+import { IOTelLoggerProviderSharedState } from "../../interfaces/otel/logs/IOTelLoggerProviderSharedState";
+import { createLoggerProviderSharedState } from "../../internal/LoggerProviderSharedState";
+import { handleWarn } from "../../internal/commonUtils";
 import { createResource } from "../resource/resource";
 import { createLogger } from "./OTelLogger";
 import { loadDefaultConfig, reconfigureLimits } from "./config";

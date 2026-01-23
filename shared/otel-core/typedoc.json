@@ -1,6 +1,6 @@
 {
     "$schema": "https://typedoc.org/schema.json",
-    "entryPoints": [ "./src/otel-core-js.ts" ],
+    "entryPoints": [ "./src/index.ts" ],
     "exclude": [ "**/internal/**/*.ts", "node_modules/**" ],
     "externalPattern": [
         "**/node_modules/**",

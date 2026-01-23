@@ -1,7 +1,10 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { arrForEach, getDocument, getNavigator, getWindow, isNullOrUndefined, isUndefined } from "@nevware21/ts-utils";
-import { IUnloadHook } from "../interfaces/AppInsights/IUnloadHook";
-import { createUniqueNamespace } from "./AppInsights/DataCacheHelper";
-import { eventOff, eventOn, mergeEvtNamespace } from "./AppInsights/EventHelpers";
+import { IUnloadHook } from "../interfaces/ai/IUnloadHook";
+import { eventOff, eventOn, mergeEvtNamespace } from "../internal/EventHelpers";
+import { createUniqueNamespace } from "./DataCacheHelper";
 
 /**
  * this is the callback that will be called when the network status changes

@@ -1,16 +1,19 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import {
     CreateIteratorContext, ICachedValue, arrForEach, arrIndexOf, createCachedValue, createIterator, getLength, isFunction, isObject,
     isUndefined, iterForOf, objCreate, objDefine, objDefineProps, objForEachKey, objIs, objKeys, safe, strSplit
 } from "@nevware21/ts-utils";
-import { eAttributeChangeOp } from "../../enums/OTel/eAttributeChangeOp";
-import { IUnloadHook } from "../../interfaces/AppInsights/IUnloadHook";
-import { IOTelAttributes, OTelAttributeValue } from "../../interfaces/OTel/IOTelAttributes";
-import { IAttributeChangeInfo, IAttributeContainer, eAttributeFilter } from "../../interfaces/OTel/attribute/IAttributeContainer";
-import { IOTelAttributeLimits } from "../../interfaces/OTel/config/IOTelAttributeLimits";
-import { IOTelConfig } from "../../interfaces/OTel/config/IOTelConfig";
-import { IOTelTraceCfg } from "../../interfaces/OTel/config/IOTelTraceCfg";
-import { STR_EMPTY, UNDEFINED_VALUE } from "../../internal/otel/InternalConstants";
-import { handleAttribError } from "../../internal/otel/commonUtils";
+import { STR_EMPTY, UNDEFINED_VALUE } from "../../constants/InternalConstants";
+import { eAttributeChangeOp } from "../../enums/otel/eAttributeChangeOp";
+import { IUnloadHook } from "../../interfaces/ai/IUnloadHook";
+import { IOTelAttributes, OTelAttributeValue } from "../../interfaces/otel/IOTelAttributes";
+import { IAttributeChangeInfo, IAttributeContainer, eAttributeFilter } from "../../interfaces/otel/attribute/IAttributeContainer";
+import { IOTelAttributeLimits } from "../../interfaces/otel/config/IOTelAttributeLimits";
+import { IOTelConfig } from "../../interfaces/otel/config/IOTelConfig";
+import { IOTelTraceCfg } from "../../interfaces/otel/config/IOTelTraceCfg";
+import { handleAttribError } from "../../internal/commonUtils";
 
 let _inheritedKey = "~[[inherited]]";
 let _deletedKey = "~[[deleted]]";

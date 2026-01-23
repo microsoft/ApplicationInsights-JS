@@ -1,18 +1,21 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { ILazyValue, createDeferredCachedValue, fnApply, objDeepFreeze, objDefineProps } from "@nevware21/ts-utils";
-import { cfgDfMerge } from "../../config/AppInsights/ConfigDefaultHelpers";
-import { createDynamicConfig } from "../../config/AppInsights/DynamicConfig";
-import { safeGetLogger } from "../../diagnostics/AppInsights/DiagnosticLogger";
-import { IConfigDefaults } from "../../interfaces/AppInsights/config/IConfigDefaults";
-import { IDynamicConfigHandler } from "../../interfaces/AppInsights/config/IDynamicConfigHandler";
-import { IOTelApi } from "../../interfaces/OTel/IOTelApi";
-import { IOTelApiCtx } from "../../interfaces/OTel/IOTelApiCtx";
-import { IOTelConfig } from "../../interfaces/OTel/config/IOTelConfig";
-import { IOTelErrorHandlers } from "../../interfaces/OTel/config/IOTelErrorHandlers";
-import { IOTelTraceCfg } from "../../interfaces/OTel/config/IOTelTraceCfg";
-import { IOTelContext } from "../../interfaces/OTel/context/IOTelContext";
-import { IOTelContextManager } from "../../interfaces/OTel/context/IOTelContextManager";
-import { IOTelTraceApi } from "../../interfaces/OTel/trace/IOTelTraceApi";
-import { IOTelTracerProvider } from "../../interfaces/OTel/trace/IOTelTracerProvider";
+import { cfgDfMerge } from "../../config/ConfigDefaultHelpers";
+import { createDynamicConfig } from "../../config/DynamicConfig";
+import { safeGetLogger } from "../../diagnostics/DiagnosticLogger";
+import { IConfigDefaults } from "../../interfaces/config/IConfigDefaults";
+import { IDynamicConfigHandler } from "../../interfaces/config/IDynamicConfigHandler";
+import { IOTelApi } from "../../interfaces/otel/IOTelApi";
+import { IOTelApiCtx } from "../../interfaces/otel/IOTelApiCtx";
+import { IOTelConfig } from "../../interfaces/otel/config/IOTelConfig";
+import { IOTelErrorHandlers } from "../../interfaces/otel/config/IOTelErrorHandlers";
+import { IOTelTraceCfg } from "../../interfaces/otel/config/IOTelTraceCfg";
+import { IOTelContext } from "../../interfaces/otel/context/IOTelContext";
+import { IOTelContextManager } from "../../interfaces/otel/context/IOTelContextManager";
+import { IOTelTraceApi } from "../../interfaces/otel/trace/IOTelTraceApi";
+import { IOTelTracerProvider } from "../../interfaces/otel/trace/IOTelTracerProvider";
 import { createContext } from "./context/context";
 import { createContextManager } from "./context/contextManager";
 import { throwOTelInvalidAttributeError } from "./errors/OTelInvalidAttributeError";

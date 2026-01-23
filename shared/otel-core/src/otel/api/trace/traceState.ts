@@ -1,7 +1,10 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { ICachedValue, createCachedValue, isFunction, isString, objDefine, symbolFor } from "@nevware21/ts-utils";
-import { IW3cTraceState } from "../../../interfaces/AppInsights/IW3cTraceState";
-import { IOTelTraceState } from "../../../interfaces/OTel/trace/IOTelTraceState";
-import { STR_EMPTY } from "../../../internal/otel/InternalConstants";
+import { STR_EMPTY } from "../../../constants/InternalConstants";
+import { IW3cTraceState } from "../../../interfaces/ai/IW3cTraceState";
+import { IOTelTraceState } from "../../../interfaces/otel/trace/IOTelTraceState";
 import { createW3cTraceState, isW3cTraceState } from "../../../telemetry/W3cTraceState";
 
 let _otelTraceState: ICachedValue<symbol>;

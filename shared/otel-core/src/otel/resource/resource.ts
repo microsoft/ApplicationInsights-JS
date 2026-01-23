@@ -1,11 +1,14 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { IPromise, createPromise, doAwait } from "@nevware21/ts-async";
 import { arrAppend, arrForEach, isPromiseLike, objDefineProps } from "@nevware21/ts-utils";
-import { IOTelAttributes, OTelAttributeValue } from "../../interfaces/OTel/IOTelAttributes";
-import { IAttributeContainer } from "../../interfaces/OTel/attribute/IAttributeContainer";
-import { IOTelResourceCtx } from "../../interfaces/OTel/resource/IOTelResourceCtx";
-import { IOTelResource, OTelRawResourceAttribute } from "../../interfaces/OTel/resources/IOTelResource";
-import { UNDEFINED_VALUE } from "../../internal/otel/InternalConstants";
-import { handleDebug, handleError } from "../../internal/otel/commonUtils";
+import { UNDEFINED_VALUE } from "../../constants/InternalConstants";
+import { IOTelAttributes, OTelAttributeValue } from "../../interfaces/otel/IOTelAttributes";
+import { IAttributeContainer } from "../../interfaces/otel/attribute/IAttributeContainer";
+import { IOTelResource, OTelRawResourceAttribute } from "../../interfaces/otel/resources/IOTelResource";
+import { IOTelResourceCtx } from "../../interfaces/otel/resources/IOTelResourceCtx";
+import { handleDebug, handleError } from "../../internal/commonUtils";
 import { createAttributeContainer } from "../attribute/attributeContainer";
 
 type ResourceKeyValue = [key: string, value: OTelAttributeValue | undefined];

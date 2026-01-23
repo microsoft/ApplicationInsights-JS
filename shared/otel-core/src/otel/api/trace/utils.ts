@@ -1,10 +1,13 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { ILazyValue, createDeferredCachedValue, isFunction, symbolFor } from "@nevware21/ts-utils";
-import { IOTelContext } from "../../../interfaces/OTel/context/IOTelContext";
-import { IOTelSpan } from "../../../interfaces/OTel/trace/IOTelSpan";
-import { IOTelSpanContext } from "../../../interfaces/OTel/trace/IOTelSpanContext";
-import { IReadableSpan } from "../../../interfaces/OTel/trace/IReadableSpan";
-import { UNDEFINED_VALUE } from "../../../internal/otel/InternalConstants";
-import { isValidSpanId, isValidTraceId } from "../../../utils/AppInsights/TraceParent";
+import { UNDEFINED_VALUE } from "../../../constants/InternalConstants";
+import { IOTelContext } from "../../../interfaces/otel/context/IOTelContext";
+import { IOTelSpan } from "../../../interfaces/otel/trace/IOTelSpan";
+import { IOTelSpanContext } from "../../../interfaces/otel/trace/IOTelSpanContext";
+import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
+import { isValidSpanId, isValidTraceId } from "../../../utils/TraceParent";
 import { createNonRecordingSpan } from "./nonRecordingSpan";
 
 const OTEL_SPAN_KEY = "OpenTelemetry Context Key SPAN";

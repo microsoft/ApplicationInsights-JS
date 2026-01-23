@@ -1,23 +1,26 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import {
     ILazyValue, createDeferredCachedValue, dumpObj, isNullOrUndefined, isString, objDefineProps, objFreeze, objKeys, perfNow
 } from "@nevware21/ts-utils";
-import { OTelSpanKind, eOTelSpanKind } from "../../../enums/OTel/trace/OTelSpanKind";
-import { eOTelSpanStatusCode } from "../../../enums/OTel/trace/OTelSpanStatus";
-import { OTelException } from "../../../interfaces/OTel/IException";
-import { IOTelAttributes } from "../../../interfaces/OTel/IOTelAttributes";
-import { IAttributeContainer } from "../../../interfaces/OTel/attribute/IAttributeContainer";
-import { IOTelHrTime, OTelTimeInput } from "../../../interfaces/OTel/time";
-import { IOTelLink } from "../../../interfaces/OTel/trace/IOTelLink";
-import { IOTelSpanCtx } from "../../../interfaces/OTel/trace/IOTelSpanCtx";
-import { IOTelSpanStatus } from "../../../interfaces/OTel/trace/IOTelSpanStatus";
-import { IOTelTimedEvent } from "../../../interfaces/OTel/trace/IOTelTimedEvent";
-import { IReadableSpan } from "../../../interfaces/OTel/trace/IReadableSpan";
-import { STR_EMPTY, UNDEFINED_VALUE } from "../../../internal/otel/InternalConstants";
-import { isAttributeValue, sanitizeAttributes } from "../../../internal/otel/attributeHelpers";
-import { handleAttribError, handleNotImplemented, handleSpanError, handleWarn } from "../../../internal/otel/commonUtils";
+import { STR_EMPTY, UNDEFINED_VALUE } from "../../../constants/InternalConstants";
+import { OTelSpanKind, eOTelSpanKind } from "../../../enums/otel/OTelSpanKind";
+import { eOTelSpanStatusCode } from "../../../enums/otel/OTelSpanStatus";
+import { OTelException } from "../../../interfaces/IException";
+import { IOTelAttributes } from "../../../interfaces/otel/IOTelAttributes";
+import { IAttributeContainer } from "../../../interfaces/otel/attribute/IAttributeContainer";
+import { IOTelLink } from "../../../interfaces/otel/trace/IOTelLink";
+import { IOTelSpanCtx } from "../../../interfaces/otel/trace/IOTelSpanCtx";
+import { IOTelSpanStatus } from "../../../interfaces/otel/trace/IOTelSpanStatus";
+import { IOTelTimedEvent } from "../../../interfaces/otel/trace/IOTelTimedEvent";
+import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
+import { isAttributeValue, sanitizeAttributes } from "../../../internal/attributeHelpers";
+import { handleAttribError, handleNotImplemented, handleSpanError, handleWarn } from "../../../internal/commonUtils";
 import {
     hrTime, hrTimeDuration, hrTimeToMilliseconds, isTimeInput, millisToHrTime, timeInputToHrTime, zeroHrTime
-} from "../../../internal/otel/timeHelpers";
+} from "../../../internal/timeHelpers";
+import { IOTelHrTime, OTelTimeInput } from "../../../types/time";
 import { addAttributes, createAttributeContainer } from "../../attribute/attributeContainer";
 
 export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpanKind): IReadableSpan {

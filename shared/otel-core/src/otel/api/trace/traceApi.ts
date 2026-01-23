@@ -1,10 +1,12 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
-import { IOTelApi } from "../../../interfaces/OTel/IOTelApi";
-import { IOTelSpan } from "../../../interfaces/OTel/trace/IOTelSpan";
-import { IOTelTraceApi } from "../../../interfaces/OTel/trace/IOTelTraceApi";
-import { IOTelTracerOptions } from "../../../interfaces/OTel/trace/IOTelTracerOptions";
-import { IOTelTracerProvider } from "../../../interfaces/OTel/trace/IOTelTracerProvider";
-import { handleNotImplemented } from "../../../internal/otel/commonUtils";
+import { IOTelApi } from "../../../interfaces/otel/IOTelApi";
+import { IOTelSpan } from "../../../interfaces/otel/trace/IOTelSpan";
+import { IOTelTraceApi } from "../../../interfaces/otel/trace/IOTelTraceApi";
+import { IOTelTracerOptions } from "../../../interfaces/otel/trace/IOTelTracerOptions";
+import { IOTelTracerProvider } from "../../../interfaces/otel/trace/IOTelTracerProvider";
+import { handleNotImplemented } from "../../../internal/commonUtils";
 import {
     deleteContextSpan, getContextActiveSpanContext, getContextSpan, isSpanContextValid, setContextSpan, setContextSpanContext,
     wrapSpanContext

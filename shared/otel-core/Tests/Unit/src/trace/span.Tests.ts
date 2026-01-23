@@ -1,14 +1,14 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { dumpObj, perfNow, isFunction, isString, isNumber, isBoolean, isObject, isArray } from "@nevware21/ts-utils";
-import { IOTelApi } from "../../../../src/interfaces/OTel/IOTelApi";
-import { IOTelSpanCtx } from "../../../../src/interfaces/OTel/trace/IOTelSpanCtx";
-import { IOTelSpanContext } from "../../../../src/interfaces/OTel/trace/IOTelSpanContext";
-import { IReadableSpan } from "../../../../src/interfaces/OTel/trace/IReadableSpan";
-import { IOTelConfig } from "../../../../src/interfaces/OTel/config/IOTelConfig";
-import { eOTelSpanKind } from "../../../../src/enums/OTel/trace/OTelSpanKind";
-import { eOTelSpanStatusCode } from "../../../../src/enums/OTel/trace/OTelSpanStatus";
-import { IOTelErrorHandlers } from "../../../../src/interfaces/OTel/config/IOTelErrorHandlers";
-import { IOTelAttributes } from "../../../../src/interfaces/OTel/IOTelAttributes";
+import { IOTelApi } from "../../../../src/interfaces/otel/IOTelApi";
+import { IOTelSpanCtx } from "../../../../src/interfaces/otel/trace/IOTelSpanCtx";
+import { IOTelSpanContext } from "../../../../src/interfaces/otel/trace/IOTelSpanContext";
+import { IReadableSpan } from "../../../../src/interfaces/otel/trace/IReadableSpan";
+import { IOTelConfig } from "../../../../src/interfaces/otel/config/IOTelConfig";
+import { eOTelSpanKind } from "../../../../src/enums/otel/OTelSpanKind";
+import { eOTelSpanStatusCode } from "../../../../src/enums/otel/OTelSpanStatus";
+import { IOTelErrorHandlers } from "../../../../src/interfaces/otel/config/IOTelErrorHandlers";
+import { IOTelAttributes } from "../../../../src/interfaces/otel/IOTelAttributes";
 import { createSpan } from "../../../../src/otel/api/trace/span";
 
 

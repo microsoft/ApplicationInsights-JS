@@ -2,7 +2,7 @@ import { createUnVersionedConfig } from "../../rollup.base.config";
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
-const entryPointName = "otel-core-js";
+const entryPointName = "index";
 const banner = [
   "/*!",
   ` * Application Insights JavaScript SDK - OpenTelemetry Core, ${version}`,

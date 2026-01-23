@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { ICachedValue, createCachedValue, newSymbol, objCreate, objDefine } from "@nevware21/ts-utils";
-import { IOTelContext } from "../../../interfaces/OTel/context/IOTelContext";
+import { IOTelContext } from "../../../interfaces/otel/context/IOTelContext";
 
 let _InternalContextKey: ICachedValue<symbol>
 

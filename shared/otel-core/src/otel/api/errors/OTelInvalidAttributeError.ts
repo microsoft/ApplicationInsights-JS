@@ -1,5 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { createCustomError } from "@nevware21/ts-utils";
-import { STR_EMPTY } from "../../../internal/otel/InternalConstants";
+import { STR_EMPTY } from "../../../constants/InternalConstants";
 import { OpenTelemetryError, OpenTelemetryErrorConstructor, getOpenTelemetryError } from "./OTelError";
 
 let otelInvalidAttributeErrorType: OTelInvalidAttributeErrorConstructor;

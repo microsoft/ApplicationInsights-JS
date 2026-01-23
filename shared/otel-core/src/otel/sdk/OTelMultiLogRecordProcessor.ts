@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import type { IOTelLogRecordProcessor } from "../../interfaces/OTel/logs/IOTelLogRecordProcessor";
-import type { IOTelSdkLogRecord } from "../../interfaces/OTel/logs/IOTelSdkLogRecord";
+import type { IOTelLogRecordProcessor } from "../../interfaces/otel/logs/IOTelLogRecordProcessor";
+import type { IOTelSdkLogRecord } from "../../interfaces/otel/logs/IOTelSdkLogRecord";
 import { IPromise, createAllPromise, createRejectedPromise, createSyncPromise } from "@nevware21/ts-async";
-import { IOTelErrorHandlers } from "../../interfaces/OTel/config/IOTelErrorHandlers";
-import { IOTelContext } from "../../interfaces/OTel/context/IOTelContext";
-import { callWithTimeout } from "../../internal/otel/commonUtils";
+import { IOTelErrorHandlers } from "../../interfaces/otel/config/IOTelErrorHandlers";
+import { IOTelContext } from "../../interfaces/otel/context/IOTelContext";
+import { callWithTimeout } from "../../internal/commonUtils";
 
 /**
  * Implementation of the {@link IOTelLogRecordProcessor} that forwards all events

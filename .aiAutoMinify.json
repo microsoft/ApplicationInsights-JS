@@ -71,12 +71,13 @@
         },
         "@microsoft/otel-core-js": {
             "constEnums": [
-                "eRequestHeaders",
-                "eTraceStateKeyType",
-                "eOfflineValue",
                 "_eSetDynamicPropertyFlags",
                 "ePendingOp",
                 "CallbackType",
+                "eW3CTraceFlags",
+                "eRequestHeaders",
+                "eTraceStateKeyType",
+                "eOfflineValue",
                 "eStorageType",
                 "FieldType",
                 "eDistributedTracingModes",
@@ -94,21 +95,20 @@
                 "TelemetryUnloadReason",
                 "TelemetryUpdateReason",
                 "eTraceHeadersMode",
-                "eW3CTraceFlags",
                 "eAttributeChangeOp",
-                "eAttributeSource",
-                "AddAttributeResult",
                 "eOTelSeverityNumber",
                 "eOTelSamplingDecision",
                 "eOTelSpanKind",
                 "eOTelSpanStatusCode",
+                "eAttributeSource",
+                "AddAttributeResult",
                 "DataPointType",
                 "DependencyKind",
                 "DependencySourceType",
                 "eSeverityLevel",
                 "eAttributeFilter",
-                "DataSanitizerValues",
-                "eValueType"
+                "eValueType",
+                "DataSanitizerValues"
             ]
         },
         "@microsoft/otel-noop-js": {

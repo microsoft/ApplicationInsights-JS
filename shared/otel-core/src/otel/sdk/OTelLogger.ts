@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IOTelLogRecord } from "../../interfaces/OTel/logs/IOTelLogRecord";
-import { IOTelLogger } from "../../interfaces/OTel/logs/IOTelLogger";
-import { IOTelLoggerProviderSharedState } from "../../interfaces/OTel/logs/IOTelLoggerProviderSharedState";
-import { IOTelInstrumentationScope } from "../../interfaces/OTel/trace/IOTelInstrumentationScope";
+import { IOTelLogRecord } from "../../interfaces/otel/logs/IOTelLogRecord";
+import { IOTelLogger } from "../../interfaces/otel/logs/IOTelLogger";
+import { IOTelLoggerProviderSharedState } from "../../interfaces/otel/logs/IOTelLoggerProviderSharedState";
+import { IOTelInstrumentationScope } from "../../interfaces/otel/trace/IOTelInstrumentationScope";
 import { createContextManager } from "../api/context/contextManager";
 import { createLogRecord } from "./OTelLogRecord";
 

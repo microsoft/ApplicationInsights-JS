@@ -3,7 +3,7 @@
 
 import { arrReduce, objKeys, strEndsWith } from "@nevware21/ts-utils";
 import { DEFAULT_BREEZE_ENDPOINT } from "../constants/Constants";
-import { ConnectionString, ConnectionStringKey } from "../interfaces/AppInsights/ConnectionString";
+import { ConnectionString, ConnectionStringKey } from "../interfaces/ai/ConnectionString";
 
 const _FIELDS_SEPARATOR = ";";
 const _FIELD_KEY_VALUE_SEPARATOR = "=";

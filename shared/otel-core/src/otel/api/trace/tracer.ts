@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 import { arrSlice, objDefineProps } from "@nevware21/ts-utils";
-import { IOTelContext } from "../../../interfaces/OTel/context/IOTelContext";
-import { IOTelContextManager } from "../../../interfaces/OTel/context/IOTelContextManager";
-import { IOTelSpan } from "../../../interfaces/OTel/trace/IOTelSpan";
-import { IOTelSpanOptions } from "../../../interfaces/OTel/trace/IOTelSpanOptions";
-import { IOTelTracer } from "../../../interfaces/OTel/trace/IOTelTracer";
-import { IOTelTracerCtx } from "../../../interfaces/OTel/trace/IOTelTracerCtx";
+import { IOTelContext } from "../../../interfaces/otel/context/IOTelContext";
+import { IOTelContextManager } from "../../../interfaces/otel/context/IOTelContextManager";
+import { IOTelSpan } from "../../../interfaces/otel/trace/IOTelSpan";
+import { IOTelSpanOptions } from "../../../interfaces/otel/trace/IOTelSpanOptions";
+import { IOTelTracer } from "../../../interfaces/otel/trace/IOTelTracer";
+import { IOTelTracerCtx } from "../../../interfaces/otel/trace/IOTelTracerCtx";
 import { setContextSpan } from "./utils";
 
 interface ITracerOptions {

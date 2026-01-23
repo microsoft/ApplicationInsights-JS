@@ -6,14 +6,14 @@ import { OTelLogRecordTests } from "./sdk/OTelLogRecord.Tests";
 import { OTelMultiLogRecordProcessorTests } from "./sdk/OTelMultiLogRecordProcessor.Tests";
 
 // AppInsightsCommon tests
-import { ApplicationInsightsTests } from "./AppInsights/Common/AppInsightsCommon.tests";
-import { ExceptionTests } from "./AppInsights/Common/Exception.tests";
-import { UtilTests } from "./AppInsights/Common/Util.tests";
-import { ConnectionStringParserTests } from "./AppInsights/Common/ConnectionStringParser.tests";
-import { SeverityLevelTests } from "./AppInsights/Common/SeverityLevel.tests";
-import { RequestHeadersTests } from "./AppInsights/Common/RequestHeaders.tests";
-import { W3CTraceStateModesTests } from "./AppInsights/Common/W3CTraceStateModes.tests";
-import { W3cTraceParentTests } from "./AppInsights/Common/W3cTraceParentTests";
+import { ApplicationInsightsTests } from "./ai/Common/AppInsightsCommon.tests";
+import { ExceptionTests } from "./ai/Common/Exception.tests";
+import { UtilTests } from "./ai/Common/Util.tests";
+import { ConnectionStringParserTests } from "./ai/Common/ConnectionStringParser.tests";
+import { SeverityLevelTests } from "./ai/Common/SeverityLevel.tests";
+import { RequestHeadersTests } from "./ai/Common/RequestHeaders.tests";
+import { W3CTraceStateModesTests } from "./ai/Common/W3CTraceStateModes.tests";
+import { W3cTraceParentTests } from "./ai/Common/W3cTraceParentTests";
 
 export function runTests() {
     // OTel tests
