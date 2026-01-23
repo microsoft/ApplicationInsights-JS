@@ -1,5 +1,6 @@
 /// <reference path="../../External/qunit.d.ts" />
 
+import { dumpObj } from "@nevware21/ts-utils";
 import { expectedToString, stateToString } from "./DebugHelpers";
 
 /**
@@ -147,6 +148,15 @@ export class Assert {
         return QUnit.assert.throws(block, expected, message || expectedToString(expected));
     }
 
+
+    public static doesNotThrow(block: () => any, message?: string): any {
+        try {
+            return block();
+        } catch (e) {
+            return Assert.fail((message || "Expected no exception, but got") + ": " + dumpObj(e));
+        }
+    }
+    
     /**
      * Fails a test with the given message.
      *

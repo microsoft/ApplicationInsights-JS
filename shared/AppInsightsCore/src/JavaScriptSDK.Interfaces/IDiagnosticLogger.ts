@@ -73,4 +73,9 @@ export interface IDiagnosticLogger {
      * / Promise to allow any listeners to wait for the operation to complete.
      */
     unload?(isAsync?: boolean): void | IPromise<void>;
+
+    /**
+     * A flag that indicates whether this logger is in debug (throw real exceptions) mode
+     */
+    readonly dbgMode?: boolean;
 }

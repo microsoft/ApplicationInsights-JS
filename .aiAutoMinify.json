@@ -6,6 +6,7 @@
                 "ePendingOp",
                 "CallbackType",
                 "eTraceStateKeyType",
+                "eDependencyTypes",
                 "eEventsDiscardedReason",
                 "eBatchDiscardedReason",
                 "FeatureOptInMode",
@@ -19,7 +20,14 @@
                 "TelemetryUnloadReason",
                 "TelemetryUpdateReason",
                 "eTraceHeadersMode",
-                "eW3CTraceFlags"
+                "eW3CTraceFlags",
+                "eAttributeSource",
+                "AddAttributeResult",
+                "eAttributeFilter",
+                "eAttributeChangeOp",
+                "eOTelSamplingDecision",
+                "eOTelSpanKind",
+                "eOTelSpanStatusCode"
             ]
         },
         "@microsoft/applicationinsights-perfmarkmeasure-js": {
@@ -50,7 +58,9 @@
             "constEnums": []
         },
         "@microsoft/applicationinsights-channel-js": {
-            "constEnums": []
+            "constEnums": [
+                "eSerializeType"
+            ]
         },
         "@microsoft/applicationinsights-react-native": {
             "constEnums": []
@@ -64,7 +74,9 @@
             "constEnums": []
         },
         "@microsoft/applicationinsights-analytics-js": {
-            "constEnums": []
+            "constEnums": [
+                "eRouteTraceStrategy"
+            ]
         },
         "@microsoft/applicationinsights-web": {
             "constEnums": []

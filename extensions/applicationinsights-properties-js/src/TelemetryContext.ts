@@ -6,15 +6,13 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     CtxTagKeys, Extensions, IApplication, IDevice, IInternal, ILocation, IOperatingSystem, ISession, ISessionManager, ITelemetryTrace,
-    IUserContext, IWeb, PageView, dataSanitizeString
+    IUserContext, IWeb, PageViewDataType, dataSanitizeString
 } from "@microsoft/applicationinsights-common";
 import {
     IAppInsightsCore, IDistributedTraceContext, IProcessTelemetryContext, ITelemetryItem, IUnloadHookContainer, _InternalLogMessage,
     getSetValue, hasWindow, isNullOrUndefined, isString, objKeys, setValue
 } from "@microsoft/applicationinsights-core-js";
-import {
-    createDeferredCachedValue, fnCall, isFunction, isUndefined, objDefine, objDefineProps, strLetterCase
-} from "@nevware21/ts-utils";
+import { fnCall, getDeferred, isFunction, isUndefined, objDefine, objDefineProps, strLetterCase } from "@nevware21/ts-utils";
 import { Application } from "./Context/Application";
 import { Device } from "./Context/Device";
 import { Internal } from "./Context/Internal";
@@ -38,17 +36,30 @@ function _nullResult(): string {
     return null;
 }
 
+/**
+ * Create a telemetryTrace object that will be used to manage the trace context for the current telemetry item.
+ * This will create a proxy object that will read the values from the core.getTraceCtx() and provide a way to update the values
+ * in the core.getTraceCtx() if they are valid.
+ * @param core - The core instance that will be used to get the trace context
+ * @returns A telemetryTrace object that will be used to manage the trace context for the current telemetry item.
+ */
 function _createTelemetryTrace(core: IAppInsightsCore): ITelemetryTrace {
     let coreTraceCtx: IDistributedTraceContext | null = core ? core.getTraceCtx() : null;
     let trace: any = {};
 
-    function _getTraceCtx<T>(name: keyof IDistributedTraceContext extends string ? keyof IDistributedTraceContext : never): T {
-        let value: T;
+    function _getCtx() {
         let ctx = core ? core.getTraceCtx() : null;
         if (coreTraceCtx && ctx !== coreTraceCtx) {
             // It appears that the coreTraceCtx has been updated, so clear the local trace context
             trace = {};
         }
+
+        return ctx;
+    }
+
+    function _getTraceCtx<T>(name: keyof IDistributedTraceContext extends string ? keyof IDistributedTraceContext : never): T {
+        let value: T;
+        let ctx = _getCtx();
 
         if (!isUndefined(trace[name])) {
             // has local value
@@ -74,11 +85,7 @@ function _createTelemetryTrace(core: IAppInsightsCore): ITelemetryTrace {
     }
 
     function _setTraceCtx<V>(name: keyof IDistributedTraceContext extends string ? keyof IDistributedTraceContext : never, value: V, checkFn?: () => V) {
-        let ctx = core ? core.getTraceCtx() : null;
-        if (coreTraceCtx && ctx !== coreTraceCtx) {
-            // It appears that the coreTraceCtx has been updated, so clear the local trace context
-            trace = {};
-        }
+        let ctx = _getCtx();
 
         if (ctx) {
             if (name in ctx) {
@@ -115,7 +122,16 @@ function _createTelemetryTrace(core: IAppInsightsCore): ITelemetryTrace {
     }
 
     function _getParentId() {
-        return _getTraceCtx<string>("spanId");
+        let ctx = _getCtx();
+        let spanId = trace["spanId"];
+        if (ctx && isUndefined(spanId)) {
+            let parentCtx = ctx.parentCtx;
+            if (parentCtx) {
+                spanId = parentCtx.spanId;
+            }
+        }
+
+        return spanId || _getTraceCtx<string>("spanId");
     }
 
     function _getTraceFlags() {
@@ -193,7 +209,7 @@ export class TelemetryContext implements IPropTelemetryContext {
                 _self.session = new Session();
                 
                 objDefine(_self, "telemetryTrace", {
-                    l: createDeferredCachedValue(() => _createTelemetryTrace(core))
+                    l: getDeferred(() => _createTelemetryTrace(core))
                 });
             }
 
@@ -252,7 +268,7 @@ export class TelemetryContext implements IPropTelemetryContext {
                     setValue(tags, CtxTagKeys.internalAgentVersion, internal.agentVersion, isString); // not mapped in CS 4.0
                     setValue(tags, CtxTagKeys.internalSdkVersion, dataSanitizeString(logger, internal.sdkVersion, 64), isString);
             
-                    if (evt.baseType === _InternalLogMessage.dataType || evt.baseType === PageView.dataType) {
+                    if (evt.baseType === _InternalLogMessage.dataType || evt.baseType === PageViewDataType) {
                         setValue(tags, CtxTagKeys.internalSnippet, internal.snippetVer, isString);
                         setValue(tags, CtxTagKeys.internalSdkSrc, internal.sdkSrc, isString);
                     }

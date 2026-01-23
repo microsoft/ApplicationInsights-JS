@@ -10,11 +10,19 @@ import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
 import {
     dataSanitizeId, dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl
 } from "./Common/DataSanitizer";
+import { PageViewDataType } from "./DataTypes";
+import { PageViewEnvelopeType } from "./EnvelopeTypes";
 
 export class PageView implements IPageViewData, ISerializable {
+    /**
+     * @deprecated Use the constant PageViewEnvelopeType instead.
+     */
+    public static envelopeType = PageViewEnvelopeType;
 
-    public static envelopeType = "Microsoft.ApplicationInsights.{0}.Pageview";
-    public static dataType = "PageviewData";
+    /**
+     * @deprecated Use the constant PageViewDataType instead.
+     */
+    public static dataType = PageViewDataType;
 
     public aiDataContract = {
         ver: FieldType.Required,

@@ -6,6 +6,7 @@ import { UtilsTest } from './UtilsTest';
 import { ValueSanitizerTests } from './ValueSanitizerTests';
 import {FileSizeCheckTest} from './FileSizeCheckTest'
 import { GlobalTestHooks } from './GlobalTestHooks.Test';
+import { SpanUtilsTests } from './SpanUtilsTests';
 
 
 
@@ -18,6 +19,7 @@ export function registerTests() {
     new UtilsTest('UtilsTest').registerTests();
     new ValueSanitizerTests('ValueSanitizerTests').registerTests();
     new FileSizeCheckTest('FileSizeCheckTest').registerTests();
+    new SpanUtilsTests('SpanUtilsTests').registerTests();
 }
 
 registerTests();

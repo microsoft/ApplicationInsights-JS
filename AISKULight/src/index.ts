@@ -142,6 +142,7 @@ export class ApplicationInsights {
                 item.baseData = item.baseData || {};
                 item.baseType = item.baseType || "EventData";
             }
+
             core.track(item);
         }
     }
@@ -236,7 +237,7 @@ export class ApplicationInsights {
     /**
      * Gets the current distributed trace context for this instance if available
      */
-    public getTraceCtx(): IDistributedTraceContext | null | undefined {
+    public getTraceCtx(): IDistributedTraceContext | null {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
@@ -294,6 +295,7 @@ export {
     IEventTelemetry,
     IMetricTelemetry,
     IPageViewPerformanceTelemetry,
-    ITraceTelemetry
+    ITraceTelemetry,
+    IRequestTelemetry
 } from "@microsoft/applicationinsights-common";
 export { Sender, ISenderConfig } from "@microsoft/applicationinsights-channel-js";

@@ -41,26 +41,26 @@ export interface IExtendedTelemetryItem extends ITelemetryItem {
      * Custom properties (alternatively referred to as Part C properties for a Common Schema event) can be
      * directly added under data.
      */
-    data?: {
-        [key: string]: string | number | boolean | string[] | number[] | boolean[] | IEventProperty | object;
-    };
+    data?: { [key: string]: any; };
+
     /**
      * Telemetry properties pertaining to domain about which data is being captured. Example, duration, referrerUri for browser page.
      * These are alternatively referred to as Part B properties for a Common Schema event.
      */
-    baseData?: {
-        [key: string]: string | number | boolean | string[] | number[] | boolean[] | IEventProperty | object;
-    };
+    baseData?: { [key: string]: any; };
+
     /**
      * An EventLatency value, that specifies the latency for the event.The EventLatency constant should be
      * used to specify the different latency values.
      */
     latency?: number | EventLatencyValue;
+
     /**
      * [Optional] An EventPersistence value, that specifies the persistence for the event. The EventPersistence constant
      * should be used to specify the different persistence values.
      */
     persistence?: number | EventPersistenceValue;
+    
     /**
      * [Optional] A boolean that specifies whether the event should be sent as a sync request.
      */

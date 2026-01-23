@@ -31,6 +31,7 @@
   <summary>More</summary>
   
   - [Cookie Handling](#cookie-handling)
+  - [OpenTelemetry Tracing API](#opentelemetry-tracing-api)
   - [Tree-Shaking Support and Enhancements](#tree-shaking-support-and-enhancements)
   - [Service Notification](#service-notification)
   - [Single Page Applications](#single-page-applications)
@@ -311,6 +312,27 @@ appInsights.stopTrackEvent("event name", {
 )
 ```
 
+### OpenTelemetry Tracing API
+
+The Application Insights JavaScript SDK includes an **OpenTelemetry-compatible tracing API** that allows you to use familiar OpenTelemetry patterns for distributed tracing while automatically sending telemetry to Azure Application Insights.
+
+**Key Features:**
+- Use OpenTelemetry-like tracing APIs following industry-standard patterns
+- Automatic telemetry creation with full distributed tracing support
+- Parent-child span relationships for nested operations
+- Compatible with OpenTelemetry API specifications (tracing only)
+
+**Learn More:**
+
+For comprehensive documentation on the OpenTelemetry tracing API, including tracer management, span utilities, helper functions, and detailed examples, see:
+
+- **[OpenTelemetry Tracing Documentation](./docs/OTel/README.md)** - Complete guide to OpenTelemetry-compatible tracing
+- **[startActiveSpan Helper](./docs/OTel/startActiveSpan.md)** - Recommended method for creating spans with automatic lifecycle management
+- **[withSpan Helper](./docs/OTel/withSpan.md)** - Execute code with existing span as active context
+- **[Trace API Reference](./docs/OTel/traceApi.md)** - Tracer management and span utilities
+- **[Examples Guide](./docs/OTel/examples.md)** - Comprehensive usage examples and patterns
+
+**Note:** This is an OpenTelemetry-compatible tracing API implementation, not a full OpenTelemetry SDK. Only tracing APIs are supported (metrics and logs APIs are not included).
 
 ### Setting Up Autocollection
 

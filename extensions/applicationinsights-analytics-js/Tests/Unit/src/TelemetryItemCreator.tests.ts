@@ -12,6 +12,18 @@ import {
     IMetricTelemetry,
     RemoteDependencyData,
     IDependencyTelemetry,
+    PageViewPerformanceDataType,
+    PageViewDataType,
+    EventDataType,
+    TraceDataType,
+    MetricDataType,
+    RemoteDependencyDataType,
+    PageViewPerformanceEnvelopeType,
+    PageViewEnvelopeType,
+    EventEnvelopeType,
+    TraceEnvelopeType,
+    MetricEnvelopeType,
+    RemoteDependencyEnvelopeType,
 } from '@microsoft/applicationinsights-common';
 import { AnalyticsPlugin } from '../../../src/JavaScriptSDK/AnalyticsPlugin'
 import { 
@@ -65,8 +77,8 @@ export class TelemetryItemCreatorTests extends AITestClass {
                 // act
                 const telemetryItem = TelemetryItemCreator.create<PageViewPerformance>(
                     pageViewPerformance,
-                    PageViewPerformance.dataType,
-                    PageViewPerformance.envelopeType,
+                    PageViewPerformanceDataType,
+                    PageViewPerformanceEnvelopeType,
                     this._core.logger,
                     properties);
 
@@ -97,8 +109,8 @@ export class TelemetryItemCreatorTests extends AITestClass {
                 // act
                 const telemetryItem = TelemetryItemCreator.create<IPageViewTelemetry>(
                     pageView,
-                    PageView.dataType,
-                    PageView.envelopeType,
+                    PageViewDataType,
+                    PageViewEnvelopeType,
                     this._core.logger,
                     properties);
 
@@ -127,8 +139,8 @@ export class TelemetryItemCreatorTests extends AITestClass {
                 // act
                 const telemetryItem = TelemetryItemCreator.create<ITelemetryItem>(
                     event,
-                    EventTelemetry.dataType,
-                    EventTelemetry.envelopeType,
+                    EventDataType,
+                    EventEnvelopeType,
                     this._appInsights.diagLog(),
                     customProperties);
 
@@ -161,8 +173,8 @@ export class TelemetryItemCreatorTests extends AITestClass {
                 // act
                 const telemetryItem = TelemetryItemCreator.create<IPageViewTelemetry>(
                     pageView,
-                    PageView.dataType,
-                    PageView.envelopeType,
+                    PageViewDataType,
+                    PageViewEnvelopeType,
                     this._core.logger,
                     properties);
 
@@ -173,7 +185,7 @@ export class TelemetryItemCreatorTests extends AITestClass {
                 Assert.equal("PageviewData", telemetryItem.baseType, "telemetryItem.baseType");
                 Assert.equal("testUri", telemetryItem.baseData.uri, "telemetryItem.baseData.uri");
                 Assert.equal("testName", telemetryItem.baseData.name, "telemetryItem.baseData.name");
-                Assert.deepEqual({"propKey1":"PropVal1"},telemetryItem.data, "telemetryItem.data");
+                Assert.deepEqual({ "propKey1": "PropVal1" }, telemetryItem.data, "telemetryItem.data");
             }
         });
 
@@ -192,8 +204,8 @@ export class TelemetryItemCreatorTests extends AITestClass {
                 // act
                 const telemetryItem = TelemetryItemCreator.create<ITraceTelemetry>(
                     trace,
-                    Trace.dataType,
-                    Trace.envelopeType,
+                    TraceDataType,
+                    TraceEnvelopeType,
                     this._core.logger,
                     customProperties);
 
@@ -220,10 +232,10 @@ export class TelemetryItemCreatorTests extends AITestClass {
                 // act
                 const telemetryItem = TelemetryItemCreator.create<IMetricTelemetry>(
                     metric,
-                    Metric.dataType,
-                    Metric.envelopeType,
-                    this._core.logger,
-                    );
+                    MetricDataType,
+                    MetricEnvelopeType,
+                    this._core.logger
+                );
 
                 // assert
                 Assert.ok(telemetryItem);
@@ -249,10 +261,10 @@ export class TelemetryItemCreatorTests extends AITestClass {
                 // act
                 const telemetryItem = TelemetryItemCreator.create<IDependencyTelemetry>(
                     dependency,
-                    RemoteDependencyData.dataType,
-                    RemoteDependencyData.envelopeType,
+                    RemoteDependencyDataType,
+                    RemoteDependencyEnvelopeType,
                     this._core.logger,
-                    );
+                );
 
                 // assert
                 Assert.ok(telemetryItem);
