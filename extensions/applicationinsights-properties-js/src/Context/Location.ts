@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ILocation } from "@microsoft/applicationinsights-common";
+import { ILocation } from "@microsoft/otel-core-js";
 
 export class Location implements ILocation {
 

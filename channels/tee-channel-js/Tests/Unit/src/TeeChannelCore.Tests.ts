@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { ITelemetryItem, AppInsightsCore, isNullOrUndefined, IChannelControls, ITelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, eLoggingSeverity, _eInternalMessageId } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, isNullOrUndefined, IChannelControls, ITelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, eLoggingSeverity, _eInternalMessageId } from "@microsoft/otel-core-js";
 import { TeeChannel } from "../../../src/TeeChannel";
 
 const AIInternalMessagePrefix = "AITR_";

@@ -5,13 +5,10 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    CtxTagKeys, Extensions, IApplication, IDevice, IInternal, ILocation, IOperatingSystem, ISession, ISessionManager, ITelemetryTrace,
-    IUserContext, IWeb, PageView, dataSanitizeString
-} from "@microsoft/applicationinsights-common";
-import {
-    IAppInsightsCore, IDistributedTraceContext, IProcessTelemetryContext, ITelemetryItem, IUnloadHookContainer, _InternalLogMessage,
-    getSetValue, hasWindow, isNullOrUndefined, isString, objKeys, setValue
-} from "@microsoft/applicationinsights-core-js";
+    CtxTagKeys, Extensions, IAppInsightsCore, IApplication, IDevice, IDistributedTraceContext, IInternal, ILocation, IOperatingSystem,
+    IProcessTelemetryContext, ISession, ISessionManager, ITelemetryItem, ITelemetryTrace, IUnloadHookContainer, IUserContext, IWeb, PageView,
+    _InternalLogMessage, dataSanitizeString, getSetValue, hasWindow, isNullOrUndefined, isString, objKeys, setValue
+} from "@microsoft/otel-core-js";
 import {
     createDeferredCachedValue, fnCall, isFunction, isUndefined, objDefine, objDefineProps, strLetterCase
 } from "@nevware21/ts-utils";

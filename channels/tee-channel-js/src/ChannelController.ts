@@ -5,7 +5,7 @@ import {
     IAppInsightsCore, IBaseProcessingContext, IChannelControls, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext,
     IProcessTelemetryUpdateContext, ITelemetryItem, ITelemetryUnloadState, ITelemetryUpdateState, SendRequestReason, TelemetryUnloadReason,
     TelemetryUpdateReason, createProcessTelemetryContext
-} from "@microsoft/applicationinsights-core-js";
+} from "@microsoft/otel-core-js";
 import { IPromise, createPromise } from "@nevware21/ts-async";
 import { ITimerHandler, arrForEach, scheduleTimeout } from "@nevware21/ts-utils";
 

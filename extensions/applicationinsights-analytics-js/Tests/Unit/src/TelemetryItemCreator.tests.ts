@@ -12,13 +12,13 @@ import {
     IMetricTelemetry,
     RemoteDependencyData,
     IDependencyTelemetry,
-} from '@microsoft/applicationinsights-common';
+} from '@microsoft/otel-core-js';
 import { AnalyticsPlugin } from '../../../src/JavaScriptSDK/AnalyticsPlugin'
 import { 
     IAppInsightsCore, AppInsightsCore,
     ITelemetryItem,
     IConfiguration, IPlugin
-} from '@microsoft/applicationinsights-core-js';
+} from '@microsoft/otel-core-js';
 
 
 

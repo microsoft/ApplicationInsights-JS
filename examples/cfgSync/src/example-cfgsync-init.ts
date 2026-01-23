@@ -1,4 +1,4 @@
-import { IConfiguration, random32 } from "@microsoft/applicationinsights-core-js"
+import { IConfiguration, random32 } from "@microsoft/otel-core-js"
 
 export function addListener() {
     window.addEventListener("ai_cfgsync", (e) => {

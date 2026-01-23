@@ -1,10 +1,10 @@
-import { isValidSpanId, isValidTraceId } from "@microsoft/applicationinsights-common";
 import { ILazyValue, createDeferredCachedValue, isFunction, symbolFor } from "@nevware21/ts-utils";
 import { IOTelContext } from "../../../interfaces/OTel/context/IOTelContext";
 import { IOTelSpan } from "../../../interfaces/OTel/trace/IOTelSpan";
 import { IOTelSpanContext } from "../../../interfaces/OTel/trace/IOTelSpanContext";
 import { IReadableSpan } from "../../../interfaces/OTel/trace/IReadableSpan";
 import { UNDEFINED_VALUE } from "../../../internal/otel/InternalConstants";
+import { isValidSpanId, isValidTraceId } from "../../../utils/AppInsights/TraceParent";
 import { createNonRecordingSpan } from "./nonRecordingSpan";
 
 const OTEL_SPAN_KEY = "OpenTelemetry Context Key SPAN";

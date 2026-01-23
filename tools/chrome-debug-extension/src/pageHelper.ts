@@ -3,7 +3,7 @@
 
 import {
     IDbgExtension, INotificationListener, IPerfEvent, ITelemetryItem, arrForEach, objKeys, toISOString
-} from "@microsoft/applicationinsights-core-js";
+} from "@microsoft/otel-core-js";
 import { MessageSource, MessageType } from "./Enums";
 import { IMessage } from "./interfaces/IMessage";
 

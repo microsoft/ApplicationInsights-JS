@@ -1,12 +1,9 @@
 import {
-    CtxTagKeys, Data, Envelope, Event, Exception, HttpMethod, IDependencyTelemetry, IEnvelope, IExceptionInternal,
-    IPageViewPerformanceTelemetry, IPageViewTelemetryInternal, IWeb, Metric, PageView, PageViewPerformance, RemoteDependencyData, SampleRate,
-    Trace, dataSanitizeString
-} from "@microsoft/applicationinsights-common";
-import {
-    IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, _throwInternal, _warnToConsole, eLoggingSeverity, getJSON, hasJSON,
-    isNullOrUndefined, isNumber, isString, isTruthy, objForEachKey, optimizeObject, setValue, toISOString
-} from "@microsoft/applicationinsights-core-js";
+    CtxTagKeys, Data, Envelope, Event, Exception, HttpMethod, IDependencyTelemetry, IDiagnosticLogger, IEnvelope, IExceptionInternal,
+    IPageViewPerformanceTelemetry, IPageViewTelemetryInternal, ITelemetryItem, IWeb, Metric, PageView, PageViewPerformance,
+    RemoteDependencyData, SampleRate, Trace, _eInternalMessageId, _throwInternal, _warnToConsole, dataSanitizeString, eLoggingSeverity,
+    getJSON, hasJSON, isNullOrUndefined, isNumber, isString, isTruthy, objForEachKey, optimizeObject, setValue, toISOString
+} from "@microsoft/otel-core-js";
 import { STR_DURATION } from "./InternalConstants";
 
 // these two constants are used to filter out properties not needed when trying to extract custom properties and measurements from the incoming payload

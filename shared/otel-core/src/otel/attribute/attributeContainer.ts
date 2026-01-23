@@ -1,9 +1,9 @@
-import { IUnloadHook } from "@microsoft/applicationinsights-common";
 import {
     CreateIteratorContext, ICachedValue, arrForEach, arrIndexOf, createCachedValue, createIterator, getLength, isFunction, isObject,
     isUndefined, iterForOf, objCreate, objDefine, objDefineProps, objForEachKey, objIs, objKeys, safe, strSplit
 } from "@nevware21/ts-utils";
 import { eAttributeChangeOp } from "../../enums/OTel/eAttributeChangeOp";
+import { IUnloadHook } from "../../interfaces/AppInsights/IUnloadHook";
 import { IOTelAttributes, OTelAttributeValue } from "../../interfaces/OTel/IOTelAttributes";
 import { IAttributeChangeInfo, IAttributeContainer, eAttributeFilter } from "../../interfaces/OTel/attribute/IAttributeContainer";
 import { IOTelAttributeLimits } from "../../interfaces/OTel/config/IOTelAttributeLimits";

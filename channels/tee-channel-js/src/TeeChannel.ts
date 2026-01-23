@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IConfig } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IChannelControlsHost, IConfigDefaults, IConfiguration, IPlugin,
+    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IChannelControlsHost, IConfig, IConfigDefaults, IConfiguration, IPlugin,
     IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext, ITelemetryItem, ITelemetryPluginChain,
     ITelemetryUnloadState, ITelemetryUpdateState, SendRequestReason, cfgDfBoolean, createProcessTelemetryContext, initializePlugins,
     onConfigChange, proxyFunctions
-} from "@microsoft/applicationinsights-core-js";
+} from "@microsoft/otel-core-js";
 import { IPromise } from "@nevware21/ts-async";
 import { arrForEach, isArray, objDeepFreeze, objFreeze, throwError } from "@nevware21/ts-utils";
 import { ChannelControllerPriority, IChannelController, _IInternalChannels, createChannelControllerPlugin } from "./ChannelController";

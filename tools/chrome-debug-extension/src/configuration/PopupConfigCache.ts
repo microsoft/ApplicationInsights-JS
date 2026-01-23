@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { objForEachKey } from "@microsoft/applicationinsights-core-js";
+import { objForEachKey } from "@microsoft/otel-core-js";
 import { IPopupSettings } from "./IPopupSettings";
 import { doAwait } from "@nevware21/ts-async";
 

@@ -1,9 +1,9 @@
-import { setObjStringTag, toISOString } from "@microsoft/applicationinsights-common";
 import {
     ICachedValue, ObjDefinePropDescriptor, createCachedValue, createDeferredCachedValue, getPerformance, isArray, isDate, isNullOrUndefined,
     isNumber, mathFloor, mathRound, objDefine, objDefineProps, objFreeze, perfNow, strRepeat, strRight, throwTypeError
 } from "@nevware21/ts-utils";
 import { IOTelHrTime, OTelTimeInput } from "../../interfaces/OTel/time";
+import { setObjStringTag, toISOString } from "../../utils/AppInsights/HelperFuncsCore";
 
 const NANOSECOND_DIGITS = 9;
 const NANOSECOND_DIGITS_IN_MILLIS = 6;

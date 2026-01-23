@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import _ from "lodash";
-import { arrForEach, isArray, isString, normalizeJsName } from "@microsoft/applicationinsights-core-js";
+import { arrForEach, isArray, isString, normalizeJsName } from "@microsoft/otel-core-js";
 import {
     DynamicValueConverter, IConfiguration, IDataEventTypeCondition, IDynamicField, ISpecialFieldNames
 } from "../configuration/IConfiguration";

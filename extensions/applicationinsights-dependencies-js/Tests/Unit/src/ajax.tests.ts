@@ -2,12 +2,12 @@ import { SinonStub } from "sinon";
 import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
 import { createAllPromise, createAsyncResolvedPromise, createPromise, createSyncPromise, createTimeoutPromise } from "@nevware21/ts-async";
 import { AjaxMonitor } from "../../../src/ajax";
-import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders, IDependencyTelemetry, IRequestContext, formatTraceParent, createTraceParent, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-common";
+import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders, IDependencyTelemetry, IRequestContext, formatTraceParent, createTraceParent, PropertiesPluginIdentifier } from "@microsoft/otel-core-js";
 import {
     AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls, _eInternalMessageId,
     getPerformance, getGlobalInst, getGlobal, generateW3CId, arrForEach,
     ActiveStatus
-} from "@microsoft/applicationinsights-core-js";
+} from "@microsoft/otel-core-js";
 import { IDependencyListenerDetails } from "../../../src/DependencyListener";
 import { TestChannelPlugin } from "./TestChannelPlugin";
 import { FakeXMLHttpRequest } from "@microsoft/ai-test-framework";

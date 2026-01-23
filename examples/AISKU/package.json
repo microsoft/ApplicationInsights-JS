@@ -53,7 +53,7 @@
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@microsoft/applicationinsights-web": "3.3.11",
-        "@microsoft/applicationinsights-core-js": "3.3.11",
+        "@microsoft/otel-core-js": "0.0.1-alpha",
         "@nevware21/ts-utils": ">= 0.11.8 < 2.x"
     }
 }

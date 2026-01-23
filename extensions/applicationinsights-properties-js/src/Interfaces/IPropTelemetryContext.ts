@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ISessionManager, ITelemetryContext } from "@microsoft/applicationinsights-common";
-import { IProcessTelemetryContext, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { IProcessTelemetryContext, ISessionManager, ITelemetryContext, ITelemetryItem } from "@microsoft/otel-core-js";
 
 export interface IPropTelemetryContext extends ITelemetryContext {
     readonly sessionManager: ISessionManager; // The session manager that manages session on the base of cookies.

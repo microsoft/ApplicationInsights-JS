@@ -1,9 +1,9 @@
-﻿import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, createCookieMgr, newId, strTrim, ITelemetryPlugin, IChannelControls, random32, objForEachKey } from "@microsoft/applicationinsights-core-js";
+import { Assert, AITestClass } from "@microsoft/ai-test-framework";
+import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, createCookieMgr, newId, strTrim, ITelemetryPlugin, IChannelControls, random32, objForEachKey } from "@microsoft/otel-core-js";
 import PropertiesPlugin from "../../../src/PropertiesPlugin";
 import { IPropertiesConfig } from "../../../src/Interfaces/IPropertiesConfig";
 import { TelemetryContext } from "../../../src/TelemetryContext";
-import { IConfig, utlCanUseLocalStorage, utlGetLocalStorage } from "@microsoft/applicationinsights-common";
+import { IConfig, utlCanUseLocalStorage, utlGetLocalStorage } from "@microsoft/otel-core-js";
 import { TestChannelPlugin } from "./TestChannelPlugin";
 import { SinonStub } from 'sinon';
 

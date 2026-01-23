@@ -1,4 +1,4 @@
-import { CdnFeatureMode, IConfiguration } from "@microsoft/applicationinsights-core-js";
+import { CdnFeatureMode, IConfiguration } from "@microsoft/otel-core-js";
 
 export interface ICfgSyncCdnConfig {
     /**

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { dumpObj, isArray, isString } from "@microsoft/applicationinsights-core-js";
+import { dumpObj, isArray, isString } from "@microsoft/otel-core-js";
 import { IConfiguration } from "../configuration/IConfiguration";
 import { IDataSource } from "./IDataSource";
 import { DefaultDataSource } from "./defaultDataSource";

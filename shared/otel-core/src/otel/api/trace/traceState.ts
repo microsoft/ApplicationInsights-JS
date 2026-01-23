@@ -1,7 +1,8 @@
-import { IW3cTraceState, createW3cTraceState, isW3cTraceState } from "@microsoft/applicationinsights-common";
 import { ICachedValue, createCachedValue, isFunction, isString, objDefine, symbolFor } from "@nevware21/ts-utils";
+import { IW3cTraceState } from "../../../interfaces/AppInsights/IW3cTraceState";
 import { IOTelTraceState } from "../../../interfaces/OTel/trace/IOTelTraceState";
 import { STR_EMPTY } from "../../../internal/otel/InternalConstants";
+import { createW3cTraceState, isW3cTraceState } from "../../../telemetry/W3cTraceState";
 
 let _otelTraceState: ICachedValue<symbol>;
 

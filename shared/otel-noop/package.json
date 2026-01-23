@@ -41,7 +41,6 @@
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
-        "@microsoft/applicationinsights-common": "3.3.9",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es5": "1.0.2",
         "@microsoft/api-extractor": "^7.40.0",

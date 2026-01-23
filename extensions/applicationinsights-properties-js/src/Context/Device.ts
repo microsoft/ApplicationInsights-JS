@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDevice } from "@microsoft/applicationinsights-common";
+import { IDevice } from "@microsoft/otel-core-js";
 
 export class Device implements IDevice {
 

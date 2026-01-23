@@ -1,9 +1,9 @@
 // import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
-// import { AppInsightsCore, createStatsMgr, eStatsType, FeatureOptInMode, getWindow, IPayloadData, IStatsBeatState, IStatsMgr, ITelemetryItem, IUnloadHook, TransportType } from "@microsoft/applicationinsights-core-js";
+// import { AppInsightsCore, createStatsMgr, eStatsType, FeatureOptInMode, getWindow, IPayloadData, IStatsBeatState, IStatsMgr, ITelemetryItem, IUnloadHook, TransportType } from "@microsoft/otel-core-js";
 // import { Sender } from "../../../src/Sender";
 // import { SinonSpy, SinonStub } from "sinon";
 // import { ISenderConfig } from "../../../types/applicationinsights-channel-js";
-// import { isBeaconApiSupported } from "@microsoft/applicationinsights-common";
+// import { isBeaconApiSupported } from "@microsoft/otel-core-js";
 
 // export class StatsbeatTests extends AITestClass {
 //     private _core: AppInsightsCore;

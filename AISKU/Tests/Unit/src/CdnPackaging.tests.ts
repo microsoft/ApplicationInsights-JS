@@ -2,8 +2,8 @@ import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { 
     AnalyticsPluginIdentifier, BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DisabledPropertyName,
     DistributedTracingModes, PropertiesPluginIdentifier, RequestHeaders, SeverityLevel
-} from "@microsoft/applicationinsights-common";
-import { dumpObj, LoggingSeverity, objForEachKey, objKeys, strUndefined } from "@microsoft/applicationinsights-core-js";
+} from "@microsoft/otel-core-js";
+import { dumpObj, LoggingSeverity, objForEachKey, objKeys, strUndefined } from "@microsoft/otel-core-js";
 import { Snippet } from "../../../src/Snippet";
 
 declare var define;

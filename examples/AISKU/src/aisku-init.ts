@@ -3,7 +3,7 @@
 
 import { ApplicationInsights, IConfiguration, IEventTelemetry, IMetricTelemetry, IPageViewTelemetry, ITraceTelemetry } from "@microsoft/applicationinsights-web";
 import { generateNewConfig } from "./utils";
-import { runTargetUnload } from "@microsoft/applicationinsights-core-js";
+import { runTargetUnload } from "@microsoft/otel-core-js";
 
 
 // ******************************************************************************************************************************

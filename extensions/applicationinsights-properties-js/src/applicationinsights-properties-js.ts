@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import PropertiesPlugin from "./PropertiesPlugin";
-import { ITelemetryTrace } from "@microsoft/applicationinsights-common";
+import { ITelemetryTrace } from "@microsoft/otel-core-js";
 import { ISessionConfig, Session, _SessionManager } from "./Context/Session";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
 

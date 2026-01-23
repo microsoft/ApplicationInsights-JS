@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach, eW3CTraceFlags } from "@microsoft/applicationinsights-core-js";
+import { arrForEach, eW3CTraceFlags } from "@microsoft/otel-core-js";
 import { addDependencyListener, addDependencyInitializer, stopDependencyEvent, changeConfig, initApplicationInsights, getConfig, enableAjaxPerfTrackingConfig } from "./appinsights-init";
 import { addHandlersButtonId, ajaxCallId, buttonSectionId, changeConfigButtonId, clearDetailsButtonId, clearDetailsList, clearEle, configContainerId, configDetails, createButton, createContainers, createDetailList, createFetchRequest, createUnTrackRequest, createXhrRequest, dependencyInitializerDetails, dependencyInitializerDetailsContainerId, dependencyListenerButtonId, dependencyListenerDetails, dependencyListenerDetailsContainerId, fetchCallId, fetchXhrId, removeAllHandlersId, stopDependencyEventButtonId, untrackFetchRequestId } from "./utils";
 

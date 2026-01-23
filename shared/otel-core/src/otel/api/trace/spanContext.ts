@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    IDistributedTraceContext, INVALID_SPAN_ID, INVALID_TRACE_ID, eW3CTraceFlags, isValidSpanId, isValidTraceId
-} from "@microsoft/applicationinsights-common";
 import { isNullOrUndefined, isNumber, isObject, isString, objDefineProps } from "@nevware21/ts-utils";
+import { eW3CTraceFlags } from "../../../enums/AppInsights/W3CTraceFlags";
+import { IDistributedTraceContext } from "../../../interfaces/AppInsights/IDistributedTraceContext";
 import { IOTelSpanContext } from "../../../interfaces/OTel/trace/IOTelSpanContext";
 import { IOTelTraceState } from "../../../interfaces/OTel/trace/IOTelTraceState";
+import { INVALID_SPAN_ID, INVALID_TRACE_ID, isValidSpanId, isValidTraceId } from "../../../utils/AppInsights/TraceParent";
 import { createOTelTraceState } from "./traceState";
 
 export function createOTelSpanContext(traceContext: IDistributedTraceContext | IOTelSpanContext): IOTelSpanContext {

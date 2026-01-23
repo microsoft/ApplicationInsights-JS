@@ -3,12 +3,11 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
-import { DEFAULT_BREEZE_PATH, IConfig, parseConnectionString } from "@microsoft/applicationinsights-common";
 import {
-    AppInsightsCore, FeatureOptInMode, IConfigDefaults, IConfiguration, IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin,
-    IPlugin, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler,
-    WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions
-} from "@microsoft/applicationinsights-core-js";
+    AppInsightsCore, DEFAULT_BREEZE_PATH, FeatureOptInMode, IConfig, IConfigDefaults, IConfiguration, IDistributedTraceContext,
+    IDynamicConfigHandler, ILoadedPlugin, IPlugin, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState,
+    IUnloadHook, UnloadHandler, WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, parseConnectionString, proxyFunctions
+} from "@microsoft/otel-core-js";
 import { IPromise, createSyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { isNullOrUndefined, isPromiseLike, isString, objDefine, throwError } from "@nevware21/ts-utils";
 
@@ -288,7 +287,7 @@ export {
     IOTelSpan,
     IOTelSpanContext,
     IOTelSpanOptions
-} from "@microsoft/applicationinsights-core-js";
+} from "@microsoft/otel-core-js";
 
 export {
     SeverityLevel,
@@ -300,5 +299,5 @@ export {
     IMetricTelemetry,
     IPageViewPerformanceTelemetry,
     ITraceTelemetry
-} from "@microsoft/applicationinsights-common";
+} from "@microsoft/otel-core-js";
 export { Sender, ISenderConfig } from "@microsoft/applicationinsights-channel-js";

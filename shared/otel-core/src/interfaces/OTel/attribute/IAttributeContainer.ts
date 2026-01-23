@@ -1,5 +1,5 @@
-import { IUnloadHook } from "@microsoft/applicationinsights-common";
 import { eAttributeChangeOp } from "../../../enums/OTel/eAttributeChangeOp";
+import { IUnloadHook } from "../../AppInsights/IUnloadHook";
 import { IOTelAttributes, OTelAttributeValue } from "../IOTelAttributes";
 
 /**

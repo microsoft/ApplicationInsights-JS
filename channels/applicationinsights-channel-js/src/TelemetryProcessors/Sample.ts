@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ISample, Metric } from "@microsoft/applicationinsights-common";
 import {
-    IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, eLoggingSeverity, safeGetLogger
-} from "@microsoft/applicationinsights-core-js";
+    IDiagnosticLogger, ISample, ITelemetryItem, Metric, _eInternalMessageId, eLoggingSeverity, safeGetLogger
+} from "@microsoft/otel-core-js";
 import { SamplingScoreGenerator } from "./SamplingScoreGenerators/SamplingScoreGenerator";
 
 export class Sample implements ISample {

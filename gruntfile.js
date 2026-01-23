@@ -723,18 +723,10 @@ module.exports = function (grunt) {
     try {
         var theBuildConfig = deepMerge(buildConfig({
             // Shared
-            "core":                 { 
-                                        path: "./shared/AppInsightsCore",
-                                        unitTestName: "aicoreunit.tests.js",
-                                        perfTestName: "aicoreperf.tests.js"
-                                    },
-            "common":               { 
-                                        path: "./shared/AppInsightsCommon",
-                                        unitTestName: "aicommon.tests.js"
-                                    },
             "otelCore":                 {
                                         path: "./shared/otel-core",
-                                        unitTestName: "otel.unittests.js"
+                                        unitTestName: "otel.unittests.js",
+                                        perfTestName: "otelcoreperf.tests.js"
                                     },
             "otelNoop":                 {
                                         path: "./shared/otel-noop",

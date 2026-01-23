@@ -1,4 +1,4 @@
-import { IDiagnosticLogger } from "@microsoft/applicationinsights-common";
+import { IDiagnosticLogger } from "../AppInsights/IDiagnosticLogger";
 import { IOTelConfig } from "./config/IOTelConfig";
 import { IOTelTracerProvider } from "./trace/IOTelTracerProvider";
 

@@ -7,25 +7,22 @@ import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsi
 import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode } from "@microsoft/applicationinsights-cfgsync-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
-    AnalyticsPluginIdentifier, ConnectionString, DEFAULT_BREEZE_PATH, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
-    IEventTelemetry, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry, IPageViewTelemetry, IRequestHeaders,
-    ITelemetryContext as Common_ITelemetryContext, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, ITraceTelemetry,
-    PropertiesPluginIdentifier, parseConnectionString
-} from "@microsoft/applicationinsights-common";
-import {
-    AppInsightsCore, FeatureOptInMode, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties,
-    IDiagnosticLogger, IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, INotificationManager, IPlugin,
-    ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, ThrottleMgr, UnloadHandler,
-    WatcherFunction, _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate,
-    createDynamicConfig, createProcessTelemetryContext, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray,
-    isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions,
-    removePageHideEventListener, removePageUnloadEventListener
-} from "@microsoft/applicationinsights-core-js";
-import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
     IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+import {
+    AnalyticsPluginIdentifier, AppInsightsCore, ConnectionString, DEFAULT_BREEZE_PATH, FeatureOptInMode, IAppInsightsCore,
+    IAutoExceptionTelemetry, IChannelControls, IConfig, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDependencyTelemetry,
+    IDiagnosticLogger, IDistributedTraceContext, IDynamicConfigHandler, IEventTelemetry, IExceptionTelemetry, ILoadedPlugin,
+    IMetricTelemetry, INotificationManager, IPageViewPerformanceTelemetry, IPageViewTelemetry, IPlugin, IRequestHeaders,
+    ITelemetryContext as Common_ITelemetryContext, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState,
+    IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, ITraceTelemetry, IUnloadHook, PropertiesPluginIdentifier, ThrottleMgr,
+    UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge,
+    cfgDfValidate, createDynamicConfig, createProcessTelemetryContext, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument,
+    hasWindow, isArray, isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange,
+    parseConnectionString, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener
+} from "@microsoft/otel-core-js";
 import { IPromise, createPromise, createSyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { arrForEach, arrIndexOf, isPromiseLike, objDefine, objForEachKey, strIndexOf, throwUnsupported } from "@nevware21/ts-utils";
 import { IApplicationInsights } from "./IApplicationInsights";

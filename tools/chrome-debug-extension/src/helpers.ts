@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach, arrIndexOf, getIEVersion, isArray, isError, isFunction, isObject, isString, isSymbol, objKeys } from "@microsoft/applicationinsights-core-js";
+import { arrForEach, arrIndexOf, getIEVersion, isArray, isError, isFunction, isObject, isString, isSymbol, objKeys } from "@microsoft/otel-core-js";
 import { strShimPrototype } from "@microsoft/applicationinsights-shims";
 import { objHasOwnProperty } from "@nevware21/ts-utils";
 

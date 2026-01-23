@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { isArray, isBoolean, isError, isNumber, isObject, isString, objToString } from "@microsoft/applicationinsights-core-js";
+import { isArray, isBoolean, isError, isNumber, isObject, isString, objToString } from "@microsoft/otel-core-js";
 import { MAX_DEPTH, formatLogElements, getTargetKeys, getTargetName, makeRegex, toggleClassName, traverseAndReplace } from "./helpers";
 
 export class LogEntry {

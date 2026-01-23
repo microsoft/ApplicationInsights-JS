@@ -4,6 +4,7 @@
 import { objForEachKey, objKeys, utcNow } from "@nevware21/ts-utils";
 import { OTelSeverityNumber } from "../../enums/OTel/logs/eOTelSeverityNumber";
 import { OTelAttributeValue } from "../../interfaces/OTel/IOTelAttributes";
+import { IOTelErrorHandlers } from "../../interfaces/OTel/config/IOTelErrorHandlers";
 import { IOTelLogRecord, LogAttributes, LogBody } from "../../interfaces/OTel/logs/IOTelLogRecord";
 import { IOTelLogRecordInstance } from "../../interfaces/OTel/logs/IOTelLogRecordInstance";
 import { IOTelLogRecordLimits } from "../../interfaces/OTel/logs/IOTelLogRecordLimits";
@@ -11,10 +12,10 @@ import { IOTelLoggerProviderSharedState } from "../../interfaces/OTel/logs/IOTel
 import { IOTelResource } from "../../interfaces/OTel/resources/IOTelResource";
 import { IOTelHrTime } from "../../interfaces/OTel/time";
 import { IOTelInstrumentationScope } from "../../interfaces/OTel/trace/IOTelInstrumentationScope";
+import { IOTelSpanContext } from "../../interfaces/OTel/trace/IOTelSpanContext";
 import { isAttributeValue } from "../../internal/otel/attributeHelpers";
 import { handleWarn } from "../../internal/otel/commonUtils";
 import { timeInputToHrTime } from "../../internal/otel/timeHelpers";
-import { IOTelErrorHandlers, IOTelSpanContext } from "../../otel-core-js";
 import { OTelAnyValue } from "../../types/OTel/OTelAnyValue";
 import { getContextActiveSpanContext, isSpanContextValid } from "../api/trace/utils";
 

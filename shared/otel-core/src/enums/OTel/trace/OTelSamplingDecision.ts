@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createEnumStyle } from "@microsoft/applicationinsights-common";
+import { createEnumStyle } from "../../AppInsights/EnumHelperFuncs";
 
 /**
  * A sampling decision that determines how a {@link IOTelSpan} will be recorded

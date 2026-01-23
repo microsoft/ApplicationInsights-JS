@@ -1,6 +1,6 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { SinonStub } from 'sinon';
-import { AppInsightsCore, DiagnosticLogger, createCookieMgr, newId, dateNow, createDynamicConfig } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, DiagnosticLogger, createCookieMgr, newId, dateNow, createDynamicConfig } from "@microsoft/otel-core-js";
 import PropertiesPlugin from "../../../src/PropertiesPlugin";
 import { _SessionManager } from "../../../src/Context/Session";
 

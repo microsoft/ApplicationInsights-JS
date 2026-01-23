@@ -1,7 +1,7 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { NonOverrideCfg } from "../../../src/Interfaces/ICfgSyncConfig";
-import { ICookieMgrConfig, AppInsightsCore, CdnFeatureMode, FeatureOptInMode, IAppInsightsCore, IConfiguration, IFeatureOptIn, IFeatureOptInDetails, INotificationManager, IPlugin, ITelemetryItem, PerfManager } from "@microsoft/applicationinsights-core-js";
-import { IConfig, IStorageBuffer } from "@microsoft/applicationinsights-common";
+import { ICookieMgrConfig, AppInsightsCore, CdnFeatureMode, FeatureOptInMode, IAppInsightsCore, IConfiguration, IFeatureOptIn, IFeatureOptInDetails, INotificationManager, IPlugin, ITelemetryItem, PerfManager } from "@microsoft/otel-core-js";
+import { IConfig, IStorageBuffer } from "@microsoft/otel-core-js";
 import { resolveCdnFeatureCfg, replaceByNonOverrideCfg, applyCdnfeatureCfg } from "../../../src/CfgSyncHelperFuncs";
 import { ICfgSyncCdnConfig } from "../../../src/Interfaces/ICfgSyncCdnConfig";
 
