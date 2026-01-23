@@ -6,6 +6,7 @@ import { IDistributedTraceContext } from "../../JavaScriptSDK.Interfaces/IDistri
 import { ITraceHost, ITraceProvider } from "../../JavaScriptSDK.Interfaces/ITraceProvider";
 import { generateW3CId } from "../../JavaScriptSDK/CoreUtils";
 import { createDistributedTraceContext } from "../../JavaScriptSDK/TelemetryHelpers";
+import { OTelTimeInput } from "../../applicationinsights-core-js";
 import { eOTelSpanKind } from "../enums/trace/OTelSpanKind";
 import { IOTelApi } from "../interfaces/IOTelApi";
 import { IOTelSpanCtx } from "../interfaces/trace/IOTelSpanCtx";
@@ -20,9 +21,10 @@ import { createSpan } from "./span";
  * @param traceName - The name of the trace provider.
  * @param api - The OpenTelemetry API instance (as a lazy value).
  * @param onEnd - Optional callback to be invoked when a span ends.
+ * @param onException - Optional callback to be invoked when an exception is recorded on a span.
  * @returns The created trace provider.
  */
-export function createTraceProvider(host: ITraceHost, traceName: string, api: IOTelApi, onEnd?: (span: IReadableSpan) => void): ITraceProvider {
+export function createTraceProvider(host: ITraceHost, traceName: string, api: IOTelApi, onEnd?: (span: IReadableSpan) => void, onException?: (span: IReadableSpan, exception: any, time?: OTelTimeInput) => void): ITraceProvider {
     let provider: ITraceProvider = {
         api: null,
         createSpan: (name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan => {
@@ -47,7 +49,8 @@ export function createTraceProvider(host: ITraceHost, traceName: string, api: IO
                 attributes: options ? options.attributes : undefined,
                 startTime: options ? options.startTime : undefined,
                 isRecording: options ? options.recording !== false : true,
-                onEnd: onEnd
+                onEnd: onEnd,
+                onException: onException
             };
 
             if (parentCtx) {

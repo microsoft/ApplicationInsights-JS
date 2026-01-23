@@ -16,11 +16,11 @@ import {
     AppInsightsCore, FeatureOptInMode, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties,
     IDiagnosticLogger, IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin, INotificationManager, IOTelApi, IOTelSpanOptions,
     IPlugin, IReadableSpan, ISpanScope, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, ITraceApi,
-    ITraceProvider, IUnloadHook, UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal, addPageHideEventListener,
-    addPageUnloadEventListener, cfgDfMerge, cfgDfValidate, createDynamicConfig, createOTelApi, createProcessTelemetryContext,
-    createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction,
-    isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions, removePageHideEventListener,
-    removePageUnloadEventListener, useSpan
+    ITraceProvider, IUnloadHook, OTelTimeInput, UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal,
+    addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate, createDynamicConfig, createOTelApi,
+    createProcessTelemetryContext, createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray,
+    isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, proxyAssign, proxyFunctions,
+    removePageHideEventListener, removePageUnloadEventListener, useSpan
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
@@ -136,14 +136,14 @@ function _parseCs(config: IConfiguration & IConfig, configCs: string | IPromise<
     });
 }
 
-function _initOTel(sku: AppInsightsSku, traceName: string, onEnd: (span: IReadableSpan) => void): ICachedValue<IOTelApi> {
+function _initOTel(sku: AppInsightsSku, traceName: string, onEnd: (span: IReadableSpan) => void, onException?: (span: IReadableSpan, exception: any, time?: OTelTimeInput) => void): ICachedValue<IOTelApi> {
     let otelApi: ICachedValue<IOTelApi> = getDeferred(createOTelApi, [{
         host: sku
     }]);
 
     // Create the initial default traceProvider
     sku.core.setTraceProvider(getDeferred(() => {
-        return createTraceProvider(sku, traceName, otelApi.v, onEnd);
+        return createTraceProvider(sku, traceName, otelApi.v, onEnd, onException);
     }));
 
     return otelApi;
@@ -394,7 +394,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                     _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin], logger, notificationManager);
 
                     // Initialize the initial OTel API
-                    _otelApi = _initOTel(_self, "aisku", _onEnd);
+                    _otelApi = _initOTel(_self, "aisku", _onEnd, _onException);
                     
                     objDefine(_self, "context", {
                         g: () => properties.context
@@ -671,6 +671,27 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                             _throwInternal(_core.logger, eLoggingSeverity.WARNING,
                                 _eInternalMessageId.TelemetryInitializerFailed,
                                 "Error processing span - " + dumpObj(error));
+                        }
+                    });
+                }
+            }
+
+            function _onException(span: IReadableSpan, exception: any, time?: OTelTimeInput) {
+                if (_otelApi) {
+                    // Flip this span to be the "current" span during processing, so any telemetry created during the span processing
+                    useSpan(_core, span, () => {
+                        try {
+                            _self.trackException({
+                                exception: exception,
+                                properties: {
+                                    time: time
+                                }
+                            });
+                        } catch (error) {
+                            // Log any errors during exception processing but don't let them break the span lifecycle
+                            _throwInternal(_core.logger, eLoggingSeverity.WARNING,
+                                _eInternalMessageId.TelemetryInitializerFailed,
+                                "Error processing exception - " + dumpObj(error));
                         }
                     });
                 }

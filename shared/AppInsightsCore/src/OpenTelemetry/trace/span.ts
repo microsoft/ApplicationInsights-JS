@@ -182,7 +182,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
         recordException: (exception: OTelException, time?: OTelTimeInput) => {
             if (!_handleIsEnded("recordException")) {
                 if (spanCtx.onException) {
-                    spanCtx.onException(exception, time, theSpan);
+                    spanCtx.onException(theSpan, exception, time);
                 } else {
                     handleNotImplemented(errorHandlers, "Span.recordException: " + dumpObj(exception) + " not handled");
                 }

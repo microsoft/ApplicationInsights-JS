@@ -63,10 +63,10 @@ export interface IOTelSpanCtx {
      * to process the exception. Unlike the OpenTelemetry spec this callback also provides the span instance
      * to allow implementations to associate the exception with the span as needed.
      * It is also called immediately when recordException is called rather than waiting until the span ends.
+     * @param span - The span associated with the exception
      * @param exception - The exception to process
      * @param time - The time the exception occurred
-     * @param span - The span associated with the exception
      * @returns
      */
-    onException?: (exception: OTelException, time?: OTelTimeInput, span?: IReadableSpan) => void;
+    onException?: (span: IReadableSpan, exception: OTelException, time?: OTelTimeInput) => void;
 }
