@@ -181,7 +181,11 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
         isRecording: () => isRecording && !isEnded,
         recordException: (exception: OTelException, time?: OTelTimeInput) => {
             if (!_handleIsEnded("recordException")) {
-                handleNotImplemented(errorHandlers, "Span.recordException: " + dumpObj(exception) + " not added");
+                if (spanCtx.onException) {
+                    spanCtx.onException(exception, time, theSpan);
+                } else {
+                    handleNotImplemented(errorHandlers, "Span.recordException: " + dumpObj(exception) + " not handled");
+                }
             }
         }
     } as IReadableSpan, _toString());

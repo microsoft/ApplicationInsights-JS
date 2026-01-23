@@ -79,9 +79,7 @@
             ]
         },
         "@microsoft/applicationinsights-web": {
-            "constEnums": [
-                "eMaxPropertyLengths"
-            ]
+            "constEnums": []
         },
         "@microsoft/applicationinsights-react-js": {
             "constEnums": []

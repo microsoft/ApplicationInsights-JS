@@ -5,17 +5,16 @@
     <meta charset="utf-8">
     <meta http-equiv="Cache-control" content="no-Cache" />
     <title>Tests for Es5 Rollup Plugin</title>
-    <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css">
-    <script src="https://sinonjs.org/releases/sinon-2.3.8.js"></script>
-    <script src="../../../common/Tests/External/require-2.2.0.js"></script>    
-    <script src="../../../common/Tests/Selenium/ModuleLoader.js"></script>
-
+    <link rel="stylesheet" href="../../../common/Tests/External/qunit-2.9.3.css">
+    <script src="../../../common/Tests/External/sinon-2.3.8.js"></script>
+    <script src="../../../common/Tests/External/require-2.3.6.js"></script>
+    <script src="../../../common/Tests/Selenium/ModuleLoader.js"></script>    
     <script>
         var modules = new ModuleLoader({
             baseUrl: '../',
             paths: {
                 qunit: "../../common/Tests/External/qunit-2.9.3",
-                "magic-string": "../../common/Tests/External/magic-string.umd",
+                "magic-string": "../../common/Tests/External/magic-string.umd"
             }
         });
 
@@ -26,31 +25,6 @@
         modules.add("@microsoft/ai-test-framework");
         
         var testModule = modules.add("Tests/Unit/src/Es5RollupTests", "./Unit/dist/es5rolluptests.js");
-        testModule.run = function (tests) {
-            console && console.log("Starting tests");
-            QUnit.start();
-            tests.runTests();
-        };
-
-        modules.run();
-    </script>
-</head>
-
-<body>
-    <div id="qunit"></div>
-    <div id="qunit-fixture"></div>
-    <div id="error-message"></div>
-</body>
-
-</html>
-
-        // Load Core
-        modules.add("@microsoft/applicationinsights-core-js");
-
-        // Load Common
-        modules.add("@microsoft/applicationinsights-common");
-
-        var testModule = modules.add("Tests/Unit/src/prop.tests", "./Unit/dist/prop.tests.js")
         testModule.run = function (tests) {
             console && console.log("Starting tests");
             QUnit.start();

@@ -1,6 +1,7 @@
 import { IDistributedTraceContext } from "../../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
 import { IOTelApi } from "../IOTelApi";
 import { IOTelAttributes } from "../IOTelAttributes";
+import { OTelException } from "../IOTelException";
 import { OTelTimeInput } from "../IOTelHrTime";
 import { IReadableSpan } from "./IReadableSpan";
 
@@ -56,4 +57,16 @@ export interface IOTelSpanCtx {
      * @returns
      */
     onEnd?: (span: IReadableSpan) => void;
+
+    /**
+     * When an exception is recorded via the span's recordException API this callback will be called
+     * to process the exception. Unlike the OpenTelemetry spec this callback also provides the span instance
+     * to allow implementations to associate the exception with the span as needed.
+     * It is also called immediately when recordException is called rather than waiting until the span ends.
+     * @param exception - The exception to process
+     * @param time - The time the exception occurred
+     * @param span - The span associated with the exception
+     * @returns
+     */
+    onException?: (exception: OTelException, time?: OTelTimeInput, span?: IReadableSpan) => void;
 }

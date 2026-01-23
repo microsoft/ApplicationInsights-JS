@@ -104,9 +104,11 @@ The trace host instance that manages span lifecycle and active span context.
 
 **Key Methods:**
 - `startSpan(name, options?, context?)` - Create a new span
-- `activeSpan()` - Get the current active span
+- `getActiveSpan()` - Get the current active span
 - `setActiveSpan(span)` - Set a span as the active span
 - `getTraceCtx()` - Get the current trace context
+
+`setActiveSpan` requires a non-null span (`IReadableSpan`); clearing the active span by passing `null` is not supported.
 
 **Example:**
 ```typescript

@@ -18,8 +18,8 @@ appInsights.loadAppInsights();
 
 // Example usage
 function exampleSpanUsage() {
-    // Start a span using the core's provider pattern
-    const span = appInsights.appInsightsCore?.startSpan("example-operation", {
+    // Start a span
+    const span = appInsights.startSpan("example-operation", {
         kind: eOTelSpanKind.CLIENT,
         attributes: {
             "operation.name": "example",

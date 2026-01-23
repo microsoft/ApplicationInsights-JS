@@ -21,9 +21,7 @@ import {
     eDependencyTypes, eOTelSpanKind, eOTelSpanStatusCode, fieldRedaction, getDependencyTarget, getHttpMethod, getHttpStatusCode, getHttpUrl,
     getLocationIp, getUrl, getUserAgent, hrTimeToMilliseconds, isSqlDB, isSyntheticSource
 } from "@microsoft/applicationinsights-core-js";
-import {
-    ILazyValue, arrIncludes, asString, getLazy, isNullOrUndefined, strLower, strStartsWith, strSubstring
-} from "@nevware21/ts-utils";
+import { ILazyValue, arrIncludes, asString, getLazy, isNullOrUndefined, strLower, strStartsWith } from "@nevware21/ts-utils";
 import { STR_EMPTY, UNDEFINED_VALUE } from "../../InternalConstants";
 
 /**
@@ -55,12 +53,6 @@ const PORT_REGEX: ILazyValue<RegExp> = (/*#__PURE__*/ getLazy(() => new RegExp(/
 const HTTP_DOT = (/*#__PURE__*/ "http.");
 
 const _MS_PROCESSED_BY_METRICS_EXTRACTORS = (/* #__PURE__*/"_MS.ProcessedByMetricExtractors");
-const enum eMaxPropertyLengths {
-    NINE_BIT = 512,
-    TEN_BIT = 1024,
-    THIRTEEN_BIT = 8192,
-    FIFTEEN_BIT = 32768,
-}
 
 /**
  * Legacy HTTP semantic convention values
@@ -140,7 +132,7 @@ function _populateTagsFromSpan(telemetryItem: ITelemetryItem, span: IReadableSpa
     let container = span.attribContainer || createAttributeContainer(span.attributes);
 
     tags[contextKeys.operationId] = span.spanContext().traceId;
-    if (span.parentSpanContext?.spanId) {
+    if ((span.parentSpanContext || {}).spanId) {
         tags[contextKeys.operationParentId] = span.parentSpanContext.spanId;
     }
 
@@ -157,7 +149,6 @@ function _populateTagsFromSpan(telemetryItem: ITelemetryItem, span: IReadableSpa
 
     const httpUserAgent = getUserAgent(container);
     if (httpUserAgent) {
-        // TODO: Not exposed in Swagger, need to update def
         tags["ai.user.userAgent"] = String(httpUserAgent);
     }
     if (isSyntheticSource(container)) {
@@ -184,11 +175,11 @@ function _populateTagsFromSpan(telemetryItem: ITelemetryItem, span: IReadableSpa
             if (httpRoute) {
                 // AiOperationName max length is 1024
                 // https://github.com/MohanGsk/ApplicationInsights-Home/blob/master/EndpointSpecs/Schemas/Bond/ContextTagKeys.bond
-                tags[contextKeys.operationName] = strSubstring(httpMethod + " " + fieldRedaction(asString(httpRoute), config), 0, eMaxPropertyLengths.TEN_BIT);
+                tags[contextKeys.operationName] = httpMethod + " " + fieldRedaction(asString(httpRoute), config);
             } else if (httpUrl) {
                 try {
                     const urlPathName = fieldRedaction(urlGetPathName(asString(httpUrl)), config);
-                    tags[contextKeys.operationName] = strSubstring(httpMethod + " " + urlPathName, 0, eMaxPropertyLengths.TEN_BIT);
+                    tags[contextKeys.operationName] = httpMethod + " " + urlPathName;
                 } catch {
                     /* no-op */
                 }
@@ -249,8 +240,10 @@ function _populateHttpDependencyProperties(dependencyTelemetry: IDependencyTelem
         const httpUrl = getHttpUrl(container);
         if (httpUrl) {
             try {
-                const dependencyUrl = new URL(String(httpUrl));
-                dependencyTelemetry.name = httpMethod + " " + fieldRedaction(dependencyUrl.pathname, config);
+                const pathName = urlGetPathName(asString(httpUrl));
+                if (pathName) {
+                    dependencyTelemetry.name = httpMethod + " " + fieldRedaction(pathName, config);
+                }
             } catch {
                 /* no-op */
             }
@@ -361,7 +354,7 @@ function createDependencyTelemetryItem(core: IAppInsightsCore, span: IReadableSp
     let dependencyTelemetry: IDependencyTelemetry = {
         name: span.name, // Default
         id: spanCtx.spanId || core.getTraceCtx().spanId,
-        success: span.status?.code !== eOTelSpanStatusCode.ERROR,
+        success: (span.status || {}).code !== eOTelSpanStatusCode.ERROR,
         responseCode: 0,
         type: dependencyType,
         duration: hrTimeToMilliseconds(span.duration),
