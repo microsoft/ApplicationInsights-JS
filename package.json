@@ -85,20 +85,6 @@
         "@rollup/plugin-commonjs": {
             "glob": "^8.0.3"
         },
-        "archiver-utils": {
-            "glob": "7.2.3"
-        },
-        "globby": {
-            "glob": "7.2.3"
-        },
-        "grunt": {
-            "glob": "7.2.3"
-        },
-        "glob@7.1.7": "7.2.3",
-        "glob@~7.1.6": "7.2.3",
-        "zip-stream": {
-            "glob": "7.2.3"
-        },
         "form-data": "^2.5.4",
         "tar": "^7.5.3"
     }
