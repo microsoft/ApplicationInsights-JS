@@ -43,8 +43,7 @@
     "license": "MIT",
     "sideEffects": false,
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "3.3.11",
-        "@microsoft/applicationinsights-common": "3.3.11",
+        "@microsoft/otel-core-js": "0.0.1-alpha",
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/ts-async": ">= 0.5.4 < 2.x",

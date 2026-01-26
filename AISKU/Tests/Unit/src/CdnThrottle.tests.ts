@@ -1,10 +1,10 @@
 import { ApplicationInsights, ApplicationInsightsContainer, IApplicationInsights, IConfig, IConfiguration, LoggingSeverity, Snippet, _eInternalMessageId } from '../../../src/index'
 import { AITestClass, Assert, IFetchArgs, PollingAssert} from '@microsoft/ai-test-framework';
-import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig } from '@microsoft/applicationinsights-common';
+import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig } from '@microsoft/otel-core-js';
 import { SinonSpy } from 'sinon';
 import { AppInsightsSku } from '../../../src/AISku';
 import { createSnippetV5 } from './testSnippetV5';
-import { CdnFeatureMode, FeatureOptInMode, getGlobal, getGlobalInst, isFunction, newId } from '@microsoft/applicationinsights-core-js';
+import { CdnFeatureMode, FeatureOptInMode, getGlobal, getGlobalInst, isFunction, newId } from '@microsoft/otel-core-js';
 import { createSnippetV6 } from './testSnippetV6';
 import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode } from '@microsoft/applicationinsights-cfgsync-js';
 import { createSyncPromise, doAwait } from '@nevware21/ts-async';

@@ -1,8 +1,8 @@
 import dynamicProto from "@microsoft/dynamicproto-js"
 import {
     IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, getJSON, isArray, isFunction, isObject, objForEachKey
-} from "@microsoft/applicationinsights-core-js";
-import { FieldType, ISerializable } from "@microsoft/applicationinsights-common";
+} from "@microsoft/otel-core-js";
+import { FieldType, ISerializable } from "@microsoft/otel-core-js";
 
 export class Serializer {
 

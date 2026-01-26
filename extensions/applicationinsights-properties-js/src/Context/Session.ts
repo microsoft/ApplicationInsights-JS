@@ -3,12 +3,10 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    ISession, ISessionManager, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage
-} from "@microsoft/applicationinsights-common";
-import {
-    IAppInsightsCore, ICookieMgr, IDiagnosticLogger, IUnloadHookContainer, _eInternalMessageId, _throwInternal, dateNow, dumpObj,
-    eLoggingSeverity, getExceptionName, isFunction, newId, onConfigChange, safeGetCookieMgr, safeGetLogger
-} from "@microsoft/applicationinsights-core-js";
+    IAppInsightsCore, ICookieMgr, IDiagnosticLogger, ISession, ISessionManager, IUnloadHookContainer, _eInternalMessageId, _throwInternal,
+    dateNow, dumpObj, eLoggingSeverity, getExceptionName, isFunction, newId, onConfigChange, safeGetCookieMgr, safeGetLogger,
+    utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage
+} from "@microsoft/otel-core-js";
 
 const SESSION_COOKIE_NAME = "ai_session";
 const ACQUISITION_SPAN = 86400000; // 24 hours in ms

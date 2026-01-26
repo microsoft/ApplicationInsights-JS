@@ -3,7 +3,7 @@
 
 /* eslint-disable no-constant-condition */
 import { Fields, ISnippetConfig } from "./type";
-import { IConfig, IEnvelope } from "@microsoft/applicationinsights-common";
+import { IConfig, IEnvelope } from "@microsoft/otel-core-js";
 import { IConfiguration, Snippet } from "@microsoft/applicationinsights-web";
 import { oneDsEnvelope } from "./1dsType";
 import { _createAiEnvelope, aiMethod } from "./aiSupport";

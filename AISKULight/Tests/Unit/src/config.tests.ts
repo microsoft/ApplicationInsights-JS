@@ -1,7 +1,7 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
-import { ITelemetryItem, newId } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, newId } from "@microsoft/otel-core-js";
 import { ApplicationInsights} from "../../../src/index";
-import { BreezeChannelIdentifier, ContextTagKeys, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
+import { BreezeChannelIdentifier, ContextTagKeys, utlRemoveSessionStorage } from "@microsoft/otel-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 
 export class ApplicationInsightsConfigTests extends AITestClass {

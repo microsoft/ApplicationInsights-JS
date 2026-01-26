@@ -5,13 +5,11 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, IConfig, IPropertiesPlugin, PageView, PropertiesPluginIdentifier, utlSetStoragePrefix
-} from "@microsoft/applicationinsights-common";
-import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, _InternalLogMessage, _eInternalMessageId,
-    _logInternalMessage, createProcessTelemetryContext, eLoggingSeverity, getNavigator, getSetValue, isNullOrUndefined, onConfigChange
-} from "@microsoft/applicationinsights-core-js";
+    BaseTelemetryPlugin, BreezeChannelIdentifier, IAppInsightsCore, IConfig, IConfigDefaults, IConfiguration, IPlugin,
+    IProcessTelemetryContext, IProcessTelemetryUnloadContext, IPropertiesPlugin, ITelemetryItem, ITelemetryPluginChain,
+    ITelemetryUnloadState, PageView, PropertiesPluginIdentifier, _InternalLogMessage, _eInternalMessageId, _logInternalMessage,
+    createProcessTelemetryContext, eLoggingSeverity, getNavigator, getSetValue, isNullOrUndefined, onConfigChange, utlSetStoragePrefix
+} from "@microsoft/otel-core-js";
 import { isString, objDeepFreeze, objDefine } from "@nevware21/ts-utils";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
 import { IPropertiesConfig } from "./Interfaces/IPropertiesConfig";

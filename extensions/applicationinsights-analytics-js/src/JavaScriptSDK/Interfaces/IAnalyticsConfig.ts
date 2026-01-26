@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IExceptionConfig } from "@microsoft/applicationinsights-core-js";
+import { IExceptionConfig } from "@microsoft/otel-core-js";
 
 /**
  * Configuration interface specifically for AnalyticsPlugin

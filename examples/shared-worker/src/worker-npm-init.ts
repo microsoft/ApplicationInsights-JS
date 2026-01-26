@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { ApplicationInsights, IConfiguration } from "@microsoft/applicationinsights-web"
-import { runTargetUnload } from "@microsoft/applicationinsights-core-js";
+import { runTargetUnload } from "@microsoft/otel-core-js";
 
 // Cache the previously initialized instance to avoid creating multiple instances
 let _appInsights: ApplicationInsights;

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { objKeys } from "@microsoft/applicationinsights-core-js";
+import { objKeys } from "@microsoft/otel-core-js";
 import { MessageType } from "./Enums";
 import { getPopupSettings, setPopupSize } from "./configuration/PopupConfigCache";
 import { IMessage } from "./interfaces/IMessage";

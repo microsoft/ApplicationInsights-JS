@@ -4,23 +4,20 @@
 */
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import {
-    AnalyticsPluginIdentifier, Event as EventTelemetry, Exception, IAppInsights, IAutoExceptionTelemetry, IConfig, IDependencyTelemetry,
-    IEventTelemetry, IExceptionInternal, IExceptionTelemetry, IMetricTelemetry, IPageViewPerformanceTelemetry,
-    IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, ITraceTelemetry, Metric, PageView,
-    PageViewPerformance, RemoteDependencyData, Trace, createDomEvent, createTelemetryItem, dataSanitizeString, eSeverityLevel,
-    findAllScripts, generateW3CId, isCrossOriginError, strNotSpecified, utlDisableStorage, utlEnableStorage, utlSetStoragePrefix
-} from "@microsoft/applicationinsights-common";
-import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IExceptionConfig,
-    IInstrumentCallDetails, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem,
-    ITelemetryPluginChain, ITelemetryUnloadState, InstrumentEvent, TelemetryInitializerFunction, _eInternalMessageId, arrForEach,
-    cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate, createProcessTelemetryContext, createUniqueNamespace, dumpObj,
-    eLoggingSeverity, eventOff, eventOn, fieldRedaction, getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory,
-    hasWindow, isFunction, isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strUndefined,
-    throwError
-} from "@microsoft/applicationinsights-core-js";
 import { IAjaxMonitorPlugin } from "@microsoft/applicationinsights-dependencies-js";
+import {
+    AnalyticsPluginIdentifier, BaseTelemetryPlugin, Event as EventTelemetry, Exception, IAppInsights, IAppInsightsCore,
+    IAutoExceptionTelemetry, IConfig, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDependencyTelemetry, IEventTelemetry,
+    IExceptionConfig, IExceptionInternal, IExceptionTelemetry, IInstrumentCallDetails, IMetricTelemetry, IPageViewPerformanceTelemetry,
+    IPageViewPerformanceTelemetryInternal, IPageViewTelemetry, IPageViewTelemetryInternal, IPlugin, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
+    ITraceTelemetry, InstrumentEvent, Metric, PageView, PageViewPerformance, RemoteDependencyData, TelemetryInitializerFunction, Trace,
+    _eInternalMessageId, arrForEach, cfgDfBoolean, cfgDfMerge, cfgDfSet, cfgDfString, cfgDfValidate, createDomEvent,
+    createProcessTelemetryContext, createTelemetryItem, createUniqueNamespace, dataSanitizeString, dumpObj, eLoggingSeverity, eSeverityLevel,
+    eventOff, eventOn, fieldRedaction, findAllScripts, generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow,
+    hasHistory, hasWindow, isCrossOriginError, isFunction, isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange,
+    safeGetCookieMgr, strNotSpecified, strUndefined, throwError, utlDisableStorage, utlEnableStorage, utlSetStoragePrefix
+} from "@microsoft/otel-core-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
 import { IAnalyticsConfig } from "./Interfaces/IAnalyticsConfig";
 import { IAppInsightsInternal, IPageViewManager, createPageViewManager } from "./Telemetry/PageViewManager";

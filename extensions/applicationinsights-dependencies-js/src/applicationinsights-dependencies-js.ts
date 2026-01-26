@@ -6,4 +6,4 @@ export {
 } from "./ajax";
 export { IDependencyHandler, IDependencyListenerHandler, IDependencyListenerDetails, DependencyListenerFunction } from "./DependencyListener";
 export { IDependencyInitializerHandler, IDependencyInitializerDetails, DependencyInitializerFunction } from "./DependencyInitializer";
-export { ICorrelationConfig } from "@microsoft/applicationinsights-common";
+export { ICorrelationConfig } from "@microsoft/otel-core-js";

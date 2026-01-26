@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IAppInsightsCore, IW3cTraceState } from "@microsoft/applicationinsights-core-js";
+import { IAppInsightsCore, IW3cTraceState } from "@microsoft/otel-core-js";
 
 export interface IDependencyListenerDetails {
     /**

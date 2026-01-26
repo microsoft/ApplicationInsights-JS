@@ -1,4 +1,4 @@
-import { IConfiguration, IChannelControls, ITelemetryItem, ITelemetryPlugin, ITelemetryPluginChain } from "@microsoft/applicationinsights-core-js";
+import { IConfiguration, IChannelControls, ITelemetryItem, ITelemetryPlugin, ITelemetryPluginChain } from "@microsoft/otel-core-js";
 
 /**
  * TestChannelPlugin for testing - a minimal implementation of IChannelControls

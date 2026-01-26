@@ -1,8 +1,8 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, createDynamicConfig } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, createDynamicConfig } from "@microsoft/otel-core-js";
 import { _SessionManager } from "../../../src/Context/Session";
 import { TelemetryContext } from "../../../src/TelemetryContext";
-import { IConfiguration } from "@microsoft/applicationinsights-core-js";
+import { IConfiguration } from "@microsoft/otel-core-js";
 import { TestChannelPlugin } from "./TestChannelPlugin";
 
 export class TelemetryContextTests extends AITestClass {

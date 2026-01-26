@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 import {
-    utlCanUseSessionStorage, utlGetSessionStorage, utlRemoveSessionStorage, utlSetSessionStorage
-} from "@microsoft/applicationinsights-common";
-import {
-    IDiagnosticLogger, _warnToConsole, dateNow, dumpObj, getJSON, hasJSON, throwError
-} from "@microsoft/applicationinsights-core-js";
+    IDiagnosticLogger, _warnToConsole, dateNow, dumpObj, getJSON, hasJSON, throwError, utlCanUseSessionStorage, utlGetSessionStorage,
+    utlRemoveSessionStorage, utlSetSessionStorage
+} from "@microsoft/otel-core-js";
 
 export interface IPageVisitData {
     pageName: string;

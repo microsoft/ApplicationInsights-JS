@@ -723,18 +723,14 @@ module.exports = function (grunt) {
     try {
         var theBuildConfig = deepMerge(buildConfig({
             // Shared
-            "core":                 { 
-                                        path: "./shared/AppInsightsCore",
-                                        unitTestName: "aicoreunit.tests.js",
-                                        perfTestName: "aicoreperf.tests.js"
-                                    },
-            "common":               { 
-                                        path: "./shared/AppInsightsCommon",
-                                        unitTestName: "aicommon.tests.js"
-                                    },
             "otelCore":                 {
-                                        path: "./shared/OpenTelemetry",
-                                        unitTestName: "otel.unittests.js"
+                                        path: "./shared/otel-core",
+                                        unitTestName: "otel.unittests.js",
+                                        perfTestName: "otelcoreperf.tests.js"
+                                    },
+            "otelNoop":                 {
+                                        path: "./shared/otel-noop",
+                                        unitTestName: "otel-noop.unittests.js"
                                     },
     
             // SKUs
@@ -1182,6 +1178,13 @@ module.exports = function (grunt) {
         grunt.registerTask("otelCore-mintest", tsTestActions("otelCore", true));
         //grunt.registerTask("otelperftest", ["connect", "ts:core-perftest", "qunit:core-perf"]);
 
+        grunt.registerTask("otelNoop", tsBuildActions("otelNoop", true));
+        grunt.registerTask("otelNoop-min", minTasks("otelNoop"));
+        grunt.registerTask("otelNoop-restore", restoreTasks("otelNoop"));
+        grunt.registerTask("otelNoop-lint-fix", ["otelNoop-restore"]);
+        grunt.registerTask("otelNoopunittest", tsTestActions("otelNoop"));
+        grunt.registerTask("otelNoop-mintest", tsTestActions("otelNoop", true));
+
 
 
         grunt.registerTask("example-shared-worker", tsBuildActions("example-shared-worker"));
@@ -1204,6 +1207,6 @@ module.exports = function (grunt) {
         console.error("stack: '" + e.stack + "', message: '" + e.message + "', name: '" + e.name + "'");
     }
 
-    console.log("***  " + JSON.stringify(theBuildConfig, null, 2) + "  ***");
+    // console.log("***  " + JSON.stringify(theBuildConfig, null, 2) + "  ***");
 };
  

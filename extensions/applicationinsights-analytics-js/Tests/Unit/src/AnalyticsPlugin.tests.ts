@@ -6,8 +6,8 @@ import { SinonStub, SinonSpy } from 'sinon';
 import {
     Exception, SeverityLevel, Event, Trace, PageViewPerformance, IConfig, IExceptionInternal,
     AnalyticsPluginIdentifier, IAppInsights, Metric, PageView, RemoteDependencyData, utlCanUseLocalStorage, createDomEvent, findAllScripts
-} from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj, __getRegisteredEvents, createCookieMgr } from "@microsoft/applicationinsights-core-js";
+} from "@microsoft/otel-core-js";
+import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj, __getRegisteredEvents, createCookieMgr } from "@microsoft/otel-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js"
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { AnalyticsPlugin } from "../../../src/JavaScriptSDK/AnalyticsPlugin";

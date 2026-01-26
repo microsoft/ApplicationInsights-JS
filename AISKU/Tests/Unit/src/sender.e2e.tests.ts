@@ -1,7 +1,7 @@
 import { ApplicationInsights, IApplicationInsights } from '../../../src/index'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { BreezeChannelIdentifier, utlGetSessionStorage, utlRemoveSessionStorage } from '@microsoft/applicationinsights-common';
-import { ActiveStatus, dumpObj, getJSON, isArray } from '@microsoft/applicationinsights-core-js';
+import { BreezeChannelIdentifier, utlGetSessionStorage, utlRemoveSessionStorage } from '@microsoft/otel-core-js';
+import { ActiveStatus, dumpObj, getJSON, isArray } from '@microsoft/otel-core-js';
 import { SinonSpy } from 'sinon';
 import { Assert, AITestClass, PollingAssert} from "@microsoft/ai-test-framework"
 import { createAsyncResolvedPromise } from '@nevware21/ts-async';

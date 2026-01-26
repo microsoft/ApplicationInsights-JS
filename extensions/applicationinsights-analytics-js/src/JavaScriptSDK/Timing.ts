@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { dateTimeUtilsDuration } from "@microsoft/applicationinsights-common";
-import { IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, _eInternalMessageId, _throwInternal, dateTimeUtilsDuration, eLoggingSeverity } from "@microsoft/otel-core-js";
 
 /**
  * Internal interface for Timing.

@@ -1,7 +1,4 @@
-import { IConfig } from "@microsoft/applicationinsights-common";
-import {
-    CdnFeatureMode, FeatureOptInMode, IAppInsightsCore, IConfiguration, IFeatureOptIn
-} from "@microsoft/applicationinsights-core-js";
+import { CdnFeatureMode, FeatureOptInMode, IAppInsightsCore, IConfig, IConfiguration, IFeatureOptIn } from "@microsoft/otel-core-js";
 import { isNullOrUndefined, isObject, objExtend, objForEachKey, setValueByKey } from "@nevware21/ts-utils";
 import { ICfgSyncCdnConfig } from "./Interfaces/ICfgSyncCdnConfig";
 import { NonOverrideCfg } from "./Interfaces/ICfgSyncConfig";

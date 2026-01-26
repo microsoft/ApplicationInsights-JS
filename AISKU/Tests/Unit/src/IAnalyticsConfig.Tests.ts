@@ -1,7 +1,7 @@
 import { ApplicationInsights, IAnalyticsConfig, IAppInsights, IConfig, ApplicationAnalytics } from "../../../src/index";
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
-import { AnalyticsPluginIdentifier, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
-import { AppInsightsCore, IConfiguration, isFunction, onConfigChange } from "@microsoft/applicationinsights-core-js";
+import { AnalyticsPluginIdentifier, utlRemoveSessionStorage } from "@microsoft/otel-core-js";
+import { AppInsightsCore, IConfiguration, isFunction, onConfigChange } from "@microsoft/otel-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';

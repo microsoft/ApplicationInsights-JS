@@ -71,16 +71,48 @@
         },
         "@microsoft/otel-core-js": {
             "constEnums": [
-                "eAttributeSource",
-                "AddAttributeResult",
-                "eAttributeFilter",
+                "_eSetDynamicPropertyFlags",
+                "ePendingOp",
+                "CallbackType",
+                "eW3CTraceFlags",
+                "eRequestHeaders",
+                "eTraceStateKeyType",
+                "eOfflineValue",
+                "eStorageType",
+                "FieldType",
+                "eDistributedTracingModes",
+                "EventPersistenceValue",
+                "eEventsDiscardedReason",
+                "eBatchDiscardedReason",
+                "FeatureOptInMode",
+                "CdnFeatureMode",
+                "eActiveStatus",
+                "eLoggingSeverity",
+                "_eInternalMessageId",
+                "SendRequestReason",
+                "TransportType",
+                "eStatsType",
+                "TelemetryUnloadReason",
+                "TelemetryUpdateReason",
+                "eTraceHeadersMode",
                 "eAttributeChangeOp",
                 "eOTelSeverityNumber",
                 "eOTelSamplingDecision",
                 "eOTelSpanKind",
                 "eOTelSpanStatusCode",
-                "eValueType"
+                "eAttributeSource",
+                "AddAttributeResult",
+                "DataPointType",
+                "DependencyKind",
+                "DependencySourceType",
+                "eSeverityLevel",
+                "eAttributeFilter",
+                "eValueType",
+                "DataSanitizerValues"
             ]
+        },
+        "@microsoft/otel-noop-js": {
+            "constEnums": []
         }
     }
 }

@@ -1,0 +1,90 @@
+/**
+ * Config file for API Extractor.  For more info, please visit: https://api-extractor.com
+ */
+ {
+    "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+  
+    /**
+     * Determines the "<projectFolder>" token that can be used with other config file settings.
+     */
+    "projectFolder": ".",
+  
+    /**
+     * (REQUIRED) Specifies the .d.ts file to be used as the starting point for analysis.
+     */
+    "mainEntryPointFilePath": "<projectFolder>/build/types/otel-noop-js.d.ts",
+  
+    /**
+     * A list of NPM package names whose exports should be treated as part of this package.
+     * CRITICAL: Do NOT bundle otel-core-js types - this causes type incompatibility issues.
+     */
+    "bundledPackages": [
+    ],
+  
+    /**
+     * Determines how the TypeScript compiler engine will be invoked by API Extractor.
+     */
+    "compiler": {
+    },
+  
+    /**
+     * Configures how the API report file (*.api.md) will be generated.
+     */
+    "apiReport": {
+      "enabled": true,
+      "reportFileName": "<unscopedPackageName>.api.md",
+      "reportFolder": "<projectFolder>/build/dts/"
+    },
+  
+    /**
+     * Configures how the doc model file (*.api.json) will be generated.
+     */
+    "docModel": {
+      "enabled": true,
+      "apiJsonFilePath": "<projectFolder>/build/dts/<unscopedPackageName>.api.json"
+    },
+  
+    /**
+     * Configures how the .d.ts rollup file will be generated.
+     */
+    "dtsRollup": {
+      "enabled": true,
+      "untrimmedFilePath": "<projectFolder>/build/dts/<unscopedPackageName>.d.ts"
+    },
+  
+    /**
+     * Configures how the tsdoc-metadata.json file will be generated.
+     */
+    "tsdocMetadata": {
+      "enabled": false,
+      "tsdocMetadataFilePath": "<projectFolder>/build/dts/tsdoc-metadata.json"
+    },
+  
+    /**
+     * Configures how API Extractor reports error and warning messages produced during analysis.
+     */
+    "messages": {
+      "compilerMessageReporting": {
+        "default": {
+          "logLevel": "warning"
+        }
+      },
+  
+      "extractorMessageReporting": {
+        "default": {
+          "logLevel": "warning"
+        },
+  
+        "ae-missing-release-tag": {
+          "logLevel": "none"
+        }
+      },
+  
+      "tsdocMessageReporting": {
+        "default": {
+          "logLevel": "warning"
+        }
+      }
+    }
+  }
+  

@@ -1,7 +1,7 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { eDistributedTracingModes } from "@microsoft/applicationinsights-common";
-import { RequestHeaders } from "@microsoft/applicationinsights-common";
-import { AppInsightsCore } from "@microsoft/applicationinsights-core-js";
+import { eDistributedTracingModes } from "@microsoft/otel-core-js";
+import { RequestHeaders } from "@microsoft/otel-core-js";
+import { AppInsightsCore } from "@microsoft/otel-core-js";
 import { createPromise } from "@nevware21/ts-async";
 
 import { AjaxMonitor } from "../../../src/ajax";

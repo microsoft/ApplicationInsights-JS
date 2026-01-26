@@ -4,13 +4,12 @@
 */
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { DisabledPropertyName, IConfig } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
+    BaseTelemetryPlugin, DisabledPropertyName, IAppInsightsCore, IConfig, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
     IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, createProcessTelemetryContext,
     createUniqueNamespace, eventOff, eventOn, getGlobal, getJSON, isFetchSupported, isXhrSupported, mergeEvtNamespace, onConfigChange,
     sendCustomEvent
-} from "@microsoft/applicationinsights-core-js";
+} from "@microsoft/otel-core-js";
 import { doAwaitResponse } from "@nevware21/ts-async";
 import { ITimerHandler, isFunction, isNullOrUndefined, isPlainObject, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
 import { applyCdnfeatureCfg, replaceByNonOverrideCfg } from "./CfgSyncHelperFuncs";

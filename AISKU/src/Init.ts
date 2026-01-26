@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { strUndefined } from "@microsoft/applicationinsights-core-js";
+import { strUndefined } from "@microsoft/otel-core-js";
 import { getInst } from "@nevware21/ts-utils";
 import { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
 import { Snippet } from "./Snippet";
@@ -33,7 +33,7 @@ export {
     addEventHandler,
     removeEventHandler,
     isBeaconsSupported
-} from "@microsoft/applicationinsights-core-js";
+} from "@microsoft/otel-core-js";
 
 export {
     RequestHeaders,
@@ -44,7 +44,7 @@ export {
     PropertiesPluginIdentifier,
     BreezeChannelIdentifier,
     AnalyticsPluginIdentifier
-} from "@microsoft/applicationinsights-common";
+} from "@microsoft/otel-core-js";
 
 // ----------------------------------------------------------------------------------------------------
 // End of Exports available from the Cdn bundles
@@ -70,7 +70,7 @@ export {
     INotificationManager,
     IProcessTelemetryContext,
     ILoadedPlugin
-} from "@microsoft/applicationinsights-core-js";
+} from "@microsoft/otel-core-js";
 
 export {
     IConfig,
@@ -86,7 +86,7 @@ export {
     eSeverityLevel,
     IRequestHeaders,
     EventPersistence
-} from "@microsoft/applicationinsights-common";
+} from "@microsoft/otel-core-js";
 
 export { ISenderConfig } from "@microsoft/applicationinsights-channel-js";
 

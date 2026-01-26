@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { dumpObj } from "@microsoft/applicationinsights-core-js";
+import { dumpObj } from "@microsoft/otel-core-js";
 
 export declare type VersionCheckCallback = (newVersion: string, details: string) => void;
 

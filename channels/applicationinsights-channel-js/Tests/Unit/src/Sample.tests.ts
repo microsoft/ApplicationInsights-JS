@@ -1,7 +1,7 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { Sample } from "../../../src/TelemetryProcessors/Sample";
-import { ITelemetryItem, isBeaconsSupported, newId } from "@microsoft/applicationinsights-core-js";
-import { PageView, TelemetryItemCreator, IPageViewTelemetry } from "@microsoft/applicationinsights-common";
+import { ITelemetryItem, isBeaconsSupported, newId } from "@microsoft/otel-core-js";
+import { PageView, TelemetryItemCreator, IPageViewTelemetry } from "@microsoft/otel-core-js";
 import { HashCodeScoreGenerator } from "../../../src/TelemetryProcessors/SamplingScoreGenerators/HashCodeScoreGenerator";
 
 export class SampleTests extends AITestClass {

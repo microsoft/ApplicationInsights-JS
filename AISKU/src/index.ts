@@ -36,7 +36,7 @@ export {
     IOTelSpan,
     IOTelSpanContext,
     IOTelSpanOptions
-} from "@microsoft/applicationinsights-core-js";
+} from "@microsoft/otel-core-js";
 export {
     IConfig,
     IDependencyTelemetry,
@@ -60,7 +60,7 @@ export {
     DistributedTracingModes,
     IRequestHeaders,
     EventPersistence
-} from "@microsoft/applicationinsights-common";
+} from "@microsoft/otel-core-js";
 export { Sender, ISenderConfig } from "@microsoft/applicationinsights-channel-js";
 export { ApplicationInsights as ApplicationAnalytics, IAppInsightsInternal, IAnalyticsConfig } from "@microsoft/applicationinsights-analytics-js";
 export { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";

@@ -1,5 +1,5 @@
 import { Assert } from "@microsoft/ai-test-framework";
-import { _testHookMaxUnloadHooksCb } from "@microsoft/applicationinsights-core-js";
+import { _testHookMaxUnloadHooksCb } from "@microsoft/otel-core-js";
 import { dumpObj } from "@nevware21/ts-utils";
 
 export class GlobalTestHooks {

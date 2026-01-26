@@ -1,5 +1,4 @@
-import { IStorageBuffer } from "@microsoft/applicationinsights-common";
-import { IXHROverride } from "@microsoft/applicationinsights-core-js";
+import { IStorageBuffer, IXHROverride } from "@microsoft/otel-core-js";
 
 /**
  * Internal interface for sendBuffer, do not export it

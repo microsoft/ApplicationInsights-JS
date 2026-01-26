@@ -1,6 +1,6 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
-import { IConfig } from "@microsoft/applicationinsights-common";
-import { IConfiguration, IPayloadData, isString, ITelemetryItem, IXHROverride, newId } from "@microsoft/applicationinsights-core-js";
+import { IConfig } from "@microsoft/otel-core-js";
+import { IConfiguration, IPayloadData, isString, ITelemetryItem, IXHROverride, newId } from "@microsoft/otel-core-js";
 import { ApplicationInsights, ISenderConfig } from "../../../src/index";
 import { createAsyncResolvedPromise } from "@nevware21/ts-async";
 import { SinonSpy } from 'sinon';

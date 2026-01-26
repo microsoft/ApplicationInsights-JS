@@ -4,7 +4,7 @@
 */
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { INotificationManager, IPerfEvent, PerfManager, getPerformance, getSetValue } from "@microsoft/applicationinsights-core-js";
+import { INotificationManager, IPerfEvent, PerfManager, getPerformance, getSetValue } from "@microsoft/otel-core-js";
 import { IPerfMarkMeasureConfiguration } from "./interfaces/IPerfMarkMeasureConfiguration";
 
 // Names used in the perf Event context
