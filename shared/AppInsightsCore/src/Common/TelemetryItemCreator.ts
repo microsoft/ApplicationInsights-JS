@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    IDiagnosticLogger, ITelemetryItem, isNullOrUndefined, objForEachKey, throwError, toISOString
-} from "@microsoft/applicationinsights-core-js";
+import { isNullOrUndefined, objForEachKey, throwError } from "@nevware21/ts-utils";
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
+import { toISOString } from "../JavaScriptSDK/HelperFuncs";
 import { strIkey, strNotSpecified } from "./Constants";
 import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
 

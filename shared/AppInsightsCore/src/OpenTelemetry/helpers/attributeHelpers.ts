@@ -33,7 +33,7 @@ function _isHomogeneousArray(arr: unknown[]): boolean {
     return result;
 }
 
- /**
+/**
   * Helper to determine if the provided key is a valid attribute key
   * @param key - The key to check
   * @returns true if the key is a valid attribute key

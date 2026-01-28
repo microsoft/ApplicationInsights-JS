@@ -573,14 +573,14 @@ function _createUnloadHook<V extends OTelAttributeValue>(listeners: { cb: (chang
                 unloadHook.rm = _noOpFunc;
             }
         }
-    };    
+    };
 
     return unloadHook;
 }
 
 /**
  * Creates a new attribute container with only configuration.
- * 
+ *
  * @param otelCfg - The OpenTelemetry configuration containing trace configuration and limits
  * @returns A new IAttributeContainer instance with auto-generated container ID
  * @since 3.4.0
@@ -595,7 +595,7 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
 
 /**
  * Creates a new attribute container with configuration and a name.
- * 
+ *
  * @param otelCfg - The OpenTelemetry configuration containing trace configuration and limits
  * @param name - The name for the container (used in the container ID)
  * @returns A new IAttributeContainer instance with the specified name
@@ -612,7 +612,7 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
 
 /**
  * Creates a new attribute container with configuration, name, and inheritance.
- * 
+ *
  * @param otelCfg - The OpenTelemetry configuration containing trace configuration and limits
  * @param name - The name for the container (used in the container ID)
  * @param inheritAttrib - Parent attributes or container to inherit from
@@ -631,7 +631,7 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
 
 /**
  * Creates a new attribute container with full configuration options.
- * 
+ *
  * @param otelCfg - The OpenTelemetry configuration containing trace configuration and limits
  * @param name - The name for the container (used in the container ID)
  * @param inheritAttrib - Parent attributes or container to inherit from
@@ -652,10 +652,10 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
 /**
  * Creates a new attribute container that provides an efficient, observable key-value storage
  * for OpenTelemetry attributes with support for inheritance, limits, and change notifications.
- * 
+ *
  * The container supports inherited attributes from parent containers or plain objects,
  * enforces attribute count and value size limits, and provides efficient iteration and access patterns.
- * 
+ *
  * @param otelCfg - The OpenTelemetry configuration containing trace configuration and limits
  * @param name - Optional name for the container (used in the container ID)
  * @param inheritAttrib - Optional parent attributes or container to inherit from
@@ -667,7 +667,7 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
  * const config = { traceCfg: { generalLimits: { attributeCountLimit: 64 } } };
  * const container = createAttributeContainer(config, "my-container");
  * container.set("service.name", "my-service");
- * 
+ *
  * // With inheritance
  * const parent = { "environment": "production" };
  * const child = createAttributeContainer(config, "child-container", parent);
@@ -734,7 +734,7 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
             droppedAttribs = 0;
             inheritSrc = null;          // Clear the inherited attributes
             inheritContainer = null;    // Clear inherited container as well
-            inheritAttribObj = null;    // Clear inherited attributes as well            
+            inheritAttribObj = null;    // Clear inherited attributes as well
         },
         get: (key: string, source?: eAttributeFilter) => {
             return _findDetail(container, key, source, (detail) => {
@@ -963,7 +963,7 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
  * This function has performance and memory implications as it immediately copies all key-value pairs
  * from the source to the target container, handling both plain attribute objects and other attribute
  * containers.
- * 
+ *
  * @param container - The target container to add attributes to
  * @param attributes - The source attributes or container to copy from
  * @since 3.4.0
@@ -972,7 +972,7 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
  * const target = createAttributeContainer(config, "target");
  * const source = { key1: "value1", key2: "value2" };
  * addAttributes(target, source);
- * 
+ *
  * // Or from another container
  * const sourceContainer = createAttributeContainer(config, "source");
  * sourceContainer.set("key3", "value3");
@@ -1043,7 +1043,7 @@ function _createSnapshotContainer(otelCfg: IOTelConfig, name: string | undefined
  * may still add / update existing attributes without affecting the original source. And changes to the source
  * attributes / container will not be reflected from the new snapshot container, only changes made to the returned
  * container itself.
- * 
+ *
  * Note: It implements this in a lazy manner, so changes made to the original source after the snapshot is taken will
  * cause the changed attributes to be copied into this snapshot container with it's original value and cause a local
  * version of the changed key (if not already been present) to be added, so when using the {@link IAttributeContainer#has} or
@@ -1054,7 +1054,7 @@ function _createSnapshotContainer(otelCfg: IOTelConfig, name: string | undefined
  * It is recommended that you always use {@link IAttributeContainer} instances for better memory and performance overheads,
  * for this specific function when you pass a {@link IOTelAttributes} instance it will create a copy of all present attributes
  * at the point of creation (not lazily).
- * 
+ *
  * @param otelCfg - The OpenTelemetry configuration to use for the snapshot container
  * @param source - The source attributes or container to create a snapshot view from
  * @param attribLimits - Optional attribute limits to apply to the snapshot container
@@ -1103,7 +1103,7 @@ export function createAttributeSnapshot(otelCfg: IOTelConfig, name: string, sour
  *     console.log(container.size);
  *     container.set("key", "value");
  * }
- * 
+ *
  * // Check unknown object
  * function processContainer(obj: unknown) {
  *     if (isAttributeContainer(obj)) {
@@ -1113,7 +1113,7 @@ export function createAttributeSnapshot(otelCfg: IOTelConfig, name: string, sour
  * ```
  */
 export function isAttributeContainer(value: any): value is IAttributeContainer {
-    return value && 
+    return value &&
            isFunction(value.clear) &&
            isFunction(value.get) &&
            isFunction(value.has) &&

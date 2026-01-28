@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 import {
-    IDiagnosticLogger, arrForEach, arrMap, isArray, isError, isFunction, isNullOrUndefined, isObject, isString, strTrim
-} from "@microsoft/applicationinsights-core-js";
-import { asString, getWindow, objFreeze, strIndexOf } from "@nevware21/ts-utils";
+    arrForEach, arrMap, asString, getWindow, isArray, isError, isFunction, isNullOrUndefined, isObject, isString, objFreeze, strIndexOf,
+    strTrim
+} from "@nevware21/ts-utils";
+import { IDiagnosticLogger } from "../../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { strNotSpecified } from "../Constants";
 import { FieldType } from "../Enums";
 import { IExceptionData } from "../Interfaces/Contracts/IExceptionData";

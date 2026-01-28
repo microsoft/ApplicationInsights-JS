@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ICustomProperties } from "@microsoft/applicationinsights-core-js";
+import { ICustomProperties } from "../../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { DistributedTracingModes } from "../Enums";
 import { IRequestContext } from "./IRequestContext";
 

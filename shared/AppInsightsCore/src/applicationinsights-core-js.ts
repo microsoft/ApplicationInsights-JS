@@ -205,3 +205,154 @@ export {
 export { OpenTelemetryError, OpenTelemetryErrorConstructor, getOpenTelemetryError, throwOTelError } from "./OpenTelemetry/errors/OTelError";
 export { OTelInvalidAttributeError, throwOTelInvalidAttributeError } from "./OpenTelemetry/errors/OTelInvalidAttributeError";
 export { OTelSpanError, throwOTelSpanError } from "./OpenTelemetry/errors/OTelSpanError";
+
+// ========================================
+// Application Insights Common Exports
+// ========================================
+
+// Utility functions
+export {
+    correlationIdSetPrefix, correlationIdGetPrefix, correlationIdCanIncludeCorrelationHeader,
+    correlationIdGetCorrelationContext, correlationIdGetCorrelationContextValue,
+    dateTimeUtilsNow, dateTimeUtilsDuration, isInternalApplicationInsightsEndpoint,
+    createDistributedTraceContextFromTrace
+} from "./Common/Util";
+
+export { ThrottleMgr } from "./Common/ThrottleMgr";
+export { parseConnectionString, ConnectionStringParser } from "./Common/ConnectionStringParser";
+export type { ConnectionString } from "./Common/Interfaces/ConnectionString";
+export { FieldType } from "./Common/Enums";
+export { IRequestHeaders, RequestHeaders, eRequestHeaders } from "./Common/RequestResponseHeaders";
+export {
+    DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod,
+    DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, strNotSpecified
+} from "./Common/Constants";
+
+// Contracts
+export { IData as AIData } from "./Common/Interfaces/Contracts/IData";
+export { IBase as AIBase } from "./Common/Interfaces/Contracts/IBase";
+export { IDomain } from "./Common/Interfaces/Contracts/IDomain";
+export { ISerializable } from "./Common/Interfaces/Telemetry/ISerializable";
+export { IEnvelope } from "./Common/Interfaces/Telemetry/IEnvelope";
+export { IStackFrame } from "./Common/Interfaces/Contracts/IStackFrame";
+export { IExceptionDetails } from "./Common/Interfaces/Contracts/IExceptionDetails";
+export { IExceptionData } from "./Common/Interfaces/Contracts/IExceptionData";
+export { IEventData } from "./Common/Interfaces/Contracts/IEventData";
+export { IMessageData } from "./Common/Interfaces/Contracts/IMessageData";
+export { IMetricData } from "./Common/Interfaces/Contracts/IMetricData";
+export { IDataPoint } from "./Common/Interfaces/Contracts/IDataPoint";
+export { DataPointType } from "./Common/Interfaces/Contracts/DataPointType";
+export { IPageViewPerfData } from "./Common/Interfaces/Contracts/IPageViewPerfData";
+
+// Telemetry classes
+export { Envelope } from "./Common/Telemetry/Common/Envelope";
+export { Event } from "./Common/Telemetry/Event";
+export { Exception } from "./Common/Telemetry/Exception";
+export { Metric } from "./Common/Telemetry/Metric";
+export { PageView } from "./Common/Telemetry/PageView";
+export { IPageViewData } from "./Common/Interfaces/Contracts/IPageViewData";
+export { RemoteDependencyData } from "./Common/Telemetry/RemoteDependencyData";
+export { IRemoteDependencyData } from "./Common/Interfaces/Contracts/IRemoteDependencyData";
+export { Trace } from "./Common/Telemetry/Trace";
+export { PageViewPerformance } from "./Common/Telemetry/PageViewPerformance";
+export { Data } from "./Common/Telemetry/Common/Data";
+export { DataPoint } from "./Common/Telemetry/Common/DataPoint";
+
+// Telemetry interfaces
+export { IEventTelemetry } from "./Common/Interfaces/IEventTelemetry";
+export { ITraceTelemetry } from "./Common/Interfaces/ITraceTelemetry";
+export { IMetricTelemetry } from "./Common/Interfaces/IMetricTelemetry";
+export { IDependencyTelemetry } from "./Common/Interfaces/IDependencyTelemetry";
+export { IExceptionTelemetry, IAutoExceptionTelemetry, IExceptionInternal } from "./Common/Interfaces/IExceptionTelemetry";
+export { IPageViewTelemetry, IPageViewTelemetryInternal } from "./Common/Interfaces/IPageViewTelemetry";
+export { IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal } from "./Common/Interfaces/IPageViewPerformanceTelemetry";
+export { IRequestTelemetry } from "./Common/Interfaces/IRequestTelemetry";
+
+// Severity level
+export { eSeverityLevel, SeverityLevel } from "./Common/Interfaces/Contracts/SeverityLevel";
+
+// Configuration
+export { IConfig, ConfigurationManager } from "./Common/Interfaces/IConfig";
+export { IStorageBuffer } from "./Common/Interfaces/IStorageBuffer";
+export { ICorrelationConfig } from "./Common/Interfaces/ICorrelationConfig";
+
+// Context tags and keys
+export { IContextTagKeys, ContextTagKeys } from "./Common/Interfaces/Contracts/ContextTagKeys";
+export { CtxTagKeys, Extensions } from "./Common/Interfaces/PartAExtensions";
+
+// Data types and envelope types
+export {
+    EventDataType, ExceptionDataType, MetricDataType, PageViewDataType,
+    PageViewPerformanceDataType, RemoteDependencyDataType, RequestDataType, TraceDataType
+} from "./Common/Telemetry/DataTypes";
+
+export {
+    EventEnvelopeType, ExceptionEnvelopeType, MetricEnvelopeType, PageViewEnvelopeType,
+    PageViewPerformanceEnvelopeType, RemoteDependencyEnvelopeType, RequestEnvelopeType, TraceEnvelopeType
+} from "./Common/Telemetry/EnvelopeTypes";
+
+// Data sanitization
+export {
+    DataSanitizerValues, dataSanitizeKeyAndAddUniqueness, dataSanitizeKey, dataSanitizeString,
+    dataSanitizeUrl, dataSanitizeMessage, dataSanitizeException, dataSanitizeProperties,
+    dataSanitizeMeasurements, dataSanitizeId, dataSanitizeInput, dsPadNumber
+} from "./Common/Telemetry/Common/DataSanitizer";
+
+// Telemetry item creator
+export { TelemetryItemCreator, createTelemetryItem } from "./Common/TelemetryItemCreator";
+
+// Application Insights interfaces
+export { IAppInsights } from "./Common/Interfaces/IAppInsights";
+export { ITelemetryContext } from "./Common/Interfaces/ITelemetryContext";
+export { IPropertiesPlugin } from "./Common/Interfaces/IPropertiesPlugin";
+export { IRequestContext } from "./Common/Interfaces/IRequestContext";
+
+// Context interfaces
+export { IWeb } from "./Common/Interfaces/Context/IWeb";
+export { ISession } from "./Common/Interfaces/Context/ISession";
+export { ISessionManager } from "./Common/Interfaces/Context/ISessionManager";
+export { IApplication } from "./Common/Interfaces/Context/IApplication";
+export { IDevice } from "./Common/Interfaces/Context/IDevice";
+export { IInternal } from "./Common/Interfaces/Context/IInternal";
+export { ILocation } from "./Common/Interfaces/Context/ILocation";
+export { ISample } from "./Common/Interfaces/Context/ISample";
+export { IOperatingSystem } from "./Common/Interfaces/Context/IOperatingSystem";
+export { IUser, IUserContext } from "./Common/Interfaces/Context/IUser";
+export { ITelemetryTrace } from "./Common/Interfaces/Context/ITelemetryTrace";
+
+// Enums
+export { eDistributedTracingModes, DistributedTracingModes, EventPersistence } from "./Common/Enums";
+
+// Helper functions
+export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./Common/HelperFuncs";
+export { createDomEvent } from "./Common/DomHelperFuncs";
+
+// Storage helpers
+export {
+    utlDisableStorage, utlEnableStorage, utlCanUseLocalStorage, utlGetLocalStorage,
+    utlSetLocalStorage, utlRemoveStorage, utlCanUseSessionStorage, utlGetSessionStorageKeys,
+    utlGetSessionStorage, utlSetSessionStorage, utlRemoveSessionStorage, utlSetStoragePrefix
+} from "./Common/StorageHelperFuncs";
+
+// URL helpers
+export {
+    urlParseUrl, urlGetAbsoluteUrl, urlGetPathName, urlGetCompleteUrl,
+    urlParseHost, urlParseFullHost
+} from "./Common/UrlHelperFuncs";
+
+// Throttle manager interfaces
+export {
+    IThrottleLimit, IThrottleInterval, IThrottleMgrConfig,
+    IThrottleLocalStorageObj, IThrottleResult
+} from "./Common/Interfaces/IThrottleMgr";
+
+// Offline support
+export {
+    IOfflineListener, createOfflineListener, IOfflineState,
+    eOfflineValue, OfflineCallback
+} from "./Common/Offline";
+
+// Plugin identifiers
+export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
+export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";
+export const AnalyticsPluginIdentifier = "ApplicationInsightsAnalytics";

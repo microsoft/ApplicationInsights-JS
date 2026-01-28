@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger } from "../../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { strNotSpecified } from "../Constants";
 import { FieldType } from "../Enums";
 import { IMetricData } from "../Interfaces/Contracts/IMetricData";

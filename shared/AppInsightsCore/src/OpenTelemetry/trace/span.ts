@@ -40,7 +40,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
     // let links: IOTelLink[] = [];
     // let events: IOTelTimedEvent[] = [];
     let localDroppedAttributes = 0;
-    let localContainer: IAttributeContainer = null;;
+    let localContainer: IAttributeContainer = null;
     // let droppedEvents = 0;
     // let droppedLinks = 0;
     let isRecording = spanCtx.isRecording !== false;

@@ -2,6 +2,12 @@
     "pkgs": {
         "@microsoft/applicationinsights-core-js": {
             "constEnums": [
+                "eStorageType",
+                "FieldType",
+                "eDistributedTracingModes",
+                "EventPersistenceValue",
+                "eOfflineValue",
+                "eRequestHeaders",
                 "_eSetDynamicPropertyFlags",
                 "ePendingOp",
                 "CallbackType",
@@ -25,6 +31,11 @@
                 "AddAttributeResult",
                 "eAttributeFilter",
                 "eAttributeChangeOp",
+                "DataPointType",
+                "DependencyKind",
+                "DependencySourceType",
+                "eSeverityLevel",
+                "DataSanitizerValues",
                 "eOTelSamplingDecision",
                 "eOTelSpanKind",
                 "eOTelSpanStatusCode"
@@ -34,19 +45,7 @@
             "constEnums": []
         },
         "@microsoft/applicationinsights-common": {
-            "constEnums": [
-                "eStorageType",
-                "FieldType",
-                "eDistributedTracingModes",
-                "EventPersistenceValue",
-                "eOfflineValue",
-                "eRequestHeaders",
-                "DataPointType",
-                "DependencyKind",
-                "DependencySourceType",
-                "eSeverityLevel",
-                "DataSanitizerValues"
-            ]
+            "constEnums": []
         },
         "@microsoft/applicationinsights-properties-js": {
             "constEnums": []

@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { eSeverityLevel, SeverityLevel } from "../../../src/applicationinsights-common";
+import { eSeverityLevel, SeverityLevel } from "../../../../src/Common/Interfaces/Contracts/SeverityLevel";
 
 export class SeverityLevelTests extends AITestClass {
 

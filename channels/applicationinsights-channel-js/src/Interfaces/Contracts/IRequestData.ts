@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDomain } from "@microsoft/applicationinsights-common/src/Interfaces/Contracts/IDomain";
+import { IDomain } from "@microsoft/applicationinsights-core-js";
 
 /**
  * This interface indentifies the serialized request data contract that is sent to Application Insights backend
