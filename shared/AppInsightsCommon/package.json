@@ -18,8 +18,8 @@
         "build:esm": "grunt common",
         "build:browser": "rollup -c rollup.config.js --bundleConfigAsCjs",
         "rebuild": "npm run build",
-        "test": "grunt commontest",
-        "mintest": "grunt common-mintest",
+        "test": "",
+        "mintest": "",
         "lint": "tslint -p tsconfig.json",
         "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights Common JavaScript Library\"",
         "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js",
@@ -29,7 +29,6 @@
         "api-docs": "typedoc"
     },
     "devDependencies": {
-        "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es5": "1.0.2",
         "@microsoft/api-extractor": "^7.40.0",

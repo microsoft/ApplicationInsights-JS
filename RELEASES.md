@@ -6,6 +6,13 @@
 
 ### Significant Changes
 
+- **AppInsightsCommon Merged into AppInsightsCore**: The `@microsoft/applicationinsights-common` package has been merged into `@microsoft/applicationinsights-core-js` to simplify dependency management and improve tree-shaking capabilities.
+  - All exports previously in `applicationinsights-common` are now available from `applicationinsights-core-js`
+  - The `applicationinsights-common` package continues to work as a compatibility layer (re-exports from Core)
+  - No breaking changes to existing APIs
+  - See the [Migration Guide](docs/upgrade/MergeCommonToCore.md) for details on updating your imports
+  - **Timeline**: The Common package will be deprecated and eventually removed in version 4.0.0
+
 - **W3C Trace State Support**: Added full support for managing W3C Trace State and sending headers in distributed tracing, including new distributed tracing modes `AI_AND_W3C_TRACE` and `W3C_TRACE` that enable the [`tracestate`](https://www.w3.org/TR/trace-context/#tracestate-header) header to be sent with requests when trace state information is available, the existing states will continue to not send the header.
 
 - **New Distributed Tracing Modes**: Added new `eDistributedTracingModes` enum values:

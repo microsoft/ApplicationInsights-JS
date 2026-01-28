@@ -859,8 +859,8 @@ module.exports = function (grunt) {
         grunt.registerTask("common", tsBuildActions("common"));
         grunt.registerTask("common-min", minTasks("common"));
         grunt.registerTask("common-restore", restoreTasks("common"));
-        grunt.registerTask("commontest", tsTestActions("common"));
-        grunt.registerTask("common-mintest", tsTestActions("common", true));
+        grunt.registerTask("commontest", []);
+        grunt.registerTask("common-mintest", []);
 
         grunt.registerTask("ai", tsBuildActions("appinsights"));
         grunt.registerTask("ai-min", minTasks("appinsights"));

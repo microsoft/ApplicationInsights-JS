@@ -31,10 +31,10 @@ import { IReadableSpan } from "./IReadableSpan";
  *   span.end();
  * });
  * ```
- * 
+ *
  * @see {@link IReadableSpan} - Interface for individual spans
  * @see {@link IOTelSpanOptions} - Configuration options for span creation
- * 
+ *
  * @since 3.4.0
  */
 export interface IOTelTracer {
@@ -92,20 +92,20 @@ export interface IOTelTracer {
      * This method creates a span, makes it active during the execution of the provided
      * function, and automatically ends the span when the function completes (or throws).
      * This provides automatic span lifecycle management and context propagation.
-     * 
+     *
      * @param name - The name of the span, should be descriptive of the operation being traced
      * @param options - Optional configuration for span creation (parent context, attributes, etc.)
      * @param fn - The function to execute within the span's active context
-     * 
+     *
      * @returns The result of executing the provided function
-     * 
+     *
      * @remarks
      * - The span is automatically ended when the function completes or throws an exception
      * - The span becomes the active parent for any spans created within the function
      * - If the function throws an error, the span status is automatically set to ERROR
      * - This is the recommended method for most tracing scenarios due to automatic lifecycle management
      * - Multiple overloads available for different parameter combinations
-     * 
+     *
      * @example
      * ```typescript
      * // Synchronous operation with just name and function
@@ -113,18 +113,18 @@ export interface IOTelTracer {
      *   span.setAttribute('operation', 'get-user-details');
      *   return { user: getUserData(), timestamp: new Date().toISOString() };
      * });
-     * 
+     *
      * // With options
-     * const result2 = tracer.startActiveSpan('database-query', 
-     *   { attributes: { 'db.table': 'users' } }, 
+     * const result2 = tracer.startActiveSpan('database-query',
+     *   { attributes: { 'db.table': 'users' } },
      *   (span) => {
      *     span.setAttribute('db.operation', 'SELECT');
      *     return database.getUser('123');
      *   }
      * );
-     * 
+     *
      * // With full context control
-     * const result3 = tracer.startActiveSpan('external-api', 
+     * const result3 = tracer.startActiveSpan('external-api',
      *   { attributes: { 'service.name': 'payment-api' } },
      *   currentContext,
      *   async (span) => {

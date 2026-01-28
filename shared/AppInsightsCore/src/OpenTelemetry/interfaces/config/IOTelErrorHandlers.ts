@@ -4,7 +4,7 @@
  * Configuration interface for OpenTelemetry error handling callbacks.
  * Provides hooks to customize how different types of errors and diagnostic
  * messages are handled within the OpenTelemetry system.
- * 
+ *
  * @example
  * ```typescript
  * const errorHandlers: IOTelErrorHandlers = {
@@ -22,7 +22,7 @@
  *   }
  * };
  * ```
- * 
+ *
  * @remarks
  * If handlers are not provided, default behavior will be used:
  * - `attribError`: Throws an `OTelInvalidAttributeError`
@@ -31,27 +31,27 @@
  * - `warn`: Logs to console.warn
  * - `error`: Logs to console.error
  * - `notImplemented`: Logs to console.error
- * 
+ *
  * @since 3.4.0
  */
 export interface IOTelErrorHandlers {
     /**
      * Handles attribute-related errors, such as invalid attribute values or keys.
      * Called when an attribute operation fails validation or processing.
-     * 
+     *
      * @param message - Descriptive error message explaining what went wrong
      * @param key - The attribute key that caused the error
      * @param value - The attribute value that caused the error (may be of any type)
-     * 
+     *
      * @remarks
      * Common scenarios that trigger this handler:
      * - Invalid attribute key format
      * - Attribute value exceeds length limits
      * - Unsupported attribute value type
      * - Attribute count exceeds limits
-     * 
+     *
      * @default Throws an `OTelInvalidAttributeError`
-     * 
+     *
      * @example
      * ```typescript
      * attribError: (message, key, value) => {
@@ -65,19 +65,19 @@ export interface IOTelErrorHandlers {
     /**
      * Handles span-related errors that occur during span operations.
      * Called when a span operation fails or encounters an unexpected condition.
-     * 
+     *
      * @param message - Descriptive error message explaining the span error
      * @param spanName - The name of the span that encountered the error
-     * 
+     *
      * @remarks
      * Common scenarios that trigger this handler:
      * - Span operation called on an ended span
      * - Invalid span configuration
      * - Span processor errors
      * - Context propagation failures
-     * 
+     *
      * @default Logs to console or calls the warn handler
-     * 
+     *
      * @example
      * ```typescript
      * spanError: (message, spanName) => {
@@ -92,18 +92,18 @@ export interface IOTelErrorHandlers {
      * Handles debug-level diagnostic messages.
      * Used for detailed troubleshooting information that is typically
      * only relevant during development or when diagnosing issues.
-     * 
+     *
      * @param message - Debug message to be handled
-     * 
+     *
      * @remarks
      * Debug messages are typically:
      * - Verbose operational details
      * - Internal state information
      * - Performance metrics
      * - Development-time diagnostics
-     * 
+     *
      * @default Logs to console.log
-     * 
+     *
      * @example
      * ```typescript
      * debug: (message) => {
@@ -118,18 +118,18 @@ export interface IOTelErrorHandlers {
     /**
      * Handles warning-level messages for non-fatal issues.
      * Used for conditions that are unusual but don't prevent continued operation.
-     * 
+     *
      * @param message - Warning message to be handled
-     * 
+     *
      * @remarks
      * Warning scenarios include:
      * - Configuration issues that fall back to defaults
      * - Performance degradation
      * - Deprecated API usage
      * - Resource limit approaches
-     * 
+     *
      * @default Logs to console.warn
-     * 
+     *
      * @example
      * ```typescript
      * warn: (message) => {
@@ -143,18 +143,18 @@ export interface IOTelErrorHandlers {
     /**
      * Handles general error conditions that may affect functionality.
      * Used for significant errors that should be investigated but may not be fatal.
-     * 
+     *
      * @param message - Error message to be handled
-     * 
+     *
      * @remarks
      * Error scenarios include:
      * - Failed network requests
      * - Configuration validation failures
      * - Resource allocation failures
      * - Unexpected runtime conditions
-     * 
+     *
      * @default Logs to console.error
-     * 
+     *
      * @example
      * ```typescript
      * error: (message) => {
@@ -169,18 +169,18 @@ export interface IOTelErrorHandlers {
      * Handles errors related to unimplemented functionality.
      * Called when a method or feature is not yet implemented or is intentionally
      * disabled in the current configuration.
-     * 
+     *
      * @param message - Message describing the unimplemented functionality
-     * 
+     *
      * @remarks
      * Common scenarios:
      * - Placeholder methods that haven't been implemented
      * - Features disabled in the current build
      * - Platform-specific functionality not available
      * - Optional features not included in the configuration
-     * 
+     *
      * @default Logs to console.error
-     * 
+     *
      * @example
      * ```typescript
      * notImplemented: (message) => {

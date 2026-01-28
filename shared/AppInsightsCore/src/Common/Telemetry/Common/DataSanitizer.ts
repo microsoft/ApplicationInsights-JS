@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    IConfiguration, IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, fieldRedaction, getJSON, hasJSON, isObject,
-    objForEachKey, strTrim
-} from "@microsoft/applicationinsights-core-js";
-import { asString, isString, strSubstr, strSubstring } from "@nevware21/ts-utils";
+import { asString, isObject, isString, objForEachKey, strSubstr, strSubstring, strTrim } from "@nevware21/ts-utils";
+import { _eInternalMessageId, eLoggingSeverity } from "../../../JavaScriptSDK.Enums/LoggingEnums";
+import { IConfiguration } from "../../../JavaScriptSDK.Interfaces/IConfiguration";
+import { IDiagnosticLogger } from "../../../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { _throwInternal } from "../../../JavaScriptSDK/DiagnosticLogger";
+import { fieldRedaction, getJSON, hasJSON } from "../../../JavaScriptSDK/EnvUtils";
 
 export const enum DataSanitizerValues {
     /**

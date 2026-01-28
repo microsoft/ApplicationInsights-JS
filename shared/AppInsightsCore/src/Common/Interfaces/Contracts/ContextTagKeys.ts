@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createClassFromInterface } from "@microsoft/applicationinsights-core-js";
+import { createClassFromInterface } from "../../../JavaScriptSDK/HelperFuncs";
 
 function _aiNameFunc(baseName: string) {
     let aiName = "ai." + baseName + ".";

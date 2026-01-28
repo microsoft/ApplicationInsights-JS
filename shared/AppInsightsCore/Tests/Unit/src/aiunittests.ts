@@ -22,6 +22,16 @@ import { W3cTraceStateTests } from './W3TraceState.Tests';
 import { OTelNegativeTests } from './OpenTelemetry/otelNegative.Tests';
 import { TraceUtilsTests } from './OpenTelemetry/traceUtils.Tests';
 
+// Application Insights Common tests (merged from AppInsightsCommon)
+import { ApplicationInsightsTests } from './Common/AppInsightsCommon.tests';
+import { ConnectionStringParserTests } from './Common/ConnectionStringParser.tests';
+import { ExceptionTests } from './Common/Exception.tests';
+import { RequestHeadersTests } from './Common/RequestHeaders.tests';
+import { SeverityLevelTests } from './Common/SeverityLevel.tests';
+import { ThrottleMgrTest } from './Common/ThrottleMgr.tests';
+import { UtilTests } from './Common/Util.tests';
+import { W3CTraceStateModesTests } from './Common/W3CTraceStateModes.tests';
+
 export function runTests() {
     new GlobalTestHooks().registerTests();
     new DynamicTests().registerTests();
@@ -47,4 +57,14 @@ export function runTests() {
     // new StatsBeatTests(false).registerTests();
     // new StatsBeatTests(true).registerTests();
     new SendPostManagerTests().registerTests();
+
+    // Application Insights Common tests (merged from AppInsightsCommon)
+    new ApplicationInsightsTests().registerTests();
+    new ConnectionStringParserTests().registerTests();
+    new ExceptionTests().registerTests();
+    new RequestHeadersTests().registerTests();
+    new SeverityLevelTests().registerTests();
+    new ThrottleMgrTest().registerTests();
+    new UtilTests().registerTests();
+    new W3CTraceStateModesTests().registerTests();
 }

@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    IDiagnosticLogger, IDistributedTraceContext, arrForEach, arrIndexOf, createDistributedTraceContext, dateNow, getPerformance,
-    isNullOrUndefined
-} from "@microsoft/applicationinsights-core-js";
-import { strIndexOf } from "@nevware21/ts-utils";
+import { arrForEach, arrIndexOf, getPerformance, isNullOrUndefined, strIndexOf, utcNow as dateNow } from "@nevware21/ts-utils";
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
+import { createDistributedTraceContext } from "../JavaScriptSDK/TelemetryHelpers";
 import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "./Constants";
 import { ITelemetryTrace } from "./Interfaces/Context/ITelemetryTrace";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
