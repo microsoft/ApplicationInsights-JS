@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { IPromise } from "@nevware21/ts-async";
-import { ITraceHost } from "../../JavaScriptSDK.Interfaces/ITraceProvider";
-import { IOTelTracer } from "../interfaces/trace/IOTelTracer";
-import { IOTelTracerProvider } from "../interfaces/trace/IOTelTracerProvider";
+import { ITraceHost } from "../../../interfaces/ai/ITraceProvider";
+import { IOTelTracer } from "../../../interfaces/otel/trace/IOTelTracer";
+import { IOTelTracerProvider } from "../../../interfaces/otel/trace/IOTelTracerProvider";
 import { _createTracer } from "./tracer";
 
 /**

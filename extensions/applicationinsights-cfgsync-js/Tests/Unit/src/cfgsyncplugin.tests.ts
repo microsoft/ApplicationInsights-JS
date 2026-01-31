@@ -3,7 +3,7 @@ import { AppInsightsCore, FeatureOptInMode, IAppInsightsCore, IPlugin, ITelemetr
 import { IConfiguration } from "@microsoft/applicationinsights-core-js";
 import { CfgSyncPlugin } from "../../../../applicationinsights-cfgsync-js/src/applicationinsights-cfgsync-js";
 import { ICfgSyncConfig, ICfgSyncMode, NonOverrideCfg } from "../../../src/Interfaces/ICfgSyncConfig";
-import { DisabledPropertyName, IConfig } from "@microsoft/applicationinsights-common";
+import { DisabledPropertyName, IConfig } from "@microsoft/applicationinsights-core-js";
 import { createSyncPromise } from "@nevware21/ts-async";
 
 

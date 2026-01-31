@@ -1,10 +1,10 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { DataSanitizerValues } from "../../../../src/Common/Telemetry/Common/DataSanitizer";
-import { Exception } from "../../../../src/Common/Telemetry/Exception";
-import { DiagnosticLogger } from "../../../../src/JavaScriptSDK/DiagnosticLogger";
-import { IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal } from "../../../../src/Common/Interfaces/IExceptionTelemetry";
-import { _createExceptionDetails, _createExDetailsFromInterface, _extractStackFrame, _parsedFrameToInterface, _IParsedStackFrame } from "../../../../src/Common/Telemetry/Exception";
-import { IStackFrame } from "../../../../src/Common/Interfaces/Contracts/IStackFrame";
+import { DataSanitizerValues } from "../../../../src/telemetry/ai/Common/DataSanitizer";
+import { Exception } from "../../../../src/telemetry/ai/Exception";
+import { DiagnosticLogger } from "../../../../src/diagnostics/DiagnosticLogger";
+import { IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal } from "../../../../src/interfaces/ai/IExceptionTelemetry";
+import { _createExceptionDetails, _createExDetailsFromInterface, _extractStackFrame, _parsedFrameToInterface, _IParsedStackFrame } from "../../../../src/telemetry/ai/Exception";
+import { IStackFrame } from "../../../../src/interfaces/ai/contracts/IStackFrame";
 
 function _checkExpectedFrame(expectedFrame: IStackFrame, actualFrame: IStackFrame,  index: number) {
     Assert.equal(expectedFrame.assembly, actualFrame.assembly, index + ") Assembly is not as expected");

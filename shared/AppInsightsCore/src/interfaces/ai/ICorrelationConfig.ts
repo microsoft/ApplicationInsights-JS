@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ICustomProperties } from "../../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { DistributedTracingModes } from "../Enums";
+import { DistributedTracingModes } from "../../enums/ai/Enums";
 import { IRequestContext } from "./IRequestContext";
+import { ICustomProperties } from "./ITelemetryItem";
 
 export interface ICorrelationConfig {
     enableCorsCorrelation: boolean;

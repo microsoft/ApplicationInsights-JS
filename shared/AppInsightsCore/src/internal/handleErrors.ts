@@ -1,5 +1,5 @@
 import { dumpObj, fnApply } from "@nevware21/ts-utils";
-import { IOTelErrorHandlers } from "../interfaces/config/IOTelErrorHandlers";
+import { IOTelErrorHandlers } from "../interfaces/otel/config/IOTelErrorHandlers";
 
 /**
  * Handle / report an error.

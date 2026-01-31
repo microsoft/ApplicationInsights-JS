@@ -4,21 +4,23 @@
 import {
     ILazyValue, dumpObj, getDeferred, isNullOrUndefined, isString, objDefineProps, objFreeze, objIs, objKeys, perfNow
 } from "@nevware21/ts-utils";
-import { setProtoTypeName, updateProtoTypeName } from "../../JavaScriptSDK/HelperFuncs";
-import { STR_EMPTY, UNDEFINED_VALUE } from "../../JavaScriptSDK/InternalConstants";
-import { IAttributeContainer } from "../attribute/IAttributeContainer";
-import { addAttributes, createAttributeContainer } from "../attribute/attributeContainer";
-import { OTelSpanKind, eOTelSpanKind } from "../enums/trace/OTelSpanKind";
-import { eOTelSpanStatusCode } from "../enums/trace/OTelSpanStatus";
-import { isAttributeValue } from "../helpers/attributeHelpers";
-import { handleAttribError, handleNotImplemented, handleSpanError, handleWarn } from "../helpers/handleErrors";
-import { hrTime, hrTimeDuration, hrTimeToMilliseconds, millisToHrTime, timeInputToHrTime, zeroHrTime } from "../helpers/timeHelpers";
-import { IOTelAttributes } from "../interfaces/IOTelAttributes";
-import { OTelException } from "../interfaces/IOTelException";
-import { IOTelHrTime, OTelTimeInput } from "../interfaces/IOTelHrTime";
-import { IOTelSpanCtx } from "../interfaces/trace/IOTelSpanCtx";
-import { IOTelSpanStatus } from "../interfaces/trace/IOTelSpanStatus";
-import { IReadableSpan } from "../interfaces/trace/IReadableSpan";
+import { STR_EMPTY, UNDEFINED_VALUE } from "../../../constants/InternalConstants";
+import { OTelSpanKind, eOTelSpanKind } from "../../../enums/otel/OTelSpanKind";
+import { eOTelSpanStatusCode } from "../../../enums/otel/OTelSpanStatus";
+import { IOTelHrTime, OTelTimeInput } from "../../../interfaces/IOTelHrTime";
+import { IOTelAttributes } from "../../../interfaces/otel/IOTelAttributes";
+import { OTelException } from "../../../interfaces/otel/IOTelException";
+import { IAttributeContainer } from "../../../interfaces/otel/attribute/IAttributeContainer";
+import { IOTelSpanCtx } from "../../../interfaces/otel/trace/IOTelSpanCtx";
+import { IOTelSpanStatus } from "../../../interfaces/otel/trace/IOTelSpanStatus";
+import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
+import { isAttributeValue } from "../../../internal/attributeHelpers";
+import { handleAttribError, handleNotImplemented, handleSpanError, handleWarn } from "../../../internal/handleErrors";
+import {
+    hrTime, hrTimeDuration, hrTimeToMilliseconds, millisToHrTime, timeInputToHrTime, zeroHrTime
+} from "../../../internal/timeHelpers";
+import { setProtoTypeName, updateProtoTypeName } from "../../../utils/HelperFuncs";
+import { addAttributes, createAttributeContainer } from "../../attribute/attributeContainer";
 
 export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpanKind): IReadableSpan {
     let otelCfg = spanCtx.api.cfg;
@@ -80,7 +82,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                 if (message) {
                     handleAttribError(errorHandlers, message, key, value);
                     localDroppedAttributes++;
-                } else if (isRecording && attributes){
+                } else if (attributes){
                     attributes.v.set(key, value);
                 } else {
                     localDroppedAttributes++;

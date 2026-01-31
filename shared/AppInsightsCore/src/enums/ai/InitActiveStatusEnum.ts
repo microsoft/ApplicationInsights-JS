@@ -1,4 +1,4 @@
-import { createEnumStyle } from "./EnumHelperFuncs";
+import { createEnumStyle } from "../EnumHelperFuncs";
 
 export const enum eActiveStatus {
    

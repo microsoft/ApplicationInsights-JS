@@ -6,4 +6,4 @@ export {
 } from "./ajax";
 export { IDependencyHandler, IDependencyListenerHandler, IDependencyListenerDetails, DependencyListenerFunction } from "./DependencyListener";
 export { IDependencyInitializerHandler, IDependencyInitializerDetails, DependencyInitializerFunction } from "./DependencyInitializer";
-export { ICorrelationConfig, eDistributedTracingModes, DistributedTracingModes } from "@microsoft/applicationinsights-common";
+export { ICorrelationConfig, eDistributedTracingModes, DistributedTracingModes } from "@microsoft/applicationinsights-core-js";

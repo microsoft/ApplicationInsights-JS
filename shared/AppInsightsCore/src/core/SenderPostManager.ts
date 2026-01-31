@@ -4,21 +4,21 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { AwaitResponse, IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { arrForEach, dumpObj, getInst, getNavigator, getWindow, isFunction, isString, objKeys } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { SendRequestReason, TransportType } from "../JavaScriptSDK.Enums/SendRequestReason";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { DisabledPropertyName } from "../constants/Constants";
+import { _throwInternal, _warnToConsole } from "../diagnostics/DiagnosticLogger";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { SendRequestReason, TransportType } from "../enums/ai/SendRequestReason";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { IProcessTelemetryUnloadContext } from "../interfaces/ai/IProcessTelemetryContext";
 import {
     _IInternalXhrOverride, _ISendPostMgrConfig, _ISenderOnComplete, _ITimeoutOverrideWrapper
-} from "../JavaScriptSDK.Interfaces/ISenderPostManager";
-import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-import { IXDomainRequest } from "../JavaScriptSDK.Interfaces/IXDomainRequest";
-import { IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction } from "../JavaScriptSDK.Interfaces/IXHROverride";
-import { _noopVoid } from "../OpenTelemetry/noop/noopHelpers";
-import { DisabledPropertyName } from "./Constants";
-import { _throwInternal, _warnToConsole } from "./DiagnosticLogger";
-import { getLocation, isBeaconsSupported, isFetchSupported, isXhrSupported, useXDomainRequest } from "./EnvUtils";
-import { _getAllResponseHeaders, formatErrorMessageXdr, formatErrorMessageXhr, getResponseText, openXhr } from "./HelperFuncs";
+} from "../interfaces/ai/ISenderPostManager";
+import { ITelemetryUnloadState } from "../interfaces/ai/ITelemetryUnloadState";
+import { IXDomainRequest } from "../interfaces/ai/IXDomainRequest";
+import { IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction } from "../interfaces/ai/IXHROverride";
+import { _noopVoid } from "../internal/noopHelpers";
+import { getLocation, isBeaconsSupported, isFetchSupported, isXhrSupported, useXDomainRequest } from "../utils/EnvUtils";
+import { _getAllResponseHeaders, formatErrorMessageXdr, formatErrorMessageXhr, getResponseText, openXhr } from "../utils/HelperFuncs";
 
 const STR_EMPTY = "";
 const STR_NO_RESPONSE_BODY = "NoResponseBody";

@@ -1,4 +1,4 @@
-import { BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-common";
+import { BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-core-js";
 import { BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfiguration, IInternalOfflineSupport, IPayloadData, IPlugin, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 
 export class TestChannel extends BaseTelemetryPlugin implements IChannelControls  {

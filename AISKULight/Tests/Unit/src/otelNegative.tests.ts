@@ -3,7 +3,7 @@
 
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { ApplicationInsights } from "../../../src/index";
-import { utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
+import { utlRemoveSessionStorage } from "@microsoft/applicationinsights-core-js";
 import { isNullOrUndefined, newId } from "@microsoft/applicationinsights-core-js";
 
 /**

@@ -2,47 +2,46 @@
 // Licensed under the MIT License.
 
 import { ILazyValue, asString, dumpObj, isError, isObject, isPrimitive, safe, safeGetLazy } from "@nevware21/ts-utils";
-import { getJSON } from "../../JavaScriptSDK/EnvUtils";
-import { STR_EMPTY } from "../../JavaScriptSDK/InternalConstants";
-import { IAttributeContainer } from "../attribute/IAttributeContainer";
+import { STR_EMPTY } from "../constants/InternalConstants";
+import { OTelAttributeValue } from "../interfaces/otel/IOTelAttributes";
+import { IAttributeContainer } from "../interfaces/otel/attribute/IAttributeContainer";
 import {
     DBSYSTEMVALUES_DB2, DBSYSTEMVALUES_DERBY, DBSYSTEMVALUES_H2, DBSYSTEMVALUES_HSQLDB, DBSYSTEMVALUES_MARIADB, DBSYSTEMVALUES_MSSQL,
     DBSYSTEMVALUES_ORACLE, DBSYSTEMVALUES_OTHER_SQL, DBSYSTEMVALUES_SQLITE
-} from "../attribute/SemanticConventions";
-import { OTelAttributeValue } from "../interfaces/IOTelAttributes";
+} from "../otel/attribute/SemanticConventions";
+import { getJSON } from "../utils/EnvUtils";
 
 const _hasJsonStringify: ILazyValue<boolean> = (/*#__PURE__*/ safeGetLazy(() => !!getJSON().stringify, null));
 
-const SYNTHETIC_TYPE = (/*#__PURE__*/ "user_agent.synthetic.type");
-const CLIENT_DOT = (/*#__PURE__*/ "client.");
-const HTTP_DOT = (/*#__PURE__*/ "http.");
-const NET_DOT = (/*#__PURE__*/ "net.");
-const PEER_DOT = (/*#__PURE__*/ "peer.");
-
-const ATTR_NETWORK_PEER_ADDRESS = (/*#__PURE__*/ "network.peer.address");
-const SEMATTRS_NET_PEER_IP = (/*#__PURE__*/ NET_DOT + PEER_DOT + "ip");
-const ATTR_CLIENT_ADDRESS = (/*#__PURE__*/ CLIENT_DOT + "address");
-const SEMATTRS_HTTP_CLIENT_IP = (/*#__PURE__*/ HTTP_DOT + "client_ip");
-const ATTR_USER_AGENT_ORIGINAL = (/*#__PURE__*/ "user_agent.original");
-const SEMATTRS_HTTP_USER_AGENT = (/*#__PURE__*/ HTTP_DOT + "user_agent");
-const ATTR_URL_FULL = (/*#__PURE__*/ "url.full");
-const SEMATTRS_HTTP_URL = (/*#__PURE__*/ HTTP_DOT + "url");
-const ATTR_HTTP_REQUEST_METHOD = (/*#__PURE__*/ HTTP_DOT + "request.method");
-const SEMATTRS_HTTP_METHOD = (/*#__PURE__*/ HTTP_DOT + "method");
-const ATTR_HTTP_RESPONSE_STATUS_CODE = (/*#__PURE__*/ HTTP_DOT + "response.status_code");
-const SEMATTRS_HTTP_STATUS_CODE = (/*#__PURE__*/ HTTP_DOT + "status_code");
-const ATTR_URL_SCHEME = (/*#__PURE__*/ "url.scheme");
-const SEMATTRS_HTTP_SCHEME = (/*#__PURE__*/ HTTP_DOT + "scheme");
-const ATTR_URL_PATH = (/*#__PURE__*/ "url.path");
-const ATTR_URL_QUERY = (/*#__PURE__*/ "url.query");
-const SEMATTRS_HTTP_TARGET = (/*#__PURE__*/ HTTP_DOT + "target");
-const ATTR_SERVER_ADDRESS = (/*#__PURE__*/ "server.address");
-const SEMATTRS_HTTP_HOST = (/*#__PURE__*/ HTTP_DOT + "host");
-const SEMATTRS_NET_PEER_NAME = (/*#__PURE__*/ NET_DOT + PEER_DOT + "name");
-const ATTR_CLIENT_PORT = (/*#__PURE__*/ CLIENT_DOT + "port");
-const ATTR_SERVER_PORT = (/*#__PURE__*/ "server.port");
-const SEMATTRS_NET_PEER_PORT = (/*#__PURE__*/ NET_DOT + PEER_DOT + "port");
-const SEMATTRS_PEER_SERVICE = (/*#__PURE__*/ PEER_DOT + "service");
+const SYNTHETIC_TYPE = "user_agent.synthetic.type";
+const CLIENT_DOT = "client.";
+const HTTP_DOT = "http.";
+const NET_DOT = "net.";
+const PEER_DOT = "peer.";
+const ATTR_NETWORK_PEER_ADDRESS = "network.peer.address";
+const SEMATTRS_NET_PEER_IP = NET_DOT + PEER_DOT + "ip";
+const ATTR_CLIENT_ADDRESS = CLIENT_DOT + "address";
+const SEMATTRS_HTTP_CLIENT_IP = HTTP_DOT + "client_ip";
+const ATTR_USER_AGENT_ORIGINAL = "user_agent.original";
+const SEMATTRS_HTTP_USER_AGENT = HTTP_DOT + "user_agent";
+const ATTR_URL_FULL = "url.full";
+const SEMATTRS_HTTP_URL = HTTP_DOT + "url";
+const ATTR_HTTP_REQUEST_METHOD = HTTP_DOT + "request.method";
+const SEMATTRS_HTTP_METHOD = HTTP_DOT + "method";
+const ATTR_HTTP_RESPONSE_STATUS_CODE = HTTP_DOT + "response.status_code";
+const SEMATTRS_HTTP_STATUS_CODE = HTTP_DOT + "status_code";
+const ATTR_URL_SCHEME = "url.scheme";
+const SEMATTRS_HTTP_SCHEME = HTTP_DOT + "scheme";
+const ATTR_URL_PATH = "url.path";
+const ATTR_URL_QUERY = "url.query";
+const SEMATTRS_HTTP_TARGET = HTTP_DOT + "target";
+const ATTR_SERVER_ADDRESS = "server.address";
+const SEMATTRS_HTTP_HOST = HTTP_DOT + "host";
+const SEMATTRS_NET_PEER_NAME = NET_DOT + PEER_DOT + "name";
+const ATTR_CLIENT_PORT = CLIENT_DOT + "port";
+const ATTR_SERVER_PORT = "server.port";
+const SEMATTRS_NET_PEER_PORT = NET_DOT + PEER_DOT + "port";
+const SEMATTRS_PEER_SERVICE = PEER_DOT + "service";
 
 /**
  * Get the URL from the attribute container

@@ -3,18 +3,16 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    DisabledPropertyName, IConfig, ICorrelationConfig, IDependencyTelemetry, IRequestContext, ITelemetryContext, PropertiesPluginIdentifier,
-    RemoteDependencyDataType, RemoteDependencyEnvelopeType, RequestHeaders, correlationIdCanIncludeCorrelationHeader,
-    correlationIdGetCorrelationContext, createDistributedTraceContextFromTrace, createTelemetryItem, createTraceParent, dateTimeUtilsNow,
-    eDistributedTracingModes, eRequestHeaders, formatTraceParent, isInternalApplicationInsightsEndpoint
-} from "@microsoft/applicationinsights-common";
-import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICustomProperties, IDistributedTraceContext,
-    IInstrumentCallDetails, IInstrumentHooksCallbacks, IPlugin, IProcessTelemetryContext, ITelemetryItem, ITelemetryPluginChain,
-    InstrumentFunc, InstrumentProto, _eInternalMessageId, _throwInternal, arrForEach, createDistributedTraceContext,
-    createProcessTelemetryContext, createUniqueNamespace, dumpObj, eLoggingSeverity, eW3CTraceFlags, eventOn, fieldRedaction, generateW3CId,
-    getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction, isNullOrUndefined, isString, isXhrSupported,
-    mergeEvtNamespace, onConfigChange, strPrototype, strTrim
+    BaseTelemetryPlugin, DisabledPropertyName, IAppInsightsCore, IConfig, IConfigDefaults, IConfiguration, ICorrelationConfig,
+    ICustomProperties, IDependencyTelemetry, IDistributedTraceContext, IInstrumentCallDetails, IInstrumentHooksCallbacks, IPlugin,
+    IProcessTelemetryContext, IRequestContext, ITelemetryContext, ITelemetryItem, ITelemetryPluginChain, InstrumentFunc, InstrumentProto,
+    PropertiesPluginIdentifier, RemoteDependencyDataType, RemoteDependencyEnvelopeType, RequestHeaders, _eInternalMessageId, _throwInternal,
+    arrForEach, correlationIdCanIncludeCorrelationHeader, correlationIdGetCorrelationContext, createDistributedTraceContext,
+    createDistributedTraceContextFromTrace, createProcessTelemetryContext, createTelemetryItem, createTraceParent, createUniqueNamespace,
+    dateTimeUtilsNow, dumpObj, eDistributedTracingModes, eLoggingSeverity, eRequestHeaders, eW3CTraceFlags, eventOn, fieldRedaction,
+    formatTraceParent, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction,
+    isInternalApplicationInsightsEndpoint, isNullOrUndefined, isString, isXhrSupported, mergeEvtNamespace, onConfigChange, strPrototype,
+    strTrim
 } from "@microsoft/applicationinsights-core-js";
 import { isWebWorker, objDefineProps, objFreeze, scheduleTimeout, strIndexOf, strSplit, strSubstr } from "@nevware21/ts-utils";
 import { DependencyInitializerFunction, IDependencyInitializerDetails, IDependencyInitializerHandler } from "./DependencyInitializer";

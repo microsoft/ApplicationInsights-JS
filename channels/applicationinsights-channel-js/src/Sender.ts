@@ -1,19 +1,16 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, EventDataType, ExceptionDataType, IConfig, IEnvelope,
-    IOfflineListener, ISample, IStorageBuffer, MetricDataType, PageViewDataType, PageViewPerformanceDataType, ProcessLegacy,
-    RemoteDependencyDataType, RequestDataType, RequestHeaders, SampleRate, TraceDataType, createOfflineListener, eRequestHeaders,
-    isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, utlSetStoragePrefix
-} from "@microsoft/applicationinsights-common";
-import {
-    ActiveStatus, BaseTelemetryPlugin, IAppInsightsCore, IBackendResponse, IChannelControls, IConfigDefaults, IConfiguration,
-    IDiagnosticLogger, IInternalOfflineSupport, INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXDomainRequest, IXHROverride,
-    OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager, TransportType, _ISendPostMgrConfig, _ISenderOnComplete,
-    _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createProcessTelemetryContext,
-    createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion,
-    isArray, isBeaconsSupported, isFeatureEnabled, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange,
-    parseResponse, prependTransports, runTargetUnload
+    ActiveStatus, BaseTelemetryPlugin, BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, EventDataType,
+    ExceptionDataType, IAppInsightsCore, IBackendResponse, IChannelControls, IConfig, IConfigDefaults, IConfiguration, IDiagnosticLogger,
+    IEnvelope, IInternalOfflineSupport, INotificationManager, IOfflineListener, IPayloadData, IPlugin, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, ISample, IStorageBuffer, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXDomainRequest,
+    IXHROverride, MetricDataType, OnCompleteCallback, PageViewDataType, PageViewPerformanceDataType, ProcessLegacy, RemoteDependencyDataType,
+    RequestDataType, RequestHeaders, SampleRate, SendPOSTFunction, SendRequestReason, SenderPostManager, TraceDataType, TransportType,
+    _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
+    createOfflineListener, createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, eRequestHeaders,
+    formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFeatureEnabled,
+    isFetchSupported, isInternalApplicationInsightsEndpoint, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse,
+    prependTransports, runTargetUnload, utlCanUseSessionStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
 import {

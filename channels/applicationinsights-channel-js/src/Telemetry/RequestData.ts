@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import {
-    FieldType, ISerializable, dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl, msToTimeSpan
-} from "@microsoft/applicationinsights-common";
-import { IDiagnosticLogger, asString } from "@microsoft/applicationinsights-core-js";
+    FieldType, IDiagnosticLogger, ISerializable, asString, dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString,
+    dataSanitizeUrl, msToTimeSpan
+} from "@microsoft/applicationinsights-core-js";
 import { IRequestData } from "../Interfaces/Contracts/IRequestData";
 
 export const RequestEnvelopeType = "Microsoft.ApplicationInsights.{0}.Request";

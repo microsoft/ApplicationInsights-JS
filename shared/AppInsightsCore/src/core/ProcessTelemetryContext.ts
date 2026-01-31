@@ -3,24 +3,24 @@
 "use strict";
 
 import { arrForEach, dumpObj, isArray, isFunction, isNullOrUndefined, isUndefined, objForEachKey, objFreeze } from "@nevware21/ts-utils";
-import { _applyDefaultValue } from "../Config/ConfigDefaults";
-import { createDynamicConfig } from "../Config/DynamicConfig";
-import { IConfigDefaults } from "../Config/IConfigDefaults";
-import { IDynamicConfigHandler } from "../Config/IDynamicConfigHandler";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { _applyDefaultValue } from "../config/ConfigDefaults";
+import { createDynamicConfig } from "../config/DynamicConfig";
+import { STR_CORE, STR_DISABLED, STR_EMPTY } from "../constants/InternalConstants";
+import { _throwInternal, safeGetLogger } from "../diagnostics/DiagnosticLogger";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import {
     IBaseProcessingContext, IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext
-} from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
-import { _noopVoid } from "../OpenTelemetry/noop/noopHelpers";
-import { _throwInternal, safeGetLogger } from "./DiagnosticLogger";
-import { STR_CORE, STR_DISABLED, STR_EMPTY } from "./InternalConstants";
+} from "../interfaces/ai/IProcessTelemetryContext";
+import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { IPlugin, ITelemetryPlugin } from "../interfaces/ai/ITelemetryPlugin";
+import { ITelemetryPluginChain } from "../interfaces/ai/ITelemetryPluginChain";
+import { ITelemetryUnloadState } from "../interfaces/ai/ITelemetryUnloadState";
+import { ITelemetryUpdateState } from "../interfaces/ai/ITelemetryUpdateState";
+import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
+import { IDynamicConfigHandler } from "../interfaces/config/IDynamicConfigHandler";
+import { _noopVoid } from "../internal/noopHelpers";
 import { doPerf } from "./PerfManager";
 import { _getPluginState } from "./TelemetryHelpers";
 

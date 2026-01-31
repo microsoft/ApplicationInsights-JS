@@ -1,4 +1,4 @@
-import { IDiagnosticLogger } from "../../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { IDiagnosticLogger } from "./IDiagnosticLogger";
 
 /**
  * Identifies a simple interface to allow you to override the storage mechanism used

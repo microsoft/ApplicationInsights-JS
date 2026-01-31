@@ -1,7 +1,7 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { AppInsightsCore, IConfiguration, IPayloadData, OnCompleteCallback, arrForEach, createDynamicConfig, newGuid } from "@microsoft/applicationinsights-core-js";
 import { TestChannel } from "./TestHelper";
-import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-common";
+import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-core-js";
 import { IOfflineChannelConfiguration, eStorageProviders } from "../../../src/Interfaces/IOfflineProvider";
 import { OfflineBatchHandler } from "../../../src/OfflineBatchHandler";
 import { createAsyncRejectedPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";

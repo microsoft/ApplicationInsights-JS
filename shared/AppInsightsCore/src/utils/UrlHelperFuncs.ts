@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { getDocument, isString } from "@nevware21/ts-utils";
+import { STR_EMPTY } from "../constants/InternalConstants";
 
 let _document: any = getDocument() || {};
 
@@ -65,11 +66,11 @@ export function urlGetCompleteUrl(method: string, absoluteUrl: string) {
 
 // Fallback method to grab host from url if document.createElement method is not available
 export function urlParseHost(url: string, inclPort?: boolean) {
-    let fullHost = urlParseFullHost(url, inclPort) || "";
+    let fullHost = urlParseFullHost(url, inclPort) || STR_EMPTY;
     if (fullHost) {
         const match = fullHost.match(/(www\d{0,5}\.)?([^\/:]{1,256})(:\d{1,20})?/i);
         if (match != null && match.length > 3 && isString(match[2]) && match[2].length > 0) {
-            return match[2] + (match[3] || "");
+            return match[2] + (match[3] || STR_EMPTY);
         }
     }
 
@@ -81,15 +82,15 @@ export function urlParseFullHost(url: string, inclPort?: boolean) {
     if (url) {
         const match = url.match(/(\w{1,150}):\/\/([^\/:]{1,256})(:\d{1,20})?/i);
         if (match != null && match.length > 2 && isString(match[2]) && match[2].length > 0) {
-            result = match[2] || "";
+            result = match[2] || STR_EMPTY;
             if (inclPort && match.length > 2) {
-                const protocol = (match[1] || "").toLowerCase();
-                let port = match[3] || "";
+                const protocol = (match[1] || STR_EMPTY).toLowerCase();
+                let port = match[3] || STR_EMPTY;
                 // IE includes the standard port so pass it off if it's the same as the protocol
                 if (protocol === "http" && port === ":80") {
-                    port = "";
+                    port = STR_EMPTY;
                 } else if (protocol === "https" && port === ":443") {
-                    port = "";
+                    port = STR_EMPTY;
                 }
 
                 result += port;

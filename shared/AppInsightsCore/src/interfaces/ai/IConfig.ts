@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { isNullOrUndefined } from "@nevware21/ts-utils";
-import { IConfiguration } from "../../JavaScriptSDK.Interfaces/IConfiguration";
-import { ICustomProperties } from "../../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { DistributedTracingModes } from "../Enums";
+import { DistributedTracingModes } from "../../enums/ai/Enums";
+import { IConfiguration } from "./IConfiguration";
 import { IRequestContext } from "./IRequestContext";
 import { IStorageBuffer } from "./IStorageBuffer";
+import { ICustomProperties } from "./ITelemetryItem";
 import { IThrottleMgrConfig } from "./IThrottleMgr";
 
 /**

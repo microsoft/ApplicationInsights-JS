@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { EventPersistence } from "@microsoft/applicationinsights-common";
 import {
-    INotificationManager, ITelemetryItem, NotificationManager, eLoggingSeverity, generateW3CId
+    EventPersistence, INotificationManager, ITelemetryItem, NotificationManager, eLoggingSeverity, generateW3CId
 } from "@microsoft/applicationinsights-core-js";
 import { isNumber, isString, objKeys, strSubstr } from "@nevware21/ts-utils";
 import { IPostTransmissionTelemetryItem } from "../Interfaces/IInMemoryBatch";

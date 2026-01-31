@@ -1,20 +1,19 @@
 import {
     ICachedValue, ObjDefinePropDescriptor, createCachedValue, getDeferred, getPerformance, isArray, isDate, isNullOrUndefined, isNumber,
-    isString, mathFloor, mathRound, objDefine, objDefineProps, objFreeze, perfNow, strLeft, strRight, strSplit, throwTypeError
+    isString, mathFloor, mathRound, objDefineProps, objFreeze, perfNow, strLeft, strRight, strSplit, throwTypeError
 } from "@nevware21/ts-utils";
-import { setObjStringTag, toISOString } from "../../JavaScriptSDK/HelperFuncs";
-import { INVALID_TRACE_ID } from "../../JavaScriptSDK/W3cTraceParent";
 import { IOTelHrTime, OTelTimeInput } from "../interfaces/IOTelHrTime";
+import { setObjStringTag, toISOString } from "../utils/HelperFuncs";
+import { INVALID_TRACE_ID } from "../utils/TraceParent";
 
 const NANOSECOND_DIGITS = 9;
 
 // Constants for time unit conversions and manipulation
-const NANOS_IN_MILLIS = /*#__PURE__*/ 1000000; // Number of nanoseconds in a millisecond
-const NANOS_IN_SECOND = /*#__PURE__*/ 1000000000; // Number of nanoseconds in a second
-const MICROS_IN_SECOND = /*#__PURE__*/ 1000000; // Number of microseconds in a second
-const MICROS_IN_MILLIS = /*#__PURE__*/ 1000; // Number of microseconds in a millisecond
-const MILLIS_IN_SECOND = /*#__PURE__*/ 1000; // Number of milliseconds in a second
-
+const NANOS_IN_MILLIS = 1000000; // Number of nanoseconds in a millisecond
+const NANOS_IN_SECOND = 1000000000; // Number of nanoseconds in a second
+const MICROS_IN_SECOND = 1000000; // Number of microseconds in a second
+const MICROS_IN_MILLIS = 1000; // Number of microseconds in a millisecond
+const MILLIS_IN_SECOND = 1000; // Number of milliseconds in a second
 interface IOriginHrTime {
     to: number;
     hr: IOTelHrTime
@@ -32,7 +31,7 @@ function _notMutable() {
  * Initialize the cached value for converting milliseconds to nanoseconds.
  * @returns
  */
-/*#__PURE__*/
+/*#__NO_SIDE_EFFECTS__*/
 function _initSecondsToNanos(): ICachedValue<number> {
     if (!cSecondsToNanos) {
         cSecondsToNanos = createCachedValue(NANOS_IN_SECOND);
@@ -44,7 +43,7 @@ function _initSecondsToNanos(): ICachedValue<number> {
  * Initialize the time origin.
  * @returns
  */
-/*#__PURE__*/
+/*#__NO_SIDE_EFFECTS__*/
 function _initTimeOrigin(): ICachedValue<IOriginHrTime> {
     if (!cTimeOrigin) {
         let timeOrigin = 0;
@@ -68,7 +67,7 @@ function _initTimeOrigin(): ICachedValue<IOriginHrTime> {
     return cTimeOrigin;
 }
 
-/*#__PURE__*/
+/*#__NO_SIDE_EFFECTS__*/
 function _finalizeHrTime(hrTime: IOTelHrTime) {
     function _toString() {
         return "[" + hrTime[0] + ", " + hrTime[1] + "]";
@@ -79,7 +78,7 @@ function _finalizeHrTime(hrTime: IOTelHrTime) {
     return objFreeze(hrTime);
 }
 
-/*#__PURE__*/
+/*#__NO_SIDE_EFFECTS__*/
 function _createUnixNanoHrTime(unixNano: number): IOTelHrTime {
     // Create array with initial length of 2
     const hrTime = [0, 0] as any as IOTelHrTime;
@@ -113,7 +112,7 @@ function _createUnixNanoHrTime(unixNano: number): IOTelHrTime {
     return _finalizeHrTime(hrTime);
 }
 
-/*#__PURE__*/
+/*#__NO_SIDE_EFFECTS__*/
 function _createHrTime(seconds: number, nanoseconds: number): IOTelHrTime {
     const hrTime = [seconds, nanoseconds] as IOTelHrTime;
 
@@ -130,7 +129,7 @@ function _createHrTime(seconds: number, nanoseconds: number): IOTelHrTime {
  * Returns a new HrTime object with zero values for seconds and nanoseconds.
  * @returns A HrTime object representing zero time.
  */
-/*#__PURE__*/ /*@__NO_SIDE_EFFECTS__*/
+/*#__NO_SIDE_EFFECTS__*/
 export function zeroHrTime(): IOTelHrTime {
     return _createUnixNanoHrTime(0);
 }
@@ -140,7 +139,7 @@ export function zeroHrTime(): IOTelHrTime {
  * @param epochMillis - The number of milliseconds since the epoch (January 1, 1970).
  * @returns A HrTime object representing the converted time.
  */
-/*#__PURE__*/ /*@__NO_SIDE_EFFECTS__*/
+/*#__NO_SIDE_EFFECTS__*/
 export function millisToHrTime(epochMillis: number): IOTelHrTime {
     let result: IOTelHrTime;
 
@@ -179,7 +178,7 @@ export function millisToHrTime(epochMillis: number): IOTelHrTime {
  * @param nanos - The number of nanoseconds since the epoch (January 1, 1970).
  * @returns A HrTime object representing the converted time.
  */
-/*#__PURE__*/ /*@__NO_SIDE_EFFECTS__*/
+/*#__NO_SIDE_EFFECTS__*/
 export function nanosToHrTime(nanos: number): IOTelHrTime {
     let result: IOTelHrTime;
     if (nanos > 0) {
@@ -196,7 +195,6 @@ export function nanosToHrTime(nanos: number): IOTelHrTime {
 //  * @param hrTime - The HrTime object to convert.
 //  * @returns The number of nanoseconds represented by the HrTime object.
 //  */
-// /*#__PURE__*/ /*@__NO_SIDE_EFFECTS__*/
 // export function hrTimeToUnixNanos(hrTime: IOTelHrTime): number {
 //     let value = hrTime.unixNano;
 //     if (isNullOrUndefined(value)) {
@@ -205,13 +203,13 @@ export function nanosToHrTime(nanos: number): IOTelHrTime {
 //         const secondsInNanos = hrTime[0] * NANOS_IN_MILLIS;
 //         // Add the additional nanoseconds
 //         value = secondsInNanos + hrTime[1];
-
+//
 //         // // Add warning if we're approaching number precision limits
 //         // if (Math.abs(value) > Number.MAX_SAFE_INTEGER) {
 //         //     console.warn("Time value exceeds safe integer limits, precision may be lost");
 //         // }
 //     }
-
+//
 //     return value;
 // }
 
@@ -219,7 +217,7 @@ export function nanosToHrTime(nanos: number): IOTelHrTime {
  * Returns an hrtime calculated via performance component.
  * @param performanceNow - The current time in milliseconds since the epoch.
  */
-/*#__PURE__*/
+/*#__NO_SIDE_EFFECTS__*/
 export function hrTime(performanceNow?: number): IOTelHrTime {
     let result = millisToHrTime(isNumber(performanceNow) ? performanceNow : perfNow());
     const perf = getPerformance();
@@ -235,7 +233,7 @@ export function hrTime(performanceNow?: number): IOTelHrTime {
  * Converts a TimeInput to an HrTime, defaults to _hrtime().
  * @param time - The time input to convert.
  */
-/*#__PURE__*/
+/*#__NO_SIDE_EFFECTS__*/
 export function timeInputToHrTime(time: OTelTimeInput): IOTelHrTime {
     let result: IOTelHrTime;
     
@@ -263,7 +261,7 @@ export function timeInputToHrTime(time: OTelTimeInput): IOTelHrTime {
  * @param endTime - The end time of the duration
  * @returns The duration between startTime and endTime as an IOTelHrTime
  */
-/*#__PURE__*/ /*@__NO_SIDE_EFFECTS__*/
+/*#__NO_SIDE_EFFECTS__*/
 export function hrTimeDuration(startTime: IOTelHrTime, endTime: IOTelHrTime): IOTelHrTime {
     const seconds = endTime[0] - startTime[0];
     let nanos = endTime[1] - startTime[1];
@@ -284,7 +282,7 @@ export function hrTimeDuration(startTime: IOTelHrTime, endTime: IOTelHrTime): IO
  * Convert hrTime to timestamp, for example "2019-05-14T17:00:00.000123456Z"
  * @param time - The hrTime to convert.
  */
-/*#__PURE__*/ /*@__NO_SIDE_EFFECTS__*/
+/*#__NO_SIDE_EFFECTS__*/
 export function hrTimeToTimeStamp(time: IOTelHrTime): string {
     if (!cNanoPadding) {
         cNanoPadding = createCachedValue(strLeft(INVALID_TRACE_ID, NANOSECOND_DIGITS));
@@ -298,7 +296,7 @@ export function hrTimeToTimeStamp(time: IOTelHrTime): string {
  * Convert hrTime to nanoseconds.
  * @param time - The hrTime to convert.
  */
-/*#__PURE__*/ /*@__NO_SIDE_EFFECTS__*/
+/*#__NO_SIDE_EFFECTS__*/
 export function hrTimeToNanoseconds(time: IOTelHrTime): number {
     let nanoSeconds = cSecondsToNanos || _initSecondsToNanos();
     return time[0] * nanoSeconds.v + time[1];
@@ -308,7 +306,7 @@ export function hrTimeToNanoseconds(time: IOTelHrTime): number {
  * Convert hrTime to milliseconds.
  * @param time - The hrTime to convert.
  */
-/*#__PURE__*/ /*@__NO_SIDE_EFFECTS__*/
+/*#__NO_SIDE_EFFECTS__*/
 export function hrTimeToMilliseconds(time: IOTelHrTime): number {
     // Use integer math for the seconds part to avoid floating point precision loss
     const millisFromSeconds = time[0] * MILLIS_IN_SECOND;
@@ -321,7 +319,7 @@ export function hrTimeToMilliseconds(time: IOTelHrTime): number {
  * Convert hrTime to microseconds.
  * @param time - The hrTime to convert.
  */
-/*#__PURE__*/ /*@__NO_SIDE_EFFECTS__*/
+/*#__NO_SIDE_EFFECTS__*/
 export function hrTimeToMicroseconds(time: IOTelHrTime): number {
     // Use integer math for the seconds part to avoid floating point precision loss
     const microsFromSeconds = time[0] * MICROS_IN_SECOND;
@@ -334,7 +332,7 @@ export function hrTimeToMicroseconds(time: IOTelHrTime): number {
  * check if time is HrTime
  * @param value - The value to check.
  */
-/*#__PURE__*/ /*@__NO_SIDE_EFFECTS__*/
+/*#__NO_SIDE_EFFECTS__*/
 export function isTimeInputHrTime(value: unknown): value is IOTelHrTime {
     return isArray(value) && value.length === 2 && isNumber(value[0]) && isNumber(value[1]);
 }
@@ -343,7 +341,7 @@ export function isTimeInputHrTime(value: unknown): value is IOTelHrTime {
  * check if input value is a correct types.TimeInput
  * @param value - The value to check.
  */
-/*#__PURE__*/ /*@__NO_SIDE_EFFECTS__*/
+/*#__NO_SIDE_EFFECTS__*/
 export function isTimeInput(value: unknown): value is OTelTimeInput {
     return !isNullOrUndefined(value) && (isTimeInputHrTime(value) || isNumber(value) || isDate(value));
 }
@@ -353,6 +351,7 @@ export function isTimeInput(value: unknown): value is OTelTimeInput {
  * @param value - The value to check
  * @returns True if the value is in a time span format; false otherwise
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function isTimeSpan(value: any): value is string {
     let result = false;
 
@@ -388,7 +387,7 @@ export function isTimeSpan(value: any): value is string {
  * @param time2 - The second HrTime to add
  * @returns The sum of the two HrTime values as an IOTelHrTime
  */
-/*#__PURE__*/ /*@__NO_SIDE_EFFECTS__*/
+/*#__NO_SIDE_EFFECTS__*/
 export function addHrTimes(time1: IOTelHrTime, time2: IOTelHrTime): IOTelHrTime {
     const seconds = time1[0] + time2[0];
     let nanos = time1[1] + time2[1];

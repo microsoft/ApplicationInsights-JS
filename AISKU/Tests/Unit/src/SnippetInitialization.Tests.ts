@@ -10,7 +10,7 @@ import { BaseTelemetryPlugin, IProcessTelemetryContext, isNotNullOrUndefined, IT
 import {
     BreezeChannelIdentifier, ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders,
     utlRemoveSessionStorage, utlSetSessionStorage
-} from "@microsoft/applicationinsights-common";
+} from "@microsoft/applicationinsights-core-js";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { IPropTelemetryContext } from "@microsoft/applicationinsights-properties-js";
 import { dumpObj, isPromiseLike, objHasOwnProperty, strSubstring } from "@nevware21/ts-utils";

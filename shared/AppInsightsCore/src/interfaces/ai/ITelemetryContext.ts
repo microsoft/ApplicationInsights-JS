@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IApplication } from "./Context/IApplication";
-import { IDevice } from "./Context/IDevice";
-import { IInternal } from "./Context/IInternal";
-import { ILocation } from "./Context/ILocation";
-import { IOperatingSystem } from "./Context/IOperatingSystem";
-import { ISession } from "./Context/ISession";
-import { ISessionManager } from "./Context/ISessionManager";
-import { ITelemetryTrace } from "./Context/ITelemetryTrace";
-import { IUserContext } from "./Context/IUser";
-import { IWeb } from "./Context/IWeb";
+import { IApplication } from "./context/IApplication";
+import { IDevice } from "./context/IDevice";
+import { IInternal } from "./context/IInternal";
+import { ILocation } from "./context/ILocation";
+import { IOperatingSystem } from "./context/IOperatingSystem";
+import { ISession } from "./context/ISession";
+import { ISessionManager } from "./context/ISessionManager";
+import { ITelemetryTrace } from "./context/ITelemetryTrace";
+import { IUserContext } from "./context/IUser";
+import { IWeb } from "./context/IWeb";
 
 export interface ITelemetryContext {
     /**

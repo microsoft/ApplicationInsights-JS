@@ -6,11 +6,11 @@ import {
     isFunction, isNullOrUndefined, isNumber, isObject, isPlainObject, isString, isUndefined, newSymbol, objCreate, objDeepFreeze, objDefine,
     objForEachKey, objGetPrototypeOf, objHasOwn, objSetPrototypeOf, safe, strIndexOf, strTrim
 } from "@nevware21/ts-utils";
-import { FeatureOptInMode } from "../JavaScriptSDK.Enums/FeatureOptInEnums";
-import { TransportType } from "../JavaScriptSDK.Enums/SendRequestReason";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IXDomainRequest } from "../JavaScriptSDK.Interfaces/IXDomainRequest";
-import { STR_EMPTY } from "./InternalConstants";
+import { STR_EMPTY } from "../constants/InternalConstants";
+import { FeatureOptInMode } from "../enums/ai/FeatureOptInEnums";
+import { TransportType } from "../enums/ai/SendRequestReason";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { IXDomainRequest } from "../interfaces/ai/IXDomainRequest";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
 
@@ -25,10 +25,12 @@ let _ProtoNameTag: ICachedValue<symbol>;
 
 export let _getObjProto = Object[strGetPrototypeOf];
 
+/*#__NO_SIDE_EFFECTS__*/
 export function isNotUndefined<T>(value: T): value is T {
     return !isUndefined(value);
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function isNotNullOrUndefined<T>(value: T): value is T {
     return !isNullOrUndefined(value);
 }
@@ -40,6 +42,7 @@ export function isNotNullOrUndefined<T>(value: T): value is T {
  * This is a simplified version
  * @param name - The name to validate
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function normalizeJsName(name: string): string {
     let value = name;
 
@@ -63,6 +66,7 @@ export function normalizeJsName(name: string): string {
  * @param value - The string value to check for the existence of the search value
  * @param search - The value search within the value
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function strContains(value: string, search: string): boolean {
     if (value && search) {
         return strIndexOf(value, search) !== -1;
@@ -74,6 +78,7 @@ export function strContains(value: string, search: string): boolean {
 /**
  * Convert a date to I.S.O. format in IE8
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function toISOString(date: Date) {
     return date && date.toISOString() || STR_EMPTY;
 }
@@ -83,6 +88,7 @@ export const deepFreeze: <T>(obj: T) => T = objDeepFreeze;
 /**
  * Returns the name of object if it's an Error. Otherwise, returns empty string.
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function getExceptionName(object: any): string {
     if (isError(object)) {
         return object.name;
@@ -249,6 +255,7 @@ export function proxyFunctions<T, S>(target: T, source: S | (() => S), functions
  * Only instance properties (hasOwnProperty) values are copied from the defaults to the new instance
  * @param defaults - Simple helper
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function createClassFromInterface<T>(defaults?: T) {
     return class {
         constructor() {
@@ -296,6 +303,9 @@ export function setProtoTypeName<T>(target: T, name: string): T {
                 // Create a new intermediate prototype that extends the current prototype
                 let newProto = setObjStringTag(objCreate(proto), name);
                 if (!_ProtoNameTag) {
+                    // Note: Using a cached value instead of a lazy value as we want to ensure that the namespace is consistent
+                    // across multiple calls as the `getLazy()` supports runtime invalidation via `setBypassLazyCache()` which would
+                    // result in different namespaces being returned.
                     _ProtoNameTag = createCachedValue(newSymbol("ai$ProtoName"));
                 }
 
@@ -355,6 +365,7 @@ export function updateProtoTypeName<T>(target: T, name: string): T {
  * This helps when iterating using for..in, objKeys() and objForEach()
  * @param theObject - The object to be optimized if possible
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function optimizeObject<T>(theObject: T): T {
     // V8 Optimization to cause the JIT compiler to create a new optimized object for looking up the own properties
     // primarily for object with <= 19 properties for >= 20 the effect is reduced or non-existent
@@ -450,6 +461,7 @@ export const asString = asString21;
  * @param sdkDefaultState - Optional default state to return if the feature is not defined
  * @returns True if the feature is enabled, false if the feature is disabled, or undefined if the feature is not defined and no default state is provided.
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function isFeatureEnabled<T extends IConfiguration = IConfiguration>(feature?: string, cfg?: T, sdkDefaultState?: boolean): boolean | undefined {
     let ft = cfg && cfg.featureOptIn && cfg.featureOptIn[feature];
     if (feature && ft) {
@@ -466,6 +478,7 @@ export function isFeatureEnabled<T extends IConfiguration = IConfiguration>(feat
     return sdkDefaultState;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
     try {
         return xhr.responseText;
@@ -476,6 +489,7 @@ export function getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
     return null;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): string {
     if (xdr) {
         return "XDomainRequest,Response:" + getResponseText(xdr) || STR_EMPTY;
@@ -484,6 +498,7 @@ export function formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): s
     return message;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
     if (xhr) {
         return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + getResponseText(xhr) || xhr.response || STR_EMPTY;
@@ -492,6 +507,7 @@ export function formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): st
     return message;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function prependTransports(theTransports: TransportType[], newTransports: TransportType | TransportType[]) {
     if (newTransports) {
         if (isNumber(newTransports)) {
@@ -565,13 +581,14 @@ export function openXhr(method: string, urlString: string, withCredentials?: boo
 * @internal
 */
 // tslint:disable-next-line: align
+/*#__NO_SIDE_EFFECTS__*/
 export function convertAllHeadersToMap(headersString: string): { [headerName: string]: string } {
-    let headers = {};
+    let headers:any = {};
     if (isString(headersString)) {
         let headersArray = strTrim(headersString).split(/[\r\n]+/);
         arrForEach(headersArray, (headerEntry) => {
             if (headerEntry) {
-                let idx = headerEntry.indexOf(": ");
+                let idx = strIndexOf(headerEntry, ": ");
                 if (idx !== -1) {
                     // The new spec has the headers returning all as lowercase -- but not all browsers do this yet
                     let header = strTrim(headerEntry.substring(0, idx)).toLowerCase();

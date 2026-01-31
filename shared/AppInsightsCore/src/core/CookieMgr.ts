@@ -2,22 +2,22 @@
 // Licensed under the MIT License.
 import { IPromise } from "@nevware21/ts-async";
 import {
-    ILazyValue, arrForEach, arrIndexOf, dumpObj, getDocument, getLazy, getNavigator, isArray, isFunction, isNullOrUndefined, isString,
-    isTruthy, isUndefined, objForEachKey, strEndsWith, strIndexOf, strLeft, strSubstring, strTrim, utcNow
+    ILazyValue, arrForEach, arrIndexOf, dumpObj, getDocument, getLazy, isArray, isFunction, isNullOrUndefined, isString, isTruthy,
+    isUndefined, objForEachKey, strEndsWith, strIndexOf, strLeft, strSubstring, strTrim, utcNow
 } from "@nevware21/ts-utils";
-import { cfgDfMerge } from "../Config/ConfigDefaultHelpers";
-import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
-import { IConfigDefaults } from "../Config/IConfigDefaults";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICookieMgr";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
-import { _throwInternal } from "./DiagnosticLogger";
-import { getLocation, isIE } from "./EnvUtils";
-import { getExceptionName, isNotNullOrUndefined, setValue, strContains } from "./HelperFuncs";
-import { STR_DOMAIN, STR_EMPTY, STR_PATH, UNDEFINED_VALUE } from "./InternalConstants";
+import { cfgDfMerge } from "../config/ConfigDefaultHelpers";
+import { createDynamicConfig, onConfigChange } from "../config/DynamicConfig";
+import { STR_DOMAIN, STR_EMPTY, STR_PATH, UNDEFINED_VALUE } from "../constants/InternalConstants";
+import { _throwInternal } from "../diagnostics/DiagnosticLogger";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { ICookieMgr, ICookieMgrConfig } from "../interfaces/ai/ICookieMgr";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { IUnloadHook } from "../interfaces/ai/IUnloadHook";
+import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
+import { getLocation, getUserAgentString, isIE } from "../utils/EnvUtils";
+import { getExceptionName, isNotNullOrUndefined, setValue, strContains } from "../utils/HelperFuncs";
 
 const strToGMTString = "toGMTString";
 const strToUTCString = "toUTCString";
@@ -242,7 +242,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 
             // Only set same site if not also secure
             if (_allowUaSameSite === null) {
-                _allowUaSameSite = !uaDisallowsSameSiteNone((getNavigator() || {} as Navigator).userAgent);
+                _allowUaSameSite = !uaDisallowsSameSiteNone(getUserAgentString());
             }
 
             if (_allowUaSameSite) {

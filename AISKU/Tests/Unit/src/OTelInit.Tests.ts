@@ -2,7 +2,7 @@ import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { ApplicationInsights } from "../../../src/applicationinsights-web";
 import { eOTelSpanKind, eOTelSpanStatusCode, isTracingSuppressed, ITelemetryItem, unsuppressTracing } from "@microsoft/applicationinsights-core-js";
 import { objIs, setBypassLazyCache } from "@nevware21/ts-utils";
-import { AnalyticsPluginIdentifier, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-common";
+import { AnalyticsPluginIdentifier, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-core-js";
 
 /**
  * Integration Tests for Span APIs with Properties Plugin and Analytics Plugin

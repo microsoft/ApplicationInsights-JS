@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { isNullOrUndefined, objForEachKey, throwError } from "@nevware21/ts-utils";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { toISOString } from "../JavaScriptSDK/HelperFuncs";
-import { strIkey, strNotSpecified } from "./Constants";
-import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
+import { strIkey, strNotSpecified } from "../constants/Constants";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { toISOString } from "../utils/HelperFuncs";
+import { dataSanitizeString } from "./ai/Common/DataSanitizer";
 
 /**
  * Create a telemetry item that the 1DS channel understands

@@ -292,7 +292,7 @@ module.exports = function (grunt) {
                         var internalConstants = aiInternalConstants;
                         if (pkg['name'] === "@microsoft/applicationinsights-core-js") {
                             nameMaps = aiCoreDefaultNameReplacements;
-                            internalConstants = [ "./src/JavaScriptSDK/InternalConstants.ts" ];
+                            internalConstants = [ "./src/constants/InternalConstants.ts" ];
                         }
     
                         var aiMinify = buildCmds["ai-minify"];

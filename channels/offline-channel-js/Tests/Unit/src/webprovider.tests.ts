@@ -1,7 +1,7 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { AppInsightsCore, IConfiguration, arrForEach, createDynamicConfig, eBatchDiscardedReason, generateW3CId, isArray } from "@microsoft/applicationinsights-core-js";
 import { WebStorageProvider } from "../../../src/Providers/WebStorageProvider";
-import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-common";
+import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-core-js";
 import { TestChannel } from "./TestHelper";
 import { IOfflineChannelConfiguration, IStorageTelemetryItem } from "../../../src/Interfaces/IOfflineProvider";
 import { doAwaitResponse } from "@nevware21/ts-async";

@@ -10,7 +10,7 @@ import { StepResult } from "./StepResult";
 import { IFakeXMLHttpRequest } from "./interfaces/FakeXMLHttpRequest";
 import { IFetchRequest } from "./interfaces/IFetchRequest";
 import { IBeaconRequest } from "./interfaces/IBeaconRequest";
-import { createPromise, createSyncPromise, createTaskScheduler, createTimeoutPromise, doAwait, doAwaitResponse, FinallyPromiseHandler, IPromise, RejectedPromiseHandler, ResolvedPromiseHandler } from "@nevware21/ts-async";
+import { createPromise, createSyncPromise, createTaskScheduler, createTimeoutPromise, doAwait, FinallyPromiseHandler, IPromise, RejectedPromiseHandler, ResolvedPromiseHandler } from "@nevware21/ts-async";
 import { AITestQueueTask, IAsyncQueue } from "./interfaces/IASyncQueue";
 
 const stepRetryCnt = "retryCnt";
@@ -1444,6 +1444,9 @@ export class AITestClass {
     }
 
     private _restoreIE() {
+        // We need to clear any lazy cached global values
+        setBypassLazyCache(true);
+
         this._restoreObject(this._orgObjectFuncs);
         this._orgObjectFuncs = null;
 
@@ -1453,8 +1456,6 @@ export class AITestClass {
             let global = window as any;
             global["Symbol"] = this._orgSymbol;
             this._orgSymbol = null;
-
-            setBypassLazyCache(true);
         }
     }
 
@@ -1468,6 +1469,9 @@ export class AITestClass {
                 Object[name] = null;
             }
         }
+
+        // clear any lazy cached global values
+        setBypassLazyCache(true);
 
         let global = getGlobal() as any;
         if (!this._orgFetch) {
@@ -1490,9 +1494,6 @@ export class AITestClass {
             this._orgSymbol = global["Symbol"];
             global["Symbol"] = undefined;
         }
-
-        // clear any lazy cached global values
-        setBypassLazyCache(true);
     }
 
     private _unhookXhr() {

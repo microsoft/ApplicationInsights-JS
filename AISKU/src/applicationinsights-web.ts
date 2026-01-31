@@ -61,7 +61,7 @@ export {
     DistributedTracingModes,
     IRequestHeaders,
     EventPersistence
-} from "@microsoft/applicationinsights-common";
+} from "@microsoft/applicationinsights-core-js";
 export { Sender, ISenderConfig } from "@microsoft/applicationinsights-channel-js";
 export { ApplicationInsights as ApplicationAnalytics, IAppInsightsInternal, IAnalyticsConfig } from "@microsoft/applicationinsights-analytics-js";
 export { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";

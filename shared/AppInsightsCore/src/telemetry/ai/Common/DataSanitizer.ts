@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { asString, isObject, isString, objForEachKey, strSubstr, strSubstring, strTrim } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../../../JavaScriptSDK.Enums/LoggingEnums";
-import { IConfiguration } from "../../../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDiagnosticLogger } from "../../../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { _throwInternal } from "../../../JavaScriptSDK/DiagnosticLogger";
-import { fieldRedaction, getJSON, hasJSON } from "../../../JavaScriptSDK/EnvUtils";
+import { _throwInternal } from "../../../diagnostics/DiagnosticLogger";
+import { _eInternalMessageId, eLoggingSeverity } from "../../../enums/ai/LoggingEnums";
+import { IConfiguration } from "../../../interfaces/ai/IConfiguration";
+import { IDiagnosticLogger } from "../../../interfaces/ai/IDiagnosticLogger";
+import { fieldRedaction, getJSON, hasJSON } from "../../../utils/EnvUtils";
 
 export const enum DataSanitizerValues {
     /**
@@ -45,6 +45,7 @@ export const enum DataSanitizerValues {
     MAX_EXCEPTION_LENGTH = 32768
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeKeyAndAddUniqueness(logger: IDiagnosticLogger, key: any, map: any) {
     const origLength = key.length;
     let field = dataSanitizeKey(logger, key);
@@ -62,6 +63,7 @@ export function dataSanitizeKeyAndAddUniqueness(logger: IDiagnosticLogger, key: 
     return field;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeKey(logger: IDiagnosticLogger, name: any) {
     let nameTrunc: String;
     if (name) {
@@ -82,6 +84,7 @@ export function dataSanitizeKey(logger: IDiagnosticLogger, name: any) {
     return nameTrunc || name;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLength: number = DataSanitizerValues.MAX_STRING_LENGTH) {
     let valueTrunc : String;
     if (value) {
@@ -100,6 +103,7 @@ export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLen
     return valueTrunc || value;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeUrl(logger: IDiagnosticLogger, url: any, config?: IConfiguration) {
     if (isString(url)) {
         url = fieldRedaction(url, config);
@@ -107,6 +111,7 @@ export function dataSanitizeUrl(logger: IDiagnosticLogger, url: any, config?: IC
     return dataSanitizeInput(logger, url, DataSanitizerValues.MAX_URL_LENGTH, _eInternalMessageId.UrlTooLong);
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeMessage(logger: IDiagnosticLogger, message: any) {
     let messageTrunc : String;
     if (message) {
@@ -123,6 +128,7 @@ export function dataSanitizeMessage(logger: IDiagnosticLogger, message: any) {
     return messageTrunc || message;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeException(logger: IDiagnosticLogger, exception: any) {
     let exceptionTrunc : String;
     if (exception) {
@@ -139,6 +145,7 @@ export function dataSanitizeException(logger: IDiagnosticLogger, exception: any)
     return exceptionTrunc || exception;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: any) {
     if (properties) {
         const tempProps = {};
@@ -161,6 +168,7 @@ export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: an
     return properties;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeMeasurements(logger: IDiagnosticLogger, measurements: any) {
     if (measurements) {
         const tempMeasurements = {};
@@ -175,10 +183,12 @@ export function dataSanitizeMeasurements(logger: IDiagnosticLogger, measurements
     return measurements;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeId(logger: IDiagnosticLogger, id: string): string {
     return id ? dataSanitizeInput(logger, id, DataSanitizerValues.MAX_ID_LENGTH, _eInternalMessageId.IdTooLong).toString() : id;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeInput(logger: IDiagnosticLogger, input: any, maxLength: number, _msgId: _eInternalMessageId) {
     let inputTrunc : String;
     if (input) {
@@ -197,6 +207,7 @@ export function dataSanitizeInput(logger: IDiagnosticLogger, input: any, maxLeng
     return inputTrunc || input;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dsPadNumber(num: number) {
     const s = "00" + num;
     return strSubstr(s, s.length - 3);

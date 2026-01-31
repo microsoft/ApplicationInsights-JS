@@ -2,10 +2,8 @@
 // Licensed under the MIT License.
 
 import {
-    utlCanUseSessionStorage, utlGetSessionStorage, utlRemoveSessionStorage, utlSetSessionStorage
-} from "@microsoft/applicationinsights-common";
-import {
-    IDiagnosticLogger, _warnToConsole, dateNow, dumpObj, getJSON, hasJSON, throwError
+    IDiagnosticLogger, _warnToConsole, dateNow, dumpObj, getJSON, hasJSON, throwError, utlCanUseSessionStorage, utlGetSessionStorage,
+    utlRemoveSessionStorage, utlSetSessionStorage
 } from "@microsoft/applicationinsights-core-js";
 
 export interface IPageVisitData {

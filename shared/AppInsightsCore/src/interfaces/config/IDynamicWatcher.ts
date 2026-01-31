@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
+import { IConfiguration } from "../ai/IConfiguration";
+import { IUnloadHook } from "../ai/IUnloadHook";
 import { IConfigDefaults } from "./IConfigDefaults";
 import { IDynamicPropertyHandler } from "./IDynamicPropertyHandler";
 

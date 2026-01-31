@@ -1,7 +1,7 @@
-import { ITraceHost } from "../../applicationinsights-core-js";
+import { ITraceHost } from "../ai/ITraceProvider";
 import { IOTelConfig } from "./config/IOTelConfig";
+import { ITraceApi } from "./trace/IOTelTraceApi";
 import { IOTelTracerProvider } from "./trace/IOTelTracerProvider";
-import { ITraceApi } from "./trace/ITraceApi";
 
 /**
  * The main OpenTelemetry API interface that provides access to all OpenTelemetry functionality.

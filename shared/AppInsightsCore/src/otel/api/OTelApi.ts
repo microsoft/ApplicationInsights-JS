@@ -1,11 +1,12 @@
 import { ILazyValue, objDefineProps } from "@nevware21/ts-utils";
-import { setProtoTypeName } from "../JavaScriptSDK/HelperFuncs";
-import { IOTelApi } from "./interfaces/IOTelApi";
-import { IOTelApiCtx } from "./interfaces/IOTelApiCtx";
-import { ITraceApi } from "./interfaces/trace/ITraceApi";
+import { IOTelApi } from "../../interfaces/otel/IOTelApi";
+import { IOTelApiCtx } from "../../interfaces/otel/IOTelApiCtx";
+import { ITraceApi } from "../../interfaces/otel/trace/IOTelTraceApi";
+import { setProtoTypeName } from "../../utils/HelperFuncs";
 import { _createTraceApi } from "./trace/traceApi";
 import { _createTracerProvider } from "./trace/tracerProvider";
 
+/*#__NO_SIDE_EFFECTS__*/
 export function createOTelApi(otelApiCtx: IOTelApiCtx): IOTelApi {
     let _traceApi: ILazyValue<ITraceApi>;
 

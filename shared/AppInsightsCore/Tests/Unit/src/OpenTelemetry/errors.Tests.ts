@@ -5,15 +5,15 @@ import {
     OpenTelemetryErrorConstructor, 
     getOpenTelemetryError, 
     throwOTelError 
-} from "../../../../src/OpenTelemetry/errors/OTelError";
+} from "../../../../src/otel/api/errors/OTelError";
 import { 
     OTelInvalidAttributeError, 
     throwOTelInvalidAttributeError 
-} from "../../../../src/OpenTelemetry/errors/OTelInvalidAttributeError";
+} from "../../../../src/otel/api/errors/OTelInvalidAttributeError";
 import { 
     OTelSpanError, 
     throwOTelSpanError 
-} from "../../../../src/OpenTelemetry/errors/OTelSpanError";
+} from "../../../../src/otel/api/errors/OTelSpanError";
 
 export class OpenTelemetryErrorsTests extends AITestClass {
 

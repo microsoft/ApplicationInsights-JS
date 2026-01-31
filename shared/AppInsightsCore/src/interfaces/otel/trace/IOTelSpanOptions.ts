@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { OTelSpanKind } from "../../enums/trace/OTelSpanKind";
+import { OTelSpanKind } from "../../../enums/otel/OTelSpanKind";
+import { OTelTimeInput } from "../../IOTelHrTime";
 import { IOTelAttributes } from "../IOTelAttributes";
-import { OTelTimeInput } from "../IOTelHrTime";
 
 /**
  * Options for creating a span.

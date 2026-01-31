@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { dumpObj } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IBackendResponse } from "../JavaScriptSDK.Interfaces/IXDomainRequest";
-import { _throwInternal } from "./DiagnosticLogger";
-import { getJSON } from "./EnvUtils";
+import { _throwInternal } from "../diagnostics/DiagnosticLogger";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { IBackendResponse } from "../interfaces/ai/IXDomainRequest";
+import { getJSON } from "../utils/EnvUtils";
 
 /**
  * Parses the response from the backend.

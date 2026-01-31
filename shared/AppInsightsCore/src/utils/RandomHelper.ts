@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { mathFloor, utcNow } from "@nevware21/ts-utils";
+import { mathFloor, mathRandom, utcNow } from "@nevware21/ts-utils";
+import { STR_EMPTY } from "../constants/InternalConstants";
 import { getCrypto, getMsCrypto, isIE } from "./EnvUtils";
-import { STR_EMPTY } from "./InternalConstants";
 
 const UInt32Mask = 0x100000000;
 const MaxUInt32 = 0xffffffff;
-const SEED1 = 123456789
-const SEED2 = 987654321
+const SEED1 = 123456789;
+const SEED2 = 987654321;
 
 // MWC based Random generator (for IE)
 let _mwcSeeded = false;
@@ -31,7 +31,7 @@ function _autoSeedMwc() {
     // and bitwise XOR with the current milliseconds
     try {
         const now = utcNow() & 0x7fffffff;
-        _mwcSeed(((Math.random() * UInt32Mask) ^ now) + now);
+        _mwcSeed(((mathRandom() * UInt32Mask) ^ now) + now);
     } catch (e) {
         // Don't crash if something goes wrong
     }
@@ -76,7 +76,7 @@ export function random32(signed?: boolean) {
 
     if (value === 0) {
         // Make sure the number is converted into the specified range (-0x80000000..0x7FFFFFFF)
-        value = mathFloor((UInt32Mask * Math.random()) | 0);
+        value = mathFloor((UInt32Mask * mathRandom()) | 0);
     }
 
     if (!signed) {

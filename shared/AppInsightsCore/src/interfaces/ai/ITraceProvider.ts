@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IOTelApi } from "../OpenTelemetry/interfaces/IOTelApi";
-import { IOTelSpanOptions } from "../OpenTelemetry/interfaces/trace/IOTelSpanOptions";
-import { IReadableSpan } from "../OpenTelemetry/interfaces/trace/IReadableSpan";
+import { IOTelApi } from "../otel/IOTelApi";
+import { IOTelSpanOptions } from "../otel/trace/IOTelSpanOptions";
+import { IReadableSpan } from "../otel/trace/IReadableSpan";
 import { IConfiguration } from "./IConfiguration";
 import { IDistributedTraceContext } from "./IDistributedTraceContext";
 

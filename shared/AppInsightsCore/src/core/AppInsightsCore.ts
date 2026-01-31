@@ -7,51 +7,52 @@ import {
     ICachedValue, ITimerHandler, arrAppend, arrForEach, arrIndexOf, createTimeout, deepExtend, hasDocument, isFunction, isNullOrUndefined,
     isPlainObject, isPromiseLike, objAssign, objDeepFreeze, objDefine, objForEachKey, objFreeze, objHasOwn, scheduleTimeout, throwError
 } from "@nevware21/ts-utils";
-import { cfgDfMerge } from "../Config/ConfigDefaultHelpers";
-import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
-import { IConfigDefaults } from "../Config/IConfigDefaults";
-import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "../Config/IDynamicConfigHandler";
-import { IWatchDetails, WatcherFunction } from "../Config/IDynamicWatcher";
-import { eEventsDiscardedReason } from "../JavaScriptSDK.Enums/EventsDiscardedReason";
-import { ActiveStatus, eActiveStatus } from "../JavaScriptSDK.Enums/InitActiveStatusEnum";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
-import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
-import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
-import { eTraceHeadersMode } from "../JavaScriptSDK.Enums/TraceHeadersMode";
-import { IAppInsightsCore, ILoadedPlugin } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
-import { IChannelControlsHost } from "../JavaScriptSDK.Interfaces/IChannelControlsHost";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
-import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
-import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
-import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
-import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
-import { ITraceProvider } from "../JavaScriptSDK.Interfaces/ITraceProvider";
-import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
-import { ITraceCfg } from "../OpenTelemetry/interfaces/config/ITraceCfg";
-import { IOTelSpanOptions } from "../OpenTelemetry/interfaces/trace/IOTelSpanOptions";
-import { IReadableSpan } from "../OpenTelemetry/interfaces/trace/IReadableSpan";
-import { ISpanScope } from "../applicationinsights-core-js";
-import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
-import { ChannelControllerPriority } from "./Constants";
-import { createCookieMgr } from "./CookieMgr";
-import { createUniqueNamespace } from "./DataCacheHelper";
-import { getDebugListener } from "./DbgExtensionUtils";
-import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "./DiagnosticLogger";
-import { getSetValue, isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString } from "./HelperFuncs";
+import { cfgDfMerge } from "../config/ConfigDefaultHelpers";
+import { createDynamicConfig, onConfigChange } from "../config/DynamicConfig";
+import { ChannelControllerPriority } from "../constants/Constants";
 import {
     STR_CHANNELS, STR_CREATE_PERF_MGR, STR_DISABLED, STR_EMPTY, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE
-} from "./InternalConstants";
+} from "../constants/InternalConstants";
+import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "../diagnostics/DiagnosticLogger";
+import { eEventsDiscardedReason } from "../enums/ai/EventsDiscardedReason";
+import { ActiveStatus, eActiveStatus } from "../enums/ai/InitActiveStatusEnum";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { SendRequestReason } from "../enums/ai/SendRequestReason";
+import { TelemetryUnloadReason } from "../enums/ai/TelemetryUnloadReason";
+import { TelemetryUpdateReason } from "../enums/ai/TelemetryUpdateReason";
+import { eTraceHeadersMode } from "../enums/ai/TraceHeadersMode";
+import { IAppInsightsCore, ILoadedPlugin } from "../interfaces/ai/IAppInsightsCore";
+import { IChannelControls } from "../interfaces/ai/IChannelControls";
+import { IChannelControlsHost } from "../interfaces/ai/IChannelControlsHost";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { ICookieMgr } from "../interfaces/ai/ICookieMgr";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { IDistributedTraceContext } from "../interfaces/ai/IDistributedTraceContext";
+import { INotificationListener } from "../interfaces/ai/INotificationListener";
+import { INotificationManager } from "../interfaces/ai/INotificationManager";
+import { IPerfManager } from "../interfaces/ai/IPerfManager";
+import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../interfaces/ai/IProcessTelemetryContext";
+import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../interfaces/ai/ITelemetryInitializers";
+import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { IPlugin, ITelemetryPlugin } from "../interfaces/ai/ITelemetryPlugin";
+import { ITelemetryPluginChain } from "../interfaces/ai/ITelemetryPluginChain";
+import { ITelemetryUnloadState } from "../interfaces/ai/ITelemetryUnloadState";
+import { ITelemetryUpdateState } from "../interfaces/ai/ITelemetryUpdateState";
+import { ISpanScope, ITraceProvider } from "../interfaces/ai/ITraceProvider";
+import { ILegacyUnloadHook, IUnloadHook } from "../interfaces/ai/IUnloadHook";
+import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
+import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "../interfaces/config/IDynamicConfigHandler";
+import { IWatchDetails, WatcherFunction } from "../interfaces/config/IDynamicWatcher";
+import { ITraceCfg } from "../interfaces/otel/config/IOTelTraceCfg";
+import { IOTelSpanOptions } from "../interfaces/otel/trace/IOTelSpanOptions";
+import { IReadableSpan } from "../interfaces/otel/trace/IReadableSpan";
+import { findW3cTraceState } from "../telemetry/W3cTraceState";
+import { createUniqueNamespace } from "../utils/DataCacheHelper";
+import { getSetValue, isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString } from "../utils/HelperFuncs";
+import { findW3cTraceParent } from "../utils/TraceParent";
+import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
+import { createCookieMgr } from "./CookieMgr";
+import { getDebugListener } from "./DbgExtensionUtils";
 import { NotificationManager } from "./NotificationManager";
 import { PerfManager, doPerf, getGblPerfMgr } from "./PerfManager";
 import {
@@ -63,11 +64,9 @@ import {
 import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
 import { IUnloadHookContainer, createUnloadHookContainer } from "./UnloadHookContainer";
-import { findW3cTraceParent } from "./W3cTraceParent";
-import { findW3cTraceState } from "./W3cTraceState";
 
-// import { IStatsBeat, IStatsBeatConfig, IStatsBeatState } from "../JavaScriptSDK.Interfaces/IStatsBeat";
-// import { IStatsMgr } from "../JavaScriptSDK.Interfaces/IStatsMgr";
+// import { IStatsBeat, IStatsBeatConfig, IStatsBeatState } from "../interfaces/ai/IStatsBeat";
+// import { IStatsMgr } from "../interfaces/ai/IStatsMgr";
 const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";
 const strSdkUnloadingError = "SDK is still unloading...";
@@ -166,10 +165,12 @@ function _getDefaultConfig<CfgType>(core: IAppInsightsCore): IConfigDefaults<Cfg
  * @param core - The AppInsightsCore instance
  * @param notificationMgr - The notification manager
  */
+/*#__NO_SIDE_EFFECTS__*/
 function _createPerfManager (core: IAppInsightsCore, notificationMgr: INotificationManager) {
     return new PerfManager(notificationMgr);
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 function _validateExtensions(logger: IDiagnosticLogger, channelPriority: number, allExtensions: IPlugin[]): { core: IPlugin[], channels: IChannelControls[] } {
     // Concat all available extensions
     let coreExtensions: ITelemetryPlugin[] = [];
@@ -213,6 +214,7 @@ function _validateExtensions(logger: IDiagnosticLogger, channelPriority: number,
     };
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 function _isPluginPresent(thePlugin: IPlugin, plugins: IPlugin[]) {
     let exists = false;
 
@@ -248,6 +250,7 @@ function _deepMergeConfig(details: IWatchDetails<IConfiguration>, target: any, n
     }
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 function _findWatcher(listeners: { rm: () => void, w: WatcherFunction<IConfiguration>}[], newWatcher: WatcherFunction<IConfiguration>) {
     let theListener: { rm: () => void, w: WatcherFunction<IConfiguration>} = null;
     let idx: number = -1;
@@ -314,6 +317,7 @@ function _initDebugListener(configHandler: IDynamicConfigHandler<IConfiguration>
 }
 
 // Moved this outside of the closure to reduce the retained memory footprint
+/*#__NO_SIDE_EFFECTS__*/
 function _createUnloadHook(unloadHook: IUnloadHook): IUnloadHook {
     return objDefine<IUnloadHook | any>({
         rm: () => {
@@ -322,6 +326,7 @@ function _createUnloadHook(unloadHook: IUnloadHook): IUnloadHook {
     }, "toJSON", { v: () => "aicore::onCfgChange<" + JSON.stringify(unloadHook) + ">" });
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 function _getParentTraceCtx(mode: eTraceHeadersMode): IDistributedTraceContext | null {
     let spanContext: IDistributedTraceContext | null = null;
     const parentTrace = (mode & eTraceHeadersMode.TraceParent) ? findW3cTraceParent() : null;
@@ -340,6 +345,7 @@ function _getParentTraceCtx(mode: eTraceHeadersMode): IDistributedTraceContext |
     return spanContext;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 function _noOpFunc() {
     // No-op function
 }

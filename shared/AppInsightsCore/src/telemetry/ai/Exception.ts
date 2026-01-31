@@ -5,15 +5,17 @@ import {
     arrForEach, arrMap, asString, getWindow, isArray, isError, isFunction, isNullOrUndefined, isObject, isString, objFreeze, strIndexOf,
     strTrim
 } from "@nevware21/ts-utils";
-import { IDiagnosticLogger } from "../../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { strNotSpecified } from "../Constants";
-import { FieldType } from "../Enums";
-import { IExceptionData } from "../Interfaces/Contracts/IExceptionData";
-import { IExceptionDetails } from "../Interfaces/Contracts/IExceptionDetails";
-import { IStackFrame } from "../Interfaces/Contracts/IStackFrame";
-import { SeverityLevel } from "../Interfaces/Contracts/SeverityLevel";
-import { IAutoExceptionTelemetry, IExceptionDetailsInternal, IExceptionInternal, IStackDetails } from "../Interfaces/IExceptionTelemetry";
-import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
+import { strNotSpecified } from "../../constants/Constants";
+import { FieldType } from "../../enums/ai/Enums";
+import { IDiagnosticLogger } from "../../interfaces/ai/IDiagnosticLogger";
+import {
+    IAutoExceptionTelemetry, IExceptionDetailsInternal, IExceptionInternal, IStackDetails
+} from "../../interfaces/ai/IExceptionTelemetry";
+import { IExceptionData } from "../../interfaces/ai/contracts/IExceptionData";
+import { IExceptionDetails } from "../../interfaces/ai/contracts/IExceptionDetails";
+import { IStackFrame } from "../../interfaces/ai/contracts/IStackFrame";
+import { SeverityLevel } from "../../interfaces/ai/contracts/SeverityLevel";
+import { ISerializable } from "../../interfaces/ai/telemetry/ISerializable";
 import {
     dataSanitizeException, dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties, dataSanitizeString
 } from "./Common/DataSanitizer";
@@ -703,7 +705,7 @@ export class Exception implements IExceptionData, ISerializable {
     public static formatError = _formatErrorCode;
 }
 
-const exDetailsAiDataContract = objFreeze({
+const exDetailsAiDataContract = (/*#__PURE__*/ objFreeze({
     id: FieldType.Default,
     outerId: FieldType.Default,
     typeName: FieldType.Required,
@@ -711,7 +713,7 @@ const exDetailsAiDataContract = objFreeze({
     hasFullStack: FieldType.Default,
     stack: FieldType.Default,
     parsedStack: FieldType.Array
-});
+}));
 
 interface _IExceptionDetails extends IExceptionDetails, ISerializable {
     toInterface: () => IExceptionDetailsInternal;
@@ -851,13 +853,13 @@ export interface _IParsedStackFrame extends IStackFrame, ISerializable {
     sizeInBytes: number;
 }
 
-const stackFrameAiDataContract = objFreeze({
+const stackFrameAiDataContract = (/*#__PURE__*/ objFreeze({
     level: FieldType.Required,
     method: FieldType.Required,
     assembly: FieldType.Default,
     fileName: FieldType.Default,
     line: FieldType.Default
-});
+}));
 
 export function _extractStackFrame(frame: string, level: number): _IParsedStackFrame | undefined {
     let theFrame: _IParsedStackFrame;

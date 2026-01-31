@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IInternal } from "@microsoft/applicationinsights-common";
-import { IUnloadHookContainer, onConfigChange } from "@microsoft/applicationinsights-core-js";
+import { IInternal, IUnloadHookContainer, onConfigChange } from "@microsoft/applicationinsights-core-js";
 import { IPropertiesConfig } from "../Interfaces/IPropertiesConfig";
 
 const Version = "#version#";

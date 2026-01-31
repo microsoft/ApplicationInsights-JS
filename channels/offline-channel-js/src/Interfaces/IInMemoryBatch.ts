@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { EventPersistence } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { EventPersistence, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 
 /**
  * An internal interface which defines a in memory batch

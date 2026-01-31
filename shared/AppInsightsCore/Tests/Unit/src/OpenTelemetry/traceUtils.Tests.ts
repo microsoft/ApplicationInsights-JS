@@ -1,19 +1,19 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
-import { isSpanContextValid, wrapSpanContext, createNonRecordingSpan, isReadableSpan, useSpan, withSpan } from "../../../../src/OpenTelemetry/trace/utils";
-import { createTraceProvider } from "../../../../src/OpenTelemetry/trace/traceProvider";
-import { IDistributedTraceContext } from "../../../../src/JavaScriptSDK.Interfaces/IDistributedTraceContext";
+import { isSpanContextValid, wrapSpanContext, createNonRecordingSpan, isReadableSpan, useSpan, withSpan } from "../../../../src/otel/api/trace/utils";
+import { createTraceProvider } from "../../../../src/otel/api/trace/traceProvider";
+import { IDistributedTraceContext } from "../../../../src/interfaces/ai/IDistributedTraceContext";
 import { createPromise, createRejectedPromise, doAwait } from "@nevware21/ts-async";
 import { createCachedValue, isNullOrUndefined } from "@nevware21/ts-utils";
-import { IOTelApi } from "../../../../src/OpenTelemetry/interfaces/IOTelApi";
-import { createOTelApi } from "../../../../src/OpenTelemetry/otelApi";
-import { eOTelSpanKind } from "../../../../src/OpenTelemetry/enums/trace/OTelSpanKind";
-import { IOTelSpanCtx } from "../../../../src/OpenTelemetry/interfaces/trace/IOTelSpanCtx";
-import { createSpan } from "../../../../src/OpenTelemetry/trace/span";
-import { createW3cTraceState } from "../../../../src/JavaScriptSDK/W3cTraceState";
-import { createDistributedTraceContext } from "../../../../src/JavaScriptSDK/TelemetryHelpers";
-import { IAppInsightsCore } from "../../../../src/JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { AppInsightsCore, ITraceHost } from "../../../../src/applicationinsights-core-js";
-import { IChannelControls } from "../../../../src/JavaScriptSDK.Interfaces/IChannelControls";
+import { IOTelApi } from "../../../../src/interfaces/otel/IOTelApi";
+import { createOTelApi } from "../../../../src/otel/api/OTelApi";
+import { eOTelSpanKind } from "../../../../src/enums/otel/OTelSpanKind";
+import { IOTelSpanCtx } from "../../../../src/interfaces/otel/trace/IOTelSpanCtx";
+import { createSpan } from "../../../../src/otel/api/trace/span";
+import { createW3cTraceState } from "../../../../src/telemetry/W3cTraceState";
+import { createDistributedTraceContext } from "../../../../src/core/TelemetryHelpers";
+import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
+import { AppInsightsCore, ITraceHost } from "../../../../src/index";
+import { IChannelControls } from "../../../../src/interfaces/ai/IChannelControls";
 
 function _createDistributedContext(traceId: string, spanId: string, traceFlags: number, traceState?: string): IDistributedTraceContext {
     const theContext: IDistributedTraceContext = {

@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDiagnosticLogger } from "../../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { strNotSpecified } from "../Constants";
-import { FieldType } from "../Enums";
-import { IMessageData } from "../Interfaces/Contracts/IMessageData";
-import { SeverityLevel } from "../Interfaces/Contracts/SeverityLevel";
-import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
+import { strNotSpecified } from "../../constants/Constants";
+import { FieldType } from "../../enums/ai/Enums";
+import { IDiagnosticLogger } from "../../interfaces/ai/IDiagnosticLogger";
+import { IMessageData } from "../../interfaces/ai/contracts/IMessageData";
+import { SeverityLevel } from "../../interfaces/ai/contracts/SeverityLevel";
+import { ISerializable } from "../../interfaces/ai/telemetry/ISerializable";
 import { dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties } from "./Common/DataSanitizer";
 import { TraceDataType } from "./DataTypes";
 import { TraceEnvelopeType } from "./EnvelopeTypes";

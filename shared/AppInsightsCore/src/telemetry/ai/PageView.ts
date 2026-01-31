@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDiagnosticLogger } from "../../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { strNotSpecified } from "../Constants";
-import { FieldType } from "../Enums";
-import { msToTimeSpan } from "../HelperFuncs";
-import { IPageViewData } from "../Interfaces/Contracts/IPageViewData";
-import { ISerializable } from "../Interfaces/Telemetry/ISerializable";
+import { strNotSpecified } from "../../constants/Constants";
+import { FieldType } from "../../enums/ai/Enums";
+import { IDiagnosticLogger } from "../../interfaces/ai/IDiagnosticLogger";
+import { IPageViewData } from "../../interfaces/ai/contracts/IPageViewData";
+import { ISerializable } from "../../interfaces/ai/telemetry/ISerializable";
+import { msToTimeSpan } from "../../utils/HelperFuncsCore";
 import {
     dataSanitizeId, dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl
 } from "./Common/DataSanitizer";

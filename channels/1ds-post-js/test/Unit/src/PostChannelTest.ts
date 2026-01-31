@@ -5,6 +5,7 @@ import { IPostTransmissionTelemetryItem, IChannelConfiguration } from '../../../
 import { SinonSpy } from 'sinon';
 import { createAsyncResolvedPromise, IPromise } from "@nevware21/ts-async";
 import { ActiveStatus } from "@microsoft/1ds-core-js";
+import { setBypassLazyCache } from "@nevware21/ts-utils";
 
 
 interface IEventsSendRequests {
@@ -46,6 +47,9 @@ export class PostChannelTest extends AITestClass {
 
 
     public testInitialize() {
+        super.testInitialize();
+        setBypassLazyCache(true);
+
         // Reset the cached isBeacons supported
         isBeaconsSupported(false);
 
@@ -83,6 +87,7 @@ export class PostChannelTest extends AITestClass {
             this.core.unload(false);
         }
         this.ctx = null;
+        super.testFinishedCleanup();
     }
 
     public registerTests() {

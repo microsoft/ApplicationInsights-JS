@@ -1,9 +1,12 @@
 import { AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
 import { Sender } from "../../../src/Sender";
-import { ExceptionDataType, IOfflineListener, createOfflineListener, utlGetSessionStorageKeys, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
+import { ExceptionDataType, IOfflineListener, createOfflineListener, utlGetSessionStorageKeys, utlRemoveSessionStorage } from "@microsoft/applicationinsights-core-js";
 import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
-import { Exception, CtxTagKeys, isBeaconApiSupported, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, safeGetLogger, isString, isArray, arrForEach, isBeaconsSupported, IXHROverride, IPayloadData,TransportType, getWindow, ActiveStatus } from "@microsoft/applicationinsights-core-js";
+import {
+    Exception, CtxTagKeys, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage,
+    ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, safeGetLogger,
+    isString, isArray, arrForEach, isBeaconsSupported, IXHROverride, IPayloadData,TransportType, getWindow, ActiveStatus
+} from "@microsoft/applicationinsights-core-js";
 import { ArraySendBuffer, SessionStorageSendBuffer } from "../../../src/SendBuffer";
 import { IInternalStorageItem, ISenderConfig } from "../../../src/Interfaces";
 import { createAsyncResolvedPromise } from "@nevware21/ts-async";
@@ -1663,7 +1666,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -1707,7 +1710,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -1780,7 +1783,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -1853,7 +1856,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -1927,7 +1930,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -2000,7 +2003,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -2052,7 +2055,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -2126,7 +2129,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -2199,7 +2202,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -2265,7 +2268,7 @@ export class SenderTests extends AITestClass {
 
                 let buffer = sender._buffer;
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
@@ -2352,7 +2355,7 @@ export class SenderTests extends AITestClass {
 
                 let buffer = sender._buffer;
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
@@ -2442,7 +2445,7 @@ export class SenderTests extends AITestClass {
 
                 let buffer = sender._buffer;
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
@@ -2529,7 +2532,7 @@ export class SenderTests extends AITestClass {
 
                 let buffer = sender._buffer;
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
@@ -2628,7 +2631,7 @@ export class SenderTests extends AITestClass {
 
                 let buffer = sender._buffer;
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
@@ -2723,7 +2726,7 @@ export class SenderTests extends AITestClass {
 
                 let buffer = sender._buffer;
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
@@ -2829,7 +2832,7 @@ export class SenderTests extends AITestClass {
 
                 let buffer = sender._buffer;
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
@@ -2896,7 +2899,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -2947,7 +2950,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 

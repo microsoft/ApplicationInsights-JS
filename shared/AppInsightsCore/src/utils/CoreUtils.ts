@@ -3,7 +3,7 @@
 "use strict";
 import { strShimUndefined } from "@microsoft/applicationinsights-shims";
 import { strSubstr, strSubstring } from "@nevware21/ts-utils";
-import { STR_EMPTY } from "./InternalConstants";
+import { STR_EMPTY } from "../constants/InternalConstants";
 import { random32 } from "./RandomHelper";
 
 // Added to help with minfication

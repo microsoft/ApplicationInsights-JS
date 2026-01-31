@@ -1,5 +1,5 @@
 import { IOTelErrorHandlers } from "./IOTelErrorHandlers";
-import { ITraceCfg } from "./ITraceCfg";
+import { ITraceCfg } from "./IOTelTraceCfg";
 
 /**
  * OpenTelemetry configuration interface

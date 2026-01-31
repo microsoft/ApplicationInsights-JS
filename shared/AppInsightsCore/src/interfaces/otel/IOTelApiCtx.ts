@@ -1,4 +1,4 @@
-import { ITraceHost } from "../../JavaScriptSDK.Interfaces/ITraceProvider";
+import { ITraceHost } from "../ai/ITraceProvider";
 
 /**
  * The context for the current IOTelApi instance linking it to the core SDK instance,

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { IConfigDefaults } from "../Config/IConfigDefaults";
+import { IConfigDefaults } from "../config/IConfigDefaults";
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IConfiguration } from "./IConfiguration";
 import { IDiagnosticLogger } from "./IDiagnosticLogger";

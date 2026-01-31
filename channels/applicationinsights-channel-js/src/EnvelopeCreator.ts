@@ -1,13 +1,11 @@
 import {
     AIData, CtxTagKeys, Envelope, Event, EventDataType, EventEnvelopeType, Exception, ExceptionDataType, ExceptionEnvelopeType, HttpMethod,
-    IDependencyTelemetry, IEnvelope, IExceptionInternal, IPageViewPerformanceTelemetry, IPageViewTelemetryInternal, IRemoteDependencyData,
-    IRequestTelemetry, ISerializable, IWeb, Metric, MetricDataType, MetricEnvelopeType, PageView, PageViewDataType, PageViewEnvelopeType,
-    PageViewPerformance, PageViewPerformanceDataType, PageViewPerformanceEnvelopeType, RemoteDependencyDataType, RequestDataType, SampleRate,
-    Trace, TraceDataType, TraceEnvelopeType, dataSanitizeString
-} from "@microsoft/applicationinsights-common";
-import {
-    IDiagnosticLogger, ITelemetryItem, Tags, _eInternalMessageId, _throwInternal, _warnToConsole, eLoggingSeverity, getJSON, hasJSON, isDate,
-    isNullOrUndefined, isNumber, isString, isTruthy, objForEachKey, optimizeObject, setValue, toISOString
+    IDependencyTelemetry, IDiagnosticLogger, IEnvelope, IExceptionInternal, IPageViewPerformanceTelemetry, IPageViewTelemetryInternal,
+    IRemoteDependencyData, IRequestTelemetry, ISerializable, ITelemetryItem, IWeb, Metric, MetricDataType, MetricEnvelopeType, PageView,
+    PageViewDataType, PageViewEnvelopeType, PageViewPerformance, PageViewPerformanceDataType, PageViewPerformanceEnvelopeType,
+    RemoteDependencyDataType, RequestDataType, SampleRate, Tags, Trace, TraceDataType, TraceEnvelopeType, _eInternalMessageId,
+    _throwInternal, _warnToConsole, dataSanitizeString, eLoggingSeverity, getJSON, hasJSON, isDate, isNullOrUndefined, isNumber, isString,
+    isTruthy, objForEachKey, optimizeObject, setValue, toISOString
 } from "@microsoft/applicationinsights-core-js";
 import { IRequestData } from "./Interfaces/Contracts/IRequestData";
 import { STR_DURATION } from "./InternalConstants";

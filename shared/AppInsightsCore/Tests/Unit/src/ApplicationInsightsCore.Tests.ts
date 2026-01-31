@@ -4,13 +4,14 @@ import {
     random32, mwcRandomSeed, newId, randomValue, mwcRandom32, isNullOrUndefined, SenderPostManager,
     OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig, fieldRedaction,
     isString
-} from "../../../src/applicationinsights-core-js"
-import { AppInsightsCore } from "../../../src/JavaScriptSDK/AppInsightsCore";
-import { IChannelControls } from "../../../src/JavaScriptSDK.Interfaces/IChannelControls";
-import { _eInternalMessageId, LoggingSeverity } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage, DiagnosticLogger } from "../../../src/JavaScriptSDK/DiagnosticLogger";
-import { ActiveStatus } from "../../../src/JavaScriptSDK.Enums/InitActiveStatusEnum";
+} from "../../../src/index"
+import { AppInsightsCore } from "../../../src/core/AppInsightsCore";
+import { IChannelControls } from "../../../src/interfaces/ai/IChannelControls";
+import { _eInternalMessageId, LoggingSeverity } from "../../../src/enums/ai/LoggingEnums";
+import { _InternalLogMessage, DiagnosticLogger } from "../../../src/diagnostics/DiagnosticLogger";
+import { ActiveStatus } from "../../../src/enums/ai/InitActiveStatusEnum";
 import { createAsyncPromise, createAsyncRejectedPromise, createAsyncResolvedPromise, createPromise, createTimeoutPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
+import { setBypassLazyCache } from "@nevware21/ts-utils";
 
 const AIInternalMessagePrefix = "AITR_";
 const MaxInt32 = 0xFFFFFFFF;
@@ -21,6 +22,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
     public testInitialize() {
         super.testInitialize();
         this.ctx = {};
+        setBypassLazyCache(true);
     }
 
     public testCleanup() {

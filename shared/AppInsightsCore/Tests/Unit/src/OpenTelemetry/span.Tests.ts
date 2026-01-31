@@ -1,23 +1,23 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { getDeferred, ICachedValue, isNullOrUndefined, mathMin, objDefine, perfNow, strSubstr } from "@nevware21/ts-utils";
-import { createSpan } from "../../../../src/OpenTelemetry/trace/span";
-import { createOTelApi } from "../../../../src/OpenTelemetry/otelApi";
-import { IOTelSpanCtx } from "../../../../src/OpenTelemetry/interfaces/trace/IOTelSpanCtx";
-import { IOTelApi } from "../../../../src/OpenTelemetry/interfaces/IOTelApi";
-import { IOTelConfig } from "../../../../src/OpenTelemetry/interfaces/config/IOTelConfig";
-import { eOTelSpanStatusCode } from "../../../../src/OpenTelemetry/enums/trace/OTelSpanStatus";
-import { IOTelAttributes } from "../../../../src/OpenTelemetry/interfaces/IOTelAttributes";
-import { IReadableSpan } from "../../../../src/OpenTelemetry/interfaces/trace/IReadableSpan";
-import { IDistributedTraceContext } from "../../../../src/JavaScriptSDK.Interfaces/IDistributedTraceContext";
-import { createDistributedTraceContext } from "../../../../src/JavaScriptSDK/TelemetryHelpers";
-import { generateW3CId } from "../../../../src/JavaScriptSDK/CoreUtils";
-import { suppressTracing, unsuppressTracing, isTracingSuppressed, useSpan, withSpan } from "../../../../src/OpenTelemetry/trace/utils";
-import { ITraceCfg } from "../../../../src/OpenTelemetry/interfaces/config/ITraceCfg";
-import { AppInsightsCore } from "../../../../src/JavaScriptSDK/AppInsightsCore";
-import { IConfiguration } from "../../../../src/JavaScriptSDK.Interfaces/IConfiguration";
-import { ITraceProvider, ISpanScope, ITraceHost } from "../../../../src/JavaScriptSDK.Interfaces/ITraceProvider";
-import { IOTelSpanOptions } from "../../../../src/OpenTelemetry/interfaces/trace/IOTelSpanOptions";
-import { eOTelSpanKind } from "../../../../src/OpenTelemetry/enums/trace/OTelSpanKind";
+import { createSpan } from "../../../../src/otel/api/trace/span";
+import { createOTelApi } from "../../../../src/otel/api/OTelApi";
+import { IOTelSpanCtx } from "../../../../src/interfaces/otel/trace/IOTelSpanCtx";
+import { IOTelApi } from "../../../../src/interfaces/otel/IOTelApi";
+import { IOTelConfig } from "../../../../src/interfaces/otel/config/IOTelConfig";
+import { eOTelSpanStatusCode } from "../../../../src/enums/otel/OTelSpanStatus";
+import { IOTelAttributes } from "../../../../src/interfaces/otel/IOTelAttributes";
+import { IReadableSpan } from "../../../../src/interfaces/otel/trace/IReadableSpan";
+import { IDistributedTraceContext } from "../../../../src/interfaces/ai/IDistributedTraceContext";
+import { createDistributedTraceContext } from "../../../../src/core/TelemetryHelpers";
+import { generateW3CId } from "../../../../src/utils/CoreUtils";
+import { suppressTracing, unsuppressTracing, isTracingSuppressed, useSpan, withSpan } from "../../../../src/otel/api/trace/utils";
+import { ITraceCfg } from "../../../../src/interfaces/otel/config/IOTelTraceCfg";
+import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+import { ITraceProvider, ISpanScope, ITraceHost } from "../../../../src/interfaces/ai/ITraceProvider";
+import { IOTelSpanOptions } from "../../../../src/interfaces/otel/trace/IOTelSpanOptions";
+import { eOTelSpanKind } from "../../../../src/enums/otel/OTelSpanKind";
 
 export class SpanTests extends AITestClass {
 

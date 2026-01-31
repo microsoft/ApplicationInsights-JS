@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { IConfiguration } from "../ai/IConfiguration";
+import { IDiagnosticLogger } from "../ai/IDiagnosticLogger";
 import { IConfigDefaults } from "./IConfigDefaults";
 import { IWatcherHandler, WatcherFunction } from "./IDynamicWatcher";
 

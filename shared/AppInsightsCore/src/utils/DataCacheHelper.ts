@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { objDefine } from "@nevware21/ts-utils";
+import { STR_EMPTY } from "../constants/InternalConstants";
 import { normalizeJsName } from "./HelperFuncs";
-import { STR_EMPTY } from "./InternalConstants";
 import { newId } from "./RandomHelper";
 
-const version = '3.3.11';
+const version = "#version#";
 let instanceName = "." + newId(6);
 let _dataUid = 0;
 

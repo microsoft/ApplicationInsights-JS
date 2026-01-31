@@ -3,7 +3,7 @@ import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, crea
 import PropertiesPlugin from "../../../src/PropertiesPlugin";
 import { IPropertiesConfig } from "../../../src/Interfaces/IPropertiesConfig";
 import { TelemetryContext } from "../../../src/TelemetryContext";
-import { IConfig, utlCanUseLocalStorage, utlGetLocalStorage } from "@microsoft/applicationinsights-common";
+import { IConfig, utlCanUseLocalStorage, utlGetLocalStorage } from "@microsoft/applicationinsights-core-js";
 import { TestChannelPlugin } from "./TestChannelPlugin";
 import { SinonStub } from 'sinon';
 

@@ -1,9 +1,8 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { ApplicationInsights } from "../../../src/applicationinsights-web";
 import {
-    IReadableSpan, eOTelSpanKind, eOTelSpanStatusCode, useSpan, ITelemetryItem, ISpanScope, ITraceHost
+    IAppInsightsCore, IReadableSpan, eOTelSpanKind, eOTelSpanStatusCode, useSpan, ITelemetryItem, ISpanScope, ITraceHost
 } from "@microsoft/applicationinsights-core-js";
-import { IAppInsightsCore } from "@microsoft/applicationinsights-core-js/src/applicationinsights-core-js";
 
 export class UseSpanTests extends AITestClass {
     private static readonly _instrumentationKey = "b7170927-2d1c-44f1-acec-59f4e1751c11";

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { arrForEach, dumpObj } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-import { _throwInternal } from "./DiagnosticLogger";
+import { _throwInternal } from "../diagnostics/DiagnosticLogger";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { IProcessTelemetryUnloadContext } from "../interfaces/ai/IProcessTelemetryContext";
+import { ITelemetryUnloadState } from "../interfaces/ai/ITelemetryUnloadState";
 
 export type UnloadHandler = (itemCtx: IProcessTelemetryUnloadContext, unloadState: ITelemetryUnloadState) => void;
 
@@ -14,6 +14,7 @@ export interface IUnloadHandlerContainer {
     run: (itemCtx: IProcessTelemetryUnloadContext, unloadState: ITelemetryUnloadState) => void
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function createUnloadHandlerContainer(): IUnloadHandlerContainer {
     let handlers: UnloadHandler[] = [];
 

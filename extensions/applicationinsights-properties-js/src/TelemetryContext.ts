@@ -5,12 +5,9 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    CtxTagKeys, Extensions, IApplication, IDevice, IInternal, ILocation, IOperatingSystem, ISession, ISessionManager, ITelemetryTrace,
-    IUserContext, IWeb, PageViewDataType, dataSanitizeString
-} from "@microsoft/applicationinsights-common";
-import {
-    IAppInsightsCore, IDistributedTraceContext, IProcessTelemetryContext, ITelemetryItem, IUnloadHookContainer, _InternalLogMessage,
-    getSetValue, hasWindow, isNullOrUndefined, isString, objKeys, setValue
+    CtxTagKeys, Extensions, IAppInsightsCore, IApplication, IDevice, IDistributedTraceContext, IInternal, ILocation, IOperatingSystem,
+    IProcessTelemetryContext, ISession, ISessionManager, ITelemetryItem, ITelemetryTrace, IUnloadHookContainer, IUserContext, IWeb,
+    PageViewDataType, _InternalLogMessage, dataSanitizeString, getSetValue, hasWindow, isNullOrUndefined, isString, objKeys, setValue
 } from "@microsoft/applicationinsights-core-js";
 import { fnCall, getDeferred, isFunction, isUndefined, objDefine, objDefineProps, strLetterCase } from "@nevware21/ts-utils";
 import { Application } from "./Context/Application";

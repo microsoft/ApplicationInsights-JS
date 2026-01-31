@@ -4,8 +4,8 @@
 import {
     asString, isArray, isDefined, isNullOrUndefined, isObject, isPlainObject, isUndefined, objForEachKey, objHasOwn
 } from "@nevware21/ts-utils";
-import { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "./IConfigDefaults";
-import { IDynamicConfigHandler } from "./IDynamicConfigHandler";
+import { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "../interfaces/config/IConfigDefaults";
+import { IDynamicConfigHandler } from "../interfaces/config/IDynamicConfigHandler";
 
 function _isConfigDefaults<C, T>(value: any): value is IConfigDefaultCheck<C, C[keyof C], T> {
     return (value && isObject(value) && !isArray(value) && (value.isVal || value.fb || objHasOwn(value, "v") || objHasOwn(value, "mrg") || objHasOwn(value, "ref") || value.set));

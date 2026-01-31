@@ -3,10 +3,8 @@
 
 import type { IAjaxRecordInternal } from "./ajax";
 import {
-    Extensions, IDependencyTelemetry, dataSanitizeUrl, dateTimeUtilsDuration, msToTimeSpan, urlGetAbsoluteUrl, urlGetCompleteUrl
-} from "@microsoft/applicationinsights-common";
-import {
-    IDiagnosticLogger, IDistributedTraceContext, arrForEach, isNullOrUndefined, isNumber, isString, normalizeJsName, objForEachKey, objKeys
+    Extensions, IDependencyTelemetry, IDiagnosticLogger, IDistributedTraceContext, arrForEach, dataSanitizeUrl, dateTimeUtilsDuration,
+    isNullOrUndefined, isNumber, isString, msToTimeSpan, normalizeJsName, objForEachKey, objKeys, urlGetAbsoluteUrl, urlGetCompleteUrl
 } from "@microsoft/applicationinsights-core-js";
 import { mathRound } from "@nevware21/ts-utils";
 import { STR_DURATION, STR_PROPERTIES } from "./InternalConstants";

@@ -1,8 +1,8 @@
 import { strRepeat } from "@nevware21/ts-utils";
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { DiagnosticLogger } from "../../../../src/JavaScriptSDK/DiagnosticLogger";
-import { IConfiguration } from "../../../../src/JavaScriptSDK.Interfaces/IConfiguration";
-import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, DataSanitizerValues, dataSanitizeString, dataSanitizeUrl } from "../../../../src/Common/Telemetry/Common/DataSanitizer";
+import { DiagnosticLogger } from "../../../../src/diagnostics/DiagnosticLogger";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, DataSanitizerValues, dataSanitizeString, dataSanitizeUrl } from "../../../../src/telemetry/ai/Common/DataSanitizer";
 
 
 export class ApplicationInsightsTests extends AITestClass {

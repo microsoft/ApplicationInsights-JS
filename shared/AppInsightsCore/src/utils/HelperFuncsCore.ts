@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { arrForEach, isString, mathFloor, mathRound } from "@nevware21/ts-utils";
-import { IPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { isTimeSpan } from "../OpenTelemetry/helpers/timeHelpers";
+import { STR_EMPTY } from "../constants/InternalConstants";
+import { IPlugin } from "../interfaces/ai/ITelemetryPlugin";
+import { isTimeSpan } from "../internal/timeHelpers";
 
-const strEmpty = "";
-
+/*#__NO_SIDE_EFFECTS__*/
 export function stringToBoolOrDefault(str: any, defaultValue = false): boolean {
     if (str === undefined || str === null) {
         return defaultValue;
@@ -18,6 +18,7 @@ export function stringToBoolOrDefault(str: any, defaultValue = false): boolean {
 /**
  * Convert ms to c# time span format
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function msToTimeSpan(totalms: number | string): string {
     if (isTimeSpan(totalms)) {
         // Already in time span format
@@ -30,10 +31,10 @@ export function msToTimeSpan(totalms: number | string): string {
 
     totalms = mathRound(totalms);
 
-    let ms = strEmpty + totalms % 1000;
-    let sec = strEmpty + mathFloor(totalms / 1000) % 60;
-    let min = strEmpty + mathFloor(totalms / (1000 * 60)) % 60;
-    let hour = strEmpty + mathFloor(totalms / (1000 * 60 * 60)) % 24;
+    let ms = STR_EMPTY + totalms % 1000;
+    let sec = STR_EMPTY + mathFloor(totalms / 1000) % 60;
+    let min = STR_EMPTY + mathFloor(totalms / (1000 * 60)) % 60;
+    let hour = STR_EMPTY + mathFloor(totalms / (1000 * 60 * 60)) % 24;
     const days = mathFloor(totalms / (1000 * 60 * 60 * 24));
 
     ms = ms.length === 1 ? "00" + ms : ms.length === 2 ? "0" + ms : ms;
@@ -41,9 +42,10 @@ export function msToTimeSpan(totalms: number | string): string {
     min = min.length < 2 ? "0" + min : min;
     hour = hour.length < 2 ? "0" + hour : hour;
 
-    return (days > 0 ? days + "." : strEmpty) + hour + ":" + min + ":" + sec + "." + ms;
+    return (days > 0 ? days + "." : STR_EMPTY) + hour + ":" + min + ":" + sec + "." + ms;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function getExtensionByName(extensions: IPlugin[], identifier: string): IPlugin | null {
     let extension: IPlugin = null;
     arrForEach(extensions, (value) => {
@@ -56,6 +58,7 @@ export function getExtensionByName(extensions: IPlugin[], identifier: string): I
     return extension;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function isCrossOriginError(message: string|Event, url: string, lineNumber: number, columnNumber: number, error: Error | Event): boolean {
     return !error && isString(message) && (message === "Script error." || message === "Script error");
 }
