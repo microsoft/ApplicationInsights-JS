@@ -16,7 +16,7 @@ import {
     ExceptionEnvelopeType,
     TraceEnvelopeType,
     PageViewPerformanceEnvelopeType
-} from "@microsoft/applicationinsights-common";
+} from "@microsoft/applicationinsights-core-js";
 import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj, __getRegisteredEvents, createCookieMgr, findAllScripts } from "@microsoft/applicationinsights-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js"
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";

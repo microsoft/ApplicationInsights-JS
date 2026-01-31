@@ -2,16 +2,16 @@
 // Licensed under the MIT License.
 
 import { objDefine, strSubstr } from "@nevware21/ts-utils";
-import { IDistributedTraceContext } from "../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
-import { ITraceHost, ITraceProvider } from "../../JavaScriptSDK.Interfaces/ITraceProvider";
-import { generateW3CId } from "../../JavaScriptSDK/CoreUtils";
-import { createDistributedTraceContext } from "../../JavaScriptSDK/TelemetryHelpers";
-import { OTelTimeInput } from "../../applicationinsights-core-js";
-import { eOTelSpanKind } from "../enums/trace/OTelSpanKind";
-import { IOTelApi } from "../interfaces/IOTelApi";
-import { IOTelSpanCtx } from "../interfaces/trace/IOTelSpanCtx";
-import { IOTelSpanOptions } from "../interfaces/trace/IOTelSpanOptions";
-import { IReadableSpan } from "../interfaces/trace/IReadableSpan";
+import { createDistributedTraceContext } from "../../../core/TelemetryHelpers";
+import { eOTelSpanKind } from "../../../enums/otel/OTelSpanKind";
+import { OTelTimeInput } from "../../../interfaces/IOTelHrTime";
+import { IDistributedTraceContext } from "../../../interfaces/ai/IDistributedTraceContext";
+import { ITraceHost, ITraceProvider } from "../../../interfaces/ai/ITraceProvider";
+import { IOTelApi } from "../../../interfaces/otel/IOTelApi";
+import { IOTelSpanCtx } from "../../../interfaces/otel/trace/IOTelSpanCtx";
+import { IOTelSpanOptions } from "../../../interfaces/otel/trace/IOTelSpanOptions";
+import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
+import { generateW3CId } from "../../../utils/CoreUtils";
 import { createSpan } from "./span";
 
 /**
@@ -24,6 +24,7 @@ import { createSpan } from "./span";
  * @param onException - Optional callback to be invoked when an exception is recorded on a span.
  * @returns The created trace provider.
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function createTraceProvider(host: ITraceHost, traceName: string, api: IOTelApi, onEnd?: (span: IReadableSpan) => void, onException?: (span: IReadableSpan, exception: any, time?: OTelTimeInput) => void): ITraceProvider {
     let provider: ITraceProvider = {
         api: null,

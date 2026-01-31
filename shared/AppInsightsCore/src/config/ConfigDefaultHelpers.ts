@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { asString, isBoolean, isFunction, isNullOrUndefined, isString } from "@nevware21/ts-utils";
-import { STR_EMPTY } from "../JavaScriptSDK/InternalConstants";
-import { IConfiguration } from "../applicationinsights-core-js";
-import { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "./IConfigDefaults";
+import { STR_EMPTY } from "../constants/InternalConstants";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn } from "../interfaces/config/IConfigDefaults";
 
 /**
  * @internal

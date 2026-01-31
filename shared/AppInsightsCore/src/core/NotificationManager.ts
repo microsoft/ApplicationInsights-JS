@@ -3,16 +3,17 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IPromise, createAllPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { ITimerHandler, arrForEach, arrIndexOf, objDefine, safe, scheduleTimeout } from "@nevware21/ts-utils";
-import { createDynamicConfig } from "../Config/DynamicConfig";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
-import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
-import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IPayloadData, IUnloadHook } from "../applicationinsights-core-js";
+import { createDynamicConfig } from "../config/DynamicConfig";
 import {
     STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_OFFLINE_DROP, STR_OFFLINE_SENT, STR_OFFLINE_STORE, STR_PERF_EVENT
-} from "./InternalConstants";
+} from "../constants/InternalConstants";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { INotificationListener } from "../interfaces/ai/INotificationListener";
+import { INotificationManager } from "../interfaces/ai/INotificationManager";
+import { IPerfEvent } from "../interfaces/ai/IPerfEvent";
+import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { IUnloadHook } from "../interfaces/ai/IUnloadHook";
+import { IPayloadData } from "../interfaces/ai/IXHROverride";
 
 const defaultValues = {
     perfEvtsSendAll: false

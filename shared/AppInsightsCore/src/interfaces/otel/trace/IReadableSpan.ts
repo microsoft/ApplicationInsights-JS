@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDistributedTraceContext } from "../../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
-import { OTelSpanKind } from "../../enums/trace/OTelSpanKind";
+import { OTelSpanKind } from "../../../enums/otel/OTelSpanKind";
+import { IOTelHrTime } from "../../IOTelHrTime";
+import { IDistributedTraceContext } from "../../ai/IDistributedTraceContext";
 import { IOTelAttributes } from "../IOTelAttributes";
-import { IOTelHrTime } from "../IOTelHrTime";
 import { IOTelSpan } from "./IOTelSpan";
 import { IOTelSpanStatus } from "./IOTelSpanStatus";
 

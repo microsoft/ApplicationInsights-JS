@@ -3,16 +3,16 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { arrAppend, arrForEach, dumpObj } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
+import { _throwInternal } from "../diagnostics/DiagnosticLogger";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { IProcessTelemetryContext } from "../interfaces/ai/IProcessTelemetryContext";
 import {
     ITelemetryInitializerContainer, ITelemetryInitializerHandler, TelemetryInitializerFunction
-} from "../JavaScriptSDK.Interfaces/ITelemetryInitializers";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
+} from "../interfaces/ai/ITelemetryInitializers";
+import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { getExceptionName } from "../utils/HelperFuncs";
 import { BaseTelemetryPlugin } from "./BaseTelemetryPlugin";
-import { _throwInternal } from "./DiagnosticLogger";
-import { getExceptionName } from "./HelperFuncs";
 
 interface _IInternalTelemetryInitializerHandler {
     id: number;

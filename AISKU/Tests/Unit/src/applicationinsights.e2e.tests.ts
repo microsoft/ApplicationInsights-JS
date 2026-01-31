@@ -2,7 +2,7 @@ import { AITestClass, Assert, PollingAssert, EventValidator, TraceValidator, Exc
 import { SinonSpy } from 'sinon';
 import { ApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Exception, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig, EventPersistence, EventDataType, PageViewDataType, TraceDataType, ExceptionDataType, MetricDataType, PageViewPerformanceDataType, RemoteDependencyDataType } from '@microsoft/applicationinsights-common';
+import { IDependencyTelemetry, ContextTagKeys, Exception, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig, EventPersistence, EventDataType, PageViewDataType, TraceDataType, ExceptionDataType, MetricDataType, PageViewPerformanceDataType, RemoteDependencyDataType } from '@microsoft/applicationinsights-core-js';
 import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus, FeatureOptInMode } from "@microsoft/applicationinsights-core-js";
 import { IPropTelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { createAsyncResolvedPromise } from '@nevware21/ts-async';

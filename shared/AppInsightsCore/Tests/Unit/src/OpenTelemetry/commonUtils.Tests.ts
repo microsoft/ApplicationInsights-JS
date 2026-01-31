@@ -2,11 +2,11 @@ import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { getGlobal } from "@nevware21/ts-utils";
 import { 
     handleAttribError, handleSpanError, handleDebug, handleWarn, handleError, handleNotImplemented
-} from "../../../../src/OpenTelemetry/helpers/handleErrors";
-import { getUrl, getHttpUrl } from "../../../../src/OpenTelemetry/helpers/common";
-import { createAttributeContainer } from "../../../../src/OpenTelemetry/attribute/attributeContainer";
-import { IOTelErrorHandlers } from "../../../../src/OpenTelemetry/interfaces/config/IOTelErrorHandlers";
-import { IOTelConfig } from "../../../../src/OpenTelemetry/interfaces/config/IOTelConfig";
+} from "../../../../src/internal/handleErrors";
+import { getUrl, getHttpUrl } from "../../../../src/internal/commonUtils";
+import { createAttributeContainer } from "../../../../src/otel/attribute/attributeContainer";
+import { IOTelErrorHandlers } from "../../../../src/interfaces/otel/config/IOTelErrorHandlers";
+import { IOTelConfig } from "../../../../src/interfaces/otel/config/IOTelConfig";
 
 export class CommonUtilsTests extends AITestClass {
 

@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IPerfEvent } from "./../JavaScriptSDK.Interfaces/IPerfEvent";
+import { IPerfEvent } from "./IPerfEvent";
 
 /**
  * Identifies an interface to a host that can provide an IPerfManager implementation

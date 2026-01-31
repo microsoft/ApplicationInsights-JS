@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { SeverityLevel } from "./Contracts/SeverityLevel";
 import { IPartC } from "./IPartC";
+import { SeverityLevel } from "./contracts/SeverityLevel";
 
 export interface ITraceTelemetry extends IPartC {
     /**

@@ -1,7 +1,7 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { isString, objForEachKey } from "@nevware21/ts-utils";
-import { LoggingSeverity, eLoggingSeverity, _eInternalMessageId } from "../../../src/JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage } from "../../../src/JavaScriptSDK/DiagnosticLogger";
+import { LoggingSeverity, eLoggingSeverity, _eInternalMessageId } from "../../../src/enums/ai/LoggingEnums";
+import { _InternalLogMessage } from "../../../src/diagnostics/DiagnosticLogger";
 
 type NoRepeats<T extends readonly any[]> = { [M in keyof T]: { [N in keyof T]:
     N extends M ? never : T[M] extends T[N] ? unknown : never

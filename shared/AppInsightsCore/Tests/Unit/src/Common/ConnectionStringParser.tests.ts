@@ -1,6 +1,6 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { ConnectionStringParser } from "../../../../src/Common/ConnectionStringParser";
-import * as Constants from "../../../../src/Common/Constants";
+import { ConnectionStringParser } from "../../../../src/telemetry/ConnectionStringParser";
+import * as Constants from "../../../../src/constants/Constants";
 
 const runTest = (options: {
     connectionString: string,

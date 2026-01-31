@@ -1,14 +1,14 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore } from "../../../../src/JavaScriptSDK/AppInsightsCore";
-import { IAppInsightsCore } from "../../../../src/JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IConfiguration } from "../../../../src/JavaScriptSDK.Interfaces/IConfiguration";
-import { IPlugin } from "../../../../src/JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { _eInternalMessageId } from "../../../../src/JavaScriptSDK.Enums/LoggingEnums";
-import { ThrottleMgr } from "../../../../src/Common/ThrottleMgr";
+import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
+import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+import { IPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
+import { _eInternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
+import { ThrottleMgr } from "../../../../src/diagnostics/ThrottleMgr";
 import { SinonSpy } from "sinon";
-import { utlCanUseLocalStorage } from "../../../../src/Common/StorageHelperFuncs";
-import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, IThrottleResult } from "../../../../src/Common/Interfaces/IThrottleMgr";
-import { IConfig } from "../../../../src/Common/Interfaces/IConfig";
+import { utlCanUseLocalStorage } from "../../../../src/utils/StorageHelperFuncs";
+import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, IThrottleResult } from "../../../../src/interfaces/ai/IThrottleMgr";
+import { IConfig } from "../../../../src/interfaces/ai/IConfig";
 
 const daysInMonth = [
     31, // Jan

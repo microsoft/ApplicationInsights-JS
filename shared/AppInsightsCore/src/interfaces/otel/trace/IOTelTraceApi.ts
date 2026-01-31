@@ -1,5 +1,5 @@
-import { IDistributedTraceContext } from "../../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
-import { ISpanScope } from "../../../JavaScriptSDK.Interfaces/ITraceProvider";
+import { IDistributedTraceContext } from "../../ai/IDistributedTraceContext";
+import { ISpanScope } from "../../ai/ITraceProvider";
 import { IOTelTracer } from "./IOTelTracer";
 import { IOTelTracerOptions } from "./IOTelTracerProvider";
 import { IReadableSpan } from "./IReadableSpan";

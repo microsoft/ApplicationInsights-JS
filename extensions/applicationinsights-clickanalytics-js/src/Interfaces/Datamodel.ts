@@ -2,8 +2,7 @@
 * @copyright Microsoft 2020
 */
 
-import { IEventTelemetry } from "@microsoft/applicationinsights-common";
-import { IUnloadableComponent } from "@microsoft/applicationinsights-core-js";
+import { IEventTelemetry, IUnloadableComponent } from "@microsoft/applicationinsights-core-js";
 
 /**
  * ClickAnalytics Configuration

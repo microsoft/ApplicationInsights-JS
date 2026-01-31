@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
-import { AppInsightsCore } from "../../../../src/applicationinsights-core-js";
-import { IAppInsightsCore } from "../../../../src/JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { createOTelApi } from "../../../../src/OpenTelemetry/otelApi";
-import { IOTelApi } from "../../../../src/OpenTelemetry/interfaces/IOTelApi";
-import { IOTelApiCtx } from "../../../../src/OpenTelemetry/interfaces/IOTelApiCtx";
-import { createNonRecordingSpan, wrapSpanContext, withSpan, useSpan, isTracingSuppressed, suppressTracing, unsuppressTracing } from "../../../../src/OpenTelemetry/trace/utils";
-import { createDistributedTraceContext } from "../../../../src/JavaScriptSDK/TelemetryHelpers";
-import { IChannelControls } from "../../../../src/JavaScriptSDK.Interfaces/IChannelControls";
+import { AppInsightsCore } from "../../../../src/index";
+import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
+import { createOTelApi } from "../../../../src/otel/api/OTelApi";
+import { IOTelApi } from "../../../../src/interfaces/otel/IOTelApi";
+import { IOTelApiCtx } from "../../../../src/interfaces/otel/IOTelApiCtx";
+import { createNonRecordingSpan, wrapSpanContext, withSpan, useSpan, isTracingSuppressed, suppressTracing, unsuppressTracing } from "../../../../src/otel/api/trace/utils";
+import { createDistributedTraceContext } from "../../../../src/core/TelemetryHelpers";
+import { IChannelControls } from "../../../../src/interfaces/ai/IChannelControls";
 
 /**
  * Negative tests for OpenTelemetry SDK helpers in AppInsights Core

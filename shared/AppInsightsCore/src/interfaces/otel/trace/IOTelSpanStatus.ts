@@ -1,4 +1,4 @@
-import { eOTelSpanStatusCode } from "../../enums/trace/OTelSpanStatus";
+import { eOTelSpanStatusCode } from "../../../enums/otel/OTelSpanStatus";
 
 export interface IOTelSpanStatus {
     /**

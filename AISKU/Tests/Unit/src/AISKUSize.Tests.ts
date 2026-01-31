@@ -2,7 +2,7 @@ import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { dumpObj } from '@nevware21/ts-utils';
 import { createPromise, doAwait, IPromise } from '@nevware21/ts-async';
 import { strUndefined } from "@microsoft/applicationinsights-core-js";
-import { utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
+import { utlRemoveSessionStorage } from "@microsoft/applicationinsights-core-js";
 import * as pako from "pako";
 import { Snippet } from "../../../src/Snippet";
 

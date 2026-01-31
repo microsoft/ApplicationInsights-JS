@@ -1,5 +1,5 @@
 import { IPromise } from "@nevware21/ts-async";
-import { SendRequestReason } from "../applicationinsights-core-js";
+import { SendRequestReason } from "../../enums/ai/SendRequestReason";
 
 /** IPayloadData describes interface of payload sent via POST channel */
 export interface IPayloadData {

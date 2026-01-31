@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ISample, MetricDataType } from "@microsoft/applicationinsights-common";
 import {
-    IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, _throwInternal, eLoggingSeverity
+    IDiagnosticLogger, ISample, ITelemetryItem, MetricDataType, _eInternalMessageId, _throwInternal, eLoggingSeverity
 } from "@microsoft/applicationinsights-core-js";
 import { IScoreGenerator, createSamplingScoreGenerator } from "./SamplingScoreGenerators/SamplingScoreGenerator";
 

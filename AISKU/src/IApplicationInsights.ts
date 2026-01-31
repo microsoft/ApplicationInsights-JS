@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 import { AnalyticsPlugin } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
-import { IAppInsights, IPropertiesPlugin, IRequestHeaders } from "@microsoft/applicationinsights-common";
 import {
-    IConfiguration, ILoadedPlugin, IOTelApi, IPlugin, ITelemetryPlugin, ITelemetryUnloadState, ITraceApi, ITraceHost, UnloadHandler
+    IAppInsights, IConfiguration, ILoadedPlugin, IOTelApi, IPlugin, IPropertiesPlugin, IRequestHeaders, ITelemetryPlugin,
+    ITelemetryUnloadState, ITraceApi, ITraceHost, UnloadHandler
 } from "@microsoft/applicationinsights-core-js";
 import { IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import { IPromise } from "@nevware21/ts-async";

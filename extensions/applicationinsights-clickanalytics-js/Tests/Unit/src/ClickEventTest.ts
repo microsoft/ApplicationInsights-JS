@@ -3,7 +3,7 @@
  */
 
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { IConfig, utlCanUseLocalStorage } from "@microsoft/applicationinsights-common";
+import { IConfig, utlCanUseLocalStorage } from "@microsoft/applicationinsights-core-js";
 import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger, hasDocument, isFunction, IAppInsightsCore } from '@microsoft/applicationinsights-core-js';
 import { ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator } from '../../../src/ClickAnalyticsPlugin';
 import { PageAction } from "../../../src/events/PageAction";

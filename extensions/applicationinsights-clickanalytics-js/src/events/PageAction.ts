@@ -3,10 +3,9 @@
 */
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { strNotSpecified } from "@microsoft/applicationinsights-common";
 import {
     ICustomProperties, IDiagnosticLogger, ITelemetryItem, _eInternalMessageId, _throwInternal, eLoggingSeverity, getPerformance, objExtend,
-    objForEachKey
+    objForEachKey, strNotSpecified
 } from "@microsoft/applicationinsights-core-js";
 import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
 import { getClickTarget } from "../DataCollector";

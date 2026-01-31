@@ -5,8 +5,8 @@ import { strShimFunction, strShimPrototype } from "@microsoft/applicationinsight
 import { getInst, objHasOwnProperty } from "@nevware21/ts-utils";
 import {
     IInstrumentCallDetails, IInstrumentHook, IInstrumentHooks, IInstrumentHooksCallbacks, InstrumentorHooksCallback
-} from "../JavaScriptSDK.Interfaces/IInstrumentHooks";
-import { _getObjProto } from "./HelperFuncs";
+} from "../interfaces/ai/IInstrumentHooks";
+import { _getObjProto } from "../utils/HelperFuncs";
 
 const aiInstrumentHooks = "_aiHooks";
 

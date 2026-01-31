@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 import { fnApply, isFunction } from "@nevware21/ts-utils";
-import { ISpanScope, ITraceHost } from "../../JavaScriptSDK.Interfaces/ITraceProvider";
-import { setProtoTypeName } from "../../JavaScriptSDK/HelperFuncs";
-import { STR_EMPTY } from "../../JavaScriptSDK/InternalConstants";
-import { IOTelSpanOptions } from "../interfaces/trace/IOTelSpanOptions";
-import { IOTelTracer } from "../interfaces/trace/IOTelTracer";
-import { IReadableSpan } from "../interfaces/trace/IReadableSpan";
+import { STR_EMPTY } from "../../../constants/InternalConstants";
+import { ISpanScope, ITraceHost } from "../../../interfaces/ai/ITraceProvider";
+import { IOTelSpanOptions } from "../../../interfaces/otel/trace/IOTelSpanOptions";
+import { IOTelTracer } from "../../../interfaces/otel/trace/IOTelTracer";
+import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
+import { setProtoTypeName } from "../../../utils/HelperFuncs";
 import { startActiveSpan } from "./utils";
 
 /**

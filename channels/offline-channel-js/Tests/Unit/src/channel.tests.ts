@@ -1,5 +1,5 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
-import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, EventPersistence, IConfig } from "@microsoft/applicationinsights-common";
+import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, EventPersistence, IConfig } from "@microsoft/applicationinsights-core-js";
 import { AppInsightsCore, IConfiguration, arrForEach, getGlobal, getGlobalInst, objKeys } from "@microsoft/applicationinsights-core-js";
 import { TestChannel, mockTelemetryItem } from "./TestHelper";
 import { OfflineChannel } from "../../../src/OfflineChannel"

@@ -4,15 +4,16 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IPromise } from "@nevware21/ts-async";
 import { dumpObj, isFunction, isUndefined, objDefine } from "@nevware21/ts-utils";
-import { createDynamicConfig, onConfigChange } from "../Config/DynamicConfig";
-import { LoggingSeverity, _InternalMessageId, _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IConfigDefaults, IUnloadHook } from "../applicationinsights-core-js";
-import { getDebugExt } from "./DbgExtensionUtils";
-import { getConsole, getJSON, hasJSON } from "./EnvUtils";
-import { STR_EMPTY } from "./InternalConstants";
+import { createDynamicConfig, onConfigChange } from "../config/DynamicConfig";
+import { STR_EMPTY } from "../constants/InternalConstants";
+import { getDebugExt } from "../core/DbgExtensionUtils";
+import { LoggingSeverity, _InternalMessageId, _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { IUnloadHook } from "../interfaces/ai/IUnloadHook";
+import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
+import { getConsole, getJSON, hasJSON } from "../utils/EnvUtils";
 
 const STR_WARN_TO_CONSOLE = "warnToConsole";
 
@@ -36,7 +37,7 @@ const defaultValues: IConfigDefaults<IConfiguration> = {
     loggingLevelTelemetry: 1,
     maxMessageLimit: 25,
     enableDebug: false
-}
+};
 
 const _logFuncs: { [key in eLoggingSeverity]: keyof IDiagnosticLogger} = {
     [eLoggingSeverity.DISABLED]: null,
@@ -94,6 +95,7 @@ export class _InternalLogMessage{
     }
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function safeGetLogger(core: IAppInsightsCore, config?: IConfiguration): IDiagnosticLogger {
     return (core || {} as any).logger || new DiagnosticLogger(config);
 }

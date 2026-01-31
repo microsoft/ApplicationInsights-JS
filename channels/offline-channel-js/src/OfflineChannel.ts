@@ -3,14 +3,12 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, EventPersistence, IConfig, IOfflineListener, createOfflineListener
-} from "@microsoft/applicationinsights-common";
-import {
-    BaseTelemetryPlugin, EventsDiscardedReason, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IDiagnosticLogger,
-    IInternalOfflineSupport, INotificationListener, INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXHROverride, SendRequestReason,
-    _eInternalMessageId, _throwInternal, arrForEach, createProcessTelemetryContext, createUniqueNamespace, dateNow, eBatchDiscardedReason,
-    eLoggingSeverity, mergeEvtNamespace, onConfigChange, runTargetUnload
+    BaseTelemetryPlugin, BreezeChannelIdentifier, EventPersistence, EventsDiscardedReason, IAppInsightsCore, IChannelControls, IConfig,
+    IConfigDefaults, IConfiguration, IDiagnosticLogger, IInternalOfflineSupport, INotificationListener, INotificationManager,
+    IOfflineListener, IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain,
+    ITelemetryUnloadState, IXHROverride, SendRequestReason, _eInternalMessageId, _throwInternal, arrForEach, createOfflineListener,
+    createProcessTelemetryContext, createUniqueNamespace, dateNow, eBatchDiscardedReason, eLoggingSeverity, mergeEvtNamespace,
+    onConfigChange, runTargetUnload
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, ITaskScheduler, createAsyncPromise, createTaskScheduler } from "@nevware21/ts-async";
 import {

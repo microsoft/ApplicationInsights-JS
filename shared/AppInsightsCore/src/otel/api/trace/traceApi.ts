@@ -1,12 +1,12 @@
 import { ICachedValue, fnBind, getDeferred } from "@nevware21/ts-utils";
-import { IDistributedTraceContext } from "../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
-import { setProtoTypeName } from "../../JavaScriptSDK/HelperFuncs";
-import { UNDEFINED_VALUE } from "../../JavaScriptSDK/InternalConstants";
+import { UNDEFINED_VALUE } from "../../../constants/InternalConstants";
+import { IDistributedTraceContext } from "../../../interfaces/ai/IDistributedTraceContext";
+import { IOTelApi } from "../../../interfaces/otel/IOTelApi";
+import { ITraceApi } from "../../../interfaces/otel/trace/IOTelTraceApi";
+import { IOTelTracerProvider } from "../../../interfaces/otel/trace/IOTelTracerProvider";
+import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
+import { setProtoTypeName } from "../../../utils/HelperFuncs";
 import { throwOTelError } from "../errors/OTelError";
-import { IOTelApi } from "../interfaces/IOTelApi";
-import { IOTelTracerProvider } from "../interfaces/trace/IOTelTracerProvider";
-import { IReadableSpan } from "../interfaces/trace/IReadableSpan";
-import { ITraceApi } from "../interfaces/trace/ITraceApi";
 import { isSpanContextValid, wrapSpanContext } from "./utils";
 
 /**

@@ -1,14 +1,14 @@
 import { arrForEach, arrIndexOf, isNullOrUndefined, mathFloor, mathMin, objForEachKey, strTrim } from "@nevware21/ts-utils";
-import { onConfigChange } from "../Config/DynamicConfig";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { _throwInternal, safeGetLogger } from "../JavaScriptSDK/DiagnosticLogger";
-import { randomValue } from "../JavaScriptSDK/RandomHelper";
-import { IConfig } from "./Interfaces/IConfig";
-import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "./Interfaces/IThrottleMgr";
-import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
+import { onConfigChange } from "../config/DynamicConfig";
+import { _throwInternal, safeGetLogger } from "../diagnostics/DiagnosticLogger";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
+import { IConfig } from "../interfaces/ai/IConfig";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "../interfaces/ai/IThrottleMgr";
+import { randomValue } from "../utils/RandomHelper";
+import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "../utils/StorageHelperFuncs";
 
 const THROTTLE_STORAGE_PREFIX = "appInsightsThrottle";
 

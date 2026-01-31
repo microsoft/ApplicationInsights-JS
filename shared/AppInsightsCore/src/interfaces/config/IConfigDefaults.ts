@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { IConfiguration } from "../ai/IConfiguration";
 
 /**
  * The type to identify whether the default value should be applied in preference to the provided value.

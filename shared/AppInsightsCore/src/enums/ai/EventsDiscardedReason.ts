@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createEnumStyle } from "../JavaScriptSDK.Enums/EnumHelperFuncs";
+import { createEnumStyle } from "../EnumHelperFuncs";
 
 /**
  * The eEventsDiscardedReason enumeration contains a set of values that specify the reason for discarding an event.

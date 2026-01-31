@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createClassFromInterface } from "../../../JavaScriptSDK/HelperFuncs";
+import { createClassFromInterface } from "../../../utils/HelperFuncs";
 
 function _aiNameFunc(baseName: string) {
     let aiName = "ai." + baseName + ".";
@@ -227,7 +227,6 @@ export interface IContextTagKeys {
     readonly internalSdkSrc: string;
 }
 
-/*#__NO_SIDE_EFFECTS__*/
 export class ContextTagKeys extends createClassFromInterface<IContextTagKeys>({
     applicationVersion: _aiApplication("ver"),
     applicationBuild: _aiApplication("build"),

@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { ITimerHandler, arrForEach, arrIndexOf, dumpObj, newSymbol, scheduleTimeout } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { throwAggregationError } from "../JavaScriptSDK/AggregationError";
-import { _IInternalDynamicConfigHandler } from "./IDynamicConfigHandler";
-import { IWatcherHandler, WatcherFunction, _IDynamicDetail } from "./IDynamicWatcher";
-import { _IDynamicConfigHandlerState } from "./_IDynamicConfigHandlerState";
+import { throwAggregationError } from "../core/AggregationError";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { _IInternalDynamicConfigHandler } from "../interfaces/config/IDynamicConfigHandler";
+import { IWatcherHandler, WatcherFunction, _IDynamicDetail } from "../interfaces/config/IDynamicWatcher";
+import { _IDynamicConfigHandlerState } from "../interfaces/config/_IDynamicConfigHandlerState";
 
 const symPrefix = "[[ai_";
 const symPostfix = "]]";

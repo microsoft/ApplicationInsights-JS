@@ -4,19 +4,19 @@
 import {
     ITimerHandler, arrForEach, isNumber, makeGlobRegex, objDefineProps, scheduleTimeout, strIndexOf, strLower, utcNow
 } from "@nevware21/ts-utils";
-import { onConfigChange } from "../Config/DynamicConfig";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { eStatsType } from "../JavaScriptSDK.Enums/StatsType";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { INetworkStatsbeat } from "../JavaScriptSDK.Interfaces/INetworkStatsbeat";
-import { IStatsBeat, IStatsBeatConfig, IStatsBeatState, IStatsEndpointConfig } from "../JavaScriptSDK.Interfaces/IStatsBeat";
-import { IStatsMgr, IStatsMgrConfig } from "../JavaScriptSDK.Interfaces/IStatsMgr";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IPayloadData } from "../JavaScriptSDK.Interfaces/IXHROverride";
-import { _throwInternal, safeGetLogger } from "./DiagnosticLogger";
-import { isFeatureEnabled } from "./HelperFuncs";
-import { STR_EMPTY } from "./InternalConstants";
+import { onConfigChange } from "../config/DynamicConfig";
+import { STR_EMPTY } from "../constants/InternalConstants";
+import { _throwInternal, safeGetLogger } from "../diagnostics/DiagnosticLogger";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { eStatsType } from "../enums/ai/StatsType";
+import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { INetworkStatsbeat } from "../interfaces/ai/INetworkStatsbeat";
+import { IStatsBeat, IStatsBeatConfig, IStatsBeatState, IStatsEndpointConfig } from "../interfaces/ai/IStatsBeat";
+import { IStatsMgr, IStatsMgrConfig } from "../interfaces/ai/IStatsMgr";
+import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { IPayloadData } from "../interfaces/ai/IXHROverride";
+import { isFeatureEnabled } from "../utils/HelperFuncs";
 
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
 const STATS_MIN_INTERVAL_SECONDS = 60; // 1 minute

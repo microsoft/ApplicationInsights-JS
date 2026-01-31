@@ -5,10 +5,10 @@ import {
     ICachedValue, arrForEach, arrIndexOf, createCachedValue, isArray, isFunction, isNullOrUndefined, isString, objDefineProps,
     safeGetDeferred, strSplit
 } from "@nevware21/ts-utils";
-import { IW3cTraceState } from "../JavaScriptSDK.Interfaces/IW3cTraceState";
-import { findMetaTags, findNamedServerTimings } from "./EnvUtils";
-import { setObjStringTag } from "./HelperFuncs";
-import { STR_EMPTY } from "./InternalConstants";
+import { STR_EMPTY } from "../constants/InternalConstants";
+import { IW3cTraceState } from "../interfaces/ai/IW3cTraceState";
+import { findMetaTags, findNamedServerTimings } from "../utils/EnvUtils";
+import { setObjStringTag } from "../utils/HelperFuncs";
 
 const MAX_TRACE_STATE_MEMBERS = 32;
 const MAX_TRACE_STATE_LEN = 512;
@@ -27,7 +27,7 @@ const NBLK_CHAR = "\x21-\x2B\\--\x3C\x3E-\x7E";
 const TRACESTATE_VALUE = "[\x20" + NBLK_CHAR + "]{0,255}[" + NBLK_CHAR + "]";
 
 // https://www.w3.org/TR/trace-context-1/#tracestate-header
-const TRACESTATE_KVP_REGEX = new RegExp("^\\s*((?:" + SIMPLE_KEY + "|" + MULTI_TENANT_KEY + ")=(" + TRACESTATE_VALUE + "))\\s*$");
+const TRACESTATE_KVP_REGEX = (/*#__PURE__*/ new RegExp("^\\s*((?:" + SIMPLE_KEY + "|" + MULTI_TENANT_KEY + ")=(" + TRACESTATE_VALUE + "))\\s*$"));
 
 /**
  * @internal
@@ -189,6 +189,7 @@ function _keys(items: ITraceStateMember[], parent?: IW3cTraceState | null): stri
  * @param parent - The parent trace state to check for keys
  * @returns true if the items are empty, false otherwise
  */
+/*#__NO_SIDE_EFFECTS__*/
 function _isEmpty(items: ITraceStateMember[], parent?: IW3cTraceState | null): boolean {
     let delKeys: string[];
     let isEmpty = true;
@@ -230,6 +231,7 @@ function _isEmpty(items: ITraceStateMember[], parent?: IW3cTraceState | null): b
  * @param value - The value to check
  * @returns - True if the value looks like a distributed trace state instance
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function isW3cTraceState(value: any): value is IW3cTraceState {
     return !!(value && isArray(value.keys) && isFunction(value.get) && isFunction(value.set) && isFunction(value.del) && isFunction(value.hdrs));
 }
@@ -245,6 +247,7 @@ export function isW3cTraceState(value: any): value is IW3cTraceState {
  * @param parent - The parent trace state to inherit any existing keys from.
  * @returns - A new distributed trace state instance
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function createW3cTraceState(value?: string | null, parent?: IW3cTraceState | null): IW3cTraceState {
     let cachedItems: ICachedValue<ITraceStateMember[]> = safeGetDeferred(_parseTraceStateList, [], [value || STR_EMPTY]);
 
@@ -403,6 +406,7 @@ export function createW3cTraceState(value?: string | null, parent?: IW3cTraceSta
  * @param traceState - The trace state instance to snapshot
  * @returns A new independent instance of IW3cTraceState with all current key/value pairs captured
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function snapshotW3cTraceState(traceState: IW3cTraceState): IW3cTraceState {
     // Create a new independent instance with no parent
     // This ensures the returned instance is completely independent from future changes
@@ -434,6 +438,7 @@ export function snapshotW3cTraceState(traceState: IW3cTraceState): IW3cTraceStat
  * @param selectIdx - If the found value is comma separated which is the preferred entry to select, defaults to the first
  * @returns
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function findW3cTraceState(): IW3cTraceState {
     const name = "tracestate";
     let traceState: IW3cTraceState = null;

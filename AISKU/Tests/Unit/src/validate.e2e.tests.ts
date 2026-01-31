@@ -3,7 +3,7 @@ import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { SinonSpy } from 'sinon';
 import { AITestClass, Assert, PollingAssert } from '@microsoft/ai-test-framework';
 import { dumpObj } from '@microsoft/applicationinsights-core-js';
-import { BreezeChannelIdentifier } from '@microsoft/applicationinsights-common';
+import { BreezeChannelIdentifier } from '@microsoft/applicationinsights-core-js';
 
 export class ValidateE2ETests extends AITestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';

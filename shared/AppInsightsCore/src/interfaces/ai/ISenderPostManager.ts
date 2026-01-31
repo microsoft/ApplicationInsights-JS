@@ -1,5 +1,5 @@
 import { ITimerHandler } from "@nevware21/ts-utils";
-import { TransportType } from "../JavaScriptSDK.Enums/SendRequestReason";
+import { TransportType } from "../../enums/ai/SendRequestReason";
 import { IXDomainRequest } from "./IXDomainRequest";
 import { IPayloadData, IXHROverride, OnCompleteCallback } from "./IXHROverride";
 

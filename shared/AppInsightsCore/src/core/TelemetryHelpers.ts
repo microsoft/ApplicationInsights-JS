@@ -2,21 +2,21 @@
 // Licensed under the MIT License.
 
 import { arrForEach, isFunction, objDefineProps } from "@nevware21/ts-utils";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IDistributedTraceContext, IDistributedTraceInit } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
-import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-import { IUnloadableComponent } from "../JavaScriptSDK.Interfaces/IUnloadableComponent";
-import { IW3cTraceState } from "../JavaScriptSDK.Interfaces/IW3cTraceState";
-import { generateW3CId } from "./CoreUtils";
-import { createElmNodeData } from "./DataCacheHelper";
-import { getLocation } from "./EnvUtils";
-import { setProtoTypeName } from "./HelperFuncs";
-import { STR_CORE, STR_EMPTY, STR_PRIORITY, STR_PROCESS_TELEMETRY, UNDEFINED_VALUE } from "./InternalConstants";
-import { isValidSpanId, isValidTraceId } from "./W3cTraceParent";
-import { createW3cTraceState } from "./W3cTraceState";
+import { STR_CORE, STR_EMPTY, STR_PRIORITY, STR_PROCESS_TELEMETRY, UNDEFINED_VALUE } from "../constants/InternalConstants";
+import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
+import { IDistributedTraceContext, IDistributedTraceInit } from "../interfaces/ai/IDistributedTraceContext";
+import { IProcessTelemetryContext, IProcessTelemetryUnloadContext } from "../interfaces/ai/IProcessTelemetryContext";
+import { IPlugin, ITelemetryPlugin } from "../interfaces/ai/ITelemetryPlugin";
+import { ITelemetryPluginChain } from "../interfaces/ai/ITelemetryPluginChain";
+import { ITelemetryUnloadState } from "../interfaces/ai/ITelemetryUnloadState";
+import { IUnloadableComponent } from "../interfaces/ai/IUnloadableComponent";
+import { IW3cTraceState } from "../interfaces/ai/IW3cTraceState";
+import { createW3cTraceState } from "../telemetry/W3cTraceState";
+import { generateW3CId } from "../utils/CoreUtils";
+import { createElmNodeData } from "../utils/DataCacheHelper";
+import { getLocation } from "../utils/EnvUtils";
+import { setProtoTypeName } from "../utils/HelperFuncs";
+import { isValidSpanId, isValidTraceId } from "../utils/TraceParent";
 
 export interface IPluginState {
     core?: IAppInsightsCore;
@@ -141,6 +141,7 @@ export function unloadComponents(components: any | IUnloadableComponent[], unloa
     return _doUnload();
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function isDistributedTraceContext(obj: any): obj is IDistributedTraceContext {
     return obj &&
         isFunction(obj.getName) &&
@@ -175,6 +176,7 @@ export function isDistributedTraceContext(obj: any): obj is IDistributedTraceCon
  * specific span is created, which is normal behavior for trace contexts.
  *
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function createDistributedTraceContext(parent?: IDistributedTraceContext | IDistributedTraceInit | undefined | null): IDistributedTraceContext {
     let parentCtx: IDistributedTraceContext = null;
     let initCtx: IDistributedTraceInit = null;

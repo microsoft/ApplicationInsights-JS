@@ -2,21 +2,21 @@
 // Licensed under the MIT License.
 
 import { dumpObj, isUndefined, objDefine, objForEachKey } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { createUniqueNamespace } from "../JavaScriptSDK/DataCacheHelper";
-import { STR_NOT_DYNAMIC_ERROR } from "../JavaScriptSDK/InternalConstants";
+import { STR_NOT_DYNAMIC_ERROR } from "../constants/InternalConstants";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
+import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "../interfaces/config/IDynamicConfigHandler";
+import { IWatcherHandler, WatcherFunction } from "../interfaces/config/IDynamicWatcher";
+import { _IDynamicConfigHandlerState } from "../interfaces/config/_IDynamicConfigHandlerState";
+import { createUniqueNamespace } from "../utils/DataCacheHelper";
 import { _applyDefaultValue } from "./ConfigDefaults";
 import {
     _eSetDynamicPropertyFlags, _makeDynamicObject, _setDynamicProperty, _setDynamicPropertyState, _throwDynamicError
 } from "./DynamicProperty";
 import { _createState } from "./DynamicState";
 import { CFG_HANDLER_LINK, _cfgDeepCopy, getDynamicConfigHandler, throwInvalidAccess } from "./DynamicSupport";
-import { IConfigDefaults } from "./IConfigDefaults";
-import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "./IDynamicConfigHandler";
-import { IWatcherHandler, WatcherFunction } from "./IDynamicWatcher";
-import { _IDynamicConfigHandlerState } from "./_IDynamicConfigHandlerState";
 
 /**
  * Identifies a function which will be re-called whenever any of it's accessed configuration values

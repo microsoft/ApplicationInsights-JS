@@ -24,7 +24,7 @@ import {
     TraceEnvelopeType,
     MetricEnvelopeType,
     RemoteDependencyEnvelopeType,
-} from '@microsoft/applicationinsights-common';
+} from '@microsoft/applicationinsights-core-js';
 import { AnalyticsPlugin } from '../../../src/JavaScriptSDK/AnalyticsPlugin'
 import { 
     IAppInsightsCore, AppInsightsCore,

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { IPromise } from "@nevware21/ts-async";
-import { LoggingSeverity, _InternalMessageId } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage } from "../JavaScriptSDK/DiagnosticLogger";
+import { _InternalLogMessage } from "../../diagnostics/DiagnosticLogger";
+import { LoggingSeverity, _InternalMessageId } from "../../enums/ai/LoggingEnums";
 import { ITelemetryUpdateState } from "./ITelemetryUpdateState";
 
 export interface IDiagnosticLogger {

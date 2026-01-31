@@ -5,6 +5,7 @@ import { PostChannel, IXHROverride, IPayloadData } from "../../../src/Index";
 import { IPostTransmissionTelemetryItem, EventBatchNotificationReason, IChannelConfiguration } from "../../../src/DataModels";
 import { EventBatch } from "../../../src/EventBatch";
 import { retryPolicyShouldRetryForStatus } from "../../../src/RetryPolicy";
+import { setBypassLazyCache } from "@nevware21/ts-utils";
 
 interface EventDetail {
     batches: EventBatch[];
@@ -36,6 +37,9 @@ export class HttpManagerTest extends AITestClass {
     }
 
     public testInitialize() {
+        super.testInitialize();
+        setBypassLazyCache(true);
+
         // Reset the cached isBeacons supported
         isBeaconsSupported(false);
 
@@ -61,9 +65,10 @@ export class HttpManagerTest extends AITestClass {
         if (this.core && this.core.isInitialized()) {
             this.core.unload(false);
         }
+        super.testFinishedCleanup();
     }
 
-     public registerTests() {
+    public registerTests() {
         let _requeueNotification = (batches: EventBatch[], reason?: EventBatchNotificationReason, isSyncRequest?: boolean) => {
             this._requeueEvents.push({
                 batches: batches,

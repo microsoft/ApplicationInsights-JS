@@ -4,25 +4,25 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { isFunction, objDefine } from "@nevware21/ts-utils";
-import { createDynamicConfig } from "../Config/DynamicConfig";
-import { IConfigDefaults } from "../Config/IConfigDefaults";
-import { TelemetryUnloadReason } from "../JavaScriptSDK.Enums/TelemetryUnloadReason";
-import { TelemetryUpdateReason } from "../JavaScriptSDK.Enums/TelemetryUpdateReason";
-import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { createDynamicConfig } from "../config/DynamicConfig";
+import { STR_EXTENSION_CONFIG } from "../constants/InternalConstants";
+import { safeGetLogger } from "../diagnostics/DiagnosticLogger";
+import { TelemetryUnloadReason } from "../enums/ai/TelemetryUnloadReason";
+import { TelemetryUpdateReason } from "../enums/ai/TelemetryUpdateReason";
+import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
 import {
     IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext
-} from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
-import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { ITelemetryUnloadState } from "../JavaScriptSDK.Interfaces/ITelemetryUnloadState";
-import { ITelemetryUpdateState } from "../JavaScriptSDK.Interfaces/ITelemetryUpdateState";
-import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
-import { safeGetLogger } from "./DiagnosticLogger";
-import { isNotNullOrUndefined, proxyFunctionAs } from "./HelperFuncs";
-import { STR_EXTENSION_CONFIG } from "./InternalConstants";
+} from "../interfaces/ai/IProcessTelemetryContext";
+import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { IPlugin, ITelemetryPlugin } from "../interfaces/ai/ITelemetryPlugin";
+import { ITelemetryPluginChain } from "../interfaces/ai/ITelemetryPluginChain";
+import { ITelemetryUnloadState } from "../interfaces/ai/ITelemetryUnloadState";
+import { ITelemetryUpdateState } from "../interfaces/ai/ITelemetryUpdateState";
+import { ILegacyUnloadHook, IUnloadHook } from "../interfaces/ai/IUnloadHook";
+import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
+import { isNotNullOrUndefined, proxyFunctionAs } from "../utils/HelperFuncs";
 import {
     createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext
 } from "./ProcessTelemetryContext";

@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { isArray, isPlainObject, objForEachKey, symbolFor, throwTypeError } from "@nevware21/ts-utils";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDynamicConfigHandler } from "./IDynamicConfigHandler";
-import { _IDynamicConfigHandlerState } from "./_IDynamicConfigHandlerState";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { IDynamicConfigHandler } from "../interfaces/config/IDynamicConfigHandler";
+import { _IDynamicConfigHandlerState } from "../interfaces/config/_IDynamicConfigHandlerState";
 
 // Using Symbol.for so that if the same symbol was already created it would be returned
 // To handle multiple instances using potentially different versions we are not using

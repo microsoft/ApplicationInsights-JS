@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { eRequestHeaders, RequestHeaders } from "../../../../src/Common/RequestResponseHeaders";
+import { eRequestHeaders, RequestHeaders } from "../../../../src/telemetry/RequestResponseHeaders";
 
 export class RequestHeadersTests extends AITestClass {
 

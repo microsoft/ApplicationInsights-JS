@@ -2,7 +2,8 @@ import { createUnVersionedConfig } from "../../rollup.base.config";
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
-const entryPointName = "applicationinsights-core-js";
+const entryPointName = "index";
+const browserOutputName = "applicationinsights-core-js";  // MUST NOT CHANGE - CDN compatibility
 const banner = [
   "/*!",
   ` * Application Insights JavaScript SDK - Core, ${version}`,
@@ -23,13 +24,13 @@ export default createUnVersionedConfig(banner,
     version: version,
     node: {
       entryPoint: entryPointName, 
-      outputName: entryPointName
+      outputName: entryPointName      // Node output uses index
     },
     browser: {
       entryPoint: entryPointName,
-      outputName: entryPointName
+      outputName: browserOutputName   // Browser keeps original name for CDN
     },
   },
-  [ "applicationinsights-core-js" ],
+  ["index"],
   false
 );

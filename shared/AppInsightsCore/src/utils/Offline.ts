@@ -1,7 +1,7 @@
-import { arrForEach, getDocument, getNavigator, getWindow, isNullOrUndefined, isUndefined } from "@nevware21/ts-utils";
-import { IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
-import { createUniqueNamespace } from "../JavaScriptSDK/DataCacheHelper";
-import { eventOff, eventOn, mergeEvtNamespace } from "../JavaScriptSDK/EventHelpers";
+import { arrForEach, arrIndexOf, getDocument, getNavigator, getWindow, isNullOrUndefined, isUndefined } from "@nevware21/ts-utils";
+import { IUnloadHook } from "../interfaces/ai/IUnloadHook";
+import { eventOff, eventOn, mergeEvtNamespace } from "../internal/EventHelpers";
+import { createUniqueNamespace } from "../utils/DataCacheHelper";
 
 /**
  * this is the callback that will be called when the network status changes
@@ -164,7 +164,7 @@ export function createOfflineListener(parentEvtNamespace?: string | string[]): I
         // Define rm as an instance of IUnloadHook
         return {
             rm: () => {
-                let index = listenerList.indexOf(callback);
+                let index = arrIndexOf(listenerList, callback);
                 if (index > -1){
                     return listenerList.splice(index, 1);
                 } else {

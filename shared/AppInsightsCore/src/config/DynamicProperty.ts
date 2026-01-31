@@ -4,12 +4,12 @@
 import {
     arrForEach, arrIndexOf, dumpObj, isArray, objDefine, objDefineProp, objForEachKey, objGetOwnPropertyDescriptor
 } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { UNDEFINED_VALUE } from "../JavaScriptSDK/InternalConstants";
+import { UNDEFINED_VALUE } from "../constants/InternalConstants";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { IWatcherHandler, _IDynamicDetail } from "../interfaces/config/IDynamicWatcher";
+import { _IDynamicConfigHandlerState, _IDynamicGetter } from "../interfaces/config/_IDynamicConfigHandlerState";
 import { CFG_HANDLER_LINK, _canMakeDynamic, blockDynamicConversion, throwInvalidAccess } from "./DynamicSupport";
-import { IWatcherHandler, _IDynamicDetail } from "./IDynamicWatcher";
-import { _IDynamicConfigHandlerState, _IDynamicGetter } from "./_IDynamicConfigHandlerState";
 
 export const enum _eSetDynamicPropertyFlags {
     inPlace = 0,

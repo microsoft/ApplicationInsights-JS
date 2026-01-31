@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDiagnosticLogger } from "../../../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { toISOString } from "../../../JavaScriptSDK/HelperFuncs";
-import { strNotSpecified } from "../../Constants";
-import { FieldType } from "../../Enums";
-import { IBase } from "../../Interfaces/Contracts/IBase";
-import { IEnvelope } from "../../Interfaces/Telemetry/IEnvelope";
+import { strNotSpecified } from "../../../constants/Constants";
+import { FieldType } from "../../../enums/ai/Enums";
+import { IDiagnosticLogger } from "../../../interfaces/ai/IDiagnosticLogger";
+import { IBase } from "../../../interfaces/ai/contracts/IBase";
+import { IEnvelope } from "../../../interfaces/ai/telemetry/IEnvelope";
+import { toISOString } from "../../../utils/HelperFuncs";
 import { dataSanitizeString } from "./DataSanitizer";
 
 export class Envelope implements IEnvelope {

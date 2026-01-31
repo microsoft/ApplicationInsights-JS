@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createValueMap } from "../JavaScriptSDK.Enums/EnumHelperFuncs";
+import { createValueMap } from "../enums/EnumHelperFuncs";
 
 export interface IRequestHeaders {
     /**

@@ -21,13 +21,9 @@
     "removeComments": false
   },
   "include": [
-    "./src/applicationinsights-core-js.ts",
-    "./src/Config/**/*.ts",
-    "./src/JavaScriptSDK/**/*.ts",
-    "./src/JavaScriptSDK.Enums/**/*.ts",
-    "./src/JavaScriptSDK.Interfaces/**/*.ts",
-    "./src/OpenTelemetry/**/*.ts",
-    "./src/Common/**/*.ts"
+    "./src/**/*.ts"
   ],
-  "exclude": ["node_modules/"]
+  "exclude": [
+    "node_modules/"
+  ]
 }

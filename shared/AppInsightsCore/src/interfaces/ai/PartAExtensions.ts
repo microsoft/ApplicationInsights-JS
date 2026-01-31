@@ -1,4 +1,4 @@
-import { ContextTagKeys } from "./Contracts/ContextTagKeys";
+import { ContextTagKeys } from "./contracts/ContextTagKeys";
 
 export const Extensions = {
     UserExt: "user",

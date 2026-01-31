@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 //  @skip-file-minify
 
-import { createEnumStyle } from "../JavaScriptSDK.Enums/EnumHelperFuncs";
+import { createEnumStyle } from "../EnumHelperFuncs";
 
 export const enum eLoggingSeverity {
     /**

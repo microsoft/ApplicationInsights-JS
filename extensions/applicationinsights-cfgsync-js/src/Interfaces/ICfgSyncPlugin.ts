@@ -1,5 +1,4 @@
-import { IConfig } from "@microsoft/applicationinsights-common";
-import { IConfiguration } from "@microsoft/applicationinsights-core-js";
+import { IConfig, IConfiguration } from "@microsoft/applicationinsights-core-js";
 
 export declare interface ICfgSyncPlugin {
     /**

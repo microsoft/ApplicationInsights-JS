@@ -3,10 +3,10 @@
 
 import { IPromise } from "@nevware21/ts-async";
 import { ICachedValue, ITimerHandler } from "@nevware21/ts-utils";
-import { WatcherFunction } from "../Config/IDynamicWatcher";
-import { eActiveStatus } from "../JavaScriptSDK.Enums/InitActiveStatusEnum";
-import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
-import { UnloadHandler } from "../JavaScriptSDK/UnloadHandlerContainer";
+import { UnloadHandler } from "../../core/UnloadHandlerContainer";
+import { eActiveStatus } from "../../enums/ai/InitActiveStatusEnum";
+import { SendRequestReason } from "../../enums/ai/SendRequestReason";
+import { WatcherFunction } from "../config/IDynamicWatcher";
 import { IChannelControls } from "./IChannelControls";
 import { IConfiguration } from "./IConfiguration";
 import { ICookieMgr } from "./ICookieMgr";

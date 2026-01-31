@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 import {
-    FieldType, IRemoteDependencyData, ISerializable, dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl,
-    msToTimeSpan, urlParseUrl
-} from "@microsoft/applicationinsights-common";
-import { IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+    FieldType, IDiagnosticLogger, IRemoteDependencyData, ISerializable, dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString,
+    dataSanitizeUrl, msToTimeSpan, urlParseUrl
+} from "@microsoft/applicationinsights-core-js";
 
 export const RemoteDependencyEnvelopeType = "Microsoft.ApplicationInsights.{0}.RemoteDependency";
 

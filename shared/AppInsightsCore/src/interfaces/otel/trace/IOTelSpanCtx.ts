@@ -1,8 +1,8 @@
-import { IDistributedTraceContext } from "../../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
+import { OTelTimeInput } from "../../IOTelHrTime";
+import { IDistributedTraceContext } from "../../ai/IDistributedTraceContext";
 import { IOTelApi } from "../IOTelApi";
 import { IOTelAttributes } from "../IOTelAttributes";
 import { OTelException } from "../IOTelException";
-import { OTelTimeInput } from "../IOTelHrTime";
 import { IReadableSpan } from "./IReadableSpan";
 
 /**

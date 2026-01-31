@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { arrAppend, arrForEach, dumpObj } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { ILegacyUnloadHook, IUnloadHook } from "../JavaScriptSDK.Interfaces/IUnloadHook";
-import { _throwInternal } from "./DiagnosticLogger";
+import { _throwInternal } from "../diagnostics/DiagnosticLogger";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { ILegacyUnloadHook, IUnloadHook } from "../interfaces/ai/IUnloadHook";
 
 let _maxHooks: number | undefined;
 let _hookAddMonitor: (state: string, hooks: Array<ILegacyUnloadHook | IUnloadHook>) => void | undefined;

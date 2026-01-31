@@ -55,7 +55,7 @@ export class AppInsightsCoreSizeCheck extends AITestClass {
     private readonly MAX_BUNDLE_SIZE = 124;
     private readonly MAX_RAW_DEFLATE_SIZE = 49;
     private readonly MAX_BUNDLE_DEFLATE_SIZE = 49;
-    private readonly rawFilePath = "../dist/es5/applicationinsights-core-js.min.js";
+    private readonly rawFilePath = "../dist/es5/index.min.js";
     private readonly prodFilePath = "../browser/es5/applicationinsights-core-js.min.js";
 
     public testInitialize() {

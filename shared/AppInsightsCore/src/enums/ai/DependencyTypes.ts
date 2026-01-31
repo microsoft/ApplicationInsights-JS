@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createEnumStyle } from "./EnumHelperFuncs";
+import { createEnumStyle } from "../EnumHelperFuncs";
 
 export const enum eDependencyTypes {
     InProc = "InProc",

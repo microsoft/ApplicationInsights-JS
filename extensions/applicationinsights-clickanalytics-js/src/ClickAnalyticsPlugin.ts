@@ -3,12 +3,12 @@
 */
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IConfig, IPropertiesPlugin, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, ICustomProperties, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, _eInternalMessageId, _throwInternal,
-    arrForEach, cfgDfFunc, cfgDfMerge, cfgDfString, cfgDfValidate, createProcessTelemetryContext, dumpObj, eLoggingSeverity,
-    getExceptionName, isNullOrUndefined, onConfigChange, throwError, unloadComponents
+    BaseTelemetryPlugin, IAppInsightsCore, IConfig, IConfigDefaults, IConfiguration, ICustomProperties, IPlugin, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, IPropertiesPlugin, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState,
+    PropertiesPluginIdentifier, _eInternalMessageId, _throwInternal, arrForEach, cfgDfFunc, cfgDfMerge, cfgDfString, cfgDfValidate,
+    createProcessTelemetryContext, dumpObj, eLoggingSeverity, getExceptionName, isNullOrUndefined, onConfigChange, throwError,
+    unloadComponents
 } from "@microsoft/applicationinsights-core-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { getDocument, hasDocument, objDeepFreeze, strSubstring, strTrim } from "@nevware21/ts-utils";

@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { isArray, isFunction, objDefine, utcNow } from "@nevware21/ts-utils";
-import { INotificationManager } from "../JavaScriptSDK.Interfaces/INotificationManager";
-import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
-import { IPerfManager, IPerfManagerProvider } from "../JavaScriptSDK.Interfaces/IPerfManager";
-import { _noopVoid } from "../OpenTelemetry/noop/noopHelpers";
-import { STR_GET_PERF_MGR } from "./InternalConstants";
+import { STR_GET_PERF_MGR } from "../constants/InternalConstants";
+import { INotificationManager } from "../interfaces/ai/INotificationManager";
+import { IPerfEvent } from "../interfaces/ai/IPerfEvent";
+import { IPerfManager, IPerfManagerProvider } from "../interfaces/ai/IPerfManager";
+import { _noopVoid } from "../internal/noopHelpers";
 
 const strExecutionContextKey = "ctx";
 const strParentContextKey = "ParentContextKey";

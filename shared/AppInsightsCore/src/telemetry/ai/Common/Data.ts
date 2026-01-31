@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { FieldType } from "../../Enums";
-import { IData } from "../../Interfaces/Contracts/IData";
-import { ISerializable } from "../../Interfaces/Telemetry/ISerializable";
+import { FieldType } from "../../../enums/ai/Enums";
+import { IData } from "../../../interfaces/ai/contracts/IData";
+import { ISerializable } from "../../../interfaces/ai/telemetry/ISerializable";
 
 /**
  * @deprecated - will be removed in future releases as this was only used by the applicationinsights-channel-js package.

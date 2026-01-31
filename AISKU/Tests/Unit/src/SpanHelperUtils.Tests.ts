@@ -4,12 +4,12 @@ import {
     createDistributedTraceContext,
     eOTelSpanKind,
     eOTelSpanStatusCode,
+    IDistributedTraceInit,
     isReadableSpan,
     isSpanContextValid,
     ITelemetryItem,
     wrapSpanContext
 } from "@microsoft/applicationinsights-core-js";
-import { IDistributedTraceInit } from "@microsoft/applicationinsights-core-js/src/JavaScriptSDK.Interfaces/IDistributedTraceContext";
 
 /**
  * Comprehensive tests for span helper utility functions

@@ -44,7 +44,7 @@ export {
     PropertiesPluginIdentifier,
     BreezeChannelIdentifier,
     AnalyticsPluginIdentifier
-} from "@microsoft/applicationinsights-common";
+} from "@microsoft/applicationinsights-core-js";
 
 // ----------------------------------------------------------------------------------------------------
 // End of Exports available from the Cdn bundles
@@ -87,7 +87,7 @@ export {
     eSeverityLevel,
     IRequestHeaders,
     EventPersistence
-} from "@microsoft/applicationinsights-common";
+} from "@microsoft/applicationinsights-core-js";
 
 export { ISenderConfig } from "@microsoft/applicationinsights-channel-js";
 

@@ -1,18 +1,18 @@
 import { doAwait, doFinally } from "@nevware21/ts-async";
 import { arrSlice, fnApply, isFunction, isObject, isPromiseLike } from "@nevware21/ts-utils";
-import { IAppInsightsCore } from "../../JavaScriptSDK.Interfaces/IAppInsightsCore";
-import { IConfiguration } from "../../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDistributedTraceContext, IDistributedTraceInit } from "../../JavaScriptSDK.Interfaces/IDistributedTraceContext";
-import { ISpanScope, ITraceHost } from "../../JavaScriptSDK.Interfaces/ITraceProvider";
-import { createDistributedTraceContext, isDistributedTraceContext } from "../../JavaScriptSDK/TelemetryHelpers";
-import { isValidSpanId, isValidTraceId } from "../../JavaScriptSDK/W3cTraceParent";
-import { eOTelSpanKind } from "../enums/trace/OTelSpanKind";
-import { eOTelSpanStatusCode } from "../enums/trace/OTelSpanStatus";
-import { IOTelApi } from "../interfaces/IOTelApi";
-import { ITraceCfg } from "../interfaces/config/ITraceCfg";
-import { IOTelSpanCtx } from "../interfaces/trace/IOTelSpanCtx";
-import { IOTelSpanOptions } from "../interfaces/trace/IOTelSpanOptions";
-import { IReadableSpan } from "../interfaces/trace/IReadableSpan";
+import { createDistributedTraceContext, isDistributedTraceContext } from "../../../core/TelemetryHelpers";
+import { eOTelSpanKind } from "../../../enums/otel/OTelSpanKind";
+import { eOTelSpanStatusCode } from "../../../enums/otel/OTelSpanStatus";
+import { IAppInsightsCore } from "../../../interfaces/ai/IAppInsightsCore";
+import { IConfiguration } from "../../../interfaces/ai/IConfiguration";
+import { IDistributedTraceContext, IDistributedTraceInit } from "../../../interfaces/ai/IDistributedTraceContext";
+import { ISpanScope, ITraceHost } from "../../../interfaces/ai/ITraceProvider";
+import { IOTelApi } from "../../../interfaces/otel/IOTelApi";
+import { ITraceCfg } from "../../../interfaces/otel/config/IOTelTraceCfg";
+import { IOTelSpanCtx } from "../../../interfaces/otel/trace/IOTelSpanCtx";
+import { IOTelSpanOptions } from "../../../interfaces/otel/trace/IOTelSpanOptions";
+import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
+import { isValidSpanId, isValidTraceId } from "../../../utils/TraceParent";
 import { createSpan } from "./span";
 
 /**

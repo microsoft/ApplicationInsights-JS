@@ -2,14 +2,15 @@
 // Licensed under the MIT License.
 
 import { arrForEach, arrIndexOf, getPerformance, isNullOrUndefined, strIndexOf, utcNow as dateNow } from "@nevware21/ts-utils";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { IDistributedTraceContext } from "../JavaScriptSDK.Interfaces/IDistributedTraceContext";
-import { createDistributedTraceContext } from "../JavaScriptSDK/TelemetryHelpers";
-import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "./Constants";
-import { ITelemetryTrace } from "./Interfaces/Context/ITelemetryTrace";
-import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
-import { RequestHeaders, eRequestHeaders } from "./RequestResponseHeaders";
-import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
+import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "../constants/Constants";
+import { STR_EMPTY } from "../constants/InternalConstants";
+import { createDistributedTraceContext } from "../core/TelemetryHelpers";
+import { ICorrelationConfig } from "../interfaces/ai/ICorrelationConfig";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { IDistributedTraceContext } from "../interfaces/ai/IDistributedTraceContext";
+import { ITelemetryTrace } from "../interfaces/ai/context/ITelemetryTrace";
+import { RequestHeaders, eRequestHeaders } from "../telemetry/RequestResponseHeaders";
+import { dataSanitizeString } from "../telemetry/ai/Common/DataSanitizer";
 import { urlParseFullHost, urlParseUrl } from "./UrlHelperFuncs";
 
 // listing only non-geo specific locations
@@ -185,9 +186,9 @@ export function dateTimeUtilsDuration(start: number, end: number): number {
 export function createDistributedTraceContextFromTrace(telemetryTrace?: ITelemetryTrace, parentCtx?: IDistributedTraceContext): IDistributedTraceContext {
     let traceCtx: IDistributedTraceContext = createDistributedTraceContext(parentCtx);
     if (telemetryTrace) {
-        traceCtx.pageName = telemetryTrace.name || traceCtx.pageName || ""; // The name of the page
-        traceCtx.traceId = telemetryTrace.traceID || traceCtx.traceId || ""; // 16 byte hex string
-        traceCtx.spanId = telemetryTrace.parentID || traceCtx.spanId || ""; // 8 byte hex string
+        traceCtx.pageName = telemetryTrace.name || traceCtx.pageName || STR_EMPTY; // The name of the page
+        traceCtx.traceId = telemetryTrace.traceID || traceCtx.traceId || STR_EMPTY; // 16 byte hex string
+        traceCtx.spanId = telemetryTrace.parentID || traceCtx.spanId || STR_EMPTY; // 8 byte hex string
         traceCtx.traceFlags = (!isNullOrUndefined(telemetryTrace.traceFlags) ? telemetryTrace.traceFlags : traceCtx.traceFlags) || 0; // 1 byte hex string
     }
 

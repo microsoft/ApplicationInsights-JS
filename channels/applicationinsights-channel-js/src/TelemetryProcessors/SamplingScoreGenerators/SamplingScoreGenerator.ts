@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ContextTagKeys } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { ContextTagKeys, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { getHashCodeScore } from "./HashCodeScoreGenerator";
 
 export interface IScoreGenerator {

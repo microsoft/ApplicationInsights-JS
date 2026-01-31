@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { getInst } from "@nevware21/ts-utils";
-import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { IDbgExtension } from "../JavaScriptSDK.Interfaces/IDbgExtension";
-import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
-import { STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_PERF_EVENT } from "./InternalConstants";
+import { STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_PERF_EVENT } from "../constants/InternalConstants";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { IDbgExtension } from "../interfaces/ai/IDbgExtension";
+import { INotificationListener } from "../interfaces/ai/INotificationListener";
 
 const listenerFuncs = [ STR_EVENTS_SENT, STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_PERF_EVENT ];
 

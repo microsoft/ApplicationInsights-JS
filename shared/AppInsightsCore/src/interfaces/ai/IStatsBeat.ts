@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { StatsType } from "../JavaScriptSDK.Enums/StatsType";
+import { StatsType } from "../../enums/ai/StatsType";
 import { IPayloadData } from "./IXHROverride";
 
 /**

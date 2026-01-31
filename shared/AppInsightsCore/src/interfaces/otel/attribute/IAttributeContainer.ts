@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IUnloadHook } from "../../JavaScriptSDK.Interfaces/IUnloadHook";
-import { eAttributeChangeOp } from "../enums/eAttributeChangeOp";
-import { IOTelAttributes, OTelAttributeValue } from "../interfaces/IOTelAttributes";
+import { eAttributeChangeOp } from "../../../enums/otel/eAttributeChangeOp";
+import { IUnloadHook } from "../../ai/IUnloadHook";
+import { IOTelAttributes, OTelAttributeValue } from "../IOTelAttributes";
 
 /**
  * Identifies the source of an attribute value in iterator operations

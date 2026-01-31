@@ -22,7 +22,7 @@ import {
     ATTR_HTTP_ROUTE,
     MicrosoftClientIp
 } from "@microsoft/applicationinsights-core-js";
-import { IRequestTelemetry } from "@microsoft/applicationinsights-common";
+import { IRequestTelemetry } from "@microsoft/applicationinsights-core-js";
 
 export class SpanUtilsTests extends AITestClass {
     private static readonly _instrumentationKey = "b7170927-2d1c-44f1-acec-59f4e1751c11";

@@ -1,4 +1,4 @@
-import { FeatureOptInMode } from "../JavaScriptSDK.Enums/FeatureOptInEnums";
+import { FeatureOptInMode } from "../../enums/ai/FeatureOptInEnums";
 
 export interface IFeatureOptInDetails {
     /**

@@ -2,7 +2,7 @@ import dynamicProto from "@microsoft/dynamicproto-js"
 import {
     IDiagnosticLogger, _eInternalMessageId, _throwInternal, eLoggingSeverity, getJSON, isArray, isFunction, isNullOrUndefined, isObject, objForEachKey
 } from "@microsoft/applicationinsights-core-js";
-import { FieldType, ISerializable } from "@microsoft/applicationinsights-common";
+import { FieldType, ISerializable } from "@microsoft/applicationinsights-core-js";
 
 const enum eSerializeType {
     String = 1,

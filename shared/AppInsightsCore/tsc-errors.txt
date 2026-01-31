@@ -1,0 +1,17 @@
+src/core/AppInsightsCore.ts(4,26): error TS2307: Cannot find module '@microsoft/dynamicproto-js' or its corresponding type declarations.
+src/core/AppInsightsCore.ts(421,46): error TS7006: Parameter '_self' implicitly has an 'any' type.
+src/core/BaseTelemetryPlugin.ts(5,26): error TS2307: Cannot find module '@microsoft/dynamicproto-js' or its corresponding type declarations.
+src/core/BaseTelemetryPlugin.ts(135,51): error TS7006: Parameter '_self' implicitly has an 'any' type.
+src/core/NotificationManager.ts(3,26): error TS2307: Cannot find module '@microsoft/dynamicproto-js' or its corresponding type declarations.
+src/core/NotificationManager.ts(78,50): error TS7006: Parameter '_self' implicitly has an 'any' type.
+src/core/NotificationManager.ts(203,29): error TS2554: Expected 1 arguments, but got 0.
+src/core/PerfManager.ts(3,26): error TS2307: Cannot find module '@microsoft/dynamicproto-js' or its corresponding type declarations.
+src/core/PerfManager.ts(148,42): error TS7006: Parameter '_self' implicitly has an 'any' type.
+src/core/SenderPostManager.ts(4,26): error TS2307: Cannot find module '@microsoft/dynamicproto-js' or its corresponding type declarations.
+src/core/SenderPostManager.ts(58,48): error TS7006: Parameter '_self' implicitly has an 'any' type.
+src/core/SenderPostManager.ts(58,55): error TS7006: Parameter '_base' implicitly has an 'any' type.
+src/core/TelemetryInitializerPlugin.ts(4,26): error TS2307: Cannot find module '@microsoft/dynamicproto-js' or its corresponding type declarations.
+src/core/TelemetryInitializerPlugin.ts(85,57): error TS7006: Parameter '_self' implicitly has an 'any' type.
+src/core/TelemetryInitializerPlugin.ts(85,64): error TS7006: Parameter '_base' implicitly has an 'any' type.
+src/diagnostics/DiagnosticLogger.ts(4,26): error TS2307: Cannot find module '@microsoft/dynamicproto-js' or its corresponding type declarations.
+src/diagnostics/DiagnosticLogger.ts(128,47): error TS7006: Parameter '_self' implicitly has an 'any' type.

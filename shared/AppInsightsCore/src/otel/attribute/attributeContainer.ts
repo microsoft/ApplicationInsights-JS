@@ -5,18 +5,18 @@ import {
     CreateIteratorContext, ICachedValue, arrForEach, arrIndexOf, createCachedValue, createIterator, getLength, isFunction, isObject,
     isUndefined, iterForOf, objCreate, objDefine, objDefineProps, objForEachKey, objIs, objKeys, safe, strSplit
 } from "@nevware21/ts-utils";
-import { IUnloadHook } from "../../JavaScriptSDK.Interfaces/IUnloadHook";
-import { STR_EMPTY, UNDEFINED_VALUE } from "../../JavaScriptSDK/InternalConstants";
-import { eAttributeChangeOp } from "../enums/eAttributeChangeOp";
-import { handleAttribError } from "../helpers/handleErrors";
-import { IOTelAttributes, OTelAttributeValue } from "../interfaces/IOTelAttributes";
-import { IOTelAttributeLimits } from "../interfaces/config/IOTelAttributeLimits";
-import { IOTelConfig } from "../interfaces/config/IOTelConfig";
-import { ITraceCfg } from "../interfaces/config/ITraceCfg";
-import { IAttributeChangeInfo, IAttributeContainer, eAttributeFilter } from "./IAttributeContainer";
+import { STR_EMPTY, UNDEFINED_VALUE } from "../../constants/InternalConstants";
+import { eAttributeChangeOp } from "../../enums/otel/eAttributeChangeOp";
+import { IUnloadHook } from "../../interfaces/ai/IUnloadHook";
+import { IOTelAttributes, OTelAttributeValue } from "../../interfaces/otel/IOTelAttributes";
+import { IAttributeChangeInfo, IAttributeContainer, eAttributeFilter } from "../../interfaces/otel/attribute/IAttributeContainer";
+import { IOTelAttributeLimits } from "../../interfaces/otel/config/IOTelAttributeLimits";
+import { IOTelConfig } from "../../interfaces/otel/config/IOTelConfig";
+import { ITraceCfg } from "../../interfaces/otel/config/IOTelTraceCfg";
+import { handleAttribError } from "../../internal/handleErrors";
 
-let _inheritedKey = "~[[inherited]]";
-let _deletedKey = "~[[deleted]]";
+const _inheritedKey = "~[[inherited]]";
+const _deletedKey = "~[[deleted]]";
 let _containerId = 0;
 
 type IAttributeBranch<V> = { [key: string]: IAttributeNode<V> };
@@ -1077,6 +1077,7 @@ function _createSnapshotContainer(otelCfg: IOTelConfig, name: string | undefined
  * container.set("key1", "changed"); // snapshot2.get("key1") remains "value1" (previous value copied)
  * ```
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function createAttributeSnapshot(otelCfg: IOTelConfig, name: string, source: IOTelAttributes | IAttributeContainer, attribLimits?: IOTelAttributeLimits): IAttributeContainer {
     let newContainer: IAttributeContainer;
 
@@ -1112,6 +1113,7 @@ export function createAttributeSnapshot(otelCfg: IOTelConfig, name: string, sour
  * }
  * ```
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function isAttributeContainer(value: any): value is IAttributeContainer {
     return value &&
            isFunction(value.clear) &&

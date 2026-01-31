@@ -2,15 +2,16 @@
 // Licensed under the MIT License.
 
 import { dumpObj, getGlobal, getInst as getGlobalInst, isNullOrUndefined, objForEachKey } from "@nevware21/ts-utils";
-import { _eInternalMessageId, eLoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { _throwInternal } from "../JavaScriptSDK/DiagnosticLogger";
-import { getExceptionName } from "../JavaScriptSDK/HelperFuncs";
-import { StorageType } from "./Enums";
+import { STR_EMPTY } from "../constants/InternalConstants";
+import { _throwInternal } from "../diagnostics/DiagnosticLogger";
+import { StorageType } from "../enums/ai/Enums";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { getExceptionName } from "../utils/HelperFuncs";
 
 let _canUseLocalStorage: boolean = undefined;
 let _canUseSessionStorage: boolean = undefined;
-let _storagePrefix: string = "";
+let _storagePrefix: string = STR_EMPTY;
 
 /**
  * Gets the localStorage object if available
@@ -72,7 +73,7 @@ export function utlDisableStorage() {
 }
 
 export function utlSetStoragePrefix(storagePrefix: string) {
-    _storagePrefix = storagePrefix || "";
+    _storagePrefix = storagePrefix || STR_EMPTY;
 }
 
 /**
