@@ -1373,7 +1373,7 @@ export class AjaxTests extends AITestClass {
                 });
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                const ExcludeRequestRegex = ["localhost"];
+                const ExcludeRequestRegex = ["localhost:9001"];
                 let coreConfig = { instrumentationKey: "", disableFetchTracking: false, excludeRequestFromAutoTrackingPatterns: ExcludeRequestRegex };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 // Flush any initial requests made during initialization

@@ -1666,15 +1666,15 @@ export class ApplicationInsightsTests extends AITestClass {
                 fakeFetchAutoRespond: true,
                 steps: [
                     () => {
-                        fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value' } });
+                        fetch('http://localhost:9001/README.md', { method: 'GET', headers: { 'header': 'value' } });
                         Assert.ok(true, "fetch monitoring is instrumented");
                     },
                     () => {
-                        fetch('https://httpbin.org/status/200', { method: 'GET' });
+                        fetch('http://localhost:9001/README.md', { method: 'GET' });
                         Assert.ok(true, "fetch monitoring is instrumented");
                     },
                     () => {
-                        fetch('https://httpbin.org/status/200');
+                        fetch('http://localhost:9001/README.md');
                         Assert.ok(true, "fetch monitoring is instrumented");
                     }
                 ].concat(this.asserts(3, false, false))

@@ -177,7 +177,7 @@ export class UtilTests extends AITestClass {
                 this.testRegexLists(config, false, "test");
                 this.testRegexLists(config, true, "portal.azure.com");
                 this.testRegexLists(config, true, "azure.com");
-                this.testRegexLists(config, false, "localhost");
+                this.testRegexLists(config, false, "localhost:9001");
                 this.testRegexLists(config, false, "bing.com");
                 this.testRegexLists(config, true, "prefix.bing.com");
             }
@@ -193,7 +193,7 @@ export class UtilTests extends AITestClass {
                 this.testRegexLists(config, false, "test");
                 this.testRegexLists(config, false, "portal.azure.com");
                 this.testRegexLists(config, true, "azure.com");
-                this.testRegexLists(config, true, "localhost");
+                this.testRegexLists(config, true, "localhost:9001");
                 this.testRegexLists(config, true, "bing.com");
                 this.testRegexLists(config, true, "prefix.bing.com");
             }
@@ -210,7 +210,7 @@ export class UtilTests extends AITestClass {
                 this.testRegexLists(config, false, "test");
                 this.testRegexLists(config, false, "portal.azure.com");
                 this.testRegexLists(config, true, "azure.com");
-                this.testRegexLists(config, false, "localhost");
+                this.testRegexLists(config, false, "localhost:9001");
                 this.testRegexLists(config, false, "bing.com");
                 this.testRegexLists(config, true, "prefix.bing.com");
                 this.testRegexLists(config, false, "ignore.microsoft.com");
