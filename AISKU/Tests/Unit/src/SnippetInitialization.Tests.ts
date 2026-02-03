@@ -678,7 +678,7 @@ export class SnippetInitializationTests extends AITestClass {
                     () => {
                         let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                         const xhr = new XMLHttpRequest();
-                        xhr.open('GET', 'https://httpbin.org/status/200');
+                        xhr.open('GET', 'http://localhost:9001/README.md');
                         xhr.send();
                         Assert.ok(true);
                     }
@@ -694,15 +694,15 @@ export class SnippetInitializationTests extends AITestClass {
                 steps: [
                     () => {
                         let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                        fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
+                        fetch('http://localhost:9001/README.md', { method: 'GET', headers: { 'header': 'value'} });
                         Assert.ok(true, "fetch monitoring is instrumented");
                     },
                     () => {
-                        fetch('https://httpbin.org/status/200', { method: 'GET' });
+                        fetch('http://localhost:9001/README.md', { method: 'GET' });
                         Assert.ok(true, "fetch monitoring is instrumented");
                     },
                     () => {
-                        fetch('https://httpbin.org/status/200');
+                        fetch('http://localhost:9001/README.md');
                         Assert.ok(true, "fetch monitoring is instrumented");
                     }
                 ]
