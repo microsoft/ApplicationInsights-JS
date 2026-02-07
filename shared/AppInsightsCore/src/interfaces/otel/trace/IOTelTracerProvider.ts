@@ -3,13 +3,7 @@
 
 import { IPromise } from "@nevware21/ts-async";
 import { IOTelTracer } from "./IOTelTracer";
-
-export declare interface IOTelTracerOptions {
-    /**
-     * The schemaUrl of the tracer or instrumentation library
-     */
-    schemaUrl?: string;
-}
+import { IOTelTracerOptions } from "./IOTelTracerOptions";
 
 /**
  * OpenTelemetry Trace API for getting tracers.
@@ -42,3 +36,4 @@ export interface IOTelTracerProvider {
      */
     shutdown?: () => IPromise<void> | void;
 }
+  

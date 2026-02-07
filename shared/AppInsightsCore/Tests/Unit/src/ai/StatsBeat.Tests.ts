@@ -1,16 +1,16 @@
 // import * as sinon from "sinon";
 // import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-// import { IPayloadData } from "../../../src/interfaces/ai/IXHROverride";
-// import { IStatsMgr } from "../../../src/JavaScriptSDK.Interfaces/IStatsMgr";
-// import { AppInsightsCore } from "../../../src/core/AppInsightsCore";
-// import { IConfiguration } from "../../../src/interfaces/ai/IConfiguration";
-// import { createStatsMgr } from "../../../src/JavaScriptSDK/StatsBeat";
-// import { IStatsBeatState } from "../../../src/JavaScriptSDK.Interfaces/IStatsBeat";
-// import { eStatsType } from "../../../src/JavaScriptSDK.Enums/StatsType";
-// import { ITelemetryItem } from "../../../src/interfaces/ai/ITelemetryItem";
-// import { IPlugin } from "../../../src/interfaces/ai/ITelemetryPlugin";
-// import { IAppInsightsCore } from "../../../src/interfaces/ai/IAppInsightsCore";
-// import { FeatureOptInMode } from "../../../src/JavaScriptSDK.Enums/FeatureOptInEnums";
+// import { IPayloadData } from "../../../../src/interfaces/ai/IXHROverride";
+// import { IStatsMgr } from "../../../../src/JavaScriptSDK.Interfaces/IStatsMgr";
+// import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
+// import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+// import { createStatsMgr } from "../../../../src/JavaScriptSDK/StatsBeat";
+// import { IStatsBeatState } from "../../../../src/JavaScriptSDK.Interfaces/IStatsBeat";
+// import { eStatsType } from "../../../../src/JavaScriptSDK.Enums/StatsType";
+// import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
+// import { IPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
+// import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
+// import { FeatureOptInMode } from "../../../../src/JavaScriptSDK.Enums/FeatureOptInEnums";
 
 // const STATS_COLLECTION_SHORT_INTERVAL: number = 900; // 15 minutes
 

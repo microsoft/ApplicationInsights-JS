@@ -7,9 +7,9 @@ import {
 import { STR_EMPTY, UNDEFINED_VALUE } from "../../../constants/InternalConstants";
 import { OTelSpanKind, eOTelSpanKind } from "../../../enums/otel/OTelSpanKind";
 import { eOTelSpanStatusCode } from "../../../enums/otel/OTelSpanStatus";
+import { OTelException } from "../../../interfaces/IException";
 import { IOTelHrTime, OTelTimeInput } from "../../../interfaces/IOTelHrTime";
 import { IOTelAttributes } from "../../../interfaces/otel/IOTelAttributes";
-import { OTelException } from "../../../interfaces/otel/IOTelException";
 import { IAttributeContainer } from "../../../interfaces/otel/attribute/IAttributeContainer";
 import { IOTelSpanCtx } from "../../../interfaces/otel/trace/IOTelSpanCtx";
 import { IOTelSpanStatus } from "../../../interfaces/otel/trace/IOTelSpanStatus";
@@ -46,6 +46,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
     // let droppedEvents = 0;
     // let droppedLinks = 0;
     let isRecording = spanCtx.isRecording !== false;
+
     if (otelCfg.traceCfg && otelCfg.traceCfg.suppressTracing) {
         // Automatically disable the span from recording
         isRecording = false;

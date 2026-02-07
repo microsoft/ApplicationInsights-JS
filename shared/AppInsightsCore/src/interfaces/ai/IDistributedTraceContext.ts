@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IOTelTraceState } from "../otel/trace/IOTelTraceState";
 import { IW3cTraceState } from "./IW3cTraceState";
 
 /**
  * An object that can be used to populate a new {@link IDistributedTraceContext} instance,
- * the included {@link IW3cTraceState} is used as the parent of the created instances traceState
+ * the included {@link IW3cTraceState} or {@link IOTelTraceState} is used as the parent of the
+ * created instances traceState
  */
 export interface IDistributedTraceInit {
     /**
@@ -127,7 +129,7 @@ export interface IDistributedTraceInit {
      * const traceparent = `00-${traceId}-${spanId}-${traceFlags.toString(16).padStart(2, '0')}`;
      * ```
      */
-    traceFlags: number;
+    traceFlags?: number;
 
     /**
      * Vendor-specific trace state information for cross-system trace correlation.
@@ -170,14 +172,17 @@ export interface IDistributedTraceInit {
      * const rojoValue = spanContext.traceState?.get('rojo');
      * const serialized = spanContext.traceState?.serialize();
      *
-     * // HTTP header format
+     * // HTTP header format (When the traceState is an IOTelTraceState)
      * headers['tracestate'] = spanContext.traceState?.serialize() || '';
+     *
+     * // HTTP header format (When the traceState is an IW3cTraceState)
+     * headers['tracestate'] = spanContext.traceState?.hdrs()[0] || '';
      * ```
      */
-    traceState?: IW3cTraceState;
+    traceState?: IW3cTraceState | IOTelTraceState;
 }
 
-export interface IDistributedTraceContext {
+export interface IDistributedTraceContext extends IDistributedTraceInit {
 
     /**
      * Returns the current name of the page

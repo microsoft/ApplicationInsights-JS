@@ -16,25 +16,25 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 176760:
+/***/ 176760
 /*!****************************!*\
   !*** external "node:path" ***!
   \****************************/
-/***/ ((module) => {
+(module) {
 
 module.exports = require("node:path");
 
-/***/ }),
+/***/ },
 
-/***/ 973024:
+/***/ 973024
 /*!**************************!*\
   !*** external "node:fs" ***!
   \**************************/
-/***/ ((module) => {
+(module) {
 
 module.exports = require("node:fs");
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -47,6 +47,12 @@ module.exports = require("node:fs");
 /******/ 		var cachedModule = __webpack_module_cache__[moduleId];
 /******/ 		if (cachedModule !== undefined) {
 /******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Check if module exists (development only)
+/******/ 		if (__webpack_modules__[moduleId] === undefined) {
+/******/ 			var e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {

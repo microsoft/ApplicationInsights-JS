@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { ICachedValue, createCachedValue, isFunction, isString, objDefine, symbolFor } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "../../../constants/InternalConstants";
 import { IW3cTraceState } from "../../../interfaces/ai/IW3cTraceState";
@@ -66,7 +69,7 @@ export function isOTelTraceState(value: any): value is IOTelTraceState {
         return true;
     }
 
-    return value && isFunction(value.serialize) && isFunction(value.unset)&& isFunction(value.get)&& isFunction(value.set);
+    return value && isFunction(value.serialize) && isFunction(value.unset) && isFunction(value.get) && isFunction(value.set);
 }
 
 /**
