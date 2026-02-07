@@ -3,33 +3,34 @@ import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
 const entryPointName = "index";
+const browserOutputName = "otel-core-js";  // MUST NOT CHANGE - CDN compatibility
 const banner = [
-  "/*!",
-  ` * Application Insights JavaScript SDK - OpenTelemetry Core, ${version}`,
-  " * Copyright (c) Microsoft and contributors. All rights reserved.",
-  " */"
+    "/*!",
+    ` * Application Insights JavaScript SDK - OpenTelemetry Core, ${version}`,
+    " * Copyright (c) Microsoft and contributors. All rights reserved.",
+    " */"
 ].join("\n");
 
 const replaceValues = {
-  "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
-  "// Licensed under the MIT License.": ""
+    "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
+    "// Licensed under the MIT License.": ""
 };
 
 updateDistEsmFiles(replaceValues, banner, true, true, "dist-es5");
 
-export default createUnVersionedConfig(banner, 
-  {
-    namespace: "Microsoft.ApplicationInsights",
-    version: version,
-    node: {
-      entryPoint: entryPointName, 
-      outputName: entryPointName
+export default createUnVersionedConfig(banner,
+    {
+        namespace: "Microsoft.ApplicationInsights",
+        version: version,
+        node: {
+            entryPoint: entryPointName,
+            outputName: entryPointName
+        },
+        browser: {
+            entryPoint: entryPointName,
+            outputName: browserOutputName   // Browser keeps original name for CDN
+        }
     },
-    browser: {
-      entryPoint: entryPointName,
-      outputName: entryPointName
-    },
-  },
-  [ "otel-core-js" ],
-  false
+    ["index", "otel-core-js"],
+    false
 );

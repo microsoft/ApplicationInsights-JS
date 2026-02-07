@@ -1,6 +1,6 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { dumpObj } from '@nevware21/ts-utils';
-import { createPromise, doAwait, IPromise } from '@nevware21/ts-async';
+import { dumpObj } from "@nevware21/ts-utils";
+import { createPromise, doAwait, IPromise } from "@nevware21/ts-async";
 import * as pako from "pako";
 
 const PACKAGE_JSON = "../package.json";
@@ -50,13 +50,13 @@ function _checkSize(checkType: string, maxSize: number, size: number, isNightly:
     Assert.ok(size <= maxSize, `exceed ${maxSize} KB, current ${checkType} size is: ${size} KB`);
 }    
 
-export class AppInsightsCoreSizeCheck extends AITestClass {
-    private readonly MAX_RAW_SIZE = 90;
-    private readonly MAX_BUNDLE_SIZE = 90;
-    private readonly MAX_RAW_DEFLATE_SIZE = 35;
-    private readonly MAX_BUNDLE_DEFLATE_SIZE = 35;
-    private readonly rawFilePath = "../dist/es5/applicationinsights-core-js.min.js";
-    private readonly prodFilePath = "../browser/es5/applicationinsights-core-js.min.js";
+export class OTelCoreSizeCheck extends AITestClass {
+    private readonly MAX_RAW_SIZE = 150;
+    private readonly MAX_BUNDLE_SIZE = 150;
+    private readonly MAX_RAW_DEFLATE_SIZE = 60;
+    private readonly MAX_BUNDLE_DEFLATE_SIZE = 60;
+    private readonly rawFilePath = "../dist/es5/index.min.js";
+    private readonly prodFilePath = "../browser/es5/otel-core-js.min.js";
 
     public testInitialize() {
     }
@@ -88,7 +88,7 @@ export class AppInsightsCoreSizeCheck extends AITestClass {
         let postfix = isProd ? "" : "-raw";
         let fileName = _filePath.split("..")[1];
         this.testCase({
-            name: `Test applicationinsights-core${postfix} deflate size`,
+            name: `Test otel-core${postfix} deflate size`,
             test: () => {
                 Assert.ok(true, `test file: ${fileName}`);
                 return _loadPackageJson((isNightly, packageJson) => {
@@ -96,7 +96,7 @@ export class AppInsightsCoreSizeCheck extends AITestClass {
                     let request = new Request(_filePath, {method:"GET"});
                     return fetch(request).then((response) => {
                         if (!response.ok) {
-                            Assert.ok(false, `applicationinsights-core${postfix} deflate size error: ${response.statusText}`);
+                            Assert.ok(false, `otel-core${postfix} deflate size error: ${response.statusText}`);
                             return;
                         } else {
                             return response.text().then(text => {
@@ -107,11 +107,11 @@ export class AppInsightsCoreSizeCheck extends AITestClass {
                                 _checkSize("deflate", _maxDeflateSize, deflateSize, isNightly);
                                 Assert.ok(deflateSize <= _maxDeflateSize ,`max ${_maxDeflateSize} KB, current deflate size is: ${deflateSize} KB`);
                             }).catch((error) => {
-                                Assert.ok(false, `applicationinsights-core${postfix} response error: ${error}`);
+                                Assert.ok(false, `otel-core${postfix} response error: ${error}`);
                             });
                         }
                     }).catch((error: Error) => {
-                        Assert.ok(false, `applicationinsights-core${postfix} deflate size error: ${error}`);
+                        Assert.ok(false, `otel-core${postfix} deflate size error: ${error}`);
                     });
                 });
             }

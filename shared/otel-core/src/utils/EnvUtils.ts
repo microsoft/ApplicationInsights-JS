@@ -4,11 +4,12 @@
 
 import { getGlobal, strShimObject, strShimPrototype, strShimUndefined } from "@microsoft/applicationinsights-shims";
 import {
-    arrForEach, getDocument, getInst, getNavigator, getPerformance, hasNavigator, isFunction, isNullOrUndefined, isString, isUndefined,
-    mathMax, strContains, strIndexOf, strSubstring
+    ICachedValue, arrForEach, createCachedValue, getDeferred, getDocument, getInst, getLazy, getNavigator, getPerformance, hasNavigator,
+    isFunction, isNullOrUndefined, isString, isUndefined, mathMax, strIndexOf, strSubstring
 } from "@nevware21/ts-utils";
 import { DEFAULT_SENSITIVE_PARAMS, STR_EMPTY, STR_REDACTED } from "../constants/InternalConstants";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { strContains } from "./HelperFuncs";
 
 // TypeScript removed this interface so we need to declare the global so we can check for it's existence.
 declare var XDomainRequest: any;
@@ -31,11 +32,13 @@ const strMsie = "msie";
 const strTrident = "trident/";
 const strXMLHttpRequest = "XMLHttpRequest";
 
-let _isTrident: boolean = null;
-let _navUserAgentCheck: string = null;
+// Local cached properties which are used to avoid multiple checks within the module
+let _isTrident: ICachedValue<boolean>;
+let _navUserAgentCheck: string;
 let _enableMocks = false;
-let _useXDomainRequest: boolean | null = null;
-let _beaconsSupported: boolean | null = null;
+let _useXDomainRequest: ICachedValue<boolean>;
+let _beaconsSupported: ICachedValue<boolean>;
+let _userAgent: ICachedValue<string>;
 
 function _hasProperty(theClass: any, property: string) {
     let supported = false;
@@ -65,6 +68,19 @@ function _hasProperty(theClass: any, property: string) {
     return supported;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
+export function getUserAgentString(): string {
+    if (!_userAgent) {
+        // Use lazy to allow mocking
+        _userAgent = getLazy(() => {
+            let nav = getNavigator() || {} as Navigator;
+            return nav.userAgent || STR_EMPTY;
+        });
+    }
+
+    return _userAgent.v;
+}
+
 /**
  * Enable the lookup of test mock objects if requested
  * @param enabled - A flag to enable or disable the mock
@@ -78,6 +94,7 @@ export function setEnableEnvMocks(enabled: boolean) {
  * This helper is used to access the location object without causing an exception
  * "Uncaught ReferenceError: location is not defined"
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function getLocation(checkForMock?: boolean): Location | null {
     if (checkForMock && _enableMocks) {
         let mockLocation = getInst("__mockLocation") as Location;
@@ -96,6 +113,7 @@ export function getLocation(checkForMock?: boolean): Location | null {
 /**
  * Returns the global console object
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function getConsole(): Console | null {
     if (typeof console !== strShimUndefined) {
         return console;
@@ -111,6 +129,7 @@ export function getConsole(): Console | null {
  * exception will be thrown.
  * Defined as a function to support lazy / late binding environments.
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function hasJSON(): boolean {
     return Boolean((typeof JSON === strShimObject && JSON) || getInst(strJSON) !== null);
 }
@@ -120,6 +139,7 @@ export function hasJSON(): boolean {
  * This helper is used to access the JSON object without causing an exception
  * "Uncaught ReferenceError: JSON is not defined"
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function getJSON(): JSON | null {
     if (hasJSON()) {
         return JSON || getInst(strJSON);
@@ -133,6 +153,7 @@ export function getJSON(): JSON | null {
  * This helper is used to access the crypto object from the current
  * global instance which could be window or globalThis for a web worker
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function getCrypto(): Crypto | null {
     return getInst(strCrypto);
 }
@@ -142,6 +163,7 @@ export function getCrypto(): Crypto | null {
  * This helper is used to access the crypto object from the current
  * global instance which could be window or globalThis for a web worker
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function getMsCrypto(): Crypto | null {
     return getInst(strMsCrypto);
 }
@@ -149,6 +171,7 @@ export function getMsCrypto(): Crypto | null {
 /**
  * Returns whether the environment is reporting that we are running in a React Native Environment
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function isReactNative(): boolean {
     // If running in React Native, navigator.product will be populated
     var nav = getNavigator();
@@ -162,25 +185,26 @@ export function isReactNative(): boolean {
 /**
  * Identifies whether the current environment appears to be IE
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function isIE() {
-    let nav = getNavigator();
-    if (nav && (nav.userAgent !== _navUserAgentCheck || _isTrident === null)) {
+    let userAgent = getUserAgentString();
+    if (!_isTrident || userAgent !== _navUserAgentCheck) {
         // Added to support test mocking of the user agent
-        _navUserAgentCheck = nav.userAgent;
-        let userAgent = (_navUserAgentCheck || STR_EMPTY).toLowerCase();
-        _isTrident = (strContains(userAgent, strMsie) || strContains(userAgent, strTrident));
+        _navUserAgentCheck = userAgent;
+        let lwrUserAgent = _navUserAgentCheck.toLowerCase();
+        _isTrident = createCachedValue( strContains(lwrUserAgent, strMsie) || strContains(lwrUserAgent, strTrident));
     }
 
-    return _isTrident;
+    return _isTrident.v;
 }
 
 /**
  * Gets IE version returning the document emulation mode if we are running on IE, or null otherwise
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function getIEVersion(userAgentStr: string = null): number {
     if (!userAgentStr) {
-        let navigator = getNavigator() || ({} as Navigator);
-        userAgentStr = navigator ? (navigator.userAgent || STR_EMPTY).toLowerCase() : STR_EMPTY;
+        userAgentStr = getUserAgentString();
     }
 
     var ua = (userAgentStr || STR_EMPTY).toLowerCase();
@@ -198,10 +222,10 @@ export function getIEVersion(userAgentStr: string = null): number {
     return null;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function isSafari(userAgentStr ?: string) {
     if (!userAgentStr || !isString(userAgentStr)) {
-        let navigator = getNavigator() || ({} as Navigator);
-        userAgentStr = navigator ? (navigator.userAgent || STR_EMPTY).toLowerCase() : STR_EMPTY;
+        userAgentStr = getUserAgentString().toLowerCase();
     }
 
     var ua = (userAgentStr || STR_EMPTY).toLowerCase();
@@ -209,17 +233,19 @@ export function isSafari(userAgentStr ?: string) {
 }
 
 /**
- * Checks if HTML5 Beacons are supported in the current environment.
+ * Checks if HTML5 Beacons are supported in the current environment. There is a side effect (for testing)
+ * when `useCached` is set to `false`, it will reset the cached value causing all future calls to
+ * use the new re-evaluated value for all future calls.
  * @param useCached - [Optional] used for testing to bypass the cached lookup, when `true` this will
  * cause the cached global to be reset.
  * @returns True if supported, false otherwise.
  */
 export function isBeaconsSupported(useCached?: boolean): boolean {
-    if (_beaconsSupported === null || useCached === false) {
-        _beaconsSupported = hasNavigator() && Boolean(getNavigator().sendBeacon);
+    if (!_beaconsSupported || useCached === false) {
+        _beaconsSupported = createCachedValue(hasNavigator() && !!(getNavigator().sendBeacon));
     }
 
-    return _beaconsSupported;
+    return _beaconsSupported.v;
 }
 
 /**
@@ -227,6 +253,7 @@ export function isBeaconsSupported(useCached?: boolean): boolean {
  * @param withKeepAlive - [Optional] If True, check if fetch is available and it supports the keepalive feature, otherwise only check if fetch is supported
  * @returns True if supported, otherwise false
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function isFetchSupported(withKeepAlive?: boolean): boolean {
     let isSupported = false;
     try {
@@ -242,21 +269,27 @@ export function isFetchSupported(withKeepAlive?: boolean): boolean {
     return isSupported;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function useXDomainRequest(): boolean | undefined {
-    if (_useXDomainRequest === null) {
-        _useXDomainRequest = (typeof XDomainRequest !== strShimUndefined);
-        if (_useXDomainRequest && isXhrSupported()) {
-            _useXDomainRequest = _useXDomainRequest && !_hasProperty(getInst(strXMLHttpRequest), "withCredentials");
-        }
+    if (!_useXDomainRequest) {
+        _useXDomainRequest = getDeferred(() => {
+            let useXDomainRequest = (typeof XDomainRequest !== strShimUndefined);
+            if (useXDomainRequest && isXhrSupported()) {
+                useXDomainRequest = useXDomainRequest && !_hasProperty(getInst(strXMLHttpRequest), "withCredentials");
+            }
+
+            return !!useXDomainRequest;
+        });
     }
 
-    return _useXDomainRequest;
+    return _useXDomainRequest.v;
 }
 
 /**
  * Checks if XMLHttpRequest is supported
  * @returns True if supported, otherwise false
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function isXhrSupported(): boolean {
     let isSupported = false;
     try {
@@ -269,7 +302,7 @@ export function isXhrSupported(): boolean {
     return isSupported;
 }
 
-
+/*#__NO_SIDE_EFFECTS__*/
 function _getNamedValue<T>(values: any, name: string): T[] {
     let items: T[]  = [];
     if (values) {
@@ -289,6 +322,7 @@ function _getNamedValue<T>(values: any, name: string): T[] {
  * Helper function to fetch the named meta-tag from the page.
  * @param name - The name of the meta-tag to find.
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function findMetaTag(name: string): any {
     let tags = findMetaTags(name);
     if (tags.length > 0) {
@@ -304,6 +338,7 @@ export function findMetaTag(name: string): any {
  * @param name - The name of the meta-tag to find.
  * @returns - An array of meta-tag values.
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function findMetaTags(name: string): string[] {
     let tags: string[] = [];
     let doc = getDocument();
@@ -321,6 +356,7 @@ export function findMetaTags(name: string): string[] {
  * Helper function to fetch the named server timing value from the page response (first navigation event).
  * @param name - The name of the server timing value to find.
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function findNamedServerTiming(name: string): any {
     let value: any;
     let serverTimings = findNamedServerTimings(name);
@@ -337,6 +373,7 @@ export function findNamedServerTiming(name: string): any {
  * @param name - The name of the server timing value to find.
  * @returns - An array of server timing values.
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function findNamedServerTimings(name: string): string[] {
     let values: string[] = [];
     let perf = getPerformance();
@@ -365,6 +402,7 @@ export function dispatchEvent(target:EventTarget, evnt: Event | CustomEvent): bo
 }
 
 
+/*#__NO_SIDE_EFFECTS__*/
 export function createCustomDomEvent(eventName: string, details?: any): CustomEvent {
     let event: CustomEvent = null;
     let detail = {detail: details || null } as CustomEventInit;
@@ -380,8 +418,6 @@ export function createCustomDomEvent(eventName: string, details?: any): CustomEv
 
     return event;
 }
-
-
 
 export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any): boolean {
     let global = getGlobal();
@@ -401,6 +437,7 @@ export function sendCustomEvent(evtName: string, cfg?: any, customDetails?: any)
  * @param url - The URL string to redact
  * @returns The URL with user information redacted
  */
+/*#__NO_SIDE_EFFECTS__*/
 function redactUserInfo(url: string): string {
     return url.replace(/^([a-zA-Z][a-zA-Z0-9+.-]*:\/\/)([^:@]{1,200}):([^@]{1,200})@(.*)$/, "$1REDACTED:REDACTED@$4");
 }
@@ -410,6 +447,7 @@ function redactUserInfo(url: string): string {
  * @param url - The URL string to redact
  * @returns The URL with sensitive query parameters redacted
  */
+/*#__NO_SIDE_EFFECTS__*/
 function redactQueryParameters(url: string, config?: IConfiguration): string {
     let sensitiveParams: string[];
     const questionMarkIndex = strIndexOf(url, "?");
@@ -500,8 +538,9 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
  * @param config - Configuration object that contain redactUrls setting.
  * @returns The redacted URL string or the original string if no redaction was needed or possible.
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function fieldRedaction(input: string, config: IConfiguration): string {
-    if (!input || !isString(input) || input.indexOf(" ") !== -1) {
+    if (!input || !isString(input) || strIndexOf(input, " ") !== -1) {
         return input;
     }
     const isRedactionDisabled = config && config.redactUrls === false;

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { OTelSeverityNumber } from "../../../enums/otel/eOTelSeverityNumber";
+import { OTelTimeInput } from "../../../interfaces/IOTelHrTime";
 import { OTelAnyValue, OTelAnyValueMap } from "../../../types/OTelAnyValue";
-import { OTelTimeInput } from "../../../types/time";
 import { IOTelContext } from "../context/IOTelContext";
 
 export type LogBody = OTelAnyValue;

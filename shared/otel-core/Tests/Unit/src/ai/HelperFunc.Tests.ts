@@ -1,9 +1,10 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { _eInternalMessageId } from "../../../../../src/index";
-import { normalizeJsName, objExtend, _getObjProto, isFeatureEnabled } from "../../../../../src/index";
-import { AppInsightsCore } from "../../../../../src/core/AppInsightsCore";
-import { isArray, isObject, objKeys, strEndsWith, strStartsWith, isPlainObject, utcNow } from "@nevware21/ts-utils";
-import { FeatureOptInMode, IConfiguration, IFeatureOptInDetails, dumpObj } from "../../../../../src/index";
+import { isArray, isObject, objKeys, strEndsWith, strStartsWith, isPlainObject, utcNow, dumpObj } from "@nevware21/ts-utils";
+import { _getObjProto, isFeatureEnabled, normalizeJsName, objExtend } from "../../../../src/utils/HelperFuncs";
+import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+import { FeatureOptInMode } from "../../../../src/enums/ai/FeatureOptInEnums";
+import { IFeatureOptInDetails } from "../../../../src/interfaces/ai/IFeatureOptIn";
 
 
 

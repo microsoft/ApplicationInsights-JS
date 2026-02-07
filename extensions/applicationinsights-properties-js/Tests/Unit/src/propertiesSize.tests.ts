@@ -1,6 +1,6 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { dumpObj } from '@nevware21/ts-utils';
-import { createPromise, doAwait, IPromise } from '@nevware21/ts-async';
+import { dumpObj } from "@nevware21/ts-utils";
+import { createPromise, doAwait, IPromise } from "@nevware21/ts-async";
 import * as pako from "pako";
 
 const PACKAGE_JSON = "../package.json";

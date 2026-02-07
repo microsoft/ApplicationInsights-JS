@@ -3,8 +3,12 @@
 
 import { arrForEach, arrIndexOf, getPerformance, isNullOrUndefined, strIndexOf, utcNow as dateNow } from "@nevware21/ts-utils";
 import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "../constants/Constants";
+import { STR_EMPTY } from "../constants/InternalConstants";
+import { createDistributedTraceContext } from "../core/TelemetryHelpers";
 import { ICorrelationConfig } from "../interfaces/ai/ICorrelationConfig";
 import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { IDistributedTraceContext } from "../interfaces/ai/IDistributedTraceContext";
+import { ITelemetryTrace } from "../interfaces/ai/context/ITelemetryTrace";
 import { RequestHeaders, eRequestHeaders } from "../telemetry/RequestResponseHeaders";
 import { dataSanitizeString } from "../telemetry/ai/Common/DataSanitizer";
 import { urlParseFullHost, urlParseUrl } from "./UrlHelperFuncs";
@@ -169,4 +173,24 @@ export function dateTimeUtilsDuration(start: number, end: number): number {
     }
 
     return result;
+}
+
+/**
+ * Creates a IDistributedTraceContext from an optional telemetryTrace
+ * @param telemetryTrace - The telemetryTrace instance that is being wrapped
+ * @param parentCtx - An optional parent distributed trace instance, almost always undefined as this scenario is only used in the case of multiple property handlers.
+ * @returns A new IDistributedTraceContext instance that is backed by the telemetryTrace or temporary object
+ * @deprecated This function is deprecated and will be removed in a future version. Use the createDistributedTraceContext function instead and set the necessary properties
+ * on the context object directly.
+ */
+export function createDistributedTraceContextFromTrace(telemetryTrace?: ITelemetryTrace, parentCtx?: IDistributedTraceContext): IDistributedTraceContext {
+    let traceCtx: IDistributedTraceContext = createDistributedTraceContext(parentCtx);
+    if (telemetryTrace) {
+        traceCtx.pageName = telemetryTrace.name || traceCtx.pageName || STR_EMPTY; // The name of the page
+        traceCtx.traceId = telemetryTrace.traceID || traceCtx.traceId || STR_EMPTY; // 16 byte hex string
+        traceCtx.spanId = telemetryTrace.parentID || traceCtx.spanId || STR_EMPTY; // 8 byte hex string
+        traceCtx.traceFlags = (!isNullOrUndefined(telemetryTrace.traceFlags) ? telemetryTrace.traceFlags : traceCtx.traceFlags) || 0; // 1 byte hex string
+    }
+
+    return traceCtx
 }

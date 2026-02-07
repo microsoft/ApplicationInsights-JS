@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IPromise } from "@nevware21/ts-async";
-import { ITimerHandler } from "@nevware21/ts-utils";
+import { ICachedValue, ITimerHandler } from "@nevware21/ts-utils";
 import { UnloadHandler } from "../../core/UnloadHandlerContainer";
 import { eActiveStatus } from "../../enums/ai/InitActiveStatusEnum";
 import { SendRequestReason } from "../../enums/ai/SendRequestReason";
@@ -11,7 +11,6 @@ import { IChannelControls } from "./IChannelControls";
 import { IConfiguration } from "./IConfiguration";
 import { ICookieMgr } from "./ICookieMgr";
 import { IDiagnosticLogger } from "./IDiagnosticLogger";
-import { IDistributedTraceContext } from "./IDistributedTraceContext";
 import { INotificationListener } from "./INotificationListener";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManagerProvider } from "./IPerfManager";
@@ -20,6 +19,7 @@ import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./IT
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "./ITelemetryPlugin";
 import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
+import { ITraceHost, ITraceProvider } from "./ITraceProvider";
 import { ILegacyUnloadHook, IUnloadHook } from "./IUnloadHook";
 
 // import { IStatsBeat, IStatsBeatState } from "./IStatsBeat";
@@ -45,12 +45,7 @@ export interface ILoadedPlugin<T extends IPlugin> {
     remove: (isAsync?: boolean, removeCb?: (removed?: boolean) => void) => void;
 }
 
-export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguration> extends IPerfManagerProvider {
-
-    /*
-    * Config object used to initialize AppInsights
-    */
-    readonly config: CfgType;
+export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguration> extends IPerfManagerProvider, ITraceHost<CfgType> {
 
     /**
      * The current logger instance for this instance.
@@ -66,12 +61,6 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
      * The formatted string of the installed plugins that contain a version number
      */
     readonly pluginVersionString: string;
-
-    // TODO: Add IOTelContextManager type
-    /**
-     * The root {@link IOTelContextManager} for this instance of the Core.
-     */
-    readonly context: any;
  
     /**
      * Returns a value that indicates whether the instance has already been previously initialized.
@@ -227,15 +216,13 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
     flush(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason, cbTimeout?: number): boolean | void;
 
     /**
-     * Gets the current distributed trace active context for this instance
-     * @param createNew - Optional flag to create a new instance if one doesn't currently exist, defaults to true
+     * Set the trace provider for creating spans.
+     * This allows different SKUs to provide their own span implementations.
+     *
+     * @param provider - The trace provider to use for span creation
+     * @since 3.4.0
      */
-    getTraceCtx(createNew?: boolean): IDistributedTraceContext | null;
-
-    /**
-     * Sets the current distributed trace context for this instance if available
-     */
-    setTraceCtx(newTraceCtx: IDistributedTraceContext | null | undefined): void;
+    setTraceProvider(provider: ICachedValue<ITraceProvider>): void;
 
     /**
      * Watches and tracks changes for accesses to the current config, and if the accessed config changes the

@@ -1,8 +1,8 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { utcNow } from "@nevware21/ts-utils";
-import { formatTraceParent, isSampledFlag, isValidSpanId, isValidTraceId, isValidTraceParent, parseTraceParent } from "../../../../../src/utils/TraceParent";
-import { ITraceParent } from "../../../../../src/interfaces/ai/ITraceParent";
-import { newGuid, generateW3CId } from "../../../../../src/utils/CoreUtils";
+import { formatTraceParent, isSampledFlag, isValidSpanId, isValidTraceId, isValidTraceParent, parseTraceParent } from "../../../../src/utils/TraceParent";
+import { ITraceParent } from "../../../../src/interfaces/ai/ITraceParent";
+import { newGuid, generateW3CId } from "../../../../src/utils/CoreUtils";
 
 export class W3cTraceParentTests extends AITestClass {
 

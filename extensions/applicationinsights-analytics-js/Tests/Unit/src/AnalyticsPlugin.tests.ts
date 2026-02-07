@@ -2,10 +2,17 @@ import {
     Assert, AITestClass, PollingAssert, EventValidator, TraceValidator, ExceptionValidator,
     MetricValidator, PageViewPerformanceValidator, PageViewValidator, RemoteDepdencyValidator
 } from "@microsoft/ai-test-framework";
-import { SinonStub, SinonSpy } from 'sinon';
+import { SinonStub, SinonSpy } from "sinon";
 import {
-    Exception, SeverityLevel, Event, Trace, PageViewPerformance, IConfig, IExceptionInternal,
-    AnalyticsPluginIdentifier, IAppInsights, Metric, PageView, RemoteDependencyData, utlCanUseLocalStorage, createDomEvent, findAllScripts
+    Exception, SeverityLevel, Trace, PageViewPerformance, IConfig, IExceptionInternal,
+    AnalyticsPluginIdentifier, IAppInsights, utlCanUseLocalStorage, createDomEvent, findAllScripts,
+    RemoteDependencyDataType,
+    PageViewPerformanceDataType,
+    PageViewDataType,
+    MetricDataType,
+    ExceptionDataType,
+    EventDataType,
+    TraceDataType
 } from "@microsoft/otel-core-js";
 import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj, __getRegisteredEvents, createCookieMgr } from "@microsoft/otel-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js"
@@ -2206,19 +2213,19 @@ export class AnalyticsPluginTests extends AITestClass {
                         const baseType = payload.data.baseType;
                         // call the appropriate Validate depending on the baseType
                         switch (baseType) {
-                            case Event.dataType:
+                            case EventDataType:
                                 return EventValidator.EventValidator.Validate(payload, baseType);
-                            case Trace.dataType:
+                            case TraceDataType:
                                 return TraceValidator.TraceValidator.Validate(payload, baseType);
-                            case Exception.dataType:
+                            case ExceptionDataType:
                                 return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
-                            case Metric.dataType:
+                            case MetricDataType:
                                 return MetricValidator.MetricValidator.Validate(payload, baseType);
-                            case PageView.dataType:
+                            case PageViewDataType:
                                 return PageViewValidator.PageViewValidator.Validate(payload, baseType);
-                            case PageViewPerformance.dataType:
+                            case PageViewPerformanceDataType:
                                 return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
-                            case RemoteDependencyData.dataType:
+                            case RemoteDependencyDataType:
                                 return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
 
                             default:

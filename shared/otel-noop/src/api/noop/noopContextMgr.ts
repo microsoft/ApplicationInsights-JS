@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IOTelContext, IOTelContextManager } from "@microsoft/otel-core-js";
+import { IOTelApi, IOTelContext, IOTelContextManager } from "@microsoft/otel-core-js";
 import { arrSlice, fnApply } from "@nevware21/ts-utils";
 import { _noopThis } from "./noopHelpers";
 import { createNoopProxy } from "./noopProxy";
@@ -12,7 +12,7 @@ import { createNoopProxy } from "./noopProxy";
  * @param parentContext - The parent context to use as the root context
  * @returns - A new Noop Context Manager
  */
-export function createNoopContextMgr(parentContext?: IOTelContext): IOTelContextManager {
+export function createNoopContextMgr(otelApi: IOTelApi, parentContext?: IOTelContext): IOTelContextManager {
     function _getValue(key: symbol): unknown {
         return parentContext ? parentContext.getValue(key) : undefined;
     }
@@ -22,6 +22,7 @@ export function createNoopContextMgr(parentContext?: IOTelContext): IOTelContext
             active: {
                 v: () => createNoopProxy<IOTelContext>({
                     props: {
+                        api: { v: otelApi },
                         getValue: { v: _getValue },
                         setValue: { v: _noopThis<IOTelContext> as IOTelContext["setValue"] },
                         deleteValue: { v: _noopThis<IOTelContext> as IOTelContext["deleteValue"] }

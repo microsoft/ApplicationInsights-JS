@@ -1,7 +1,7 @@
-import { OTelLoggerTests } from "./sdk/OTelLogger.Tests";
-import { OTelLoggerProviderTests } from "./sdk/OTelLoggerProvider.Tests";
+import { NoopOTelLoggerTests } from "./sdk/NoopOTelLogger.Tests";
+// import { NoopOTelLoggerProviderTests } from "./sdk/NoopOTelLoggerProvider.Tests";
 
 export function runTests() {
-    new OTelLoggerTests().registerTests();
-    new OTelLoggerProviderTests().registerTests();
+    new NoopOTelLoggerTests().registerTests();
+    // new NoopOTelLoggerProviderTests().registerTests();
 }

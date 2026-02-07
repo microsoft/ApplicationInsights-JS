@@ -5,7 +5,7 @@ import { isNullOrUndefined, objForEachKey, throwError } from "@nevware21/ts-util
 import { strIkey, strNotSpecified } from "../constants/Constants";
 import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
-import { toISOString } from "../utils/HelperFuncsCore";
+import { toISOString } from "../utils/HelperFuncs";
 import { dataSanitizeString } from "./ai/Common/DataSanitizer";
 
 /**

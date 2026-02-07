@@ -1,15 +1,15 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { _eInternalMessageId } from "../../../../../src/index";
-import { ITelemetryItem } from "../../../../../src/index";
-import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../../../../../src/index";
-import { TelemetryUpdateReason } from "../../../../../src/index";
-import { IConfiguration } from "../../../../../src/index";
-import { IPlugin, ITelemetryPlugin } from "../../../../../src/index";
-import { IAppInsightsCore } from "../../../../../src/index";
-import { ITelemetryPluginChain } from "../../../../../src/index";
-import { ITelemetryUpdateState } from "../../../../../src/index";
-import { IChannelControls } from "../../../../../src/index";
-import { BaseTelemetryPlugin } from "../../../../../src/index";
+import { IPlugin, ITelemetryPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+import { BaseTelemetryPlugin } from "../../../../src/core/BaseTelemetryPlugin";
+import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
+import { ITelemetryPluginChain } from "../../../../src/interfaces/ai/ITelemetryPluginChain";
+import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
+import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../../../../src/interfaces/ai/IProcessTelemetryContext";
+import { ITelemetryUpdateState } from "../../../../src/interfaces/ai/ITelemetryUpdateState";
+import { TelemetryUpdateReason } from "../../../../src/enums/ai/TelemetryUpdateReason";
+import { IChannelControls } from "../../../../src/interfaces/ai/IChannelControls";
+
 
 
 export class TestPlugin implements IPlugin {

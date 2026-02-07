@@ -1,44 +1,7 @@
 {
     "pkgs": {
-        "@microsoft/applicationinsights-core-js": {
-            "constEnums": [
-                "_eSetDynamicPropertyFlags",
-                "ePendingOp",
-                "CallbackType"
-            ]
-        },
         "@microsoft/applicationinsights-perfmarkmeasure-js": {
             "constEnums": []
-        },
-        "@microsoft/applicationinsights-common": {
-            "constEnums": [
-                "eOfflineValue",
-                "eRequestHeaders",
-                "eTraceStateKeyType",
-                "eStorageType",
-                "FieldType",
-                "eDistributedTracingModes",
-                "EventPersistenceValue",
-                "eEventsDiscardedReason",
-                "eBatchDiscardedReason",
-                "FeatureOptInMode",
-                "CdnFeatureMode",
-                "eActiveStatus",
-                "eLoggingSeverity",
-                "_eInternalMessageId",
-                "SendRequestReason",
-                "TransportType",
-                "eStatsType",
-                "TelemetryUnloadReason",
-                "TelemetryUpdateReason",
-                "eTraceHeadersMode",
-                "eW3CTraceFlags",
-                "DataPointType",
-                "DependencyKind",
-                "DependencySourceType",
-                "eSeverityLevel",
-                "DataSanitizerValues"
-            ]
         },
         "@microsoft/applicationinsights-properties-js": {
             "constEnums": []
@@ -47,13 +10,17 @@
             "constEnums": []
         },
         "@microsoft/applicationinsights-channel-js": {
-            "constEnums": []
+            "constEnums": [
+                "eSerializeType"
+            ]
         },
         "@microsoft/applicationinsights-web-basic": {
             "constEnums": []
         },
         "@microsoft/applicationinsights-analytics-js": {
-            "constEnums": []
+            "constEnums": [
+                "eRouteTraceStrategy"
+            ]
         },
         "@microsoft/applicationinsights-web": {
             "constEnums": []
@@ -78,6 +45,7 @@
                 "eRequestHeaders",
                 "eTraceStateKeyType",
                 "eOfflineValue",
+                "eDependencyTypes",
                 "eStorageType",
                 "FieldType",
                 "eDistributedTracingModes",

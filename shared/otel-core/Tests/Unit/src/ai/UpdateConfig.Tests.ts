@@ -1,8 +1,8 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { dumpObj } from "@nevware21/ts-utils";
-import { AppInsightsCore } from "../../../../../src/core/AppInsightsCore";
-import { _eInternalMessageId } from "../../../../../src/index";
-import { IConfiguration } from "../../../../../src/index";
+import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
+import { _eInternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
 import { OldTrackPlugin, TestChannelPlugin, TestPlugin, TestSamplingPlugin, TrackPlugin } from "./TestPlugins";
 
 const AIInternalMessagePrefix = "AITR_";
@@ -25,7 +25,7 @@ export class UpdateConfigTests extends AITestClass {
             test: () => {
                 const iKey1 = "09465199-12AA-4124-817F-544738CC7C41";
                 const iKey2 = "00000000-1111-7777-8888-999999999999";
-                const testEndpoint1 = "https://localhost:9001/TestEndpoint";
+                const testEndpoint1 = "https://localhost:9002/TestEndpoint";
 
                 const channelPlugin = new TestChannelPlugin();
                 const trackPlugin = new TrackPlugin();
@@ -56,7 +56,7 @@ export class UpdateConfigTests extends AITestClass {
                 Assert.equal(undefined, testSamplingPlugin._updatedConfig, "Config has not been updated");
 
                 appInsightsCore.updateCfg({
-                    endpointUrl: "https://localhost:9001/TestEndpoint",
+                    endpointUrl: "https://localhost:9002/TestEndpoint",
                     disableCookiesUsage: true,
                     extensions: []          // Try and replace the extensions
                 }, true);
@@ -116,7 +116,7 @@ export class UpdateConfigTests extends AITestClass {
             test: () => {
                 const iKey1 = "09465199-12AA-4124-817F-544738CC7C41";
                 const iKey2 = "00000000-1111-7777-8888-999999999999";
-                const testEndpoint1 = "https://localhost:9001/TestEndpoint";
+                const testEndpoint1 = "https://localhost:9002/TestEndpoint";
 
                 const channelPlugin = new TestChannelPlugin();
                 const trackPlugin = new OldTrackPlugin();
@@ -147,7 +147,7 @@ export class UpdateConfigTests extends AITestClass {
                 Assert.equal(undefined, testSamplingPlugin._updatedConfig, "Config has not been updated");
 
                 appInsightsCore.updateCfg({
-                    endpointUrl: "https://localhost:9001/TestEndpoint",
+                    endpointUrl: "https://localhost:9002/TestEndpoint",
                     disableCookiesUsage: true
                 }, true);
 
@@ -206,7 +206,7 @@ export class UpdateConfigTests extends AITestClass {
             test: () => {
                 const iKey1 = "09465199-12AA-4124-817F-544738CC7C41";
                 const iKey2 = "00000000-1111-7777-8888-999999999999";
-                const testEndpoint1 = "https://localhost:9001/TestEndpoint";
+                const testEndpoint1 = "https://localhost:9002/TestEndpoint";
 
                 const channelPlugin = new TestChannelPlugin();
                 const trackPlugin = new OldTrackPlugin();
@@ -246,7 +246,7 @@ export class UpdateConfigTests extends AITestClass {
                 Assert.equal(undefined, testSamplingPlugin._updatedConfig, "Config has not been updated");
 
                 appInsightsCore.updateCfg({
-                    endpointUrl: "https://localhost:9001/TestEndpoint",
+                    endpointUrl: "https://localhost:9002/TestEndpoint",
                     cookieCfg: {
                         enabled: true
                     }

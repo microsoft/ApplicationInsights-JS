@@ -1,9 +1,9 @@
 import { strRepeat } from "@nevware21/ts-utils";
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { LoggingSeverity, _InternalMessageId } from "../../../../../src/enums/ai/LoggingEnums";
-import { IConfiguration } from "../../../../../src/interfaces/ai/IConfiguration";
-import { IDiagnosticLogger, IInternalLogMessage } from "../../../../../src/interfaces/ai/IDiagnosticLogger";
-import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, DataSanitizerValues, dataSanitizeString, dataSanitizeUrl } from "../../../../../src/telemetry/ai/Common/DataSanitizer";
+import { LoggingSeverity, _InternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+import { IDiagnosticLogger, IInternalLogMessage } from "../../../../src/interfaces/ai/IDiagnosticLogger";
+import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, DataSanitizerValues, dataSanitizeString, dataSanitizeUrl } from "../../../../src/telemetry/ai/Common/DataSanitizer";
 
 
 class TestDiagnosticLogger implements IDiagnosticLogger {

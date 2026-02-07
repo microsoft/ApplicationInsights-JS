@@ -12,11 +12,11 @@ import { IOTelAttributes, OTelAttributeValue } from "../../interfaces/otel/IOTel
 import { IAttributeChangeInfo, IAttributeContainer, eAttributeFilter } from "../../interfaces/otel/attribute/IAttributeContainer";
 import { IOTelAttributeLimits } from "../../interfaces/otel/config/IOTelAttributeLimits";
 import { IOTelConfig } from "../../interfaces/otel/config/IOTelConfig";
-import { IOTelTraceCfg } from "../../interfaces/otel/config/IOTelTraceCfg";
-import { handleAttribError } from "../../internal/commonUtils";
+import { ITraceCfg } from "../../interfaces/otel/config/IOTelTraceCfg";
+import { handleAttribError } from "../../internal/handleErrors";
 
-let _inheritedKey = "~[[inherited]]";
-let _deletedKey = "~[[deleted]]";
+const _inheritedKey = "~[[inherited]]";
+const _deletedKey = "~[[deleted]]";
 let _containerId = 0;
 
 type IAttributeBranch<V> = { [key: string]: IAttributeNode<V> };
@@ -347,7 +347,7 @@ function _iterator<V, T>(target: IAttributeBranch<V>, cb: (prefix: string, key: 
     let ctx: CreateIteratorContext<T> | null = {
         v: undefined,
         n: _moveNext
-    }
+    };
 
     if (parentAttribs) {
         if (isAttributeContainer(parentAttribs)) {
@@ -675,12 +675,13 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
  * ```
  */
 export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: IOTelConfig, name?: string | null | undefined, inheritAttrib?: IOTelAttributes | IAttributeContainer, attribLimits?: IOTelAttributeLimits): IAttributeContainer<V> {
-    let traceCfg: IOTelTraceCfg = otelCfg.traceCfg || {};
+    let traceCfg: ITraceCfg = otelCfg.traceCfg || {};
     let nodes: { [key: string]: IAttributeNode<V> } | null = null;
     let theSize: ICachedValue<number> | null = null;
     let theDropped: ICachedValue<number> | null = null;
     let limits: IOTelAttributeLimits = traceCfg.generalLimits || {};
     let maxAttribs: number = limits.attributeCountLimit || 128;
+    // let maxValueLen: number = limits.attributeValueLengthLimit;
     let theAttributes: ICachedValue<IOTelAttributes>;
     let localAttributes: ICachedValue<IOTelAttributes>;
     let droppedAttribs = 0;
@@ -692,6 +693,7 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
     
     if (attribLimits) {
         maxAttribs = attribLimits.attributeCountLimit || maxAttribs;
+        // maxValueLen = attribLimits.attributeValueLengthLimit || maxValueLen;
     }
 
     // Determine if inheritAttrib is a container or plain attributes object
@@ -875,7 +877,7 @@ export function createAttributeContainer<V extends OTelAttributeValue>(otelCfg: 
 
             return _createUnloadHook(listeners, callback);
         }
-    }
+    };
 
     function _listener(changeInfo: IAttributeChangeInfo<V>) {
         // Invalidate caches when parent changes
@@ -1075,6 +1077,7 @@ function _createSnapshotContainer(otelCfg: IOTelConfig, name: string | undefined
  * container.set("key1", "changed"); // snapshot2.get("key1") remains "value1" (previous value copied)
  * ```
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function createAttributeSnapshot(otelCfg: IOTelConfig, name: string, source: IOTelAttributes | IAttributeContainer, attribLimits?: IOTelAttributeLimits): IAttributeContainer {
     let newContainer: IAttributeContainer;
 
@@ -1110,6 +1113,7 @@ export function createAttributeSnapshot(otelCfg: IOTelConfig, name: string, sour
  * }
  * ```
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function isAttributeContainer(value: any): value is IAttributeContainer {
     return value &&
            isFunction(value.clear) &&

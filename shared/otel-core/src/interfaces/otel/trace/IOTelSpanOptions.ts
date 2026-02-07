@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { OTelSpanKind } from "../../../enums/otel/OTelSpanKind";
-import { OTelTimeInput } from "../../../types/time";
+import { OTelTimeInput } from "../../IOTelHrTime";
 import { IOTelAttributes } from "../IOTelAttributes";
 import { IOTelLink } from "./IOTelLink";
 
@@ -12,12 +12,16 @@ import { IOTelLink } from "./IOTelLink";
  */
 export interface IOTelSpanOptions {
     /**
-     * The SpanKind of a span
-     * @default {@link eOTelSpanKind.INTERNAL}
+     * The SpanKind of a span of this span, this is used to specify
+     * the relationship between the span and its parent span.
+     * @see {@link eOTelSpanKind} for possible values.
+     * @default eOTelSpanKind.INTERNAL
      */
     kind?: OTelSpanKind;
-  
-    /** A span's attributes */
+
+    /**
+     * A span's attributes
+     */
     attributes?: IOTelAttributes;
   
     /** {@link IOTelLink}s span to other spans */
@@ -28,4 +32,7 @@ export interface IOTelSpanOptions {
   
     /** The new span should be a root span. (Ignore parent from context). */
     root?: boolean;
+
+    /** Specify whether the span should be a recording span, default is true */
+    recording?: boolean;
 }

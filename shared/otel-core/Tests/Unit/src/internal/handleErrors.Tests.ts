@@ -1,10 +1,10 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { getGlobal } from "@nevware21/ts-utils";
-import { handleAttribError, handleDebug, handleError, handleNotImplemented, handleSpanError, handleWarn } from "../../../../src/internal/commonUtils";
+import { handleAttribError, handleDebug, handleError, handleNotImplemented, handleSpanError, handleWarn } from "../../../../src/internal/handleErrors";
 import { IOTelErrorHandlers } from "../../../../src/interfaces/otel/config/IOTelErrorHandlers";
 
 
-export class CommonUtilsTests extends AITestClass {
+export class HandleErrorsTests extends AITestClass {
 
     public testInitialize() {
         super.testInitialize();

@@ -1,15 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ObjAssign, ObjClass } from "@microsoft/applicationinsights-shims";
+import { ObjAssign, ObjClass, ObjProto } from "@microsoft/applicationinsights-shims";
 import {
-    WellKnownSymbols, arrForEach, asString as asString21, getKnownSymbol, isArray, isBoolean, isError, isFunction, isNullOrUndefined,
-    isNumber, isObject, isPlainObject, isString, isUndefined, objCreate, objDeepFreeze, objDefine, objForEachKey, objHasOwn,
-    objSetPrototypeOf, safe, strIndexOf, strTrim
+    ICachedValue, WellKnownSymbols, arrForEach, asString as asString21, createCachedValue, getKnownSymbol, isArray, isBoolean, isError,
+    isFunction, isNullOrUndefined, isNumber, isObject, isPlainObject, isString, isUndefined, mathFloor, mathRound, newSymbol, objCreate,
+    objDeepFreeze, objDefine, objForEachKey, objGetPrototypeOf, objHasOwn, objSetPrototypeOf, safe, strIndexOf, strSplit, strTrim
 } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { FeatureOptInMode } from "../enums/ai/FeatureOptInEnums";
 import { TransportType } from "../enums/ai/SendRequestReason";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { IPlugin } from "../interfaces/ai/ITelemetryPlugin";
 import { IXDomainRequest } from "../interfaces/ai/IXDomainRequest";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
@@ -21,12 +22,16 @@ const rCamelCase = /-([a-z])/g;
 const rNormalizeInvalid = /([^\w\d_$])/g;
 const rLeadingNumeric = /^(\d+[\w\d_$])/;
 
+let _ProtoNameTag: ICachedValue<symbol>;
+
 export let _getObjProto = Object[strGetPrototypeOf];
 
+/*#__NO_SIDE_EFFECTS__*/
 export function isNotUndefined<T>(value: T): value is T {
     return !isUndefined(value);
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function isNotNullOrUndefined<T>(value: T): value is T {
     return !isNullOrUndefined(value);
 }
@@ -38,6 +43,7 @@ export function isNotNullOrUndefined<T>(value: T): value is T {
  * This is a simplified version
  * @param name - The name to validate
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function normalizeJsName(name: string): string {
     let value = name;
 
@@ -61,6 +67,7 @@ export function normalizeJsName(name: string): string {
  * @param value - The string value to check for the existence of the search value
  * @param search - The value search within the value
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function strContains(value: string, search: string): boolean {
     if (value && search) {
         return strIndexOf(value, search) !== -1;
@@ -72,6 +79,7 @@ export function strContains(value: string, search: string): boolean {
 /**
  * Convert a date to I.S.O. format in IE8
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function toISOString(date: Date) {
     return date && date.toISOString() || STR_EMPTY;
 }
@@ -81,6 +89,7 @@ export const deepFreeze: <T>(obj: T) => T = objDeepFreeze;
 /**
  * Returns the name of object if it's an Error. Otherwise, returns empty string.
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function getExceptionName(object: any): string {
     if (isError(object)) {
         return object.name;
@@ -247,6 +256,7 @@ export function proxyFunctions<T, S>(target: T, source: S | (() => S), functions
  * Only instance properties (hasOwnProperty) values are copied from the defaults to the new instance
  * @param defaults - Simple helper
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function createClassFromInterface<T>(defaults?: T) {
     return class {
         constructor() {
@@ -265,14 +275,26 @@ export function createClassFromInterface<T>(defaults?: T) {
  * in the debug output and also in the DevTools watchers window when inspecting the object etc.
  * @param target - The object to set the toStringTag symbol on
  * @param nameOrFunc - The name or function to use for the toStringTag
+ * @returns The target object
  */
-export function setObjStringTag(target: any, nameOrFunc: string | (() => string)): any {
-    safe(objDefine, [target, getKnownSymbol(WellKnownSymbols.toStringTag), isFunction(nameOrFunc) ? { g: nameOrFunc } : { v: nameOrFunc }]);
+export function setObjStringTag<T>(target: T, nameOrFunc: string | (() => string)): T {
+    safe(objDefine, [target, getKnownSymbol(WellKnownSymbols.toStringTag), isFunction(nameOrFunc) ? { g: nameOrFunc, e: false } : { v: nameOrFunc, w: false, e: false }]);
 
     return target;
 }
 
-export function setProtoTypeName(target: any, name: string) {
+/**
+ * Introduce an intermediate prototype to the target object and that sets the toStringTag on that prototype,
+ * this avoids directly modifying the target object and also allows multiple different "types" to be
+ * applied to the same target object if required.
+ * This is done as a best effort approach and may not always succeed due to security / object model restrictions
+ * So if it fails then it will fallback to just defining the toStringTag on the target object, which also may fail
+ * resulting in no change.
+ * @param target - The object to set the toStringTag symbol on
+ * @param name - The name or function to use for the toStringTag
+ * @returns The target object
+ */
+export function setProtoTypeName<T>(target: T, name: string): T {
     if (target) {
         let proto = _getObjProto(target);
         let done = false;
@@ -281,6 +303,19 @@ export function setProtoTypeName(target: any, name: string) {
             safe(() => {
                 // Create a new intermediate prototype that extends the current prototype
                 let newProto = setObjStringTag(objCreate(proto), name);
+                if (!_ProtoNameTag) {
+                    // Note: Using a cached value instead of a lazy value as we want to ensure that the namespace is consistent
+                    // across multiple calls as the `getLazy()` supports runtime invalidation via `setBypassLazyCache()` which would
+                    // result in different namespaces being returned.
+                    _ProtoNameTag = createCachedValue(newSymbol("ai$ProtoName"));
+                }
+
+                // Tag this new prototype
+                objDefine(newProto, _ProtoNameTag.v as any, {
+                    v: true,
+                    w: false,
+                    e: false
+                });
                 
                 objSetPrototypeOf(target, newProto);
                 done = true;
@@ -289,7 +324,35 @@ export function setProtoTypeName(target: any, name: string) {
 
         if (!done) {
             // Either no prototype or we failed to set it so just define the toStringTag on the target
-            setObjStringTag(target, name);
+            safe(setObjStringTag, [target, name]);
+        }
+    }
+
+    return target;
+}
+
+/**
+ * Update the introduced intermediate prototype name of the target object.
+ * @param target - The object to look for the prototype name and update
+ * @param name - The updated name to apply
+ * @returns The target Object
+ */
+export function updateProtoTypeName<T>(target: T, name: string): T {
+    if (_ProtoNameTag) {
+        // Find the Parent Proto
+        while (target && target !== ObjProto && !(target as any)[_ProtoNameTag.v]) {
+            let protoTarget = objGetPrototypeOf(target);
+            if (target === protoTarget) {
+                // Break out of any recursive case (happens on some runtimes) where the prototype of an
+                // object is the same prototype
+                break;
+            }
+            target = protoTarget;
+        }
+
+        if ((target as any)[_ProtoNameTag.v]) {
+            // Found it so update
+            safe(setObjStringTag, [target, name]);
         }
     }
 
@@ -303,6 +366,7 @@ export function setProtoTypeName(target: any, name: string) {
  * This helps when iterating using for..in, objKeys() and objForEach()
  * @param theObject - The object to be optimized if possible
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function optimizeObject<T>(theObject: T): T {
     // V8 Optimization to cause the JIT compiler to create a new optimized object for looking up the own properties
     // primarily for object with <= 19 properties for >= 20 the effect is reduced or non-existent
@@ -398,6 +462,7 @@ export const asString = asString21;
  * @param sdkDefaultState - Optional default state to return if the feature is not defined
  * @returns True if the feature is enabled, false if the feature is disabled, or undefined if the feature is not defined and no default state is provided.
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function isFeatureEnabled<T extends IConfiguration = IConfiguration>(feature?: string, cfg?: T, sdkDefaultState?: boolean): boolean | undefined {
     let ft = cfg && cfg.featureOptIn && cfg.featureOptIn[feature];
     if (feature && ft) {
@@ -414,6 +479,7 @@ export function isFeatureEnabled<T extends IConfiguration = IConfiguration>(feat
     return sdkDefaultState;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
     try {
         return xhr.responseText;
@@ -424,6 +490,7 @@ export function getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
     return null;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): string {
     if (xdr) {
         return "XDomainRequest,Response:" + getResponseText(xdr) || STR_EMPTY;
@@ -432,6 +499,7 @@ export function formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): s
     return message;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
     if (xhr) {
         return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + getResponseText(xhr) || xhr.response || STR_EMPTY;
@@ -440,6 +508,7 @@ export function formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): st
     return message;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function prependTransports(theTransports: TransportType[], newTransports: TransportType | TransportType[]) {
     if (newTransports) {
         if (isNumber(newTransports)) {
@@ -513,13 +582,14 @@ export function openXhr(method: string, urlString: string, withCredentials?: boo
 * @internal
 */
 // tslint:disable-next-line: align
+/*#__NO_SIDE_EFFECTS__*/
 export function convertAllHeadersToMap(headersString: string): { [headerName: string]: string } {
-    let headers = {};
+    let headers:any = {};
     if (isString(headersString)) {
         let headersArray = strTrim(headersString).split(/[\r\n]+/);
         arrForEach(headersArray, (headerEntry) => {
             if (headerEntry) {
-                let idx = headerEntry.indexOf(": ");
+                let idx = strIndexOf(headerEntry, ": ");
                 if (idx !== -1) {
                     // The new spec has the headers returning all as lowercase -- but not all browsers do this yet
                     let header = strTrim(headerEntry.substring(0, idx)).toLowerCase();
@@ -575,4 +645,95 @@ export function _getAllResponseHeaders(xhr: XMLHttpRequest, isOneDs?: boolean) {
     }
 
     return theHeaders;
+}
+
+/*#__NO_SIDE_EFFECTS__*/
+export function stringToBoolOrDefault(str: any, defaultValue = false): boolean {
+    if (str === undefined || str === null) {
+        return defaultValue;
+    }
+
+    return str.toString().toLowerCase() === "true";
+}
+
+/**
+ * Convert ms to c# time span format
+ */
+/*#__NO_SIDE_EFFECTS__*/
+export function msToTimeSpan(totalms: number | string): string {
+    if (isTimeSpan(totalms)) {
+        // Already in time span format
+        return totalms;
+    }
+
+    if (isNaN(totalms) || totalms < 0) {
+        totalms = 0;
+    }
+
+    totalms = mathRound(totalms);
+
+    let ms = STR_EMPTY + totalms % 1000;
+    let sec = STR_EMPTY + mathFloor(totalms / 1000) % 60;
+    let min = STR_EMPTY + mathFloor(totalms / (1000 * 60)) % 60;
+    let hour = STR_EMPTY + mathFloor(totalms / (1000 * 60 * 60)) % 24;
+    const days = mathFloor(totalms / (1000 * 60 * 60 * 24));
+
+    ms = ms.length === 1 ? "00" + ms : ms.length === 2 ? "0" + ms : ms;
+    sec = sec.length < 2 ? "0" + sec : sec;
+    min = min.length < 2 ? "0" + min : min;
+    hour = hour.length < 2 ? "0" + hour : hour;
+
+    return (days > 0 ? days + "." : STR_EMPTY) + hour + ":" + min + ":" + sec + "." + ms;
+}
+
+/*#__NO_SIDE_EFFECTS__*/
+export function getExtensionByName(extensions: IPlugin[], identifier: string): IPlugin | null {
+    let extension: IPlugin = null;
+    arrForEach(extensions, (value) => {
+        if (value.identifier === identifier) {
+            extension = value;
+            return -1;
+        }
+    });
+
+    return extension;
+}
+
+/*#__NO_SIDE_EFFECTS__*/
+export function isCrossOriginError(message: string|Event, url: string, lineNumber: number, columnNumber: number, error: Error | Event): boolean {
+    return !error && isString(message) && (message === "Script error." || message === "Script error");
+}
+
+/**
+ * A helper method to determine whether the provided value is in a ISO time span format (DD.HH:MM:SS.MMMMMM)
+ * @param value - The value to check
+ * @returns True if the value is in a time span format; false otherwise
+ */
+/*#__NO_SIDE_EFFECTS__*/
+export function isTimeSpan(value: any): value is string {
+    let result = false;
+
+    if (isString(value)) {
+        const parts = strSplit(value, ":");
+        if (parts.length === 3) {
+            // Looks like a candidate, now validate each part
+            const daysHours = strSplit(parts[0], ".");
+            if (daysHours.length === 2) {
+                result = !isNaN(parseInt(daysHours[0] || "0")) && !isNaN(parseInt(daysHours[1] || "0"));
+            } else {
+                result = !isNaN(parseInt(daysHours[0] || "0"));
+            }
+
+            result = result && !isNaN(parseInt(parts[1] || "0"));
+
+            const secondsParts = strSplit(parts[2], ".");
+            if (secondsParts.length === 2) {
+                result = result && !isNaN(parseInt(secondsParts[0] || "0")) && !isNaN(parseInt(secondsParts[1] || "0"));
+            } else {
+                result = result && !isNaN(parseInt(secondsParts[0] || "0"));
+            }
+        }
+    }
+
+    return result;
 }

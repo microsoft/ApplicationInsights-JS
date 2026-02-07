@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 
 import { OTelSeverityNumber } from "../../../enums/otel/eOTelSeverityNumber";
+import { IOTelHrTime } from "../../../interfaces/IOTelHrTime";
 import { OTelAnyValue } from "../../../types/OTelAnyValue";
-import { IOTelHrTime } from "../../../types/time";
+import { IDistributedTraceContext, IDistributedTraceInit } from "../../ai/IDistributedTraceContext";
 import { IOTelResource } from "../resources/IOTelResource";
 import { IOTelInstrumentationScope } from "../trace/IOTelInstrumentationScope";
 import { IOTelSpanContext } from "../trace/IOTelSpanContext";
@@ -23,7 +24,7 @@ export interface IOTelSdkLogRecord {
     /**
      * The SpanContext associated with the LogRecord.
      */
-    readonly spanContext?: IOTelSpanContext;
+    readonly spanContext?: IDistributedTraceContext | IDistributedTraceInit | IOTelSpanContext;
 
     /**
      * The Resource associated with the LogRecord.

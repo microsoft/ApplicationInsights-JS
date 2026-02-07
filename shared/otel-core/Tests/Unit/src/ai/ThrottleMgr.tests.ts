@@ -1,10 +1,14 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, IAppInsightsCore, IConfiguration, IPlugin, _eInternalMessageId } from "../../../../../src/index";
+import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
+import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+import { IPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
+import { _eInternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
 import { SinonSpy } from "sinon";
-import { ThrottleMgr } from "../../../../../src/diagnostics/ThrottleMgr";
-import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, IThrottleResult } from "../../../../../src/interfaces/ai/IThrottleMgr";
-import { utlCanUseLocalStorage } from "../../../../../src/utils/StorageHelperFuncs";
-import { IConfig } from "../../../../../src/index";
+import { ThrottleMgr } from "../../../../src/diagnostics/ThrottleMgr";
+import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, IThrottleResult } from "../../../../src/interfaces/ai/IThrottleMgr";
+import { utlCanUseLocalStorage } from "../../../../src/utils/StorageHelperFuncs";
+import { IConfig } from "../../../../src/interfaces/ai/IConfig";
 
 const daysInMonth = [
     31, // Jan

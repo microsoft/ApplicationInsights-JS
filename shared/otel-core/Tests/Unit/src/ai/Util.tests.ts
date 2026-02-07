@@ -1,11 +1,11 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { ICorrelationConfig } from "../../../../../src/interfaces/ai/ICorrelationConfig";
-import { strStartsWith } from "@nevware21/ts-utils";
-import { correlationIdCanIncludeCorrelationHeader } from "../../../../../src/utils/Util";
-import { createDomEvent } from "../../../../../src/utils/DomHelperFuncs";
-import { urlParseFullHost, urlParseHost, urlParseUrl } from "../../../../../src/utils/UrlHelperFuncs";
-import { getIEVersion } from "../../../../../src/utils/EnvUtils";
-import { uaDisallowsSameSiteNone } from "../../../../../src/core/CookieMgr";
+import { ICorrelationConfig } from "../../../../src/interfaces/ai/ICorrelationConfig";
+import { setBypassLazyCache, strStartsWith } from "@nevware21/ts-utils";
+import { correlationIdCanIncludeCorrelationHeader } from "../../../../src/utils/Util";
+import { createDomEvent } from "../../../../src/utils/DomHelperFuncs";
+import { urlParseFullHost, urlParseHost, urlParseUrl } from "../../../../src/utils/UrlHelperFuncs";
+import { getIEVersion } from "../../../../src/utils/EnvUtils";
+import { uaDisallowsSameSiteNone } from "../../../../src/core/CookieMgr";
 
 export class UtilTests extends AITestClass {
     private testRegexLists = (config: ICorrelationConfig, exp: boolean, host: string) => {
@@ -17,9 +17,13 @@ export class UtilTests extends AITestClass {
     };
 
     public testInitialize() {
+        super.testInitialize();
+        setBypassLazyCache(true);
     }
 
-    public testCleanup() {}
+    public testCleanup() {
+        super.testCleanup();
+    }
 
     public registerTests() {
         this.testCase({

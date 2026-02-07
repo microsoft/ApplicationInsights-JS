@@ -1,15 +1,15 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { dumpObj } from "@nevware21/ts-utils";
-import { AppInsightsCore } from "../../../../../src/core/AppInsightsCore";
-import { _eInternalMessageId } from "../../../../../src/index";
-import { IConfiguration } from "../../../../../src/index";
-import { IPlugin, ITelemetryPlugin } from "../../../../../src/index";
-import { ITelemetryItem } from "../../../../../src/index";
-import { IAppInsightsCore } from "../../../../../src/index";
-import { ITelemetryPluginChain } from "../../../../../src/index";
-import { IProcessTelemetryContext } from "../../../../../src/index";
-import { OldTrackPlugin, TestChannelPlugin, TestPlugin } from "./TestPlugins";
-import { BaseTelemetryPlugin } from "../../../../../src/index";
+import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
+import { _eInternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+import { IPlugin, ITelemetryPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
+import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
+import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
+import { ITelemetryPluginChain } from "../../../../src/interfaces/ai/ITelemetryPluginChain";
+import { IProcessTelemetryContext } from "../../../../src/interfaces/ai/IProcessTelemetryContext";
+import { OldTrackPlugin, TestChannelPlugin, TestPlugin } from "../ai/TestPlugins";
+import { BaseTelemetryPlugin } from "../../../../src/core/BaseTelemetryPlugin";
 
 export class DynamicTests extends AITestClass {
 

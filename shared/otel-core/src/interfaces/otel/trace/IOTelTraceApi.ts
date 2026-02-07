@@ -1,17 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IDistributedTraceContext } from "../../..";
+import { IDistributedTraceInit } from "../../ai/IDistributedTraceContext";
+import { ISpanScope } from "../../ai/ITraceProvider";
 import { IOTelContext } from "../context/IOTelContext";
 import { IOTelSpan } from "./IOTelSpan";
 import { IOTelSpanContext } from "./IOTelSpanContext";
 import { IOTelTracer } from "./IOTelTracer";
 import { IOTelTracerOptions } from "./IOTelTracerOptions";
 import { IOTelTracerProvider } from "./IOTelTracerProvider";
+import { IReadableSpan } from "./IReadableSpan";
 
 /**
- * IOTelTraceApi provides an interface definition for the OpenTelemetry TraceAPI
+ * ITraceApi provides an interface definition which is simular to the OpenTelemetry TraceAPI
  */
-export interface IOTelTraceApi {
+export interface ITraceApi {
     /**
      * Set the current global tracer for the current API instance.
      * @param provider - The {@link IOTelTracerProvider} to be set as the global tracer provider for this API instance
@@ -42,18 +46,18 @@ export interface IOTelTraceApi {
     disable(): void;
 
     /**
-     * Wrap the given {@link IOTelSpanContext} in a new non-recording {@link IOTelSpan}
+     * Wrap the given {@link IDistributedTraceContext} in a new non-recording {@link IReadableSpan}
      *
-     * @param spanContext - The {@link IOTelSpanContext} to be wrapped
-     * @returns a new non-recording {@link IOTelSpan} with the provided context
+     * @param spanContext - The {@link IDistributedTraceContext} to be wrapped
+     * @returns a new non-recording {@link IReadableSpan} with the provided context
      */
-    wrapSpanContext(spanContext: IOTelSpanContext): IOTelSpan;
+    wrapSpanContext(spanContext: IDistributedTraceContext | IDistributedTraceInit | IOTelSpanContext): IReadableSpan;
 
     /**
-     * Returns true if this {@link IOTelSpanContext} is valid.
-     * @return true if this {@link IOTelSpanContext} is valid.
+     * Returns true if this {@link IDistributedTraceContext} is valid.
+     * @return true if this {@link IDistributedTraceContext} is valid.
      */
-    isSpanContextValid(spanContext: IOTelSpanContext): boolean;
+    isSpanContextValid(spanContext: IDistributedTraceContext | IDistributedTraceInit | IOTelSpanContext): boolean;
 
     /**
      * Remove current span stored in the context
@@ -67,12 +71,12 @@ export interface IOTelTraceApi {
      *
      * @param context - The {@link IOTelContext} to get span from
      */
-    getSpan(context: IOTelContext): IOTelSpan | undefined;
+    getSpan(context: IOTelContext): IReadableSpan | undefined;
   
     /**
      * Gets the span from the current context, if one exists.
      */
-    getActiveSpan(): IOTelSpan | undefined;
+    getActiveSpan(): IReadableSpan | undefined | null;
   
     /**
      * Wrap span context in a NoopSpan and set as span in a new
@@ -88,7 +92,7 @@ export interface IOTelTraceApi {
      *
      * @param context - The {@Link IOTelContext} to get values from
      */
-    getSpanContext(context: IOTelContext): IOTelSpanContext | undefined
+    getSpanContext(context: IOTelContext): IDistributedTraceContext | undefined
 
     /**
      * Set the span on a context
@@ -97,4 +101,11 @@ export interface IOTelTraceApi {
      * @param span - The {@link IOTelSpan} to set as the active span for the context
      */
     setSpan(context: IOTelContext, span: IOTelSpan): IOTelContext;
+    
+    /**
+     * Set or clear the current active span.
+     * @param span - The span to set as the active span, or null/undefined to clear the active span.
+     * @return An ISpanScope instance returned by the host, or void if there is no defined host.
+     */
+    setActiveSpan(span: IReadableSpan | undefined | null): ISpanScope | undefined | null;
 }

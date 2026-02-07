@@ -6,6 +6,7 @@ import { STR_GET_PERF_MGR } from "../constants/InternalConstants";
 import { INotificationManager } from "../interfaces/ai/INotificationManager";
 import { IPerfEvent } from "../interfaces/ai/IPerfEvent";
 import { IPerfManager, IPerfManagerProvider } from "../interfaces/ai/IPerfManager";
+import { _noopVoid } from "../internal/noopHelpers";
 
 const strExecutionContextKey = "ctx";
 const strParentContextKey = "ParentContextKey";
@@ -130,7 +131,7 @@ export class PerfEvent implements IPerfEvent {
 
             _self.time = utcNow() - _self.start;
             _self.exTime = _self.time - childTime;
-            _self.complete = () => {};
+            _self.complete = _noopVoid;
         };
     }
 }
@@ -226,32 +227,14 @@ const doPerfActiveKey = "CoreUtils.doPerf";
 export function doPerf<T>(mgrSource: IPerfManagerProvider | IPerfManager, getSource: () => string, func: (perfEvt?: IPerfEvent) => T, details?: () => any, isAsync?: boolean) {
     if (mgrSource) {
         let perfMgr: IPerfManager = mgrSource as IPerfManager;
-        let perfProvider: IPerfManagerProvider = mgrSource as IPerfManagerProvider;
-        let thePerfMgr: any = mgrSource;
-
-        let internalGetPerfMgr = thePerfMgr[STR_GET_PERF_MGR];
-        if (isFunction(internalGetPerfMgr)) {
-            // Looks like a perf manager provider object using the internal accessor
-            perfMgr = internalGetPerfMgr.call(thePerfMgr);
-        } else {
-            let providerGetPerfMgr = perfProvider.getPerfMgr;
-            if (isFunction(providerGetPerfMgr)) {
-                perfMgr = providerGetPerfMgr.call(perfProvider);
-            }
+        if (perfMgr[STR_GET_PERF_MGR]) {
+            // Looks like a perf manager provider object
+            perfMgr = perfMgr[STR_GET_PERF_MGR]();
         }
-
+        
         if (perfMgr) {
-            let hasCreate = isFunction(perfMgr.create);
-            let hasFire = isFunction(perfMgr.fire);
-            let hasSetCtx = isFunction(perfMgr.setCtx);
-            let hasGetCtx = isFunction(perfMgr.getCtx);
-
-            if (!(hasCreate && hasFire && hasSetCtx)) {
-                return func();
-            }
-
             let perfEvt: IPerfEvent;
-            let currentActive: IPerfEvent = hasGetCtx ? perfMgr.getCtx(doPerfActiveKey) : null;
+            let currentActive: IPerfEvent = perfMgr.getCtx(doPerfActiveKey);
             try {
                 perfEvt = perfMgr.create(getSource(), details, isAsync);
                 if (perfEvt) {
@@ -263,11 +246,11 @@ export function doPerf<T>(mgrSource: IPerfManagerProvider | IPerfManager, getSou
                                 children = [];
                                 currentActive.setCtx(PerfEvent[strChildrenContextKey], children);
                             }
-
+    
                             children.push(perfEvt);
                         }
                     }
-
+    
                     // Set this event as the active event now
                     perfMgr.setCtx(doPerfActiveKey, perfEvt);
                     return func(perfEvt);
@@ -281,7 +264,7 @@ export function doPerf<T>(mgrSource: IPerfManagerProvider | IPerfManager, getSou
                 if (perfEvt) {
                     perfMgr.fire(perfEvt);
                 }
-
+                
                 // Reset the active event to the previous value
                 perfMgr.setCtx(doPerfActiveKey, currentActive);
             }

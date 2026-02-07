@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { eEventsDiscardedReason, EventsDiscardedReason } from "../../../../../src/index";
+import { eEventsDiscardedReason, EventsDiscardedReason } from "../../../../src/enums/ai/EventsDiscardedReason";
 
 export class EventsDiscardedReasonTests extends AITestClass {
 

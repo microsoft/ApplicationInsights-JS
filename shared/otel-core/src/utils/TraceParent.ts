@@ -1,22 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach, isArray, isNullOrUndefined, isString, strLeft, strTrim } from "@nevware21/ts-utils";
+import { arrForEach, isArray, isNullOrUndefined, isString, strIndexOf, strLeft, strTrim } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { eW3CTraceFlags } from "../enums/W3CTraceFlags";
-import { IDistributedTraceContext } from "../interfaces/ai/IDistributedTraceContext";
 import { ITraceParent } from "../interfaces/ai/ITraceParent";
-import { ITelemetryTrace } from "../interfaces/ai/context/ITelemetryTrace";
 import { generateW3CId } from "./CoreUtils";
 import { findMetaTag, findNamedServerTiming } from "./EnvUtils";
 
+// using {0,16} for leading and trailing whitespace just to constrain the possible runtime of a random string
 const TRACE_PARENT_REGEX = /^([\da-f]{2})-([\da-f]{32})-([\da-f]{16})-([\da-f]{2})(-[^\s]{1,64})?$/i;
 const DEFAULT_VERSION = "00";
 const INVALID_VERSION = "ff";
 export const INVALID_TRACE_ID = "00000000000000000000000000000000";
 export const INVALID_SPAN_ID = "0000000000000000";
 const SAMPLED_FLAG = 0x01;
-
 
 function _isValid(value: string, len: number, invalidValue?: string): boolean {
     if (value && value.length === len && value !== invalidValue) {
@@ -53,7 +51,9 @@ function _formatFlags(value: number): string {
  * @param spanId - The parent/span id to use, a new random value will be generated if it is invalid.
  * @param flags - The traceFlags to use, defaults to zero (0) if not supplied or invalid
  * @param version - The version to used, defaults to version "01" if not supplied or invalid.
+ * @returns
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function createTraceParent(traceId?: string, spanId?: string, flags?: number, version?: string): ITraceParent {
     return {
         version: _isValid(version, 2, INVALID_VERSION) ? version : DEFAULT_VERSION,
@@ -68,31 +68,37 @@ export function createTraceParent(traceId?: string, spanId?: string, flags?: num
  *
  * @param value - The value to be parsed
  * @param selectIdx - If the found value is comma separated which is the preferred entry to select, defaults to the first
+ * @returns
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function parseTraceParent(value: string, selectIdx?: number): ITraceParent {
     if (!value) {
+        // Don't pass a null/undefined or empty string
         return null;
     }
 
     if (isArray(value)) {
+        // The value may have been encoded on the page into an array so handle this automatically
         value = value[0] || STR_EMPTY;
     }
 
     if (!value || !isString(value) || value.length > 8192) {
+        // limit potential processing based on total length
         return null;
     }
 
-    if (value.indexOf(",") !== -1) {
+    if (strIndexOf(value, ",") !== -1) {
         let values = value.split(",");
         value = values[selectIdx > 0 && values.length > selectIdx ? selectIdx : 0];
     }
 
+    // See https://www.w3.org/TR/trace-context/#versioning-of-traceparent
     TRACE_PARENT_REGEX.lastIndex = 0;
     const match = TRACE_PARENT_REGEX.exec(strTrim(value));
-    if (!match ||
-        match[1] === INVALID_VERSION ||
-        match[2] === INVALID_TRACE_ID ||
-        match[3] === INVALID_SPAN_ID) {
+    if (!match ||                               // No match
+            match[1] === INVALID_VERSION ||     // version ff is forbidden
+            match[2] === INVALID_TRACE_ID ||    // All zeros is considered to be invalid
+            match[3] === INVALID_SPAN_ID) {     // All zeros is considered to be invalid
         return null;
     }
 
@@ -105,28 +111,43 @@ export function parseTraceParent(value: string, selectIdx?: number): ITraceParen
 }
 
 /**
- * Is the provided W3c Trace Id a valid string representation.
+ * Is the provided W3c Trace Id a valid string representation, it must be a 32-character string
+ * of lowercase hexadecimal characters for example, 4bf92f3577b34da6a3ce929d0e0e4736.
+ * If all characters as zero (00000000000000000000000000000000) it will be considered an invalid value.
+ * @param value - The W3c trace Id to be validated
+ * @returns true if valid otherwise false
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function isValidTraceId(value: string): boolean {
     return _isValid(value, 32, INVALID_TRACE_ID);
 }
 
 /**
- * Is the provided W3c span id (aka. parent id) a valid string representation.
+ * Is the provided W3c span id (aka. parent id) a valid string representation, it must be a 16-character
+ * string of lowercase hexadecimal characters, for example, 00f067aa0ba902b7.
+ * If all characters are zero (0000000000000000) this is considered an invalid value.
+ * @param value - The W3c span id to be validated
+ * @returns true if valid otherwise false
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function isValidSpanId(value: string): boolean {
     return _isValid(value, 16, INVALID_SPAN_ID);
 }
 
 /**
- * Validates that the provided ITraceParent instance conforms to the currently supported specifications.
+ * Validates that the provided ITraceParent instance conforms to the currently supported specifications
+ * @param value - The parsed traceParent value
+ * @returns
  */
-export function isValidTraceParent(value: ITraceParent): boolean {
+/*#__NO_SIDE_EFFECTS__*/
+export function isValidTraceParent(value: ITraceParent) {
     if (!value ||
-        !_isValid(value.version, 2, INVALID_VERSION) ||
-        !_isValid(value.traceId, 32, INVALID_TRACE_ID) ||
-        !_isValid(value.spanId, 16, INVALID_SPAN_ID) ||
-        !_isValid(_formatFlags(value.traceFlags), 2)) {
+            !_isValid(value.version, 2, INVALID_VERSION) ||
+            !_isValid(value.traceId, 32, INVALID_TRACE_ID) ||
+            !_isValid(value.spanId, 16, INVALID_SPAN_ID) ||
+            !_isValid(_formatFlags(value.traceFlags), 2)) {
+
+        // Each known field must contain a valid value
         return false;
     }
 
@@ -135,8 +156,11 @@ export function isValidTraceParent(value: ITraceParent): boolean {
 
 /**
  * Is the parsed traceParent indicating that the trace is currently sampled.
+ * @param value - The parsed traceParent value
+ * @returns
  */
-export function isSampledFlag(value: ITraceParent): boolean {
+/*#__NO_SIDE_EFFECTS__*/
+export function isSampledFlag(value: ITraceParent) {
     if (isValidTraceParent(value)) {
         return (value.traceFlags & SAMPLED_FLAG) === SAMPLED_FLAG;
     }
@@ -145,10 +169,18 @@ export function isSampledFlag(value: ITraceParent): boolean {
 }
 
 /**
- * Format the ITraceParent value as a string using the supported and known version formats.
+ * Format the ITraceParent value as a string using the supported and know version formats.
+ * So even if the passed traceParent is a later version the string value returned from this
+ * function will convert it to only the known version formats.
+ * This currently only supports version "00" and invalid "ff"
+ * @param value - The parsed traceParent value
+ * @returns
  */
-export function formatTraceParent(value: ITraceParent): string {
+/*#__NO_SIDE_EFFECTS__*/
+export function formatTraceParent(value: ITraceParent) {
     if (value) {
+        // Special Note: This only supports formatting as version 00, future versions should encode any known supported version
+        // So parsing a future version will populate the correct version value but reformatting will reduce it to version 00.
         let flags = _formatFlags(value.traceFlags);
         if (!_isValid(flags, 2)) {
             flags = "01";
@@ -156,9 +188,11 @@ export function formatTraceParent(value: ITraceParent): string {
 
         let version = value.version || DEFAULT_VERSION;
         if (version !== "00" && version !== "ff") {
+            // Reduce version to "00"
             version = DEFAULT_VERSION;
         }
 
+        // Format as version 00
         return `${version.toLowerCase()}-${_formatValue(value.traceId, 32, INVALID_TRACE_ID).toLowerCase()}-${_formatValue(value.spanId, 16, INVALID_SPAN_ID).toLowerCase()}-${flags.toLowerCase()}`;
     }
 
@@ -167,127 +201,17 @@ export function formatTraceParent(value: ITraceParent): string {
 
 /**
  * Helper function to fetch the passed traceparent from the page, looking for it as a meta-tag or a Server-Timing header.
+ * @param selectIdx - If the found value is comma separated which is the preferred entry to select, defaults to the first
+ * @returns
  */
 export function findW3cTraceParent(selectIdx?: number): ITraceParent {
     const name = "traceparent";
     let traceParent: ITraceParent = parseTraceParent(findMetaTag(name), selectIdx);
     if (!traceParent) {
-        traceParent = parseTraceParent(findNamedServerTiming(name), selectIdx);
+        traceParent = parseTraceParent(findNamedServerTiming(name), selectIdx)
     }
 
     return traceParent;
-}
-
-export function createDistributedTraceContextFromTrace(telemetryTrace?: ITelemetryTrace, parentCtx?: IDistributedTraceContext): IDistributedTraceContext {
-    let trace = telemetryTrace || {} as ITelemetryTrace;
-
-    function _getName(): string {
-        return trace.name;
-    }
-
-    function _setName(newValue: string): void {
-        if (parentCtx) {
-            parentCtx.setName(newValue);
-        }
-
-        trace.name = newValue;
-    }
-
-    function _getTraceId(): string {
-        return trace.traceID;
-    }
-
-    function _setTraceId(newValue: string): void {
-        if (parentCtx) {
-            parentCtx.setTraceId(newValue);
-        }
-
-        if (isValidTraceId(newValue)) {
-            trace.traceID = newValue;
-        }
-    }
-
-    function _getSpanId(): string {
-        return trace.parentID;
-    }
-
-    function _setSpanId(newValue: string): void {
-        if (parentCtx) {
-            parentCtx.setSpanId(newValue);
-        }
-
-        if (isValidSpanId(newValue)) {
-            trace.parentID = newValue;
-        }
-    }
-
-    function _getTraceFlags(): number | undefined {
-        return trace.traceFlags;
-    }
-
-    function _setTraceFlags(newValue?: number): void {
-        if (parentCtx) {
-            parentCtx.setTraceFlags(newValue);
-        }
-
-        trace.traceFlags = newValue;
-    }
-
-    let ctx = {
-        getName: _getName,
-        setName: _setName,
-        getTraceId: _getTraceId,
-        setTraceId: _setTraceId,
-        getSpanId: _getSpanId,
-        setSpanId: _setSpanId,
-        getTraceFlags: _getTraceFlags,
-        setTraceFlags: _setTraceFlags,
-        isRemote: parentCtx ? parentCtx.isRemote : false,
-        traceState: parentCtx ? parentCtx.traceState : undefined,
-        parentCtx: parentCtx || null
-    } as IDistributedTraceContext;
-
-    Object.defineProperty(ctx, "pageName", {
-        configurable: true,
-        enumerable: true,
-        get: _getName,
-        set: (newValue: string) => {
-            trace.name = newValue;
-        }
-    });
-
-    Object.defineProperty(ctx, "traceId", {
-        configurable: true,
-        enumerable: true,
-        get: _getTraceId,
-        set: (newValue: string) => {
-            if (isValidTraceId(newValue)) {
-                trace.traceID = newValue;
-            }
-        }
-    });
-
-    Object.defineProperty(ctx, "spanId", {
-        configurable: true,
-        enumerable: true,
-        get: _getSpanId,
-        set: (newValue: string) => {
-            if (isValidSpanId(newValue)) {
-                trace.parentID = newValue;
-            }
-        }
-    });
-
-    Object.defineProperty(ctx, "traceFlags", {
-        configurable: true,
-        enumerable: true,
-        get: _getTraceFlags,
-        set: (newValue?: number) => {
-            trace.traceFlags = newValue;
-        }
-    });
-
-    return ctx;
 }
 
 export interface scriptsInfo {
@@ -300,6 +224,8 @@ export interface scriptsInfo {
 
 /**
  * Find all script tags in the provided document and return the information about them.
+ * @param doc - The document to search for script tags
+ * @returns
  */
 export function findAllScripts(doc: any): scriptsInfo[] {
     let scripts = doc.getElementsByTagName("script");

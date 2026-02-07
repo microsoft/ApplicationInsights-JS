@@ -4,6 +4,29 @@
 import { IExceptionConfig } from "@microsoft/otel-core-js";
 
 /**
+ * Enum values for configuring trace context strategy for SPA route changes.
+ * Controls how trace contexts are managed when navigating between pages in a Single Page Application.
+ * @since 3.4.0
+ */
+export const enum eRouteTraceStrategy {
+    /**
+     * Server strategy: Each page view gets a new, independent trace context.
+     * No parent-child relationships are created between page views.
+     * Each page will use the original server-provided trace context (if available) as its parent,
+     * as defined by the {@link IConfiguration.traceHdrMode} configuration for distributed tracing headers.
+     * This is the traditional behavior where each page view is treated as a separate operation.
+     */
+    Server = 0,
+    
+    /**
+     * Page strategy: Page views are chained together with parent-child relationships.
+     * Each new page view inherits the trace context from the previous page view,
+     * creating a connected chain of related operations for better correlation.
+     */
+    Page = 1
+}
+
+/**
  * Configuration interface specifically for AnalyticsPlugin
  * This interface defines only the configuration properties that the Analytics plugin uses.
  */
@@ -115,5 +138,14 @@ export interface IAnalyticsConfig {
      * @default { inclScripts: false, expLog: undefined, maxLogs: 50 }
      */
     expCfg?: IExceptionConfig;
+
+    /**
+     * Controls the trace context strategy for SPA route changes.
+     * Determines how trace contexts are managed and correlated across virtual page views
+     * in Single Page Applications, affecting telemetry correlation and operation tracking.
+     * @default eRouteTraceStrategy.Server
+     * @since 3.4.0
+     */
+    routeTraceStrategy?: eRouteTraceStrategy;
 }
 

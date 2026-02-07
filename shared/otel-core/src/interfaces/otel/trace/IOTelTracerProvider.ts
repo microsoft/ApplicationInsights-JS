@@ -1,9 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IPromise } from "@nevware21/ts-async";
 import { IOTelTracer } from "./IOTelTracer";
 import { IOTelTracerOptions } from "./IOTelTracerOptions";
 
+/**
+ * OpenTelemetry Trace API for getting tracers.
+ * This provides the standard OpenTelemetry trace API entry point.
+ */
 export interface IOTelTracerProvider {
     /**
      * Returns a Tracer, creating one if one with the given name and version is
@@ -18,5 +23,17 @@ export interface IOTelTracerProvider {
      * @returns Tracer A Tracer with the given name and version
      */
     getTracer(name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer;
+
+    /**
+     * Forces the tracer provider to flush any buffered data.
+     * @returns A promise that resolves when the flush is complete.
+     */
+    forceFlush?: () => IPromise<void> | void;
+
+    /**
+     * Shuts down the tracer provider and releases any resources.
+     * @returns A promise that resolves when the shutdown is complete.
+     */
+    shutdown?: () => IPromise<void> | void;
 }
   

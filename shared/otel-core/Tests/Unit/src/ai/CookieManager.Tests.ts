@@ -1,6 +1,15 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, createCookieMgr, IAppInsightsCore, IConfiguration, ICookieMgrConfig, IPlugin, ITelemetryItem, newId, objExtend } from "../../../../../src/index"
-import { _eInternalMessageId } from "../../../../../src/index";
+import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
+import { createCookieMgr } from "../../../../src/core/CookieMgr";
+import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+import { ICookieMgrConfig } from "../../../../src/interfaces/ai/ICookieMgr";
+import { IPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
+import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
+import { newId } from "../../../../src/utils/RandomHelper";
+import { objExtend } from "../../../../src/utils/HelperFuncs";
+import { _eInternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
+import { setBypassLazyCache } from "@nevware21/ts-utils";
 
 export class CookieManagerTests extends AITestClass {
     private _cookieMgrCfg: ICookieMgrConfig;
@@ -14,6 +23,7 @@ export class CookieManagerTests extends AITestClass {
     public testInitialize() {
         let _self = this;
         super.testInitialize();
+        setBypassLazyCache(true);
         _self._testCookies = {};
         _self._cookieMgrCfg = {
             getCookie: (name) => {

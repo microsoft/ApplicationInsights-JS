@@ -4,7 +4,7 @@
 import { strTrim } from "@nevware21/ts-utils";
 import { IOTelErrorHandlers } from "../../interfaces/otel/config/IOTelErrorHandlers";
 import { IOTelLogRecordLimits } from "../../interfaces/otel/logs/IOTelLogRecordLimits";
-import { handleWarn } from "../../internal/commonUtils";
+import { handleWarn } from "../../internal/handleErrors";
 
 /**
  * Retrieves a number from an environment variable.
@@ -15,6 +15,7 @@ import { handleWarn } from "../../internal/commonUtils";
  * @param {string} key - The name of the environment variable to retrieve.
  * @returns {number | undefined} - The number value or `undefined`.
  */
+// TODO: Remove this function as this MUST be using the common shared dynamic configuration and not loading its own isolaoted instance.
 export function getNumberFromEnv(key: string): number | undefined {
     // Handle browser environments where process is not defined
     const handlers: IOTelErrorHandlers = {};
@@ -36,6 +37,7 @@ export function getNumberFromEnv(key: string): number | undefined {
     return value;
 }
 
+// TODO: Remove this function as this MUST be using the common shared dynamic configuration and not loading its own isolaoted instance.
 export function loadDefaultConfig() {
     return {
         forceFlushTimeoutMillis: 30000,
@@ -58,6 +60,7 @@ export function loadDefaultConfig() {
  * configures the model specific limits by using the values from the general ones.
  * @param logRecordLimits User provided limits configuration
  */
+// TODO: Remove this function as this MUST be using the common shared dynamic configuration and not loading its own isolaoted instance.
 export function reconfigureLimits(
     logRecordLimits: IOTelLogRecordLimits
 ): Required<IOTelLogRecordLimits> {

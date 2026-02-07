@@ -1,10 +1,11 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { LoggingSeverity, _InternalMessageId } from "../../../../../src/enums/ai/LoggingEnums";
-import { DataSanitizerValues, Exception } from "../../../../../src/index"
-import { IDiagnosticLogger, IInternalLogMessage } from "../../../../../src/interfaces/ai/IDiagnosticLogger";
-import { IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal } from "../../../../../src/interfaces/ai/IExceptionTelemetry";
-import { _createExceptionDetails, _createExDetailsFromInterface, _extractStackFrame, _parsedFrameToInterface, _IParsedStackFrame } from "../../../../../src/telemetry/ai/Exception";
-import { IStackFrame } from "../../../../../src/interfaces/ai/contracts/IStackFrame";
+import { LoggingSeverity, _InternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
+import { DataSanitizerValues } from "../../../../src/telemetry/ai/Common/DataSanitizer";
+import { Exception } from "../../../../src/telemetry/ai/Exception";
+import { IDiagnosticLogger, IInternalLogMessage } from "../../../../src/interfaces/ai/IDiagnosticLogger";
+import { IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal } from "../../../../src/interfaces/ai/IExceptionTelemetry";
+import { _createExceptionDetails, _createExDetailsFromInterface, _extractStackFrame, _parsedFrameToInterface, _IParsedStackFrame } from "../../../../src/telemetry/ai/Exception";
+import { IStackFrame } from "../../../../src/interfaces/ai/contracts/IStackFrame";
 
 class TestDiagnosticLogger implements IDiagnosticLogger {
     public queue: IInternalLogMessage[];
@@ -257,7 +258,7 @@ export class ExceptionTests extends AITestClass {
                             "   c@http://example.com/stacktrace.js:9:3\n" +
                             "   b@http://example.com/stacktrace.js:6:3\n" +
                             "   a@http://example.com/stacktrace.js:3:3\n" +
-                            "  at Object.testMethod (http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)"
+                            "  at Object.testMethod (http://localhost:9002/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)"
                     }
                 };
 
@@ -290,7 +291,7 @@ export class ExceptionTests extends AITestClass {
                     { level: 25, method: "c", assembly: "c@http://example.com/stacktrace.js:9:3", fileName: "http://example.com/stacktrace.js", line: 9 },
                     { level: 26, method: "b", assembly: "b@http://example.com/stacktrace.js:6:3", fileName: "http://example.com/stacktrace.js", line: 6 },
                     { level: 27, method: "a", assembly: "a@http://example.com/stacktrace.js:3:3", fileName: "http://example.com/stacktrace.js", line: 3 },
-                    { level: 28, method: "Object.testMethod", assembly: "at Object.testMethod (http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)", fileName: "http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js", line: 53058 }
+                    { level: 28, method: "Object.testMethod", assembly: "at Object.testMethod (http://localhost:9002/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)", fileName: "http://localhost:9002/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js", line: 53058 }
                 ];
 
                 let exception = Exception.CreateAutoException("message",
@@ -430,8 +431,8 @@ export class ExceptionTests extends AITestClass {
                         frame: { level: 0, method: "a", assembly: "a@http://example.com/stacktrace.js:3:3", fileName: "http://example.com/stacktrace.js", line: 3 }
                     },
                     {
-                        src: "  at Object.testMethod (http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)",
-                        frame: { level: 0, method: "Object.testMethod", assembly: "at Object.testMethod (http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)", fileName: "http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js", line: 53058 }
+                        src: "  at Object.testMethod (http://localhost:9002/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)",
+                        frame: { level: 0, method: "Object.testMethod", assembly: "at Object.testMethod (http://localhost:9002/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)", fileName: "http://localhost:9002/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js", line: 53058 }
                     }
                 ];
 
@@ -449,28 +450,28 @@ export class ExceptionTests extends AITestClass {
                     reason:{
                         message: "TypeError: Cannot read property 'b' of undefined",
                         stack: "TypeError: Cannot read property 'b' of undefined\n" +
-                                "  at ApplicationInsightsTests.<anonymous> (http://localhost:9001/AISKU/Tests/Unit/dist/aiskuunittests.tests.js:4578:40)\n" +
-                                "  at trigger_1 (http://localhost:9001/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:52923:59)\n" +
-                                "  at Object.testMethod (http://localhost:9001/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:52964:21)\n" +
-                                "  at runTest (http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2725:35)\n" +
-                                "  at Test.run (http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2708:9)\n" +
-                                "  at http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2972:16\n" +
-                                "  at processTaskQueue (http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2293:26)\n" +
-                                "  at http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2297:13"
+                                "  at ApplicationInsightsTests.<anonymous> (http://localhost:9002/AISKU/Tests/Unit/dist/aiskuunittests.tests.js:4578:40)\n" +
+                                "  at trigger_1 (http://localhost:9002/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:52923:59)\n" +
+                                "  at Object.testMethod (http://localhost:9002/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:52964:21)\n" +
+                                "  at runTest (http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2725:35)\n" +
+                                "  at Test.run (http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2708:9)\n" +
+                                "  at http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2972:16\n" +
+                                "  at processTaskQueue (http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2293:26)\n" +
+                                "  at http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2297:13"
                     }
                 };
                 let errDetail = {
                     src: errObj.reason.stack,
                     obj:[
                         "TypeError: Cannot read property 'b' of undefined",
-                        "at ApplicationInsightsTests.<anonymous> (http://localhost:9001/AISKU/Tests/Unit/dist/aiskuunittests.tests.js:4578:40)",
-                        "at trigger_1 (http://localhost:9001/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:52923:59)",
-                        "at Object.testMethod (http://localhost:9001/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:52964:21)",
-                        "at runTest (http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2725:35)",
-                        "at Test.run (http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2708:9)",
-                        "at http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2972:16",
-                        "at processTaskQueue (http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2293:26)",
-                        "at http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2297:13"
+                        "at ApplicationInsightsTests.<anonymous> (http://localhost:9002/AISKU/Tests/Unit/dist/aiskuunittests.tests.js:4578:40)",
+                        "at trigger_1 (http://localhost:9002/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:52923:59)",
+                        "at Object.testMethod (http://localhost:9002/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:52964:21)",
+                        "at runTest (http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2725:35)",
+                        "at Test.run (http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2708:9)",
+                        "at http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2972:16",
+                        "at processTaskQueue (http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2293:26)",
+                        "at http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2297:13"
                     ]
                 };
                 let exception = Exception.CreateAutoException("message",
@@ -483,14 +484,14 @@ export class ExceptionTests extends AITestClass {
                 Assert.ok(exception.stackDetails);
 
                 const expectedParsedStack: IStackFrame[] = [
-                    { level: 0, method: "ApplicationInsightsTests.<anonymous>", assembly: "at ApplicationInsightsTests.<anonymous> (http://localhost:9001/AISKU/Tests/Unit/dist/aiskuunittests.tests.js:4578:40)", fileName: "http://localhost:9001/AISKU/Tests/Unit/dist/aiskuunittests.tests.js", line: 4578 },
-                    { level: 1, method: "trigger_1", assembly: "at trigger_1 (http://localhost:9001/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:52923:59)", fileName: "http://localhost:9001/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js", line: 52923 },
-                    { level: 2, method: "Object.testMethod", assembly: "at Object.testMethod (http://localhost:9001/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:52964:21)", fileName: "http://localhost:9001/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js", line: 52964 },
-                    { level: 3, method: "runTest", assembly: "at runTest (http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2725:35)", fileName: "http://localhost:9001/common/Tests/External/qunit-2.9.3.js", line: 2725 },
-                    { level: 4, method: "Test.run", assembly: "at Test.run (http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2708:9)", fileName: "http://localhost:9001/common/Tests/External/qunit-2.9.3.js", line: 2708 },
-                    { level: 5, method: "<no_method>", assembly: "at http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2972:16", fileName: "http://localhost:9001/common/Tests/External/qunit-2.9.3.js", line: 2972 },
-                    { level: 6, method: "processTaskQueue", assembly: "at processTaskQueue (http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2293:26)", fileName: "http://localhost:9001/common/Tests/External/qunit-2.9.3.js", line: 2293 },
-                    { level: 7, method: "<no_method>", assembly: "at http://localhost:9001/common/Tests/External/qunit-2.9.3.js:2297:13", fileName: "http://localhost:9001/common/Tests/External/qunit-2.9.3.js", line: 2297 }
+                    { level: 0, method: "ApplicationInsightsTests.<anonymous>", assembly: "at ApplicationInsightsTests.<anonymous> (http://localhost:9002/AISKU/Tests/Unit/dist/aiskuunittests.tests.js:4578:40)", fileName: "http://localhost:9002/AISKU/Tests/Unit/dist/aiskuunittests.tests.js", line: 4578 },
+                    { level: 1, method: "trigger_1", assembly: "at trigger_1 (http://localhost:9002/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:52923:59)", fileName: "http://localhost:9002/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js", line: 52923 },
+                    { level: 2, method: "Object.testMethod", assembly: "at Object.testMethod (http://localhost:9002/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:52964:21)", fileName: "http://localhost:9002/AISKU/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js", line: 52964 },
+                    { level: 3, method: "runTest", assembly: "at runTest (http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2725:35)", fileName: "http://localhost:9002/common/Tests/External/qunit-2.9.3.js", line: 2725 },
+                    { level: 4, method: "Test.run", assembly: "at Test.run (http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2708:9)", fileName: "http://localhost:9002/common/Tests/External/qunit-2.9.3.js", line: 2708 },
+                    { level: 5, method: "<no_method>", assembly: "at http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2972:16", fileName: "http://localhost:9002/common/Tests/External/qunit-2.9.3.js", line: 2972 },
+                    { level: 6, method: "processTaskQueue", assembly: "at processTaskQueue (http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2293:26)", fileName: "http://localhost:9002/common/Tests/External/qunit-2.9.3.js", line: 2293 },
+                    { level: 7, method: "<no_method>", assembly: "at http://localhost:9002/common/Tests/External/qunit-2.9.3.js:2297:13", fileName: "http://localhost:9002/common/Tests/External/qunit-2.9.3.js", line: 2297 }
                 ];
 
                 const exceptionDetails = _createExceptionDetails(this.logger, exception);

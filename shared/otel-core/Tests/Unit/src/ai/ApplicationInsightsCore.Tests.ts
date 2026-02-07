@@ -1,15 +1,23 @@
 import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
-import { 
-    IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, IAppInsightsCore, normalizeJsName,
-    random32, mwcRandomSeed, newId, randomValue, mwcRandom32, isNullOrUndefined, SenderPostManager,
-    OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig, fieldRedaction,
-    _InternalLogMessage, DiagnosticLogger, isString
-} from "../../../../../src/index"
-import { AppInsightsCore } from "../../../../../src/core/AppInsightsCore";
-import { IChannelControls } from "../../../../../src/index";
-import { _eInternalMessageId, LoggingSeverity } from "../../../../../src/index";
-import { ActiveStatus } from "../../../../../src/index";
-import { createAsyncPromise, createAsyncRejectedPromise, createAsyncResolvedPromise, createPromise, createTimeoutPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+import { ITelemetryPlugin, IPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
+import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
+import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
+import { normalizeJsName } from "../../../../src/utils/HelperFuncs";
+import { random32, mwcRandomSeed, newId, randomValue, mwcRandom32 } from "../../../../src/utils/RandomHelper";
+import { isNullOrUndefined, isString } from "@nevware21/ts-utils";
+import { SenderPostManager } from "../../../../src/core/SenderPostManager";
+import { OnCompleteCallback, IPayloadData } from "../../../../src/interfaces/ai/IXHROverride";
+import { _ISenderOnComplete, _ISendPostMgrConfig } from "../../../../src/interfaces/ai/ISenderPostManager";
+import { TransportType } from "../../../../src/enums/ai/SendRequestReason";
+import { fieldRedaction } from "../../../../src/utils/EnvUtils";
+import { _InternalLogMessage, DiagnosticLogger } from "../../../../src/diagnostics/DiagnosticLogger";
+import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
+import { IChannelControls } from "../../../../src/interfaces/ai/IChannelControls";
+import { _eInternalMessageId, LoggingSeverity } from "../../../../src/enums/ai/LoggingEnums";
+import { ActiveStatus } from "../../../../src/enums/ai/InitActiveStatusEnum";
+import { createAsyncPromise, createAsyncRejectedPromise, createAsyncResolvedPromise, createTimeoutPromise, doAwaitResponse } from "@nevware21/ts-async";
+import { setBypassLazyCache } from "@nevware21/ts-utils";
 
 const AIInternalMessagePrefix = "AITR_";
 const MaxInt32 = 0xFFFFFFFF;
@@ -20,6 +28,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
     public testInitialize() {
         super.testInitialize();
         this.ctx = {};
+        setBypassLazyCache(true);
     }
 
     public testCleanup() {

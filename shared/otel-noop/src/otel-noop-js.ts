@@ -13,6 +13,6 @@ export { INoopProxyConfig, INoopProxyProp, NoopProxyProps } from "./interfaces/n
 export { createNoopProxy } from "./api/noop/noopProxy";
 export { _noopThis, _noopVoid } from "./api/noop/noopHelpers";
 export { createNoopContextMgr } from "./api/noop/noopContextMgr";
-export { createNoopLogger } from "./api/noop/noopLogger";
-export { createNoopLogRecordProcessor } from "./api/noop/noopLogRecordProcessor";
+export { createNoopLogger } from "./api/logger/noopLogger";
+export { createNoopLogRecordProcessor } from "./api/logger/noopLogRecordProcessor";
 export { createNoopTracerProvider } from "./api/noop/noopTracerProvider";

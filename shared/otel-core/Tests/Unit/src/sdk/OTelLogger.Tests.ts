@@ -10,6 +10,7 @@ import { createContextManager } from "../../../../src/otel/api/context/contextMa
 import { setContextSpanContext } from "../../../../src/otel/api/trace/utils";
 import { createLogger } from "../../../../src/otel/sdk/OTelLogger";
 import { createResolvedPromise } from "@nevware21/ts-async";
+import { IOTelApi, IOTelConfig } from "../../../../src";
 
 // W3C trace flags constant for sampled traces
 const eW3CTraceFlags_Sampled = 1;
@@ -17,8 +18,18 @@ const eW3CTraceFlags_Sampled = 1;
 type LoggerWithScope = IOTelLogger & { instrumentationScope: IOTelInstrumentationScope };
 
 export class OTelLoggerTests extends AITestClass {
+    private _mockApi!: IOTelApi;
+
     public testInitialize() {
         super.testInitialize();
+
+
+        // Create mock API
+        this._mockApi = {
+            cfg: {
+                errorHandlers: {}
+            } as IOTelConfig
+        } as IOTelApi;
     }
 
     public testCleanup() {
@@ -113,7 +124,8 @@ export class OTelLoggerTests extends AITestClass {
                     spanId: "6e0c63257de34c92",
                     traceFlags: eW3CTraceFlags_Sampled
                 };
-                const ROOT_CONTEXT = createContext();
+
+                const ROOT_CONTEXT = createContext(this._mockApi);
                 const activeContext = setContextSpanContext(ROOT_CONTEXT, spanContext);
                 const logRecordData: IOTelLogRecord = {
                     context: activeContext

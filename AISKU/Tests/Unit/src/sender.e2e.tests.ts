@@ -1,10 +1,11 @@
-import { ApplicationInsights, IApplicationInsights } from '../../../src/index'
-import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { BreezeChannelIdentifier, utlGetSessionStorage, utlRemoveSessionStorage } from '@microsoft/otel-core-js';
-import { ActiveStatus, dumpObj, getJSON, isArray } from '@microsoft/otel-core-js';
-import { SinonSpy } from 'sinon';
-import { Assert, AITestClass, PollingAssert} from "@microsoft/ai-test-framework"
-import { createAsyncResolvedPromise } from '@nevware21/ts-async';
+import { AppInsightsSku as ApplicationInsights } from "../../../src/AISku";
+import { IApplicationInsights } from "../../../src/IApplicationInsights";
+import { Sender } from "@microsoft/applicationinsights-channel-js";
+import { BreezeChannelIdentifier, utlGetSessionStorage, utlRemoveSessionStorage } from "@microsoft/otel-core-js";
+import { ActiveStatus, dumpObj, getJSON, isArray } from "@microsoft/otel-core-js";
+import { SinonSpy } from "sinon";
+import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
+import { createAsyncResolvedPromise } from "@nevware21/ts-async";
 
 export class SenderE2ETests extends AITestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';

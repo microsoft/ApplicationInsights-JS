@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { asString, isObject, isString, objForEachKey, strSubstr, strSubstring, strTrim } from "@nevware21/ts-utils";
+import { _throwInternal } from "../../../diagnostics/DiagnosticLogger";
 import { _eInternalMessageId, eLoggingSeverity } from "../../../enums/ai/LoggingEnums";
 import { IConfiguration } from "../../../interfaces/ai/IConfiguration";
 import { IDiagnosticLogger } from "../../../interfaces/ai/IDiagnosticLogger";
@@ -44,6 +45,7 @@ export const enum DataSanitizerValues {
     MAX_EXCEPTION_LENGTH = 32768
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeKeyAndAddUniqueness(logger: IDiagnosticLogger, key: any, map: any) {
     const origLength = key.length;
     let field = dataSanitizeKey(logger, key);
@@ -61,6 +63,7 @@ export function dataSanitizeKeyAndAddUniqueness(logger: IDiagnosticLogger, key: 
     return field;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeKey(logger: IDiagnosticLogger, name: any) {
     let nameTrunc: String;
     if (name) {
@@ -70,19 +73,18 @@ export function dataSanitizeKey(logger: IDiagnosticLogger, name: any) {
         // truncate the string to 150 chars
         if (name.length > DataSanitizerValues.MAX_NAME_LENGTH) {
             nameTrunc = strSubstring(name, 0, DataSanitizerValues.MAX_NAME_LENGTH);
-            if (logger) {
-                logger.throwInternal(
-                    eLoggingSeverity.WARNING,
-                    _eInternalMessageId.NameTooLong,
-                    "name is too long.  It has been truncated to " + DataSanitizerValues.MAX_NAME_LENGTH + " characters.",
-                    { name });
-            }
+            _throwInternal(logger,
+                eLoggingSeverity.WARNING,
+                _eInternalMessageId.NameTooLong,
+                "name is too long.  It has been truncated to " + DataSanitizerValues.MAX_NAME_LENGTH + " characters.",
+                { name }, true);
         }
     }
 
     return nameTrunc || name;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLength: number = DataSanitizerValues.MAX_STRING_LENGTH) {
     let valueTrunc : String;
     if (value) {
@@ -90,19 +92,18 @@ export function dataSanitizeString(logger: IDiagnosticLogger, value: any, maxLen
         value = strTrim(asString(value));
         if (value.length > maxLength) {
             valueTrunc = strSubstring(value, 0, maxLength);
-            if (logger) {
-                logger.throwInternal(
-                    eLoggingSeverity.WARNING,
-                    _eInternalMessageId.StringValueTooLong,
-                    "string value is too long. It has been truncated to " + maxLength + " characters.",
-                    { value });
-            }
+            _throwInternal(logger,
+                eLoggingSeverity.WARNING,
+                _eInternalMessageId.StringValueTooLong,
+                "string value is too long. It has been truncated to " + maxLength + " characters.",
+                { value }, true);
         }
     }
 
     return valueTrunc || value;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeUrl(logger: IDiagnosticLogger, url: any, config?: IConfiguration) {
     if (isString(url)) {
         url = fieldRedaction(url, config);
@@ -110,23 +111,24 @@ export function dataSanitizeUrl(logger: IDiagnosticLogger, url: any, config?: IC
     return dataSanitizeInput(logger, url, DataSanitizerValues.MAX_URL_LENGTH, _eInternalMessageId.UrlTooLong);
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeMessage(logger: IDiagnosticLogger, message: any) {
     let messageTrunc : String;
     if (message) {
         if (message.length > DataSanitizerValues.MAX_MESSAGE_LENGTH) {
             messageTrunc = strSubstring(message, 0, DataSanitizerValues.MAX_MESSAGE_LENGTH);
-            if (logger) {
-                logger.throwInternal(
-                    eLoggingSeverity.WARNING, _eInternalMessageId.MessageTruncated,
-                    "message is too long, it has been truncated to " + DataSanitizerValues.MAX_MESSAGE_LENGTH + " characters.",
-                    { message });
-            }
+            _throwInternal(logger,
+                eLoggingSeverity.WARNING, _eInternalMessageId.MessageTruncated,
+                "message is too long, it has been truncated to " + DataSanitizerValues.MAX_MESSAGE_LENGTH + " characters.",
+                { message },
+                true);
         }
     }
 
     return messageTrunc || message;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeException(logger: IDiagnosticLogger, exception: any) {
     let exceptionTrunc : String;
     if (exception) {
@@ -134,17 +136,16 @@ export function dataSanitizeException(logger: IDiagnosticLogger, exception: any)
         let value:string = "" + exception;
         if (value.length > DataSanitizerValues.MAX_EXCEPTION_LENGTH) {
             exceptionTrunc = strSubstring(value, 0, DataSanitizerValues.MAX_EXCEPTION_LENGTH);
-            if (logger) {
-                logger.throwInternal(
-                    eLoggingSeverity.WARNING, _eInternalMessageId.ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizerValues.MAX_EXCEPTION_LENGTH + " characters.",
-                    { exception });
-            }
+            _throwInternal(logger,
+                eLoggingSeverity.WARNING, _eInternalMessageId.ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizerValues.MAX_EXCEPTION_LENGTH + " characters.",
+                { exception }, true);
         }
     }
 
     return exceptionTrunc || exception;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: any) {
     if (properties) {
         const tempProps: any = {};
@@ -154,9 +155,7 @@ export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: an
                 try {
                     value = getJSON().stringify(value);
                 } catch (e) {
-                    if (logger) {
-                        logger.throwInternal(eLoggingSeverity.WARNING, _eInternalMessageId.CannotSerializeObjectNonSerializable, "custom property is not valid", { exception: e });
-                    }
+                    _throwInternal(logger,eLoggingSeverity.WARNING, _eInternalMessageId.CannotSerializeObjectNonSerializable, "custom property is not valid", { exception: e}, true);
                 }
             }
             value = dataSanitizeString(logger, value, DataSanitizerValues.MAX_PROPERTY_LENGTH);
@@ -169,6 +168,7 @@ export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: an
     return properties;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeMeasurements(logger: IDiagnosticLogger, measurements: any) {
     if (measurements) {
         const tempMeasurements: any = {};
@@ -183,30 +183,31 @@ export function dataSanitizeMeasurements(logger: IDiagnosticLogger, measurements
     return measurements;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeId(logger: IDiagnosticLogger, id: string): string {
     return id ? dataSanitizeInput(logger, id, DataSanitizerValues.MAX_ID_LENGTH, _eInternalMessageId.IdTooLong).toString() : id;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeInput(logger: IDiagnosticLogger, input: any, maxLength: number, _msgId: _eInternalMessageId) {
     let inputTrunc : String;
     if (input) {
         input = strTrim(asString(input));
         if (input.length > maxLength) {
             inputTrunc = strSubstring(input, 0, maxLength);
-            if (logger) {
-                logger.throwInternal(
-                    eLoggingSeverity.WARNING,
-                    _msgId,
-                    "input is too long, it has been truncated to " + maxLength + " characters.",
-                    { data: input },
-                    true);
-            }
+            _throwInternal(logger,
+                eLoggingSeverity.WARNING,
+                _msgId,
+                "input is too long, it has been truncated to " + maxLength + " characters.",
+                { data: input },
+                true);
         }
     }
 
     return inputTrunc || input;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function dsPadNumber(num: number) {
     const s = "00" + num;
     return strSubstr(s, s.length - 3);

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 import { IPromise } from "@nevware21/ts-async";
 import {
-    ILazyValue, arrForEach, arrIndexOf, dumpObj, getDocument, getLazy, getNavigator, isArray, isFunction, isNullOrUndefined, isString,
-    isTruthy, isUndefined, objForEachKey, strEndsWith, strIndexOf, strLeft, strSubstring, strTrim, utcNow
+    ILazyValue, arrForEach, arrIndexOf, dumpObj, getDocument, getLazy, isArray, isFunction, isNullOrUndefined, isString, isTruthy,
+    isUndefined, objForEachKey, strEndsWith, strIndexOf, strLeft, strSubstring, strTrim, utcNow
 } from "@nevware21/ts-utils";
 import { cfgDfMerge } from "../config/ConfigDefaultHelpers";
 import { createDynamicConfig, onConfigChange } from "../config/DynamicConfig";
@@ -16,8 +16,8 @@ import { ICookieMgr, ICookieMgrConfig } from "../interfaces/ai/ICookieMgr";
 import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
 import { IUnloadHook } from "../interfaces/ai/IUnloadHook";
 import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
-import { getLocation, isIE } from "../utils/EnvUtils";
-import { getExceptionName, isNotNullOrUndefined, setValue, strContains } from "../utils/HelperFuncsCore";
+import { getLocation, getUserAgentString, isIE } from "../utils/EnvUtils";
+import { getExceptionName, isNotNullOrUndefined, setValue, strContains } from "../utils/HelperFuncs";
 
 const strToGMTString = "toGMTString";
 const strToUTCString = "toUTCString";
@@ -242,7 +242,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 
             // Only set same site if not also secure
             if (_allowUaSameSite === null) {
-                _allowUaSameSite = !uaDisallowsSameSiteNone((getNavigator() || {} as Navigator).userAgent);
+                _allowUaSameSite = !uaDisallowsSameSiteNone(getUserAgentString());
             }
 
             if (_allowUaSameSite) {

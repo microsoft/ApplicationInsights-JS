@@ -14,4 +14,4 @@ export const Extensions = {
     SDKExt: "sdk"
 };
 
-export let CtxTagKeys = new ContextTagKeys();
+export let CtxTagKeys = (/* #__PURE__ */ new ContextTagKeys());

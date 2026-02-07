@@ -1,16 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import {
+    INVALID_SPAN_ID, INVALID_TRACE_ID, IOTelSpanContext, IOTelSpanStatus, IReadableSpan, eOTelSpanKind, eOTelSpanStatusCode, eW3CTraceFlags
+} from "@microsoft/otel-core-js";
 import { createDeferredCachedValue, objDefineProps, objFreeze } from "@nevware21/ts-utils";
-import { UNDEFINED_VALUE } from "../../../constants/InternalConstants";
-import { eW3CTraceFlags } from "../../../enums/W3CTraceFlags";
-import { eOTelSpanKind } from "../../../enums/otel/OTelSpanKind";
-import { eOTelSpanStatusCode } from "../../../enums/otel/OTelSpanStatus";
-import { IOTelSpan } from "../../../interfaces/otel/trace/IOTelSpan";
-import { IOTelSpanContext } from "../../../interfaces/otel/trace/IOTelSpanContext";
-import { IOTelSpanStatus } from "../../../interfaces/otel/trace/IOTelSpanStatus";
-import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
-import { INVALID_SPAN_ID, INVALID_TRACE_ID } from "../../../utils/TraceParent";
+import { UNDEFINED_VALUE } from "../../internal/InternalConstants";
 
 // Inline noop helpers - these don't need the full noop package
 function _noopThis<T>(this: T): T {
@@ -32,7 +27,7 @@ function _createNoopSpanContext(): IOTelSpanContext {
     });
 }
 
-export function createNonRecordingSpan(spanContext?: IOTelSpanContext, name?: string): IOTelSpan {
+export function createNonRecordingSpan(spanContext?: IOTelSpanContext, name?: string): IReadableSpan {
     function _spanSontext() {
         return spanContext || _createNoopSpanContext();
     }

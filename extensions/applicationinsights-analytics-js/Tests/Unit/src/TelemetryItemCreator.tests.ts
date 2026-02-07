@@ -10,15 +10,16 @@ import {
     ITraceTelemetry,
     Metric,
     IMetricTelemetry,
-    RemoteDependencyData,
     IDependencyTelemetry,
-} from '@microsoft/otel-core-js';
-import { AnalyticsPlugin } from '../../../src/JavaScriptSDK/AnalyticsPlugin'
+    RemoteDependencyEnvelopeType,
+    RemoteDependencyDataType,
+} from "@microsoft/otel-core-js";
+import { AnalyticsPlugin } from "../../../src/JavaScriptSDK/AnalyticsPlugin"
 import { 
     IAppInsightsCore, AppInsightsCore,
     ITelemetryItem,
     IConfiguration, IPlugin
-} from '@microsoft/otel-core-js';
+} from "@microsoft/otel-core-js";
 
 
 
@@ -249,8 +250,8 @@ export class TelemetryItemCreatorTests extends AITestClass {
                 // act
                 const telemetryItem = TelemetryItemCreator.create<IDependencyTelemetry>(
                     dependency,
-                    RemoteDependencyData.dataType,
-                    RemoteDependencyData.envelopeType,
+                    RemoteDependencyDataType,
+                    RemoteDependencyEnvelopeType,
                     this._core.logger,
                     );
 

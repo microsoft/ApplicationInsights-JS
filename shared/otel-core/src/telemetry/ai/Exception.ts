@@ -19,6 +19,8 @@ import { ISerializable } from "../../interfaces/ai/telemetry/ISerializable";
 import {
     dataSanitizeException, dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties, dataSanitizeString
 } from "./Common/DataSanitizer";
+import { ExceptionDataType } from "./DataTypes";
+import { ExceptionEnvelopeType } from "./EnvelopeTypes";
 
 // These Regex covers the following patterns
 // 1. Chrome/Firefox/IE/Edge:
@@ -538,9 +540,15 @@ export function _formatErrorCode(errorObj:any) {
 }
 
 export class Exception implements IExceptionData, ISerializable {
+    /**
+     * @deprecated Use the constant ExceptionEnvelopeType instead.
+     */
+    public static envelopeType = ExceptionEnvelopeType;
 
-    public static envelopeType = "Microsoft.ApplicationInsights.{0}.Exception";
-    public static dataType = "ExceptionData";
+    /**
+     * @deprecated Use the constant ExceptionDataType instead.
+     */
+    public static dataType = ExceptionDataType;
 
     public id?: string;
     public problemGroup?: string;
@@ -697,7 +705,7 @@ export class Exception implements IExceptionData, ISerializable {
     public static formatError = _formatErrorCode;
 }
 
-const exDetailsAiDataContract = objFreeze({
+const exDetailsAiDataContract = (/*#__PURE__*/ objFreeze({
     id: FieldType.Default,
     outerId: FieldType.Default,
     typeName: FieldType.Required,
@@ -705,7 +713,7 @@ const exDetailsAiDataContract = objFreeze({
     hasFullStack: FieldType.Default,
     stack: FieldType.Default,
     parsedStack: FieldType.Array
-});
+}));
 
 interface _IExceptionDetails extends IExceptionDetails, ISerializable {
     toInterface: () => IExceptionDetailsInternal;
@@ -845,13 +853,13 @@ export interface _IParsedStackFrame extends IStackFrame, ISerializable {
     sizeInBytes: number;
 }
 
-const stackFrameAiDataContract = objFreeze({
+const stackFrameAiDataContract = (/*#__PURE__*/ objFreeze({
     level: FieldType.Required,
     method: FieldType.Required,
     assembly: FieldType.Default,
     fileName: FieldType.Default,
     line: FieldType.Default
-});
+}));
 
 export function _extractStackFrame(frame: string, level: number): _IParsedStackFrame | undefined {
     let theFrame: _IParsedStackFrame;

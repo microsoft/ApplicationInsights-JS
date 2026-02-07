@@ -1,70 +1,52 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrSlice, objDefineProps } from "@nevware21/ts-utils";
-import { IOTelContext } from "../../../interfaces/otel/context/IOTelContext";
-import { IOTelContextManager } from "../../../interfaces/otel/context/IOTelContextManager";
-import { IOTelSpan } from "../../../interfaces/otel/trace/IOTelSpan";
+import { fnApply, isFunction } from "@nevware21/ts-utils";
+import { STR_EMPTY } from "../../../constants/InternalConstants";
+import { ISpanScope, ITraceHost } from "../../../interfaces/ai/ITraceProvider";
 import { IOTelSpanOptions } from "../../../interfaces/otel/trace/IOTelSpanOptions";
 import { IOTelTracer } from "../../../interfaces/otel/trace/IOTelTracer";
-import { IOTelTracerCtx } from "../../../interfaces/otel/trace/IOTelTracerCtx";
-import { setContextSpan } from "./utils";
-
-interface ITracerOptions {
-    name: string;
-    version?: string;
-    schemaUrl?: string;
-}
+import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
+import { setProtoTypeName } from "../../../utils/HelperFuncs";
+import { startActiveSpan } from "./utils";
 
 /**
- * Creates a new Tracer instance using the provided {@link IOTelTracerCtx} to obtain
- * the current context and context manager and to start new spans.
- * @param tracerCtx - The current {@link IOTelTracerCtx} instance
- * @returns A new Tracer instance
+ * @internal
+ * Create a tracer implementation.
+ * @param host - The ApplicationInsights core instance
+ * @returns A tracer object
  */
-export function createTracer(tracerCtx: IOTelTracerCtx, tracerOptions: ITracerOptions): IOTelTracer {
+export function _createTracer(host: ITraceHost, name?: string): IOTelTracer {
+    let tracer: IOTelTracer = setProtoTypeName({
+        startSpan(spanName: string, options?: IOTelSpanOptions): IReadableSpan | null {
+            // Note: context is not used / needed for Application Insights / 1DS
+            if (host) {
+                return host.startSpan(spanName, options);
+            }
 
-    function _startSpan(name: string, options?: IOTelSpanOptions, context?: IOTelContext): IOTelSpan {
-        return tracerCtx.startSpan(name, options, context || tracerCtx.ctxMgr.active());
-    }
-
-    function _startActiveSpan<F extends (span: IOTelSpan) => ReturnType<F>>(name: string, arg2?: F | IOTelSpanOptions, arg3?: F | IOTelContext, arg4?: F): ReturnType<F> | undefined {
-    
-        let theArgs = arrSlice(arguments);
-        let cnt = theArgs.length;
-        let opts: IOTelSpanOptions | undefined;
-        let ctx: IOTelContext | undefined;
-        let fn: F;
-        let ctxMgr: IOTelContextManager = tracerCtx.ctxMgr;
-    
-        if (cnt == 2) {
-            fn = arg2 as F;
-        } else if (cnt == 3) {
-            opts = arg2 as IOTelSpanOptions | undefined;
-            fn = arg3 as F;
-        } else if (cnt >= 4) {
-            opts = arg2 as IOTelSpanOptions | undefined;
-            ctx = arg3 as IOTelContext | undefined;
-            fn = arg4 as F;
-        }
-
-        if (fn) {
-            let theCtx = ctx || ctxMgr.active();
-            let span = _startSpan(name, opts, theCtx);
-            let theContext = setContextSpan(theCtx, span);
-
-            return ctxMgr.with(theContext, fn, undefined, span);
-        }
-    }
-
-    let tracer = objDefineProps<IOTelTracer>({} as IOTelTracer, {
-        startSpan: {
-            v: _startSpan
+            return null;
         },
-        startActiveSpan: {
-            v: _startActiveSpan
+        startActiveSpan<F extends (span: IReadableSpan, scope?: ISpanScope<ITraceHost>) => ReturnType<F>>(name: string, fnOrOptions?: F | IOTelSpanOptions, fn?: F): ReturnType<F> {
+            // Figure out which parameter order was passed
+            let theFn: F | null = null;
+            let opts: IOTelSpanOptions | null = null;
+
+            if (isFunction(fnOrOptions)) {
+                // startActiveSpan<F extends (span: IReadableSpan) => unknown>(name: string, fn: F): ReturnType<F>;
+                theFn = fnOrOptions;
+            } else {
+                // startActiveSpan<F extends (span: IReadableSpan) => unknown>(name: string, options: IOTelSpanOptions, fn: F): ReturnType<F>; or
+                opts = fnOrOptions as IOTelSpanOptions;
+                theFn = fn;
+            }
+
+            if (theFn) {
+                return startActiveSpan(host, name, opts, (spanScope: ISpanScope<ITraceHost>) => {
+                    return fnApply(theFn, spanScope, [spanScope.span, spanScope]);
+                });
+            }
         }
-    });
+    }, "OTelTracer" + (name ? (" (" + name + ")") : STR_EMPTY));
 
     return tracer;
 }

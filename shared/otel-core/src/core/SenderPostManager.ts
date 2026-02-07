@@ -17,8 +17,9 @@ import {
 import { ITelemetryUnloadState } from "../interfaces/ai/ITelemetryUnloadState";
 import { IXDomainRequest } from "../interfaces/ai/IXDomainRequest";
 import { IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction } from "../interfaces/ai/IXHROverride";
+import { _noopVoid } from "../internal/noopHelpers";
 import { getLocation, isBeaconsSupported, isFetchSupported, isXhrSupported, useXDomainRequest } from "../utils/EnvUtils";
-import { _getAllResponseHeaders, formatErrorMessageXdr, formatErrorMessageXhr, getResponseText, openXhr } from "../utils/HelperFuncsCore";
+import { _getAllResponseHeaders, formatErrorMessageXdr, formatErrorMessageXhr, getResponseText, openXhr } from "../utils/HelperFuncs";
 
 const STR_NO_RESPONSE_BODY = "NoResponseBody";
 const _noResponseQs =  "&" + STR_NO_RESPONSE_BODY + "=true";
@@ -34,6 +35,7 @@ declare var XDomainRequest: {
  * Manager SendPost functions
  * SendPostManger
  * @internal for internal use only
+ * @since 3.0.0
  */
 export class SenderPostManager {
 
@@ -650,7 +652,7 @@ export class SenderPostManager {
                 };
 
                 
-                xdr.onprogress = () => { };
+                xdr.onprogress = _noopVoid;
         
                 // XDomainRequest requires the same protocol as the hosting page.
                 // If the protocol doesn't match, we can't send the telemetry :(.

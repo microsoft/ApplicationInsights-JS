@@ -1,72 +1,74 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { ICachedValue, fnBind, getDeferred } from "@nevware21/ts-utils";
+import { UNDEFINED_VALUE } from "../../../constants/InternalConstants";
+import { IDistributedTraceContext } from "../../../interfaces/ai/IDistributedTraceContext";
 import { IOTelApi } from "../../../interfaces/otel/IOTelApi";
-import { IOTelSpan } from "../../../interfaces/otel/trace/IOTelSpan";
-import { IOTelTraceApi } from "../../../interfaces/otel/trace/IOTelTraceApi";
-import { IOTelTracerOptions } from "../../../interfaces/otel/trace/IOTelTracerOptions";
+import { ITraceApi } from "../../../interfaces/otel/trace/IOTelTraceApi";
 import { IOTelTracerProvider } from "../../../interfaces/otel/trace/IOTelTracerProvider";
-import { handleNotImplemented } from "../../../internal/commonUtils";
+import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
+import { handleNotImplemented } from "../../../internal/handleErrors";
+import { setProtoTypeName } from "../../../utils/HelperFuncs";
+import { throwOTelError } from "../errors/OTelError";
 import {
     deleteContextSpan, getContextActiveSpanContext, getContextSpan, isSpanContextValid, setContextSpan, setContextSpanContext,
     wrapSpanContext
 } from "./utils";
 
 /**
- * Create a new instance of the OpenTelemetry Trace API
- * @param otelApiCtx
- * @returns
+ * @internal
+ * Create a new instance of the OpenTelemetry Trace API, this is bound to the
+ * provided instance of the traceProvider (the {@link IOTelApi} instance),
+ * to "change" (setGlobalTraceProvider) you MUST create a new instance of this API.
+ * @param otelApi - The IOTelApi instance associated with this instance
+ * @returns A new instance of the ITraceApi for the provided ITelApi
  */
-export function createTraceApi(otelApi: IOTelApi): IOTelTraceApi {
-    let errorHandlers = otelApi.cfg.errorHandlers || {};
+export function _createTraceApi(otelApi: IOTelApi): ICachedValue<ITraceApi> {
     let traceProvider: IOTelTracerProvider = otelApi;
     if (!traceProvider) {
-        traceProvider = createNoopTraceProvider();
+        throwOTelError("Must provide an otelApi instance");
     }
 
-    let traceApi: IOTelTraceApi = {
-        setGlobalTracerProvider: (provider: IOTelTracerProvider) => {
-            handleNotImplemented(errorHandlers, "setGlobalTracerProvider");
-            return false;
-        },
+    return getDeferred(() => {
+        return setProtoTypeName({
+            setGlobalTracerProvider: (provider: IOTelTracerProvider) => {
+                handleNotImplemented(otelApi.host.config.errorHandlers, "setGlobalTracerProvider");
+                return false;
+            },
 
-        getTracerProvider: () => {
-            return traceProvider;
-        },
+            getTracerProvider: () => {
+                return traceProvider;
+            },
 
-        getTracer: (name: string, version?: string, options?: IOTelTracerOptions) => {
-            return traceProvider.getTracer(name, version, options);
-        },
+            getTracer: fnBind(traceProvider.getTracer, traceProvider),
 
-        disable: () => {
-            traceProvider = createNoopTraceProvider();
-        },
+            disable: () => {
+                handleNotImplemented(otelApi.host.config.errorHandlers, "disableTraceApi");
+            },
 
-        wrapSpanContext: wrapSpanContext,
+            // We use fnBind to automatically inject the "otelApi" argument as the first argument to the wrapSpanContext function
+            wrapSpanContext: fnBind(wrapSpanContext, UNDEFINED_VALUE, [otelApi]) as unknown as (spanContext: IDistributedTraceContext) => IReadableSpan,
 
-        isSpanContextValid: isSpanContextValid,
+            isSpanContextValid: isSpanContextValid,
 
-        deleteSpan: deleteContextSpan,
+            deleteSpan: deleteContextSpan,
 
-        getSpan: getContextSpan,
+            getSpan: getContextSpan,
 
-        getActiveSpan: (): IOTelSpan | undefined => {
-            let theSpan: IOTelSpan | undefined;
-            theSpan = getContextSpan(otelApi.context.active());
+            getActiveSpan: (): IReadableSpan | undefined | null => {
+                return otelApi.host ? otelApi.host.getActiveSpan() : null;
+            },
 
-            return theSpan;
-        },
+            setSpanContext: setContextSpanContext,
 
-        setSpanContext: setContextSpanContext,
+            getSpanContext: getContextActiveSpanContext,
 
-        getSpanContext: getContextActiveSpanContext,
+            setSpan: setContextSpan,
 
-        setSpan: setContextSpan
-    };
-
-    return traceApi;
-}
-
-function createNoopTraceProvider(): IOTelTracerProvider {
-    throw new Error("Function not implemented.");
+            setActiveSpan(span: IReadableSpan | undefined | null) {
+                return otelApi.host ? otelApi.host.setActiveSpan(span) : null;
+            }
+        }, "TraceApi");
+    });
 }

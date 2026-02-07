@@ -2,8 +2,8 @@
  * @copyright Microsoft 2024
  */
 
-import { Assert, AITestClass } from '@microsoft/ai-test-framework';
-import { IOSPluginConfiguration, OsPlugin } from '../../../src/applicationinsights-osplugin-js';
+import { Assert, AITestClass } from "@microsoft/ai-test-framework";
+import { IOSPluginConfiguration, OsPlugin } from "../../../src/applicationinsights-osplugin-js";
 import { createAsyncPromise, ResolvePromiseHandler, RejectPromiseHandler } from "@nevware21/ts-async";
 import {getWindow, AppInsightsCore, IChannelControls, ITelemetryPlugin,
     IConfiguration, ITelemetryItem} from "@microsoft/otel-core-js";

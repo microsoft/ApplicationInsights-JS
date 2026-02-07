@@ -1,5 +1,6 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { addEventHandler, createUniqueNamespace, removeEventHandler, _eInternalMessageId, mergeEvtNamespace, __getRegisteredEvents } from "../../../../../src/index";
+import { __getRegisteredEvents, addEventHandler, mergeEvtNamespace, removeEventHandler } from "../../../../src/internal/EventHelpers";
+import { createUniqueNamespace } from "../../../../src/utils/DataCacheHelper";
 
 export class EventHelperTests extends AITestClass {
 
@@ -280,15 +281,15 @@ export class EventHelperTests extends AITestClass {
 
         function _checkRegisteredAddEventHandler(name: string, expected: number) {
             let registered = __getRegisteredEvents(window, name);
-            Assert.equal(expected, registered.length, "Check that window event was registered");
+            Assert.equal(expected, registered.length, "Check that window event was registered for " + name);
 
-            if (window["body"]) {
+            if (window && window["body"]) {
                 registered = __getRegisteredEvents(window["body"], name);
-                Assert.equal(expected, registered.length, "Check that window.body event was registered");
+                Assert.equal(expected, registered.length, "Check that window.body event was registered for " + name);
             }
 
             registered = __getRegisteredEvents(document, name);
-            Assert.equal(expected, registered.length, "Check that document event was registered");
+            Assert.equal(expected, registered.length, "Check that document event was registered for " + name);
         }
     }
 }

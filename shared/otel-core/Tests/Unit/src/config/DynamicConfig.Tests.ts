@@ -1,20 +1,23 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { eLoggingSeverity, _eInternalMessageId, LoggingSeverity, _InternalMessageId } from "../../../../../src/index";
-import { IConfigDefaults } from "../../../../../src/index";
-import { IConfiguration } from "../../../../../src/index";
-import { blockDynamicConversion, forceDynamicConversion, getDynamicConfigHandler } from "../../../../../src/config/DynamicSupport";
-import { createDynamicConfig, onConfigChange } from "../../../../../src/config/DynamicConfig";
+import { eLoggingSeverity, _eInternalMessageId, LoggingSeverity, _InternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
+import { IConfigDefaults } from "../../../../src/interfaces/config/IConfigDefaults";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+import { blockDynamicConversion, forceDynamicConversion, getDynamicConfigHandler } from "../../../../src/config/DynamicSupport";
+import { createDynamicConfig, onConfigChange } from "../../../../src/config/DynamicConfig";
 import { arrForEach, dumpObj, isArray, isFunction, objForEachKey, objKeys, isPlainObject, objHasOwn, objDeepFreeze, objDefineProps, strContains } from "@nevware21/ts-utils";
-import { IAppInsightsCore } from "../../../../../src/index";
-import { INotificationManager } from "../../../../../src/index";
-import { IPerfManager } from "../../../../../src/index";
-import { AppInsightsCore, DiagnosticLogger, IDiagnosticLogger, IProcessTelemetryContext } from "../../../../../src/index";
-import { ITelemetryItem } from "../../../../../src/index";
-import { ITelemetryPluginChain } from "../../../../../src/index";
-import { ITelemetryPlugin } from "../../../../../src/index";
-import { IChannelControls } from "../../../../../src/index";
-import { TestPlugin, TestSamplingPlugin, TrackPlugin } from "./TestPlugins";
-import { STR_CHANNELS, STR_CREATE_PERF_MGR, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE } from "../../../../../src/constants/InternalConstants";
+import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
+import { INotificationManager } from "../../../../src/interfaces/ai/INotificationManager";
+import { IPerfManager } from "../../../../src/interfaces/ai/IPerfManager";
+import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
+import { DiagnosticLogger } from "../../../../src/diagnostics/DiagnosticLogger";
+import { IDiagnosticLogger } from "../../../../src/interfaces/ai/IDiagnosticLogger";
+import { IProcessTelemetryContext } from "../../../../src/interfaces/ai/IProcessTelemetryContext";
+import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
+import { ITelemetryPluginChain } from "../../../../src/interfaces/ai/ITelemetryPluginChain";
+import { ITelemetryPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
+import { IChannelControls } from "../../../../src/interfaces/ai/IChannelControls";
+import { TestPlugin, TestSamplingPlugin, TrackPlugin } from "../ai/TestPlugins";
+import { STR_CHANNELS, STR_CREATE_PERF_MGR, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE } from "../../../../src/constants/InternalConstants";
 
 const coreDefaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     cookieCfg: {},
@@ -98,7 +101,7 @@ export class DynamicConfigTests extends AITestClass {
                 };
 
                 const theDefaults: IConfigDefaults<IConfiguration> = {
-                    endpointUrl: "https://localhost:9001"
+                    endpointUrl: "https://localhost:9002"
                 };
 
                 let dynamicHandler = createDynamicConfig(theConfig, theDefaults, this._testLogger, false);
@@ -123,15 +126,15 @@ export class DynamicConfigTests extends AITestClass {
                 });
 
                 Assert.equal("testiKey", dynamicConfig.instrumentationKey, "Expect the iKey to be set");
-                Assert.equal("https://localhost:9001", dynamicConfig.endpointUrl, "Expect the endpoint to be set");
+                Assert.equal("https://localhost:9002", dynamicConfig.endpointUrl, "Expect the endpoint to be set");
 
                 dynamicConfig.instrumentationKey = "newIkey";
                 Assert.equal("newIkey", dynamicConfig.instrumentationKey, "Expect the iKey to be changed");
-                Assert.equal("https://localhost:9001", dynamicConfig.endpointUrl, "Expect the endpoint to be set");
+                Assert.equal("https://localhost:9002", dynamicConfig.endpointUrl, "Expect the endpoint to be set");
 
-                dynamicConfig.endpointUrl = "https://newendpoint.localhost:9001";
+                dynamicConfig.endpointUrl = "https://newendpoint.localhost:9002";
                 Assert.equal("newIkey", dynamicConfig.instrumentationKey, "Expect the iKey to be changed");
-                Assert.equal("https://newendpoint.localhost:9001", dynamicConfig.endpointUrl, "Expect the endpoint to be changed");
+                Assert.equal("https://newendpoint.localhost:9002", dynamicConfig.endpointUrl, "Expect the endpoint to be changed");
             }
         });
 
@@ -146,7 +149,7 @@ export class DynamicConfigTests extends AITestClass {
                 };
 
                 const theDefaults: IConfigDefaults<IConfiguration> = {
-                    endpointUrl: "https://localhost:9001",
+                    endpointUrl: "https://localhost:9002",
                     cookieCfg: {
                         enabled: undefined,
                         domain: "test",
@@ -187,15 +190,15 @@ export class DynamicConfigTests extends AITestClass {
                 });
 
                 Assert.equal("testiKey", theConfig.instrumentationKey, "Expect the iKey to be set");
-                Assert.equal("https://localhost:9001", theConfig.endpointUrl, "Expect the endpoint to be set");
+                Assert.equal("https://localhost:9002", theConfig.endpointUrl, "Expect the endpoint to be set");
 
                 theConfig.instrumentationKey = "newIkey";
                 Assert.equal("newIkey", theConfig.instrumentationKey, "Expect the iKey to be changed");
-                Assert.equal("https://localhost:9001", theConfig.endpointUrl, "Expect the endpoint to be set");
+                Assert.equal("https://localhost:9002", theConfig.endpointUrl, "Expect the endpoint to be set");
 
-                theConfig.endpointUrl = "https://newendpoint.localhost:9001";
+                theConfig.endpointUrl = "https://newendpoint.localhost:9002";
                 Assert.equal("newIkey", theConfig.instrumentationKey, "Expect the iKey to be changed");
-                Assert.equal("https://newendpoint.localhost:9001", theConfig.endpointUrl, "Expect the endpoint to be changed");
+                Assert.equal("https://newendpoint.localhost:9002", theConfig.endpointUrl, "Expect the endpoint to be changed");
             }
         });
 
@@ -208,7 +211,7 @@ export class DynamicConfigTests extends AITestClass {
                 };
 
                 const theDefaults: IConfigDefaults<IConfiguration> = {
-                    endpointUrl: "https://localhost:9001"
+                    endpointUrl: "https://localhost:9002"
                 };
 
                 // Creates a dynamic config as a side-effect
@@ -230,15 +233,15 @@ export class DynamicConfigTests extends AITestClass {
                 Assert.equal(dynamicHandler?.cfg, theConfig, "The handler should point to the config");
 
                 Assert.equal("testiKey", theConfig.instrumentationKey, "Expect the iKey to be set");
-                Assert.equal("https://localhost:9001", theConfig.endpointUrl, "Expect the endpoint to be set");
+                Assert.equal("https://localhost:9002", theConfig.endpointUrl, "Expect the endpoint to be set");
 
                 theConfig.instrumentationKey = "newIkey";
                 Assert.equal("newIkey", theConfig.instrumentationKey, "Expect the iKey to be changed");
-                Assert.equal("https://localhost:9001", theConfig.endpointUrl, "Expect the endpoint to be set");
+                Assert.equal("https://localhost:9002", theConfig.endpointUrl, "Expect the endpoint to be set");
 
-                theConfig.endpointUrl = "https://newendpoint.localhost:9001";
+                theConfig.endpointUrl = "https://newendpoint.localhost:9002";
                 Assert.equal("newIkey", theConfig.instrumentationKey, "Expect the iKey to be changed");
-                Assert.equal("https://newendpoint.localhost:9001", theConfig.endpointUrl, "Expect the endpoint to be changed");
+                Assert.equal("https://newendpoint.localhost:9002", theConfig.endpointUrl, "Expect the endpoint to be changed");
             }
         });
 
@@ -250,7 +253,7 @@ export class DynamicConfigTests extends AITestClass {
                 };
 
                 const theDefaults: IConfigDefaults<IConfiguration> = {
-                    endpointUrl: "https://localhost:9001"
+                    endpointUrl: "https://localhost:9002"
                 };
 
                 let dynamicHandler = createDynamicConfig(theConfig, theDefaults, this._testLogger);
@@ -260,7 +263,7 @@ export class DynamicConfigTests extends AITestClass {
                 Assert.equal(dynamicHandler?.cfg, theConfig, "The handler should point to the config");
 
                 let expectediKey = "testiKey";
-                let expectedEndpointUrl = "https://localhost:9001";
+                let expectedEndpointUrl = "https://localhost:9002";
                 let onChangeCalled = 0;
                 let onChange = onConfigChange(dynamicConfig, (details) => {
                     onChangeCalled ++;
@@ -278,14 +281,14 @@ export class DynamicConfigTests extends AITestClass {
                 dynamicHandler?.notify();
                 Assert.equal(2, onChangeCalled, "Expected the onChanged was called again");
 
-                expectedEndpointUrl = "https://newendpoint.localhost:9001";
+                expectedEndpointUrl = "https://newendpoint.localhost:9002";
                 theConfig.endpointUrl = expectedEndpointUrl;
 
                 Assert.equal(2, onChangeCalled, "Expected the onChanged was called");
                 dynamicHandler?.notify();
                 Assert.equal(3, onChangeCalled, "Expected the onChanged was called again");
                 Assert.equal("newIKey", theConfig.instrumentationKey, "Expect the iKey to be changed");
-                Assert.equal("https://newendpoint.localhost:9001", theConfig.endpointUrl, "Expect the endpoint to be changed");
+                Assert.equal("https://newendpoint.localhost:9002", theConfig.endpointUrl, "Expect the endpoint to be changed");
             }
         });
 
@@ -297,7 +300,7 @@ export class DynamicConfigTests extends AITestClass {
                 };
 
                 const theDefaults: IConfigDefaults<IConfiguration> = {
-                    endpointUrl: "https://localhost:9001"
+                    endpointUrl: "https://localhost:9002"
                 };
 
                 let dynamicHandler = createDynamicConfig(theConfig, theDefaults, this._testLogger);
@@ -307,7 +310,7 @@ export class DynamicConfigTests extends AITestClass {
                 Assert.equal(dynamicHandler?.cfg, theConfig, "The handler should point to the config");
 
                 let expectediKey = "testiKey";
-                let expectedEndpointUrl = "https://localhost:9001";
+                let expectedEndpointUrl = "https://localhost:9002";
                 let onChangeCalled = 0;
                 let onChange = onConfigChange(dynamicConfig, (details) => {
                     onChangeCalled ++;
@@ -321,7 +324,7 @@ export class DynamicConfigTests extends AITestClass {
                 expectediKey = "newIKey";
                 theConfig.instrumentationKey = expectediKey;
 
-                expectedEndpointUrl = "https://newendpoint.localhost:9001";
+                expectedEndpointUrl = "https://newendpoint.localhost:9002";
                 theConfig.endpointUrl = expectedEndpointUrl;
 
                 Assert.equal(1, onChangeCalled, "Expected the onChanged was only called once");
@@ -331,7 +334,7 @@ export class DynamicConfigTests extends AITestClass {
                 dynamicHandler?.notify();
                 Assert.equal(2, onChangeCalled, "Expected the onChanged was not called again");
                 Assert.equal("newIKey", theConfig.instrumentationKey, "Expect the iKey to be changed");
-                Assert.equal("https://newendpoint.localhost:9001", theConfig.endpointUrl, "Expect the endpoint to be changed");
+                Assert.equal("https://newendpoint.localhost:9002", theConfig.endpointUrl, "Expect the endpoint to be changed");
             }
         });
 
@@ -343,7 +346,7 @@ export class DynamicConfigTests extends AITestClass {
                 };
 
                 const theDefaults: IConfigDefaults<IConfiguration> = {
-                    endpointUrl: "https://localhost:9001"
+                    endpointUrl: "https://localhost:9002"
                 };
 
                 let dynamicConfig = createDynamicConfig(theConfig, theDefaults, this._testLogger).cfg;
@@ -356,7 +359,7 @@ export class DynamicConfigTests extends AITestClass {
                 let onChange = onConfigChange(theConfig, () => {
                     onChangeCalled ++;
                     Assert.equal("testiKey", theConfig.instrumentationKey, "Expect the iKey to be set");
-                    Assert.equal("https://localhost:9001", theConfig.endpointUrl, "Expect the endpoint to be set");
+                    Assert.equal("https://localhost:9002", theConfig.endpointUrl, "Expect the endpoint to be set");
                 });
 
                 Assert.equal(1, onChangeCalled, "Expected the onChanged was called");
@@ -364,11 +367,11 @@ export class DynamicConfigTests extends AITestClass {
 
                 theConfig.instrumentationKey = "newIkey";
                 Assert.equal("newIkey", theConfig.instrumentationKey, "Expect the iKey to be changed");
-                Assert.equal("https://localhost:9001", theConfig.endpointUrl, "Expect the endpoint to be set");
+                Assert.equal("https://localhost:9002", theConfig.endpointUrl, "Expect the endpoint to be set");
 
-                theConfig.endpointUrl = "https://newendpoint.localhost:9001";
+                theConfig.endpointUrl = "https://newendpoint.localhost:9002";
                 Assert.equal("newIkey", theConfig.instrumentationKey, "Expect the iKey to be changed");
-                Assert.equal("https://newendpoint.localhost:9001", theConfig.endpointUrl, "Expect the endpoint to be changed");
+                Assert.equal("https://newendpoint.localhost:9002", theConfig.endpointUrl, "Expect the endpoint to be changed");
             }
         });
 
@@ -381,7 +384,7 @@ export class DynamicConfigTests extends AITestClass {
                 };
 
                 const theDefaults: IConfigDefaults<IConfiguration> = {
-                    endpointUrl: "https://localhost:9001"
+                    endpointUrl: "https://localhost:9002"
                 };
 
                 let dynamicHandler = createDynamicConfig(theConfig, theDefaults, this._testLogger);
@@ -391,7 +394,7 @@ export class DynamicConfigTests extends AITestClass {
                 Assert.equal(dynamicHandler?.cfg, theConfig, "The handler should point to the config");
 
                 let expectediKey = "testiKey";
-                let expectedEndpointUrl = "https://localhost:9001";
+                let expectedEndpointUrl = "https://localhost:9002";
                 let onChangeCalled = 0;
                 let onChange = onConfigChange(dynamicConfig, (details) => {
                     onChangeCalled ++;
@@ -413,7 +416,7 @@ export class DynamicConfigTests extends AITestClass {
                 dynamicHandler?.notify();
                 Assert.equal(2, onChangeCalled, "Expected the onChanged was called again");
 
-                expectedEndpointUrl = "https://newendpoint.localhost:9001";
+                expectedEndpointUrl = "https://newendpoint.localhost:9002";
                 theConfig.endpointUrl = expectedEndpointUrl;
 
                 Assert.equal(2, onChangeCalled, "Expected the onChanged was called");
@@ -423,7 +426,7 @@ export class DynamicConfigTests extends AITestClass {
                 dynamicHandler?.notify();
                 Assert.equal(3, onChangeCalled, "Expected the onChanged was called again");
                 Assert.equal("newIKey", theConfig.instrumentationKey, "Expect the iKey to be changed");
-                Assert.equal("https://newendpoint.localhost:9001", theConfig.endpointUrl, "Expect the endpoint to be changed");
+                Assert.equal("https://newendpoint.localhost:9002", theConfig.endpointUrl, "Expect the endpoint to be changed");
             }
         });
 
@@ -433,7 +436,7 @@ export class DynamicConfigTests extends AITestClass {
             test: () => {
                 let theConfig: IConfiguration = {
                     instrumentationKey: "testiKey",
-                    endpointUrl: "https://localhost:9001"
+                    endpointUrl: "https://localhost:9002"
                 };
 
                 const channelPlugin = new TestChannelPlugin();
@@ -476,7 +479,7 @@ export class DynamicConfigTests extends AITestClass {
             test: () => {
                 let theConfig: IConfiguration = {
                     instrumentationKey: "testiKey",
-                    endpointUrl: "https://localhost:9001"
+                    endpointUrl: "https://localhost:9002"
                 };
 
                 const channelPlugin = new TestChannelPlugin();
@@ -505,7 +508,7 @@ export class DynamicConfigTests extends AITestClass {
             test: () => {
                 let theConfig: IConfiguration = {
                     instrumentationKey: "testiKey",
-                    endpointUrl: "https://localhost:9001"
+                    endpointUrl: "https://localhost:9002"
                 };
 
                 const channelPlugin = new TestChannelPlugin();
@@ -548,7 +551,7 @@ export class DynamicConfigTests extends AITestClass {
             test: () => {
                 let theConfig: IConfiguration = {
                     instrumentationKey: "testiKey",
-                    endpointUrl: "https://localhost:9001",
+                    endpointUrl: "https://localhost:9002",
                     enableDebug: false,
                     loggingLevelConsole: 1
                 };
@@ -611,7 +614,7 @@ export class DynamicConfigTests extends AITestClass {
             test: () => {
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
-                    endpointUrl: "https://localhost:9001",
+                    endpointUrl: "https://localhost:9002",
                     enableDebug: false,
                     loggingLevelConsole: 1,
                     extensionConfig: {
@@ -750,7 +753,7 @@ export class DynamicConfigTests extends AITestClass {
             test: () => {
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
-                    endpointUrl: "https://localhost:9001",
+                    endpointUrl: "https://localhost:9002",
                     enableDebug: false,
                     loggingLevelConsole: 1,
                     extensionConfig: {
@@ -804,7 +807,7 @@ export class DynamicConfigTests extends AITestClass {
 
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
-                    endpointUrl: "https://localhost:9001",
+                    endpointUrl: "https://localhost:9002",
                     enableDebug: false,
                     loggingLevelConsole: 1,
                     extensionConfig: {
@@ -904,7 +907,7 @@ export class DynamicConfigTests extends AITestClass {
 
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
-                    endpointUrl: "https://localhost:9001",
+                    endpointUrl: "https://localhost:9002",
                     enableDebug: false,
                     loggingLevelConsole: 1,
                     userCfg: undefined
@@ -997,7 +1000,7 @@ export class DynamicConfigTests extends AITestClass {
             test: () => {
                 let theConfig: any = {
                     instrumentationKey: "testiKey",
-                    endpointUrl: "https://localhost:9001",
+                    endpointUrl: "https://localhost:9002",
                     enableDebug: false,
                     loggingLevelConsole: 1,
                     userCfg: undefined,
@@ -1095,7 +1098,7 @@ export class DynamicConfigTests extends AITestClass {
             test: () => {
                 const iKey1 = "09465199-12AA-4124-817F-544738CC7C41";
                 const iKey2 = "00000000-1111-7777-8888-999999999999";
-                const testEndpoint1 = "https://localhost:9001/TestEndpoint";
+                const testEndpoint1 = "https://localhost:9002/TestEndpoint";
 
                 const channelPlugin = new TestChannelPlugin();
                 const trackPlugin = new TrackPlugin();

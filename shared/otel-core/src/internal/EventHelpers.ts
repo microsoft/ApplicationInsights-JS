@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { arrForEach, arrIndexOf, getDocument, getWindow, isArray, objForEachKey, objKeys } from "@nevware21/ts-utils";
+import {
+    ICachedValue, arrForEach, arrIndexOf, createCachedValue, getDocument, getWindow, isArray, objForEachKey, objKeys
+} from "@nevware21/ts-utils";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { createElmNodeData, createUniqueNamespace } from "../utils/DataCacheHelper";
 
@@ -10,15 +12,33 @@ const strAttachEvent = "attachEvent";
 const strAddEventHelper = "addEventListener";
 const strDetachEvent = "detachEvent";
 const strRemoveEventListener = "removeEventListener";
-const strEvents = "events"
+const strEvents = "events";
 const strVisibilityChangeEvt: string = "visibilitychange";
 const strPageHide: string = "pagehide";
 const strPageShow: string = "pageshow";
 const strUnload: string = "unload";
 const strBeforeUnload: string = "beforeunload";
 
-const strPageHideNamespace = createUniqueNamespace("aiEvtPageHide");
-const strPageShowNamespace = createUniqueNamespace("aiEvtPageShow");
+let _strPageHideNamespace: ICachedValue<string>;
+let _strPageShowNamespace: ICachedValue<string>;
+
+/*#__NO_SIDE_EFFECTS__*/
+function _getPageHideNamespace() {
+    // Note: Using a cached value instead of a lazy value as we want to ensure that the namespace is consistent
+    // across multiple calls as the `getLazy()` supports runtime invalidation via `setBypassLazyCache()` which would
+    // result in different namespaces being returned.
+    !_strPageHideNamespace && (_strPageHideNamespace = createCachedValue(createUniqueNamespace("aiEvtPageHide")));
+    return _strPageHideNamespace.v;
+}
+
+/*#__NO_SIDE_EFFECTS__*/
+function _getPageShowNamespace() {
+    // Note: Using a cached value instead of a lazy value as we want to ensure that the namespace is consistent
+    // across multiple calls as the `getLazy()` supports runtime invalidation via `setBypassLazyCache()` which would
+    // result in different namespaces being returned.
+    !_strPageShowNamespace && (_strPageShowNamespace = createCachedValue(createUniqueNamespace("aiEvtPageShow")));
+    return _strPageShowNamespace.v;
+}
 
 const rRemoveEmptyNs = /\.[\.]+/g;
 const rRemoveTrailingEmptyNs = /[\.]+$/;
@@ -41,9 +61,20 @@ interface IAiEvents {
     [name: string]: IRegisteredEvent[]
 }
 
-const elmNodeData = createElmNodeData("events");
-const eventNamespace = /^([^.]*)(?:\.(.+)|)/
+let _elmNodeData: ICachedValue<ReturnType<typeof createElmNodeData>>;
 
+/*#__NO_SIDE_EFFECTS__*/
+function _getElmNodeData() {
+    // Note: Using a cached value instead of a lazy value as we want to ensure that the namespace is consistent
+    // across multiple calls as the `getLazy()` supports runtime invalidation via `setBypassLazyCache()` which would
+    // result in different namespaces being returned.
+    !_elmNodeData && (_elmNodeData = createCachedValue(createElmNodeData("events")));
+    return _elmNodeData.v;
+}
+
+const eventNamespace = /^([^.]*)(?:\.(.+)|)/;
+
+/*#__NO_SIDE_EFFECTS__*/
 function _normalizeNamespace(name: string) {
     if (name && name.replace) {
         return name.replace(/^[\s\.]+|(?=[\s\.])[\.\s]+$/g, STR_EMPTY);
@@ -52,6 +83,7 @@ function _normalizeNamespace(name: string) {
     return name;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 function _getEvtNamespace(eventName: string | undefined, evtNamespace?: string | string[] | null): IEventDetails {
     if (evtNamespace) {
         let theNamespace: string = STR_EMPTY;
@@ -103,9 +135,10 @@ export interface _IRegisteredEvents {
  * @param evtNamespace - [Optional] Additional namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace,
  * if the eventName also includes a namespace the namespace(s) are merged into a single namespace
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function __getRegisteredEvents(target: any, eventName?: string, evtNamespace?: string | string[]): _IRegisteredEvents[] {
     let theEvents: _IRegisteredEvents[] = [];
-    let eventCache = elmNodeData.get<IAiEvents>(target, strEvents, {}, false);
+    let eventCache = _getElmNodeData().get<IAiEvents>(target, strEvents, {}, false);
     let evtName = _getEvtNamespace(eventName, evtNamespace);
 
     objForEachKey(eventCache, (evtType, registeredEvents) => {
@@ -125,8 +158,9 @@ export function __getRegisteredEvents(target: any, eventName?: string, evtNamesp
 }
 
 // Exported for internal unit testing only
+/*#__NO_SIDE_EFFECTS__*/
 function _getRegisteredEvents(target: any, evtName: string, addDefault: boolean = true): IRegisteredEvent[] {
-    let aiEvts = elmNodeData.get<IAiEvents>(target, strEvents, {}, addDefault);
+    let aiEvts = _getElmNodeData().get<IAiEvents>(target, strEvents, {}, addDefault);
     let registeredEvents = aiEvts[evtName];
     if (!registeredEvents) {
         registeredEvents = aiEvts[evtName] = [];
@@ -183,18 +217,19 @@ function _unregisterEvents(target: any, evtName: IEventDetails, unRegFn: (regEve
     if (evtName.type) {
         _doUnregister(target, _getRegisteredEvents(target, evtName.type), evtName, unRegFn);
     } else {
-        let eventCache = elmNodeData.get<IAiEvents>(target, strEvents, {});
+        let eventCache = _getElmNodeData().get<IAiEvents>(target, strEvents, {});
         objForEachKey(eventCache, (evtType, events) => {
             _doUnregister(target, events, evtName, unRegFn);
         });
 
         // Cleanup
         if (objKeys(eventCache).length === 0) {
-            elmNodeData.kill(target, strEvents);
+            _getElmNodeData().kill(target, strEvents);
         }
     }
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function mergeEvtNamespace(theNamespace: string, namespaces?: string | string[] | null): string | string[] {
     let newNamespaces: string | string[];
 
@@ -233,7 +268,7 @@ export function eventOn<T>(target: T, eventName: string, handlerRef: any, evtNam
             let evtName = _getEvtNamespace(eventName, evtNamespace);
             result = _doAttach(target, evtName, handlerRef, useCapture);
         
-            if (result && elmNodeData.accept(target)) {
+            if (result && _getElmNodeData().accept(target)) {
                 let registeredEvent: IRegisteredEvent = {
                     guid: _guid++,
                     evtName: evtName,
@@ -472,7 +507,7 @@ export function addPageHideEventListener(listener: any, excludeEvents?: string[]
     }
 
     // add the unique page show namespace to any provided namespace so we can only remove the ones added by "pagehide"
-    let newNamespaces = mergeEvtNamespace(strPageHideNamespace, evtNamespace);
+    let newNamespaces = mergeEvtNamespace(_getPageHideNamespace(), evtNamespace);
     let pageUnloadAdded = _addEventListeners([strPageHide], listener, excludeEvents, newNamespaces);
 
     if (!excludeEvents || arrIndexOf(excludeEvents, strVisibilityChangeEvt) === -1) {
@@ -497,7 +532,7 @@ export function addPageHideEventListener(listener: any, excludeEvents?: string[]
 
 export function removePageHideEventListener(listener: any, evtNamespace?: string | string[] | null) {
     // add the unique page show namespace to any provided namespace so we only remove the ones added by "pagehide"
-    let newNamespaces = mergeEvtNamespace(strPageHideNamespace, evtNamespace);
+    let newNamespaces = mergeEvtNamespace(_getPageHideNamespace(), evtNamespace);
     removeEventListeners([strPageHide], listener, newNamespaces);
     removeEventListeners([strVisibilityChangeEvt], null, newNamespaces);
 }
@@ -523,7 +558,7 @@ export function addPageShowEventListener(listener: any, excludeEvents?: string[]
     }
 
     // add the unique page show namespace to any provided namespace so we can only remove the ones added by "pageshow"
-    let newNamespaces = mergeEvtNamespace(strPageShowNamespace, evtNamespace);
+    let newNamespaces = mergeEvtNamespace(_getPageShowNamespace(), evtNamespace);
     let pageShowAdded = _addEventListeners([strPageShow], listener, excludeEvents, newNamespaces);
     pageShowAdded = _addEventListeners([strVisibilityChangeEvt], _handlePageVisibility, excludeEvents, newNamespaces) || pageShowAdded;
 
@@ -544,7 +579,7 @@ export function addPageShowEventListener(listener: any, excludeEvents?: string[]
  */
 export function removePageShowEventListener(listener: any, evtNamespace?: string | string[] | null) {
     // add the unique page show namespace to any provided namespace so we only remove the ones added by "pageshow"
-    let newNamespaces = mergeEvtNamespace(strPageShowNamespace, evtNamespace);
+    let newNamespaces = mergeEvtNamespace(_getPageShowNamespace(), evtNamespace);
     removeEventListeners([strPageShow], listener, newNamespaces);
     removeEventListeners([strVisibilityChangeEvt], null, newNamespaces);
 }

@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IDistributedTraceContext } from "../../..";
 import { OTelSeverityNumber } from "../../../enums/otel/eOTelSeverityNumber";
-import { IOTelHrTime } from "../../../types/time";
+import { IOTelHrTime } from "../../../interfaces/IOTelHrTime";
 import { IOTelResource } from "../resources/IOTelResource";
 import { IOTelInstrumentationScope } from "../trace/IOTelInstrumentationScope";
-import { IOTelSpanContext } from "../trace/IOTelSpanContext";
 import { LogAttributes, LogBody } from "./IOTelLogRecord";
 
 export interface ReadableLogRecord {
@@ -22,7 +22,7 @@ export interface ReadableLogRecord {
     /**
      * The SpanContext associated with the LogRecord.
      */
-    readonly spanContext?: IOTelSpanContext;
+    readonly spanContext?: IDistributedTraceContext;
 
     /**
      * The severity text.

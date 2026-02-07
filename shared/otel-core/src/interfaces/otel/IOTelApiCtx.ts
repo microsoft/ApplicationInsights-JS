@@ -1,17 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDiagnosticLogger } from "../ai/IDiagnosticLogger";
-import { IOTelConfig } from "./config/IOTelConfig";
-import { IOTelTracerProvider } from "./trace/IOTelTracerProvider";
+import { ITraceHost } from "../ai/ITraceProvider";
 
 /**
- * The context for the current IOTelApi instance and it's configuration
+ * The context for the current IOTelApi instance linking it to the core SDK instance,
+ * including access to the core dynamic configuration.
+ *
+ * Note: Passing the core instance within a context object to allow future expansion
+ * without breaking changes or modifying signatures. Also allows easier mocking for tests.
  */
 export interface IOTelApiCtx {
-    otelCfg: IOTelConfig;
-    
-    traceProvider: IOTelTracerProvider;
-
-    diagLogger: IDiagnosticLogger;
+    /**
+     * The host instance associated with this OTel API instance
+     */
+    host: ITraceHost;
 }

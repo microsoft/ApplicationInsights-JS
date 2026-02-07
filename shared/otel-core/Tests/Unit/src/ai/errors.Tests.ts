@@ -1,5 +1,8 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { getOpenTelemetryError, OTelInvalidAttributeError, OTelSpanError, throwOTelError, throwOTelInvalidAttributeError, throwOTelNotImplementedError, throwOTelSpanError } from "../../../../../src/index";
+import { getOpenTelemetryError, throwOTelError } from "../../../../src/otel/api/errors/OTelError";
+import { OTelInvalidAttributeError, throwOTelInvalidAttributeError } from "../../../../src/otel/api/errors/OTelInvalidAttributeError";
+import { throwOTelNotImplementedError } from "../../../../src/otel/api/errors/OTelNotImplementedError";
+import { OTelSpanError, throwOTelSpanError } from "../../../../src/otel/api/errors/OTelSpanError";
 import { isFunction, isString, dumpObj } from "@nevware21/ts-utils";
 
 

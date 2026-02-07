@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { OTelTimeInput } from "../../../types/time";
+import { OTelException } from "../../IException";
+import { OTelTimeInput } from "../../IOTelHrTime";
+import { IDistributedTraceContext } from "../../ai/IDistributedTraceContext";
 import { IOTelApi } from "../IOTelApi";
 import { IOTelAttributes } from "../IOTelAttributes";
 import { IOTelContext } from "../context/IOTelContext";
 import { IOTelResource } from "../resources/IOTelResource";
 import { IOTelInstrumentationScope } from "./IOTelInstrumentationScope";
 import { IOTelLink } from "./IOTelLink";
-import { IOTelSpanContext } from "./IOTelSpanContext";
 import { IReadableSpan } from "./IReadableSpan";
 
 /**
@@ -23,31 +24,31 @@ export interface IOTelSpanCtx {
     /**
      * The current {@link IOTelResource} instance to use for this Span Context
      */
-    resource: IOTelResource;
+    resource?: IOTelResource;
     
     /**
      * The current {@link IOTelInstrumentationScope} instrumentationScope instance to
      * use for this Span Context
      */
-    instrumentationScope: IOTelInstrumentationScope;
+    instrumentationScope?: IOTelInstrumentationScope;
 
     /**
      * The context for the current instance
      */
-    context: IOTelContext;
+    context?: IOTelContext;
     
     /*
-     * The current {@link IOTelSpanContext} instance to associated with the span
+     * The current {@link IDistributedTraceContext} instance to associated with the span
      * used to create the span.
      */
-    spanContext: IOTelSpanContext;
+    spanContext: IDistributedTraceContext;
 
     /**
      * Identifies the user provided start time of the span
      */
     startTime?: OTelTimeInput;
 
-    parentSpanContext?: IOTelSpanContext;
+    parentSpanContext?: IDistributedTraceContext;
     
     attributes?: IOTelAttributes;
 
@@ -63,4 +64,16 @@ export interface IOTelSpanCtx {
      * @returns
      */
     onEnd?: (span: IReadableSpan) => void;
+
+    /**
+     * When an exception is recorded via the span's recordException API this callback will be called
+     * to process the exception. Unlike the OpenTelemetry spec this callback also provides the span instance
+     * to allow implementations to associate the exception with the span as needed.
+     * It is also called immediately when recordException is called rather than waiting until the span ends.
+     * @param span - The span associated with the exception
+     * @param exception - The exception to process
+     * @param time - The time the exception occurred
+     * @returns
+     */
+    onException?: (span: IReadableSpan, exception: OTelException, time?: OTelTimeInput) => void;
 }

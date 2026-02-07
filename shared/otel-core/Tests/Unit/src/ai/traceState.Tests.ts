@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { createOTelTraceState } from "../../../../../src/index";
+import { createOTelTraceState } from "../../../../src/otel/api/trace/traceState";
 import { strRepeat } from "@nevware21/ts-utils";
 
 export class OTelTraceApiTests extends AITestClass {
