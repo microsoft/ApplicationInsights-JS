@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { IDynamicConfigHandler } from "./IDynamicConfigHandler";
 import { IDynamicPropertyHandler } from "./IDynamicPropertyHandler";
 import { IWatcherHandler, WatcherFunction, _IDynamicDetail } from "./IDynamicWatcher";

@@ -7,7 +7,7 @@ import { _throwInternal } from "../diagnostics/DiagnosticLogger";
 import { StorageType } from "../enums/ai/Enums";
 import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
 import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
-import { getExceptionName } from "../utils/HelperFuncs";
+import { getExceptionName } from "./HelperFuncs";
 
 let _canUseLocalStorage: boolean = undefined;
 let _canUseSessionStorage: boolean = undefined;

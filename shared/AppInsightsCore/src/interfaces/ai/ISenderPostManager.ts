@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { ITimerHandler } from "@nevware21/ts-utils";
 import { TransportType } from "../../enums/ai/SendRequestReason";
 import { IXDomainRequest } from "./IXDomainRequest";

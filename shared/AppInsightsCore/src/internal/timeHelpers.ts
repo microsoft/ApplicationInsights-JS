@@ -1,6 +1,9 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import {
     ICachedValue, ObjDefinePropDescriptor, createCachedValue, getDeferred, getPerformance, isArray, isDate, isNullOrUndefined, isNumber,
-    isString, mathFloor, mathRound, objDefineProps, objFreeze, perfNow, strLeft, strRight, strSplit, throwTypeError
+    mathFloor, mathRound, objDefineProps, objFreeze, perfNow, strLeft, strRight, throwTypeError
 } from "@nevware21/ts-utils";
 import { IOTelHrTime, OTelTimeInput } from "../interfaces/IOTelHrTime";
 import { setObjStringTag, toISOString } from "../utils/HelperFuncs";
@@ -345,41 +348,6 @@ export function isTimeInputHrTime(value: unknown): value is IOTelHrTime {
 export function isTimeInput(value: unknown): value is OTelTimeInput {
     return !isNullOrUndefined(value) && (isTimeInputHrTime(value) || isNumber(value) || isDate(value));
 }
-
-/**
- * A helper method to determine whether the provided value is in a ISO time span format (DD.HH:MM:SS.MMMMMM)
- * @param value - The value to check
- * @returns True if the value is in a time span format; false otherwise
- */
-/*#__NO_SIDE_EFFECTS__*/
-export function isTimeSpan(value: any): value is string {
-    let result = false;
-
-    if (isString(value)) {
-        const parts = strSplit(value, ":");
-        if (parts.length === 3) {
-            // Looks like a candidate, now validate each part
-            const daysHours = strSplit(parts[0], ".");
-            if (daysHours.length === 2) {
-                result = !isNaN(parseInt(daysHours[0] || "0")) && !isNaN(parseInt(daysHours[1] || "0"));
-            } else {
-                result = !isNaN(parseInt(daysHours[0] || "0"));
-            }
-
-            result = result && !isNaN(parseInt(parts[1] || "0"));
-
-            const secondsParts = strSplit(parts[2], ".");
-            if (secondsParts.length === 2) {
-                result = result && !isNaN(parseInt(secondsParts[0] || "0")) && !isNaN(parseInt(secondsParts[1] || "0"));
-            } else {
-                result = result && !isNaN(parseInt(secondsParts[0] || "0"));
-            }
-        }
-    }
-
-    return result;
-}
-
 
 /**
  * Given 2 HrTime formatted times, return their sum as an HrTime.

@@ -12,7 +12,7 @@ import { createSpan } from "../../../../src/otel/api/trace/span";
 import { createW3cTraceState } from "../../../../src/telemetry/W3cTraceState";
 import { createDistributedTraceContext } from "../../../../src/core/TelemetryHelpers";
 import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
-import { AppInsightsCore, ITraceHost } from "../../../../src/index";
+import { AppInsightsCore } from "../../../../src/index";
 import { IChannelControls } from "../../../../src/interfaces/ai/IChannelControls";
 
 function _createDistributedContext(traceId: string, spanId: string, traceFlags: number, traceState?: string): IDistributedTraceContext {

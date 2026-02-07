@@ -1,15 +1,18 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IPromise, createRacePromise, createTimeoutPromise } from "@nevware21/ts-async";
 import { ILazyValue, asString, dumpObj, isError, isObject, isPrimitive, safe, safeGetLazy } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { OTelAttributeValue } from "../interfaces/otel/IOTelAttributes";
 import { IAttributeContainer } from "../interfaces/otel/attribute/IAttributeContainer";
+import { IOTelErrorHandlers } from "../interfaces/otel/config/IOTelErrorHandlers";
 import {
     DBSYSTEMVALUES_DB2, DBSYSTEMVALUES_DERBY, DBSYSTEMVALUES_H2, DBSYSTEMVALUES_HSQLDB, DBSYSTEMVALUES_MARIADB, DBSYSTEMVALUES_MSSQL,
     DBSYSTEMVALUES_ORACLE, DBSYSTEMVALUES_OTHER_SQL, DBSYSTEMVALUES_SQLITE
 } from "../otel/attribute/SemanticConventions";
 import { getJSON } from "../utils/EnvUtils";
+import { handleError } from "./handleErrors";
 
 const _hasJsonStringify: ILazyValue<boolean> = (/*#__PURE__*/ safeGetLazy(() => !!getJSON().stringify, null));
 
@@ -291,4 +294,36 @@ export function isSqlDB(dbSystem: string): boolean {
         dbSystem === DBSYSTEMVALUES_HSQLDB ||
         dbSystem === DBSYSTEMVALUES_H2
     );
+}
+
+/**
+ * Adds a timeout to a promise and rejects if the specified timeout has elapsed.
+ * Reports the timeout through the configured error handlers before rejecting.
+ *
+ * @param handlers - The configured error handlers to notify.
+ * @param promise - The promise to guard with the timeout.
+ * @param timeout - Timeout in milliseconds before the promise is rejected.
+ */
+export function callWithTimeout<T>(
+    handlers: IOTelErrorHandlers,
+    promise: Promise<T>,
+    timeout: number
+): IPromise<T> {
+    const timeoutMessage = "Operation timed out.";
+    const timeoutError = new Error(timeoutMessage);
+    timeoutError.name = "TimeoutError";
+    (timeoutError as { __otelTimeout?: boolean }).__otelTimeout = true;
+
+    const racedPromise = createRacePromise<T>([
+        promise,
+        createTimeoutPromise<Error>(timeout, false, timeoutError) as unknown as PromiseLike<T>
+    ]);
+
+    return racedPromise.catch((error) => {
+        if (error && (error === timeoutError || (error as { __otelTimeout?: boolean }).__otelTimeout)) {
+            handleError(handlers, timeoutMessage);
+        }
+
+        throw error;
+    });
 }

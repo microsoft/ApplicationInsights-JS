@@ -53,6 +53,7 @@ export function _cfgDeepCopy<T>(source: T): T {
 }
 
 /**
+ * @internal
  * Get the dynamic config handler if the value is already dynamic
  * @param value - The value to check for dynamic config handler
  * @returns The dynamic config handler if present, null otherwise

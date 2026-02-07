@@ -28,7 +28,7 @@ const STR_FETCH = "fetch";
 
 const ERROR_HEADER = "Failed to monitor XMLHttpRequest";
 const ERROR_PREFIX = ", monitoring data for this ajax call ";
-const ERROR_POSTFIX = ERROR_PREFIX +  "may be incorrect.";
+const ERROR_POSTFIX = ERROR_PREFIX + "may be incorrect.";
 const ERROR_NOT_SENT = ERROR_PREFIX + "won't be sent.";
 const CORRELATION_HEADER_ERROR = "Failed to get Request-Context correlation header as it may be not included in the response or not accessible.";
 const CUSTOM_REQUEST_CONTEXT_ERROR = "Failed to add custom defined request context as configured call back may missing a null check.";

@@ -1,9 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { IPromise } from "@nevware21/ts-async";
-import { _InternalLogMessage } from "../../diagnostics/DiagnosticLogger";
 import { LoggingSeverity, _InternalMessageId } from "../../enums/ai/LoggingEnums";
 import { ITelemetryUpdateState } from "./ITelemetryUpdateState";
+
+export interface IInternalLogMessage {
+    message: string;
+    messageId: _InternalMessageId;
+}
 
 export interface IDiagnosticLogger {
 
@@ -17,7 +21,7 @@ export interface IDiagnosticLogger {
     /**
      * The internal logging queue
      */
-    queue: _InternalLogMessage[];
+    queue: IInternalLogMessage[];
 
     /**
      * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
@@ -30,7 +34,7 @@ export interface IDiagnosticLogger {
      * This will write a debug message to the console if possible
      * @param message - The debug message
      */
-    debugToConsole? (message: string): void
+    debugToConsole?(message: string): void
 
     /**
      * This will write a warning to the console if possible
@@ -56,7 +60,7 @@ export interface IDiagnosticLogger {
      * @param severity - The severity of the log message
      * @param message - The message to log.
      */
-    logInternalMessage?(severity: LoggingSeverity, message: _InternalLogMessage): void;
+    logInternalMessage?(severity: LoggingSeverity, message: IInternalLogMessage): void;
 
     /**
      * Optional Callback hook to allow the diagnostic logger to update it's configuration

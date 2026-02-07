@@ -1,8 +1,8 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { addEventHandler, createUniqueNamespace, removeEventHandler } from "../../../src/index";
-import { _eInternalMessageId } from "../../../src/enums/ai/LoggingEnums";
-import { _InternalLogMessage } from "../../../src/diagnostics/DiagnosticLogger";
-import { mergeEvtNamespace, __getRegisteredEvents } from "../../../src/internal/EventHelpers";
+import { addEventHandler, createUniqueNamespace, removeEventHandler } from "../../../../src/index";
+import { _eInternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
+import { _InternalLogMessage } from "../../../../src/diagnostics/DiagnosticLogger";
+import { mergeEvtNamespace, __getRegisteredEvents } from "../../../../src/internal/EventHelpers";
 import { setBypassLazyCache } from "@nevware21/ts-utils";
 
 export class EventHelperTests extends AITestClass {

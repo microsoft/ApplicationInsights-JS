@@ -47,7 +47,6 @@ export interface IOTelTracer {
      *
      * @param name - The name of the span, should be descriptive of the operation being traced
      * @param options - Optional configuration for span creation (parent context, attributes, etc.)
-     * @param context - Optional context to use for extracting the parent span; if not provided, uses current context
      *
      * @returns The newly created span, or null if span creation failed
      *

@@ -1,8 +1,11 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { OTelException } from "../../IException";
 import { OTelTimeInput } from "../../IOTelHrTime";
 import { IDistributedTraceContext } from "../../ai/IDistributedTraceContext";
 import { IOTelApi } from "../IOTelApi";
 import { IOTelAttributes } from "../IOTelAttributes";
-import { OTelException } from "../IOTelException";
 import { IReadableSpan } from "./IReadableSpan";
 
 /**
@@ -17,13 +20,13 @@ export interface IOTelSpanCtx {
     // /**
     //  * The current {@link IOTelResource} instance to use for this Span Context
     //  */
-    // resource: IOTelResource;
+    // resource?: IOTelResource;
     
     // /**
     //  * The current {@link IOTelInstrumentationScope} instrumentationScope instance to
     //  * use for this Span Context
     //  */
-    // instrumentationScope: IOTelInstrumentationScope;
+    // instrumentationScope?: IOTelInstrumentationScope;
 
     // /**
     //  * The context for the current instance (not currently used)

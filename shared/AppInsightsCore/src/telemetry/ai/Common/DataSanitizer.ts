@@ -148,7 +148,7 @@ export function dataSanitizeException(logger: IDiagnosticLogger, exception: any)
 /*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: any) {
     if (properties) {
-        const tempProps = {};
+        const tempProps: any = {};
         objForEachKey(properties, (prop, value) => {
             if (isObject(value) && hasJSON()) {
                 // Stringify any part C properties
@@ -171,7 +171,7 @@ export function dataSanitizeProperties(logger: IDiagnosticLogger, properties: an
 /*#__NO_SIDE_EFFECTS__*/
 export function dataSanitizeMeasurements(logger: IDiagnosticLogger, measurements: any) {
     if (measurements) {
-        const tempMeasurements = {};
+        const tempMeasurements: any = {};
         objForEachKey(measurements, (measure, value) => {
             measure = dataSanitizeKeyAndAddUniqueness(logger, measure, tempMeasurements);
             tempMeasurements[measure] = value;
