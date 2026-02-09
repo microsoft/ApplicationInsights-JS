@@ -40,10 +40,10 @@
         "rollup-plugin-cleanup": "^3.2.1",
         "rollup-plugin-sourcemaps": "^0.6.3",
         "typedoc": "^0.26.6",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
-        "@nevware21/grunt-ts-plugin": "^0.4.3",
-        "@nevware21/grunt-eslint-ts": "^0.2.2"
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
+        "@nevware21/grunt-ts-plugin": "^0.5.1",
+        "@nevware21/grunt-eslint-ts": "^0.5.1"
     },
     "peerDependencies": {
         "tslib": ">= 1.0.0"
@@ -54,7 +54,7 @@
         "@microsoft/applicationinsights-core-js": "3.3.11",
         "@microsoft/applicationinsights-common": "3.3.11",
         "@microsoft/applicationinsights-properties-js": "3.3.11",
-        "@nevware21/ts-utils": ">= 0.11.8 < 2.x"
+        "@nevware21/ts-utils": ">= 0.12.6 < 2.x"
     },
     "repository": {
         "type": "git",
