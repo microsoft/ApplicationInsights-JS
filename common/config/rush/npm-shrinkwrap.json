@@ -61,10 +61,10 @@
         "autoprefixer": "9.4.5",
         "file-saver": "^2.0.0",
         "finalhandler": "^1.1.1",
-        "form-data": "2.5.4",
+        "form-data": "^2.5.5",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
         "puppeteer": "24.8.2",
@@ -724,7 +724,7 @@
     "node_modules/@rush-temp/1ds-core-js": {
       "version": "0.0.0",
       "resolved": "file:projects/1ds-core-js.tgz",
-      "integrity": "sha512-I13YbsFizUkWTZQl4Xd2EWcq0wdtGmoewed3ZmwmXrcS/rtF9JfzxloVd+ne4aHY+Y+q0wTJCLHA6paZ9u999g==",
+      "integrity": "sha512-pR50cRWaEco97vLWZWKLw0EYcLAuu97y1SaxLKnh4dtP0J4tfuwLIzRNRqsLF3/vWja720HJToBEPsXLlc8Jeg==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -736,8 +736,8 @@
         "@types/qunit": "^2.19.3",
         "@types/sinon": "4.3.3",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "pako": "^2.0.3",
         "qunit": "^2.11.2",
         "rollup": "^3.20.0",
@@ -752,7 +752,7 @@
     "node_modules/@rush-temp/1ds-post-js": {
       "version": "0.0.0",
       "resolved": "file:projects/1ds-post-js.tgz",
-      "integrity": "sha512-lo/Bt3HnpvTLuVd/zme6ny5sh2TZsXtvy9DEK8KfkszpzyM9Eo/4SpmbymkZfU+KWGaKsNv3nvaa7dyb+UMAAA==",
+      "integrity": "sha512-Ejq2SRGTXhuA221kmuZqZQzH3meOL0fZ3pYNezsT++5Ma9H7XiLV3TbxNurb0331roPh4SnbAACKZodYhzr4Ww==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -762,7 +762,7 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
+        "grunt": "^1.6.1",
         "pako": "^2.0.3",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
@@ -775,7 +775,7 @@
     "node_modules/@rush-temp/ai-test-framework": {
       "version": "0.0.0",
       "resolved": "file:projects/ai-test-framework.tgz",
-      "integrity": "sha512-ycSF6hI9aJD/nJzfa2R5KxTGk2mQWVCCiT3k/enALCC8ZXFNnpq+U8bUB7vkKrS0doB3wB8ENCv8COIoU59Izw==",
+      "integrity": "sha512-ydel+sHmwe63H3A9EQ29oUvZcCmGDRE1au3cI92xAYsahXkn6MmmcOKqcb0/80utVK7icdAlIPfF+nlIPFsSmw==",
       "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-ts-plugin": "^0.5.1",
@@ -787,7 +787,7 @@
         "@types/qunit": "^2.19.3",
         "@types/sinon": "4.3.3",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
+        "grunt": "^1.6.1",
         "magic-string": "^0.25.7",
         "qunit": "^2.11.2",
         "rollup": "^3.20.0",
@@ -801,7 +801,7 @@
     "node_modules/@rush-temp/applicationinsights-analytics-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-analytics-js.tgz",
-      "integrity": "sha512-7+OlbhIyNOXUI5d2j15nOaTlRQ3PK66GCZs+c5BTyCU3nt1eXz5UZm4+r9DM7yMKh4OXLBvsSxOpPcqjZt+KVg==",
+      "integrity": "sha512-pAzkHhe8WCmnr19be+Lp8VTT3TNtrEg7OuuWIA0YsvEnbm5IFTMPIssKcvL+ycWmFLs2VrfmYDTroyKksbAB1A==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -812,8 +812,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
         "qunit": "^2.11.2",
@@ -829,7 +829,7 @@
     "node_modules/@rush-temp/applicationinsights-cfgsync-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-cfgsync-js.tgz",
-      "integrity": "sha512-0DgwfhowN2QkOBFT4sOlWV+4o2trFgSE9VP8Aci6X8i6dHaMFlKJe9s8tUgU26fl28Me1HIHgWA/5GEiHB9T+A==",
+      "integrity": "sha512-JKKVxrBN76qvhf0R4vOUGVviSXOqw2ex+uRz7JMaUaUBDM+ntdW+PS9CPF2DafVP1apuQBGjWf4PNyE27s7VrQ==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -841,8 +841,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
         "qunit": "^2.11.2",
@@ -858,7 +858,7 @@
     "node_modules/@rush-temp/applicationinsights-channel-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-channel-js.tgz",
-      "integrity": "sha512-WXRMuLhL0ZcMteVhZFkSDuPvQF+1Vyn1JDQATBetlt3zjcymtpvhvjdWpJS0WkUQqOsHoG4qiLcPtJFN+aIjEA==",
+      "integrity": "sha512-SAcb+ocqYF3HfNJWhy05sHgwSYz6IoCRaGICQT6pmg+tLIL4TMlOc1QngNLknb5Qcvonq6xe60nnQhgYGPPD1g==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -871,8 +871,8 @@
         "@rollup/plugin-replace": "^5.0.2",
         "@types/sinon": "4.3.3",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
@@ -886,7 +886,7 @@
     "node_modules/@rush-temp/applicationinsights-chrome-debug-extension": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-chrome-debug-extension.tgz",
-      "integrity": "sha512-t3AbTelVC6ELQyUe4dGRy8WrW0GjyCyqa+OvhHFxtqiQzeh4ltZxpXXZjx/7eT8opVx93cUsQmiDRr8s4mfrBQ==",
+      "integrity": "sha512-fkq4sXsbGIb23+ekBSroLeZ766r+FSQLC0ep0Es0tQTwQbFs/ORJM1FsXK3YYz6avqIG/8y/fua9UHiToQaKcg==",
       "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.5.1",
@@ -906,7 +906,7 @@
         "archiver": "^5.3.0",
         "autoprefixer": "9.4.5",
         "file-saver": "^2.0.0",
-        "grunt": "^1.5.3",
+        "grunt": "^1.6.1",
         "react": "^17.0.2",
         "react-dom": "^17.0.2",
         "react-is": "16.13.1",
@@ -922,7 +922,7 @@
     "node_modules/@rush-temp/applicationinsights-clickanalytics-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-clickanalytics-js.tgz",
-      "integrity": "sha512-Xjjf9MR8UYOabl0OK5TWGrk09d4Jy6v+rNBOExO/cBLSvEcXyAoLcmGkbwps0mYn9RX/iFCu3K4p6xCAeJgXGg==",
+      "integrity": "sha512-HX70vvG7dQDCepgQfg3Vq2+z09of5uDCz8y0sag2mGlbqpauD+OZguo+kpUvrC3rux3uqhVEbePm0zKzvIZRtg==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -933,8 +933,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
@@ -947,7 +947,7 @@
     "node_modules/@rush-temp/applicationinsights-common": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-common.tgz",
-      "integrity": "sha512-2+3KNklw5223ekQQiICtonMsiFe663Jw2DU0pGlzpaoGUWnNpXh51341TmpdmBGx80kv/zex1OM/LWzk+yvX1Q==",
+      "integrity": "sha512-nD+nu8oRygkoeJj6RosTjsPXe1sw87nXcJ31U2r3GkXfQnkc8vDE9uLBcEvvNGsWUpFfis0iZOpCVTw5H4yiGQ==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -958,8 +958,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
@@ -973,7 +973,7 @@
     "node_modules/@rush-temp/applicationinsights-core-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-core-js.tgz",
-      "integrity": "sha512-3OTo0U/bWdMwWLpnwwurrXjPpH8Q2qcjKlAxmVyAbxsFyHkCTAgbggC/OozM793stDWsqpswb188mUkDISTDNA==",
+      "integrity": "sha512-oLfMy7dp/ZqJGcQalLxnWKON2TnwQWWFo7hGn3wqxnBIFYbiQ5QDiY5geTrSE4qCC8mNup55mn0EpBqWVKAdeQ==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -985,8 +985,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
         "qunit": "^2.11.2",
@@ -1002,7 +1002,7 @@
     "node_modules/@rush-temp/applicationinsights-debugplugin-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-debugplugin-js.tgz",
-      "integrity": "sha512-f8NK9+jYgxhwiqdFGocmPOAV47Dz5V/zaslFdn9yWYiF4w22Pqgi4RbH2Bs56PRl4FZLBR1eJ+GAfS0qqOsDkQ==",
+      "integrity": "sha512-mMaeScduQK015G/LQ2Yp1waAErz9ZVSR6nvmjEtf2Cx8AXhiPUgS95EHFNrEkAqCCexfp/DUFX/c0Dt7QLFpdg==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -1013,8 +1013,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
@@ -1027,7 +1027,7 @@
     "node_modules/@rush-temp/applicationinsights-dependencies-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-dependencies-js.tgz",
-      "integrity": "sha512-3NhR9UTh0cc+dH31N0Vz9bZdvf369C8oCsvMyOy2vmPqQOEEMAQALQQy9817qQu8BNDGw+Txg0aP4QfJu2CGMQ==",
+      "integrity": "sha512-7dV0vwgbq91uGDS+qhKsAZ7Z0FRnXD8jG0oYmWl27aSKZUxrwzyG6B+JMLXNNlUZnfCeSTxJkSkR4rGwV+HnEA==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -1039,8 +1039,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "qunit": "^2.11.2",
         "rollup": "^3.20.0",
@@ -1055,15 +1055,15 @@
     "node_modules/@rush-temp/applicationinsights-example-aisku": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-example-aisku.tgz",
-      "integrity": "sha512-jgyGQbmjQlaeoVN81/fBmJPHoLMRqtKe2wnAjp05BFRIuXUC0Sf1qY2gjLDsgvnVYl7c4DtWADnzO3MWKG6YYg==",
+      "integrity": "sha512-w8DGkX2Lk22NDwGKlVf1LAvNujeWlHJSw0u4JYWyIOzMPiKbqh5C/P87linrCYX27kMI4r7u3cs3ic3O4BrWZQ==",
       "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/ts-utils": ">= 0.12.6 < 2.x",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
         "rollup-plugin-sourcemaps": "^0.6.3",
@@ -1074,7 +1074,7 @@
     "node_modules/@rush-temp/applicationinsights-example-cfgsync": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-example-cfgsync.tgz",
-      "integrity": "sha512-LOMiKZOUqwzDOR2i8vwCQv+HatpHVIGFHEpYn47uCxUY8NdwUpLO4ZYzcGUwkfe+JVowC1yMc0dlDjmZSNd4YA==",
+      "integrity": "sha512-z4IR1fkQdanbPx3HDYGijmE0Ey4XOPOgErwqQ7NEYDTgt7UtPUrkfSQTIsL81jknSvJS00V9/bfigW/4XWbsMw==",
       "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.5.1",
@@ -1084,8 +1084,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
         "qunit": "^2.11.2",
@@ -1100,15 +1100,15 @@
     "node_modules/@rush-temp/applicationinsights-example-dependencies": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-example-dependencies.tgz",
-      "integrity": "sha512-8qOzUKh+KpTzu5bhL37ro5GB5OWXMsheYX7K9bsOWgXOnr4pxeeve1L4WE3i3W6SnXYPmAJdaiFu2SzUBbhSfQ==",
+      "integrity": "sha512-QQ4CrVpRgK7RVbQkwI9AP4kcYMx8WRwWlC8vhG5EA5oh4BxqbNhK+RRVoeEsAL+AcBRhfGj1JvpX8OXrJCz+9g==",
       "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/ts-utils": ">= 0.12.6 < 2.x",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
         "rollup-plugin-sourcemaps": "^0.6.3",
@@ -1119,7 +1119,7 @@
     "node_modules/@rush-temp/applicationinsights-example-shared-worker": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-example-shared-worker.tgz",
-      "integrity": "sha512-8n8IYHQDo/qBH9TMHgWquXf2bQ/YnE89Au9yfGX8C8pbVawedAtcjviEVfuDm7tEjGC6lSAgX7e/LQ4UfOYcKw==",
+      "integrity": "sha512-5xEKNKnrgVLzDxy6SBOv7LWbtXYTmsBHhWeZIUlaSicFUvx05p9DLzPXMhd9L/ip03gq0pRGpP7gM869D7Ag5g==",
       "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.5.1",
@@ -1129,8 +1129,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
         "qunit": "^2.11.2",
@@ -1145,15 +1145,15 @@
     "node_modules/@rush-temp/applicationinsights-example-startspan": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-example-startspan.tgz",
-      "integrity": "sha512-x/vhkhOmGEm/K5MFQ5oP6jodpZx7Qeo/jFhlVK3SPMV3XDZ8xcxWcV2tjpwSXPaKBQz+xN+yayoBEHW5e6/nvA==",
+      "integrity": "sha512-axijiAKIdpt4u060lUqA8SqcUlTh5fyI5Kftu9gogYouhMmY8k5DnFG1zNu3AWRJ85kKFIP2S97180p6pVUkTA==",
       "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/ts-utils": ">= 0.12.6 < 2.x",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
         "rollup-plugin-sourcemaps": "^0.6.3",
@@ -1164,16 +1164,16 @@
     "node_modules/@rush-temp/applicationinsights-js-release-tools": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-js-release-tools.tgz",
-      "integrity": "sha512-e9jw61D/jeRuLlSL+dQ2bFp8iqw6Q9ZMeboqX0CX0iYwjAPRiN/59ZK66D0UOgggNkqYgSEqgDi+ycw9XRtGnA==",
+      "integrity": "sha512-8uINBeACjJThsXFQEnxCoZ+r0tfEq8xQsS83PjgTyNYgkqHNethd6/DR1uFrszGSTBoBNtuI0bMUWPN1e0axPw==",
       "dependencies": {
         "globby": "^11.0.0",
-        "grunt": "^1.5.3"
+        "grunt": "^1.6.1"
       }
     },
     "node_modules/@rush-temp/applicationinsights-offlinechannel-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-offlinechannel-js.tgz",
-      "integrity": "sha512-jsrICHwv+xKbxcPQSSF9hTaPyy/f1z7oqC6a5gM3GP/ahZLijPLmYyTHi6rsfjpA1pk2rPHelogyVocbiysPdQ==",
+      "integrity": "sha512-12+c2SjH6E5L/I7BgqMMIq7sUKEeX9ceqf7PSjSEUZHQR7SafZodhqHmsQn6+ZCKCliHDTHlWLN9ccw5jQFcHA==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -1186,8 +1186,8 @@
         "@rollup/plugin-replace": "^5.0.2",
         "@types/sinon": "4.3.3",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
@@ -1201,7 +1201,7 @@
     "node_modules/@rush-temp/applicationinsights-osplugin-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-osplugin-js.tgz",
-      "integrity": "sha512-jWlnGs25+hzKf6Jino/Az6/LV4/+3LMyHsY4Pwyv+8zY4gdkZlr6/7BvHPSVBEQSHabBSXNQ2klw9eNcbitVmw==",
+      "integrity": "sha512-fAKrqiPlftceyjMr28g1a3YAOyMosXvF7OwOQnFmcROw6j6DFfQMKUhFRwFIjXWoN1rC+gCgrCk3198HX3oEHg==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -1212,7 +1212,7 @@
         "@rollup/plugin-replace": "^5.0.2",
         "@types/sinon": "4.3.3",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
+        "grunt": "^1.6.1",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
         "rollup-plugin-sourcemaps": "^0.6.3",
@@ -1224,7 +1224,7 @@
     "node_modules/@rush-temp/applicationinsights-perfmarkmeasure-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-perfmarkmeasure-js.tgz",
-      "integrity": "sha512-uA+hP9YTJDyeCTwUZf2821kSEJDvVFKH/z/h4xWlaytaEYQuCGotdWjXIi3U6l59XyjmaMyMBTMg7mELVqc7xQ==",
+      "integrity": "sha512-6t0fVBQmpkOaDASet5E3h8DrM7nWOcNg6d/DaJSI7A+A90eQ16zLtC/AwfjR7q/Jml5z+crQFYG0JcSesSUmZg==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -1235,8 +1235,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
         "rollup": "^3.20.0",
@@ -1250,7 +1250,7 @@
     "node_modules/@rush-temp/applicationinsights-properties-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-properties-js.tgz",
-      "integrity": "sha512-/7LkDvsXdkt3bliNiYxdD1xHbKdsLDRL+CdW05Mevlbg+I6DSkeZpFDHlNjNknRq+vCURpmkFIW6cOxaoULgyw==",
+      "integrity": "sha512-DfItXbFRzVg7dKV1f69lNrTU4lLn4fg9MR/55vk/FYBGXB+ln/Dd+Rv4mBfQ0R8sbV+wchyi2LEEwpPIwKInxw==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -1261,8 +1261,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
         "qunit": "^2.11.2",
@@ -1278,7 +1278,7 @@
     "node_modules/@rush-temp/applicationinsights-rollup-es5": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-rollup-es5.tgz",
-      "integrity": "sha512-m2JyBLynQOZF2tAvYOdxXuv6TKRKtbsPTirNqPzy/wrlDbwJMjuJ8nQvX7arGNYs5RV+DowZbKorpfhxIllwyA==",
+      "integrity": "sha512-ZcBVTDPPpK55mPw7FmCy5knZH6AV6KAoCnql/fM7sENu9DCgenAYi+iSmTie4yFNH/R7HRzg4cQR3TNcZ2WHgw==",
       "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.5.1",
@@ -1287,8 +1287,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "@types/qunit": "^2.19.3",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
@@ -1301,15 +1301,15 @@
     "node_modules/@rush-temp/applicationinsights-rollup-plugin-uglify3-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-rollup-plugin-uglify3-js.tgz",
-      "integrity": "sha512-DSU3flaXUMqhGViYU/A7msqHr+vIRO+7Mfl8tQfuKX1CAyfJoeWZyZmoP7rndpXqSCEyW6TCeM/jEv6O+PglFQ==",
+      "integrity": "sha512-yJuFItRmkitYYOmJ5HLRWreTu1QF+zyjlju63Q4zAKcz0xVZG4FgMrA2QlH558l2H7QeYtJxehagzoA1hZx6QA==",
       "dependencies": {
         "@nevware21/grunt-eslint-ts": "^0.5.1",
         "@nevware21/grunt-ts-plugin": "^0.5.1",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
         "rollup-plugin-sourcemaps": "^0.6.3",
@@ -1321,7 +1321,7 @@
     "node_modules/@rush-temp/applicationinsights-shims": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-shims.tgz",
-      "integrity": "sha512-9KEZKu7txNSGPJ95bdrrhQE1gObs3LydbrtWT/G3FJe77gU/48anDxEAG0er/nsva/LIUxUzOIsj26elaKO8OQ==",
+      "integrity": "sha512-T/fU+5702KSUIctL8WXxP87egsGU8qFhGv2C+QJaLT8gZOk+LAuKbAiD0nV6VakHqxO5e6J1Syz6ZSz1au9sBw==",
       "dependencies": {
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.5.1",
@@ -1331,8 +1331,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "@types/qunit": "^2.19.3",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
         "rollup-plugin-minify-es": "^1.1.1",
@@ -1343,7 +1343,7 @@
     "node_modules/@rush-temp/applicationinsights-teechannel-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-teechannel-js.tgz",
-      "integrity": "sha512-u+HV6H5yUIpTalTE1hGuT0GVaK1SabndQu8WBa+fAf/DUsdlM66YVolMXnyFF0wuIa1E8Jjpt4A701YOsgWXAg==",
+      "integrity": "sha512-rzL/bz+X+0JS35XcxV/jlFZV1sks02OKRWlEARXR4oVpfbusxQwSM9/2Ic8O79UgfADhbMjWudgCaHo3B0tvcQ==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -1356,8 +1356,8 @@
         "@rollup/plugin-replace": "^5.0.2",
         "@types/sinon": "4.3.3",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
@@ -1380,7 +1380,7 @@
     "node_modules/@rush-temp/applicationinsights-web": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-web.tgz",
-      "integrity": "sha512-3lmT1b0u9kIOL5savVS6FfL6KKl2l/tDE6gTOs+qGrGhdBk0y3ytNqtRcsXtE0cI3vvcJ9OvmWeqbpV32ixeRw==",
+      "integrity": "sha512-Nr5BMRsYrH9nNnXFL149v1Kl+TV9Ic8a0EpfCOcfF3z3XHN0VL2q5OVIly3lTJr7AhdK/hBfoVwQp2mrmyQWdA==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -1393,8 +1393,8 @@
         "@rollup/plugin-replace": "^5.0.2",
         "finalhandler": "^1.1.1",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
         "puppeteer": "24.8.2",
@@ -1412,7 +1412,7 @@
     "node_modules/@rush-temp/applicationinsights-web-basic": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-web-basic.tgz",
-      "integrity": "sha512-njild5OHq4BA3/iiKq517FT85IBNSY10bmRcdCqiWPT27mStQfFKF+s/PLiQ3m8DWx/Bgw5FZPCGYD/myWLavw==",
+      "integrity": "sha512-sC7igCkEiDhJdKOYWdyuJEkT+kMpsT1aD2MegthS9TsvPordDUwmEkzob71pQHk+BVBH83w4/5DfQThnGEe6kw==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -1424,8 +1424,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
         "rollup": "^3.20.0",
@@ -1445,7 +1445,7 @@
     "node_modules/@rush-temp/applicationinsights-web-snippet": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-web-snippet.tgz",
-      "integrity": "sha512-ebBPHKONGUyjqovB8Lb+VerxpbpASHibIUv5s397PyZAI4Enpjgh7ApvunMusBPetsClxYZKFCbfFoXAIqLShA==",
+      "integrity": "sha512-X5EwU2y+FfkLpTUCC2D1P9IJkQCFFCqdS0Gg8YiGbIDwFLiXvlQV5p+DdrMWhW0DwHLTa2Apqqe7+a9SWGD+5A==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.40.0",
         "@microsoft/dynamicproto-js": "^2.0.3",
@@ -1455,8 +1455,8 @@
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
         "@types/qunit": "^2.19.3",
-        "grunt": "^1.5.3",
-        "grunt-cli": "^1.4.3",
+        "grunt": "^1.6.1",
+        "grunt-cli": "^1.5.0",
         "magic-string": "^0.25.7",
         "rollup": "^3.20.0",
         "rollup-plugin-cleanup": "^3.2.1",
@@ -3712,15 +3712,14 @@
       }
     },
     "node_modules/form-data": {
-      "version": "2.5.4",
-      "resolved": "https://registry.npmjs.org/form-data/-/form-data-2.5.4.tgz",
-      "integrity": "sha512-Y/3MmRiR8Nd+0CUtrbvcKtKzLWiUfpQ7DFVggH8PwmGt/0r7RSy32GuP4hpCJlQNEBusisSx1DLtD8uD386HJQ==",
-      "deprecated": "This version has an incorrect dependency; please use v2.5.5",
+      "version": "2.5.5",
+      "resolved": "https://registry.npmjs.org/form-data/-/form-data-2.5.5.tgz",
+      "integrity": "sha512-jqdObeR2rxZZbPSGL+3VckHMYtu+f9//KXBsVny6JSX/pa38Fy+bGjuG8eW/H6USNQWhLi8Num++cU2yOCNz4A==",
       "dependencies": {
         "asynckit": "^0.4.0",
         "combined-stream": "^1.0.8",
         "es-set-tostringtag": "^2.1.0",
-        "has-own": "^1.0.1",
+        "hasown": "^2.0.2",
         "mime-types": "^2.1.35",
         "safe-buffer": "^5.2.1"
       },
@@ -4212,12 +4211,6 @@
       "engines": {
         "node": ">=8"
       }
-    },
-    "node_modules/has-own": {
-      "version": "1.0.1",
-      "resolved": "https://registry.npmjs.org/has-own/-/has-own-1.0.1.tgz",
-      "integrity": "sha512-RDKhzgQTQfMaLvIFhjahU+2gGnRBK6dYOd5Gd9BzkmnBneOCRYjRC003RIMrdAbH52+l+CnMS4bBCXGer8tEhg==",
-      "deprecated": "This project is not maintained. Use Object.hasOwn() instead."
     },
     "node_modules/has-symbols": {
       "version": "1.1.0",

@@ -37,7 +37,7 @@
         "@microsoft/applicationinsights-rollup-es5": "1.0.2",
         "@microsoft/api-extractor": "^7.40.0",
         "globby": "^11.0.0",
-        "grunt": "^1.5.3",
+        "grunt": "^1.6.1",
         "sinon": "^7.3.1",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
