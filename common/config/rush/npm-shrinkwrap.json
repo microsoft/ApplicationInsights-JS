@@ -62,7 +62,6 @@
         "file-saver": "^2.0.0",
         "finalhandler": "^1.1.1",
         "form-data": "2.5.4",
-        "glob": "7.2.3",
         "globby": "^11.0.0",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
@@ -83,7 +82,6 @@
         "selenium-server-standalone-jar": "^3.141.5",
         "serve-static": "^1.13.2",
         "sinon": "^7.3.1",
-        "tar": "^7.5.3",
         "tslib": "^2.0.0",
         "typedoc": "^0.26.6",
         "typescript": "^4.9.3",
@@ -428,17 +426,6 @@
         "node": "20 || >=22"
       }
     },
-    "node_modules/@isaacs/fs-minipass": {
-      "version": "4.0.1",
-      "resolved": "https://registry.npmjs.org/@isaacs/fs-minipass/-/fs-minipass-4.0.1.tgz",
-      "integrity": "sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==",
-      "dependencies": {
-        "minipass": "^7.0.4"
-      },
-      "engines": {
-        "node": ">=18.0.0"
-      }
-    },
     "node_modules/@jridgewell/sourcemap-codec": {
       "version": "1.5.5",
       "resolved": "https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.5.tgz",
@@ -651,33 +638,6 @@
         }
       }
     },
-    "node_modules/@rollup/plugin-commonjs/node_modules/brace-expansion": {
-      "version": "2.0.2",
-      "resolved": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.0.2.tgz",
-      "integrity": "sha512-Jt0vHyM+jmUBqojB7E1NIYadt0vI0Qxjxd2TErW94wDz+E2LAm5vKMXXwg6ZZBTHPuUlDgQHKXvjGBdfcF1ZDQ==",
-      "dependencies": {
-        "balanced-match": "^1.0.0"
-      }
-    },
-    "node_modules/@rollup/plugin-commonjs/node_modules/glob": {
-      "version": "8.1.0",
-      "resolved": "https://registry.npmjs.org/glob/-/glob-8.1.0.tgz",
-      "integrity": "sha512-r8hpEjiQEYlF2QU0df3dS+nxxSIreXQS1qRhMJM0Q5NDdR386C7jb7Hwwod8Fgiuex+k0GFjgft18yvxm5XoCQ==",
-      "deprecated": "Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me",
-      "dependencies": {
-        "fs.realpath": "^1.0.0",
-        "inflight": "^1.0.4",
-        "inherits": "2",
-        "minimatch": "^5.0.1",
-        "once": "^1.3.0"
-      },
-      "engines": {
-        "node": ">=12"
-      },
-      "funding": {
-        "url": "https://github.com/sponsors/isaacs"
-      }
-    },
     "node_modules/@rollup/plugin-commonjs/node_modules/magic-string": {
       "version": "0.27.0",
       "resolved": "https://registry.npmjs.org/magic-string/-/magic-string-0.27.0.tgz",
@@ -687,17 +647,6 @@
       },
       "engines": {
         "node": ">=12"
-      }
-    },
-    "node_modules/@rollup/plugin-commonjs/node_modules/minimatch": {
-      "version": "5.1.6",
-      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-5.1.6.tgz",
-      "integrity": "sha512-lKwV/1brpG6mBUFHtb7NUmtABCb2WZZmm2wNiOA5hAb8VdCS4B3dtMWyvcoViccwAW/COERjXLt0zP1zXUN26g==",
-      "dependencies": {
-        "brace-expansion": "^2.0.1"
-      },
-      "engines": {
-        "node": ">=10"
       }
     },
     "node_modules/@rollup/plugin-node-resolve": {
@@ -2265,10 +2214,41 @@
         "node": ">= 6"
       }
     },
+    "node_modules/archiver-utils/node_modules/glob": {
+      "version": "7.2.3",
+      "resolved": "https://registry.npmjs.org/glob/-/glob-7.2.3.tgz",
+      "integrity": "sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==",
+      "deprecated": "Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me",
+      "dependencies": {
+        "fs.realpath": "^1.0.0",
+        "inflight": "^1.0.4",
+        "inherits": "2",
+        "minimatch": "^3.1.1",
+        "once": "^1.3.0",
+        "path-is-absolute": "^1.0.0"
+      },
+      "engines": {
+        "node": "*"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/isaacs"
+      }
+    },
     "node_modules/archiver-utils/node_modules/isarray": {
       "version": "1.0.0",
       "resolved": "https://registry.npmjs.org/isarray/-/isarray-1.0.0.tgz",
       "integrity": "sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ=="
+    },
+    "node_modules/archiver-utils/node_modules/minimatch": {
+      "version": "3.1.2",
+      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-3.1.2.tgz",
+      "integrity": "sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==",
+      "dependencies": {
+        "brace-expansion": "^1.1.7"
+      },
+      "engines": {
+        "node": "*"
+      }
     },
     "node_modules/archiver-utils/node_modules/readable-stream": {
       "version": "2.3.8",
@@ -2693,14 +2673,6 @@
       "funding": {
         "type": "github",
         "url": "https://github.com/sponsors/wooorm"
-      }
-    },
-    "node_modules/chownr": {
-      "version": "3.0.0",
-      "resolved": "https://registry.npmjs.org/chownr/-/chownr-3.0.0.tgz",
-      "integrity": "sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==",
-      "engines": {
-        "node": ">=18"
       }
     },
     "node_modules/chromium-bidi": {
@@ -3887,20 +3859,19 @@
       }
     },
     "node_modules/glob": {
-      "version": "7.2.3",
-      "resolved": "https://registry.npmjs.org/glob/-/glob-7.2.3.tgz",
-      "integrity": "sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==",
+      "version": "8.1.0",
+      "resolved": "https://registry.npmjs.org/glob/-/glob-8.1.0.tgz",
+      "integrity": "sha512-r8hpEjiQEYlF2QU0df3dS+nxxSIreXQS1qRhMJM0Q5NDdR386C7jb7Hwwod8Fgiuex+k0GFjgft18yvxm5XoCQ==",
       "deprecated": "Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me",
       "dependencies": {
         "fs.realpath": "^1.0.0",
         "inflight": "^1.0.4",
         "inherits": "2",
-        "minimatch": "^3.1.1",
-        "once": "^1.3.0",
-        "path-is-absolute": "^1.0.0"
+        "minimatch": "^5.0.1",
+        "once": "^1.3.0"
       },
       "engines": {
-        "node": "*"
+        "node": ">=12"
       },
       "funding": {
         "url": "https://github.com/sponsors/isaacs"
@@ -3918,15 +3889,23 @@
         "node": ">=10.13.0"
       }
     },
-    "node_modules/glob/node_modules/minimatch": {
-      "version": "3.1.2",
-      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-3.1.2.tgz",
-      "integrity": "sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==",
+    "node_modules/glob/node_modules/brace-expansion": {
+      "version": "2.0.2",
+      "resolved": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.0.2.tgz",
+      "integrity": "sha512-Jt0vHyM+jmUBqojB7E1NIYadt0vI0Qxjxd2TErW94wDz+E2LAm5vKMXXwg6ZZBTHPuUlDgQHKXvjGBdfcF1ZDQ==",
       "dependencies": {
-        "brace-expansion": "^1.1.7"
+        "balanced-match": "^1.0.0"
+      }
+    },
+    "node_modules/glob/node_modules/minimatch": {
+      "version": "5.1.6",
+      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-5.1.6.tgz",
+      "integrity": "sha512-lKwV/1brpG6mBUFHtb7NUmtABCb2WZZmm2wNiOA5hAb8VdCS4B3dtMWyvcoViccwAW/COERjXLt0zP1zXUN26g==",
+      "dependencies": {
+        "brace-expansion": "^2.0.1"
       },
       "engines": {
-        "node": "*"
+        "node": ">=10"
       }
     },
     "node_modules/global-modules": {
@@ -5138,25 +5117,6 @@
         "url": "https://github.com/sponsors/isaacs"
       }
     },
-    "node_modules/minipass": {
-      "version": "7.1.2",
-      "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.2.tgz",
-      "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==",
-      "engines": {
-        "node": ">=16 || 14 >=14.17"
-      }
-    },
-    "node_modules/minizlib": {
-      "version": "3.1.0",
-      "resolved": "https://registry.npmjs.org/minizlib/-/minizlib-3.1.0.tgz",
-      "integrity": "sha512-KZxYo1BUkWD2TVFLr0MQoM8vUUigWD3LlD83a/75BqC+4qE0Hb1Vo5v1FgcfaNXvfXzr+5EhQ6ing/CaBijTlw==",
-      "dependencies": {
-        "minipass": "^7.1.2"
-      },
-      "engines": {
-        "node": ">= 18"
-      }
-    },
     "node_modules/mitt": {
       "version": "3.0.1",
       "resolved": "https://registry.npmjs.org/mitt/-/mitt-3.0.1.tgz",
@@ -6008,6 +5968,26 @@
         "node": ">=6 <7 || >=8"
       }
     },
+    "node_modules/rollup-plugin-copy/node_modules/glob": {
+      "version": "7.2.3",
+      "resolved": "https://registry.npmjs.org/glob/-/glob-7.2.3.tgz",
+      "integrity": "sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==",
+      "deprecated": "Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me",
+      "dependencies": {
+        "fs.realpath": "^1.0.0",
+        "inflight": "^1.0.4",
+        "inherits": "2",
+        "minimatch": "^3.1.1",
+        "once": "^1.3.0",
+        "path-is-absolute": "^1.0.0"
+      },
+      "engines": {
+        "node": "*"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/isaacs"
+      }
+    },
     "node_modules/rollup-plugin-copy/node_modules/globby": {
       "version": "10.0.1",
       "resolved": "https://registry.npmjs.org/globby/-/globby-10.0.1.tgz",
@@ -6048,6 +6028,17 @@
       "integrity": "sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==",
       "optionalDependencies": {
         "graceful-fs": "^4.1.6"
+      }
+    },
+    "node_modules/rollup-plugin-copy/node_modules/minimatch": {
+      "version": "3.1.2",
+      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-3.1.2.tgz",
+      "integrity": "sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==",
+      "dependencies": {
+        "brace-expansion": "^1.1.7"
+      },
+      "engines": {
+        "node": "*"
       }
     },
     "node_modules/rollup-plugin-copy/node_modules/universalify": {
@@ -6238,11 +6229,6 @@
       "engines": {
         "node": ">=10"
       }
-    },
-    "node_modules/semver/node_modules/yallist": {
-      "version": "4.0.0",
-      "resolved": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz",
-      "integrity": "sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A=="
     },
     "node_modules/send": {
       "version": "0.19.2",
@@ -6579,21 +6565,6 @@
       },
       "funding": {
         "url": "https://github.com/sponsors/ljharb"
-      }
-    },
-    "node_modules/tar": {
-      "version": "7.5.7",
-      "resolved": "https://registry.npmjs.org/tar/-/tar-7.5.7.tgz",
-      "integrity": "sha512-fov56fJiRuThVFXD6o6/Q354S7pnWMJIVlDBYijsTNx6jKSE4pvrDTs6lUnmGvNyfJwFQQwWy3owKz1ucIhveQ==",
-      "dependencies": {
-        "@isaacs/fs-minipass": "^4.0.0",
-        "chownr": "^3.0.0",
-        "minipass": "^7.1.2",
-        "minizlib": "^3.1.0",
-        "yallist": "^5.0.0"
-      },
-      "engines": {
-        "node": ">=18"
       }
     },
     "node_modules/tar-fs": {
@@ -7108,12 +7079,9 @@
       }
     },
     "node_modules/yallist": {
-      "version": "5.0.0",
-      "resolved": "https://registry.npmjs.org/yallist/-/yallist-5.0.0.tgz",
-      "integrity": "sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw==",
-      "engines": {
-        "node": ">=18"
-      }
+      "version": "4.0.0",
+      "resolved": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz",
+      "integrity": "sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A=="
     },
     "node_modules/yaml": {
       "version": "2.8.2",
@@ -7206,6 +7174,37 @@
       },
       "engines": {
         "node": ">= 10"
+      }
+    },
+    "node_modules/zip-stream/node_modules/glob": {
+      "version": "7.2.3",
+      "resolved": "https://registry.npmjs.org/glob/-/glob-7.2.3.tgz",
+      "integrity": "sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==",
+      "deprecated": "Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me",
+      "dependencies": {
+        "fs.realpath": "^1.0.0",
+        "inflight": "^1.0.4",
+        "inherits": "2",
+        "minimatch": "^3.1.1",
+        "once": "^1.3.0",
+        "path-is-absolute": "^1.0.0"
+      },
+      "engines": {
+        "node": "*"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/isaacs"
+      }
+    },
+    "node_modules/zip-stream/node_modules/minimatch": {
+      "version": "3.1.2",
+      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-3.1.2.tgz",
+      "integrity": "sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==",
+      "dependencies": {
+        "brace-expansion": "^1.1.7"
+      },
+      "engines": {
+        "node": "*"
       }
     },
     "node_modules/zod": {
