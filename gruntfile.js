@@ -6,14 +6,19 @@ module.exports = function (grunt) {
 
     function _removeEs6DynamicProto(code, id) {
         if (id.endsWith(".js") && id.indexOf("node_modules") === -1) {
-            console.log("Processing [" + id + "]");
+            // console.log("Processing [" + id + "]");
             const rEs6DynamicProto = /([\t ]*)(\w+)\([^\)]*\)\s*{(?:\r|\n)+([^\}]*@DynamicProtoStub[^\}]*)(?:\r|\n)+\s*}\s*(?:\r|\n)+/gi;
+            let processFlag = false;
             let modifiedCode = code;
             let changed = false;
             let match;
             while ((match = rEs6DynamicProto.exec(code)) !== null) {
                 let prefix = match[1];
                 let funcName = match[2];
+                if (!processFlag) {
+                    console.log("Processing [" + id + "]");
+                    processFlag = true;
+                }
                 console.log(" -- Removing [" + funcName + "]");
                 modifiedCode = modifiedCode.replace(match[0], prefix + "// Removed Stub for " + funcName + "\n");
                 changed = true;
@@ -25,10 +30,10 @@ module.exports = function (grunt) {
                     map: null
                 };
             } else {
-                console.log("No changes made to " + id);
+                // console.log("No changes made to " + id);
             }
         } else {
-            console.log("Skipping " + id);
+            // console.log("Skipping " + id);
         }
     
         return null;
@@ -309,7 +314,7 @@ module.exports = function (grunt) {
             connect: {
                 server: {
                     options: {
-                        port: 9001,
+                        port: 9002,
                          base: '.',
                          debug: true
                     }
@@ -397,7 +402,7 @@ module.exports = function (grunt) {
                 var addTestRollup = false;
                 var testRoot = "";
                 if (modules[key].testHttp !== false) {
-                    testRoot = "http://localhost:9001/";
+                    testRoot = "http://localhost:9002/";
                 }
 
                 var testPath = modulePath + "/test";
@@ -806,6 +811,16 @@ module.exports = function (grunt) {
                                                 ]
                                             },
                                             unitTestName: "index.tests.js"
+                                    },
+            "shims":                {
+                                        autoMinify: false,
+                                        path: "./tools/shims",
+                                        cfg: {
+                                            src: [
+                                                "./tools/shims/src/*.ts"
+                                            ]
+                                        },
+                                        unitTestName: "shimstests.js"
                                     },
             "chrome-debug-extension": {
                                         autoMinify: false,

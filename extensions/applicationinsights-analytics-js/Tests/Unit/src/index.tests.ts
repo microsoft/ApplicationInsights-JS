@@ -1,5 +1,5 @@
-import { AnalyticsPluginTests } from './AnalyticsPlugin.tests';
-import { TelemetryItemCreatorTests } from './TelemetryItemCreator.tests';
+import { AnalyticsPluginTests } from "./AnalyticsPlugin.tests";
+import { TelemetryItemCreatorTests } from "./TelemetryItemCreator.tests";
 import { AnalyticsExtensionSizeCheck } from "./AnalyticsExtensionSize.tests";
 import { GlobalTestHooks } from "./GlobalTestHooks.Test";
 

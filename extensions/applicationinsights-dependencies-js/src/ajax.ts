@@ -6,8 +6,8 @@ import {
     BaseTelemetryPlugin, DisabledPropertyName, IAppInsightsCore, IConfig, IConfigDefaults, IConfiguration, ICorrelationConfig,
     ICustomProperties, IDependencyTelemetry, IDistributedTraceContext, IInstrumentCallDetails, IInstrumentHooksCallbacks, IPlugin,
     IProcessTelemetryContext, IRequestContext, ITelemetryContext, ITelemetryItem, ITelemetryPluginChain, InstrumentFunc, InstrumentProto,
-    PropertiesPluginIdentifier, RemoteDependencyData, RequestHeaders, _eInternalMessageId, _throwInternal, arrForEach,
-    correlationIdCanIncludeCorrelationHeader, correlationIdGetCorrelationContext, createDistributedTraceContext,
+    PropertiesPluginIdentifier, RemoteDependencyDataType, RemoteDependencyEnvelopeType, RequestHeaders, _eInternalMessageId, _throwInternal,
+    arrForEach, correlationIdCanIncludeCorrelationHeader, correlationIdGetCorrelationContext, createDistributedTraceContext,
     createDistributedTraceContextFromTrace, createProcessTelemetryContext, createTelemetryItem, createTraceParent, createUniqueNamespace,
     dateTimeUtilsNow, dumpObj, eDistributedTracingModes, eLoggingSeverity, eRequestHeaders, eW3CTraceFlags, eventOn, fieldRedaction,
     formatTraceParent, generateW3CId, getExceptionName, getGlobal, getIEVersion, getLocation, getPerformance, isFunction,
@@ -46,9 +46,9 @@ interface _IInternalDependencyHandler<F> {
 function _supportsFetch(): (input: RequestInfo, init?: RequestInit) => Promise<Response> {
     let _global = getGlobal();
     if (!_global ||
-        isNullOrUndefined((_global as any).Request) ||
-        isNullOrUndefined((_global as any).Request[strPrototype]) ||
-        isNullOrUndefined(_global[STR_FETCH])) {
+            isNullOrUndefined((_global as any).Request) ||
+            isNullOrUndefined((_global as any).Request[strPrototype]) ||
+            isNullOrUndefined(_global[STR_FETCH])) {
         return null;
     }
 
@@ -333,8 +333,6 @@ export interface IDependenciesPlugin extends IDependencyListenerContainer {
 /**
  * Interface for ajax data passed to includeCorrelationHeaders function.
  * Contains the public properties and methods needed for correlation header processing.
- *
- * @public
  */
 export interface IAjaxRecordData {
     /**
@@ -771,8 +769,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IAjaxMonitorPlug
                     }
                     const item = createTelemetryItem<IDependencyTelemetry>(
                         dependency,
-                        RemoteDependencyData.dataType,
-                        RemoteDependencyData.envelopeType,
+                        RemoteDependencyDataType,
+                        RemoteDependencyEnvelopeType,
                         _self[strDiagLog](),
                         properties,
                         systemProperties);

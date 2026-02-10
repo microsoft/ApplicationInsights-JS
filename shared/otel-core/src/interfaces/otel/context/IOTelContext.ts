@@ -1,11 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IOTelApi } from "../IOTelApi";
+
 /**
  * Provides an OpenTelemetry compatible Interface for the Open Telemetry Api (1.9.0) Context type.
  * @since 3.4.0
  */
 export interface IOTelContext {
+    readonly api: IOTelApi;
+
     /**
      * Get a value from the context.
      *

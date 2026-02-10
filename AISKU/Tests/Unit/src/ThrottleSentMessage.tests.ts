@@ -1,11 +1,14 @@
-import { ApplicationInsights, ApplicationInsightsContainer, IApplicationInsights, IConfig, IConfiguration, LoggingSeverity, Snippet, _eInternalMessageId } from '../../../src/index'
-import { AITestClass, Assert} from '@microsoft/ai-test-framework';
-import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig } from '@microsoft/otel-core-js';
-import { SinonSpy } from 'sinon';
-import { AppInsightsSku } from '../../../src/AISku';
-import { createSnippetV5 } from './testSnippetV5';
-import { FeatureOptInMode, newId } from '@microsoft/otel-core-js';
-import { createSnippetV6 } from './testSnippetV6';
+import { AppInsightsSku } from "../../../src/AISku";
+import { ApplicationInsightsContainer } from "../../../src/ApplicationInsightsContainer";
+import { IApplicationInsights } from "../../../src/IApplicationInsights";
+import { Snippet } from "../../../src/Snippet";
+import { AITestClass, Assert } from "@microsoft/ai-test-framework";
+import { IConfig, IConfiguration, LoggingSeverity, _eInternalMessageId, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig } from "@microsoft/otel-core-js";
+import { SinonSpy } from "sinon";
+import { createSnippetV5 } from "./testSnippetV5";
+import { FeatureOptInMode, newId } from "@microsoft/otel-core-js";
+import { createSnippetV6 } from "./testSnippetV6";
+const ApplicationInsights = AppInsightsSku;
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
 

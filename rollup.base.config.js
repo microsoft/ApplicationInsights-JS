@@ -8,7 +8,6 @@ import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup";
 import { es5Poly, es5Check, importCheck } from "@microsoft/applicationinsights-rollup-es5";
 import { resolve } from 'path';
 import { existsSync, readFileSync } from "fs";
-import { exists } from "grunt";
 
 const rootVersion = require("./package.json").version;
 
@@ -317,14 +316,19 @@ function getSourceMapPathTransformer(distPath, theNameSpace, isDebug) {
 
 function _removeEs6DynamicProto(code, id) {
     if (id.endsWith(".js") && id.indexOf("node_modules") === -1) {
-        console.log("Processing [" + id + "]");
+        // console.log("Processing [" + id + "]");
         const rEs6DynamicProto = /([\t ]*)(\w+)\([^\)]*\)\s*{(?:\r|\n)+([^\}]*@DynamicProtoStub[^\}]*)(?:\r|\n)+\s*}\s*(?:\r|\n)+/gi;
+        let processFlag = false;
         let modifiedCode = code;
         let changed = false;
         let match;
         while ((match = rEs6DynamicProto.exec(code)) !== null) {
             let prefix = match[1];
             let funcName = match[2];
+            if (!processFlag) {
+                console.log("Processing [" + id + "]");
+                processFlag = true;
+            }
             console.log(" -- Removing [" + funcName + "]");
             modifiedCode = modifiedCode.replace(match[0], prefix + "// Removed Stub for " + funcName + "\n");
             changed = true;
@@ -336,10 +340,10 @@ function _removeEs6DynamicProto(code, id) {
                 map: null
             };
         } else {
-            console.log("No changes made to " + id);
+            // console.log("No changes made to " + id);
         }
     } else {
-        console.log("Skipping " + id);
+        // console.log("Skipping " + id);
     }
 
     return null;

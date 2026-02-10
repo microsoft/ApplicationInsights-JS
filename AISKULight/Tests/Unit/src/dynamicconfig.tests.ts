@@ -1,9 +1,10 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { IConfig } from "@microsoft/otel-core-js";
 import { IConfiguration, IPayloadData, isString, ITelemetryItem, IXHROverride, newId } from "@microsoft/otel-core-js";
-import { ApplicationInsights, ISenderConfig } from "../../../src/index";
+import { ApplicationInsights } from "../../../src/index";
+import { ISenderConfig } from "@microsoft/applicationinsights-channel-js";
 import { createAsyncResolvedPromise } from "@nevware21/ts-async";
-import { SinonSpy } from 'sinon';
+import { SinonSpy } from "sinon";
 export class ApplicationInsightsDynamicConfigTests extends AITestClass {
     private static readonly _instrumentationKey = "b7170927-2d1c-44f1-acec-59f4e1751c11";
     private static readonly _connectionString = `InstrumentationKey=${ApplicationInsightsDynamicConfigTests._instrumentationKey}`;

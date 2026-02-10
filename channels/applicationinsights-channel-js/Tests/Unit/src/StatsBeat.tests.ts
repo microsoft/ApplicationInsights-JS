@@ -3,7 +3,7 @@
 // import { Sender } from "../../../src/Sender";
 // import { SinonSpy, SinonStub } from "sinon";
 // import { ISenderConfig } from "../../../types/applicationinsights-channel-js";
-// import { isBeaconApiSupported } from "@microsoft/otel-core-js";
+// import { isBeaconsSupported } from "@microsoft/otel-core-js";
 
 // export class StatsbeatTests extends AITestClass {
 //     private _core: AppInsightsCore;
@@ -270,7 +270,7 @@
 //                         sendBeaconCalled = true;
 //                         return true;
 //                     });
-//                     QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+//                     QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
 //                     this.processTelemetryAndFlush(sender, telemetryItem);
 //                 }
 //             ].concat(PollingAssert.createPollingAssert(() => {

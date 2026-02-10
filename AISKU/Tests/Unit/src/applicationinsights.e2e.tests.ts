@@ -1,14 +1,13 @@
-import { AITestClass, Assert, PollingAssert, EventValidator, TraceValidator, ExceptionValidator, MetricValidator, PageViewValidator, PageViewPerformanceValidator, RemoteDepdencyValidator } from '@microsoft/ai-test-framework';
-import { SinonSpy } from 'sinon';
-import { ApplicationInsights } from '../../../src/index'
-import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig, EventPersistence } from '@microsoft/otel-core-js';
-import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus, FeatureOptInMode } from "@microsoft/otel-core-js";
-import { IPropTelemetryContext } from '@microsoft/applicationinsights-properties-js';
-import { createAsyncResolvedPromise } from '@nevware21/ts-async';
-import { CONFIG_ENDPOINT_URL } from '../../../src/InternalConstants';
-import { IStackFrame } from '@microsoft/otel-core-js/src/Interfaces/Contracts/IStackFrame';
-import { utcNow } from '@nevware21/ts-utils';
+import { AITestClass, Assert, PollingAssert, EventValidator, TraceValidator, ExceptionValidator, MetricValidator, PageViewValidator, PageViewPerformanceValidator, RemoteDepdencyValidator } from "@microsoft/ai-test-framework";
+import { SinonSpy } from "sinon";
+import { AppInsightsSku as ApplicationInsights } from "../../../src/AISku";
+import { Sender } from "@microsoft/applicationinsights-channel-js";
+import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig, RemoteDependencyDataType } from "@microsoft/otel-core-js";
+import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus, FeatureOptInMode, IStackFrame } from "@microsoft/otel-core-js";
+import { IPropTelemetryContext } from "@microsoft/applicationinsights-properties-js";
+import { createAsyncResolvedPromise } from "@nevware21/ts-async";
+import { CONFIG_ENDPOINT_URL } from "../../../src/InternalConstants";
+import { utcNow } from "@nevware21/ts-utils";
 
 function _checkExpectedFrame(expectedFrame: IStackFrame, actualFrame: IStackFrame,  index: number) {
     Assert.equal(expectedFrame.assembly, actualFrame.assembly, index + ") Assembly is not as expected");
@@ -1248,7 +1247,7 @@ export class ApplicationInsightsTests extends AITestClass {
                             "   c@http://example.com/stacktrace.js:9:3\n" +
                             "   b@http://example.com/stacktrace.js:6:3\n" +
                             "   a@http://example.com/stacktrace.js:3:3\n" +
-                            "  at Object.testMethod (http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)"
+                            "  at Object.testMethod (http://localhost:9002/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)"
                     }
                 };
 
@@ -1290,7 +1289,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     { level: 25, method: "c", assembly: "c@http://example.com/stacktrace.js:9:3", fileName: "http://example.com/stacktrace.js", line: 9 },
                     { level: 26, method: "b", assembly: "b@http://example.com/stacktrace.js:6:3", fileName: "http://example.com/stacktrace.js", line: 6 },
                     { level: 27, method: "a", assembly: "a@http://example.com/stacktrace.js:3:3", fileName: "http://example.com/stacktrace.js", line: 3 },
-                    { level: 28, method: "Object.testMethod", assembly: "at Object.testMethod (http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)", fileName: "http://localhost:9001/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js", line: 53058 }
+                    { level: 28, method: "Object.testMethod", assembly: "at Object.testMethod (http://localhost:9002/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js:53058:48)", fileName: "http://localhost:9002/shared/AppInsightsCommon/node_modules/@microsoft/ai-test-framework/dist/es5/ai-test-framework.js", line: 53058 }
                 ];
 
                 const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
@@ -2008,7 +2007,7 @@ export class ApplicationInsightsTests extends AITestClass {
                                 return PageViewValidator.PageViewValidator.Validate(payload, baseType);
                             case PageViewPerformance.dataType:
                                 return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
-                            case RemoteDependencyData.dataType:
+                            case RemoteDependencyDataType:
                                 return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
 
                             default:

@@ -3,8 +3,8 @@
  */
 
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger, IAppInsightsCore, ITelemetryPluginChain, doPerf, EventsDiscardedReason, INotificationManager, IPerfEvent} from '@microsoft/otel-core-js';
-import { PerfMarkMeasureManager } from '../../../src/PerfMarkMeasureManager';
+import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger, IAppInsightsCore, ITelemetryPluginChain, doPerf, EventsDiscardedReason, INotificationManager, IPerfEvent} from "@microsoft/otel-core-js";
+import { PerfMarkMeasureManager } from "../../../src/PerfMarkMeasureManager";
 
 export interface PerfMeasures {
     name: string;

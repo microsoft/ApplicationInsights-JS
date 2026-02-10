@@ -107,9 +107,24 @@ export class CfgSyncHelperTests extends AITestClass {
                     //    }
                     //},
                     traceHdrMode: 3,
+                    traceCfg: {
+                        generalLimits: {
+                            attributeCountLimit: 128
+                        },
+                        // spanLimits: {
+                        //     attributeCountLimit: 128,
+                        //     linkCountLimit: 128,
+                        //     eventCountLimit: 128,
+                        //     attributePerEventCountLimit: 128,
+                        //     attributePerLinkCountLimit: 128
+                        // },
+                        serviceName: null,
+                        suppressTracing: false
+                    },
+                    errorHandlers: {},
                     enableDebug: false
-                }
-               
+                };
+
                 let core = new AppInsightsCore();
                 this.onDone(() => {
                     core.unload(false);

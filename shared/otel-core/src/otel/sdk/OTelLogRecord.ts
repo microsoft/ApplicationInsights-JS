@@ -3,6 +3,8 @@
 
 import { objForEachKey, objKeys, utcNow } from "@nevware21/ts-utils";
 import { OTelSeverityNumber } from "../../enums/otel/eOTelSeverityNumber";
+import { IOTelHrTime } from "../../interfaces/IOTelHrTime";
+import { IDistributedTraceContext } from "../../interfaces/ai/IDistributedTraceContext";
 import { OTelAttributeValue } from "../../interfaces/otel/IOTelAttributes";
 import { IOTelErrorHandlers } from "../../interfaces/otel/config/IOTelErrorHandlers";
 import { IOTelLogRecord, LogAttributes, LogBody } from "../../interfaces/otel/logs/IOTelLogRecord";
@@ -11,12 +13,10 @@ import { IOTelLogRecordLimits } from "../../interfaces/otel/logs/IOTelLogRecordL
 import { IOTelLoggerProviderSharedState } from "../../interfaces/otel/logs/IOTelLoggerProviderSharedState";
 import { IOTelResource } from "../../interfaces/otel/resources/IOTelResource";
 import { IOTelInstrumentationScope } from "../../interfaces/otel/trace/IOTelInstrumentationScope";
-import { IOTelSpanContext } from "../../interfaces/otel/trace/IOTelSpanContext";
 import { isAttributeValue } from "../../internal/attributeHelpers";
-import { handleWarn } from "../../internal/commonUtils";
+import { handleWarn } from "../../internal/handleErrors";
 import { timeInputToHrTime } from "../../internal/timeHelpers";
 import { OTelAnyValue } from "../../types/OTelAnyValue";
-import { IOTelHrTime } from "../../types/time";
 import { getContextActiveSpanContext, isSpanContextValid } from "../api/trace/utils";
 
 export function createLogRecord(
@@ -43,7 +43,7 @@ export function createLogRecord(
     const logRecordLimits: Required<IOTelLogRecordLimits> = sharedState.logRecordLimits;
     const handlers: IOTelErrorHandlers = {};
 
-    let spanContext: IOTelSpanContext | undefined;
+    let spanContext: IDistributedTraceContext | undefined;
     if (context) {
         const activeSpanContext = getContextActiveSpanContext(context);
         if (activeSpanContext && isSpanContextValid(activeSpanContext)) {
@@ -192,7 +192,7 @@ export function createLogRecord(
         get hrTimeObserved(): IOTelHrTime {
             return hrTimeObserved;
         },
-        get spanContext(): IOTelSpanContext | undefined {
+        get spanContext(): IDistributedTraceContext | undefined {
             return spanContext;
         },
         get resource(): IOTelResource {

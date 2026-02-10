@@ -10,7 +10,7 @@ import { IOTelLoggerProvider } from "../../interfaces/otel/logs/IOTelLoggerProvi
 import { IOTelLoggerProviderConfig } from "../../interfaces/otel/logs/IOTelLoggerProviderConfig";
 import { IOTelLoggerProviderSharedState } from "../../interfaces/otel/logs/IOTelLoggerProviderSharedState";
 import { createLoggerProviderSharedState } from "../../internal/LoggerProviderSharedState";
-import { handleWarn } from "../../internal/commonUtils";
+import { handleWarn } from "../../internal/handleErrors";
 import { createResource } from "../resource/resource";
 import { createLogger } from "./OTelLogger";
 import { loadDefaultConfig, reconfigureLimits } from "./config";

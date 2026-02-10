@@ -11,7 +11,7 @@ import {
     ITelemetryInitializerContainer, ITelemetryInitializerHandler, TelemetryInitializerFunction
 } from "../interfaces/ai/ITelemetryInitializers";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
-import { getExceptionName } from "../utils/HelperFuncsCore";
+import { getExceptionName } from "../utils/HelperFuncs";
 import { BaseTelemetryPlugin } from "./BaseTelemetryPlugin";
 
 interface _IInternalTelemetryInitializerHandler {

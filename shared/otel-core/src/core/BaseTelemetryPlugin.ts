@@ -22,7 +22,7 @@ import { ITelemetryUnloadState } from "../interfaces/ai/ITelemetryUnloadState";
 import { ITelemetryUpdateState } from "../interfaces/ai/ITelemetryUpdateState";
 import { ILegacyUnloadHook, IUnloadHook } from "../interfaces/ai/IUnloadHook";
 import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
-import { isNotNullOrUndefined, proxyFunctionAs } from "../utils/HelperFuncsCore";
+import { isNotNullOrUndefined, proxyFunctionAs } from "../utils/HelperFuncs";
 import {
     createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext
 } from "./ProcessTelemetryContext";

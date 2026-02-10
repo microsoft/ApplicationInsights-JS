@@ -17,6 +17,7 @@ export interface OpenTelemetryErrorConstructor<T extends Error = OpenTelemetryEr
 }
 
 
+/*#__NO_SIDE_EFFECTS__*/
 export function getOpenTelemetryError(): OpenTelemetryErrorConstructor {
     if (!otelErrorType) {
         otelErrorType = createCustomError<OpenTelemetryErrorConstructor>("OpenTelemetryError", function (self, args) {

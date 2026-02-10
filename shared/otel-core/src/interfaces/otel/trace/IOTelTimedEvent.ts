@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IOTelHrTime } from "../../../types/time";
+import { IOTelHrTime } from "../../../interfaces/IOTelHrTime";
 import { IOTelAttributes } from "../IOTelAttributes";
 
 export interface IOTelTimedEvent {

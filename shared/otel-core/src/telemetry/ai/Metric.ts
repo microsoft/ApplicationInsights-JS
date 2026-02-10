@@ -8,11 +8,19 @@ import { IMetricData } from "../../interfaces/ai/contracts/IMetricData";
 import { ISerializable } from "../../interfaces/ai/telemetry/ISerializable";
 import { DataPoint } from "./Common/DataPoint";
 import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString } from "./Common/DataSanitizer";
+import { MetricDataType } from "./DataTypes";
+import { MetricEnvelopeType } from "./EnvelopeTypes";
 
 export class Metric implements IMetricData, ISerializable {
+    /**
+     * @deprecated Use the constant MetricEnvelopeType instead.
+     */
+    public static envelopeType = MetricEnvelopeType;
 
-    public static envelopeType = "Microsoft.ApplicationInsights.{0}.Metric";
-    public static dataType = "MetricData";
+    /**
+     * @deprecated Use the constant MetricDataType instead.
+     */
+    public static dataType = MetricDataType;
 
     public aiDataContract = {
         ver: FieldType.Required,

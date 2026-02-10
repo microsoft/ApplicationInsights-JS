@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { ICachedValue, createCachedValue, newSymbol, objCreate, objDefine } from "@nevware21/ts-utils";
+import { IOTelApi } from "../../..";
 import { IOTelContext } from "../../../interfaces/otel/context/IOTelContext";
 
 let _InternalContextKey: ICachedValue<symbol>
@@ -13,9 +14,10 @@ let _InternalContextKey: ICachedValue<symbol>
  * @param parent - The optional parent context.
  * @returns A new context instance.
  */
-export function createContext(parent?: IOTelContext): IOTelContext {
+export function createContext(otelApi: IOTelApi, parent?: IOTelContext): IOTelContext {
     let theValues = objCreate(null);
-    let theContext = {
+    let theContext: IOTelContext = {
+        api: otelApi,
         getValue: _getValue,
         setValue: _setValue,
         deleteValue: _deleteValue
@@ -26,6 +28,13 @@ export function createContext(parent?: IOTelContext): IOTelContext {
         // And any other context that may have been created or loaded into some other scope (bundle, etc.)
         _InternalContextKey = createCachedValue(newSymbol("OTelSdk$InternalContextKey"));
     }
+
+    // Make the api property read-only
+    objDefine(theContext, "api", {
+        v: otelApi,
+        w: false,
+        e: false
+    });
 
     objDefine(theContext as any, _InternalContextKey.v, {
         e: false,
@@ -45,7 +54,7 @@ export function createContext(parent?: IOTelContext): IOTelContext {
     }
 
     function _setValue(key: symbol, value: unknown) {
-        let newContext = createContext(parent);
+        let newContext = createContext(theContext.api, parent);
         ((newContext as any)[_InternalContextKey.v])[key] = value;
         return theContext;
     }

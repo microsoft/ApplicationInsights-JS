@@ -14,6 +14,7 @@ export interface IUnloadHandlerContainer {
     run: (itemCtx: IProcessTelemetryUnloadContext, unloadState: ITelemetryUnloadState) => void
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 export function createUnloadHandlerContainer(): IUnloadHandlerContainer {
     let handlers: UnloadHandler[] = [];
 

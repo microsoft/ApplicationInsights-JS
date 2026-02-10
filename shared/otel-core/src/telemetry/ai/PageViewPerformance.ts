@@ -8,11 +8,19 @@ import { IPageViewPerformanceTelemetry } from "../../interfaces/ai/IPageViewPerf
 import { IPageViewPerfData } from "../../interfaces/ai/contracts/IPageViewPerfData";
 import { ISerializable } from "../../interfaces/ai/telemetry/ISerializable";
 import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl } from "./Common/DataSanitizer";
+import { PageViewPerformanceDataType } from "./DataTypes";
+import { PageViewPerformanceEnvelopeType } from "./EnvelopeTypes";
 
 export class PageViewPerformance implements IPageViewPerfData, ISerializable {
+    /**
+     * @deprecated Use the constant PageViewPerformanceEnvelopeType instead.
+     */
+    public static envelopeType = PageViewPerformanceEnvelopeType;
 
-    public static envelopeType = "Microsoft.ApplicationInsights.{0}.PageviewPerformance";
-    public static dataType = "PageviewPerformanceData";
+    /**
+     * @deprecated Use the constant PageViewPerformanceDataType instead.
+     */
+    public static dataType = PageViewPerformanceDataType;
 
     public aiDataContract = {
         ver: FieldType.Required,

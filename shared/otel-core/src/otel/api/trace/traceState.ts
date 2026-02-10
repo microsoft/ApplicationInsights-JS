@@ -17,6 +17,7 @@ function _initOTelTraceStateSymbol() {
     return _otelTraceState;
 }
 
+/*#__NO_SIDE_EFFECTS__*/
 function _createOTelTraceState(traceState: IW3cTraceState): IOTelTraceState {
     if (!_otelTraceState) {
         _otelTraceState = _initOTelTraceStateSymbol();
@@ -58,6 +59,7 @@ function _createOTelTraceState(traceState: IW3cTraceState): IOTelTraceState {
  * @remarks The OpenTelemetry TraceState is an immutable object, meaning that any changes made to the trace state will
  * @since 3.4.0
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function isOTelTraceState(value: any): value is IOTelTraceState {
     if (!_otelTraceState) {
         _otelTraceState = _initOTelTraceStateSymbol();
@@ -80,6 +82,7 @@ export function isOTelTraceState(value: any): value is IOTelTraceState {
  * @remarks The OpenTelemetry TraceState is an immutable object, meaning that any changes made to the trace state will
  * @since 3.4.0
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function createOTelTraceState(value?: string | IW3cTraceState | IOTelTraceState | null): IOTelTraceState {
     let traceState: IW3cTraceState | null = null;
     if (isOTelTraceState(value)) {

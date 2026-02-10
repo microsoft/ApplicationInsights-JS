@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/rush/v5/rush.schema.json",
   "npmVersion": "9.9.3",
-  "rushVersion": "5.153.1",
+  "rushVersion": "5.167.0",
   "projectFolderMaxDepth": 4,
   "projects": [
     {
@@ -17,6 +17,16 @@
     {
       "packageName": "@microsoft/applicationinsights-rollup-plugin-uglify3-js",
       "projectFolder": "tools/rollup-plugin-uglify3-js",
+      "shouldPublish": true
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-rollup-es5",
+      "projectFolder": "tools/rollup-es5",
+      "shouldPublish": true
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-shims",
+      "projectFolder": "tools/shims",
       "shouldPublish": true
     },
     {
@@ -67,11 +77,6 @@
     {
       "packageName": "@microsoft/applicationinsights-web",
       "projectFolder": "AISKU",
-      "shouldPublish": true
-    },
-    {
-      "packageName": "@microsoft/applicationinsights-rollup-es5",
-      "projectFolder": "tools/rollup-es5",
       "shouldPublish": true
     },
     {

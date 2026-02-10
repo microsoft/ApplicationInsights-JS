@@ -5,7 +5,7 @@ import { IPropertiesConfig } from "../../../src/Interfaces/IPropertiesConfig";
 import { TelemetryContext } from "../../../src/TelemetryContext";
 import { IConfig, utlCanUseLocalStorage, utlGetLocalStorage } from "@microsoft/otel-core-js";
 import { TestChannelPlugin } from "./TestChannelPlugin";
-import { SinonStub } from 'sinon';
+import { SinonStub } from "sinon";
 
 export class PropertiesTests extends AITestClass {
     private properties: PropertiesPlugin;

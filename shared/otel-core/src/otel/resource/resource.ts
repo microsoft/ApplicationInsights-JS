@@ -8,7 +8,7 @@ import { IOTelAttributes, OTelAttributeValue } from "../../interfaces/otel/IOTel
 import { IAttributeContainer } from "../../interfaces/otel/attribute/IAttributeContainer";
 import { IOTelResource, OTelRawResourceAttribute } from "../../interfaces/otel/resources/IOTelResource";
 import { IOTelResourceCtx } from "../../interfaces/otel/resources/IOTelResourceCtx";
-import { handleDebug, handleError } from "../../internal/commonUtils";
+import { handleDebug, handleError } from "../../internal/handleErrors";
 import { createAttributeContainer } from "../attribute/attributeContainer";
 
 type ResourceKeyValue = [key: string, value: OTelAttributeValue | undefined];

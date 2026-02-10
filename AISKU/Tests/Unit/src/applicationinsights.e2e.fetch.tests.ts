@@ -1,6 +1,6 @@
-import { DistributedTracingModes, IConfig } from '@microsoft/otel-core-js';
-import { ApplicationInsightsTests } from './applicationinsights.e2e.tests';
-import { IConfiguration } from '@microsoft/otel-core-js';
+import { DistributedTracingModes, IConfig } from "@microsoft/otel-core-js";
+import { ApplicationInsightsTests } from "./applicationinsights.e2e.tests";
+import { IConfiguration } from "@microsoft/otel-core-js";
 
 const _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
 const _connectionString = `InstrumentationKey=${_instrumentationKey}`;

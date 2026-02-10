@@ -1,8 +1,8 @@
-import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
-import { ITelemetryItem, newId } from "@microsoft/otel-core-js";
-import { ApplicationInsights} from "../../../src/index";
-import { BreezeChannelIdentifier, ContextTagKeys, utlRemoveSessionStorage } from "@microsoft/otel-core-js";
+import { AITestClass, Assert } from "@microsoft/ai-test-framework";
+import { newId } from "@microsoft/otel-core-js";
+import { BreezeChannelIdentifier, utlRemoveSessionStorage } from "@microsoft/otel-core-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
+import { ApplicationInsights } from "../../../src/index";
 
 export class ApplicationInsightsConfigTests extends AITestClass {
     private readonly _instrumentationKey = "b7170927-2d1c-44f1-acec-59f4e1751c11";

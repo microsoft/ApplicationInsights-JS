@@ -40,14 +40,6 @@
             "package": "extensions/applicationinsights-properties-js/package.json",
             "release": "4.0.0-beta"
         },
-        "@microsoft/applicationinsights-common": {
-            "package": "shared/AppInsightsCommon/package.json",
-            "release": "4.0.0-beta"
-        },
-        "@microsoft/applicationinsights-core-js": {
-            "package": "shared/AppInsightsCore/package.json",
-            "release": "4.0.0-beta"
-        },
         "applicationinsights-web-config": {
             "package": "tools/config/package.json",
             "release": "1.0.6"

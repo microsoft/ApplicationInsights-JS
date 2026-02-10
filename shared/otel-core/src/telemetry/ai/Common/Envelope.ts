@@ -6,7 +6,7 @@ import { FieldType } from "../../../enums/ai/Enums";
 import { IDiagnosticLogger } from "../../../interfaces/ai/IDiagnosticLogger";
 import { IBase } from "../../../interfaces/ai/contracts/IBase";
 import { IEnvelope } from "../../../interfaces/ai/telemetry/IEnvelope";
-import { toISOString } from "../../../utils/HelperFuncsCore";
+import { toISOString } from "../../../utils/HelperFuncs";
 import { dataSanitizeString } from "./DataSanitizer";
 
 export class Envelope implements IEnvelope {

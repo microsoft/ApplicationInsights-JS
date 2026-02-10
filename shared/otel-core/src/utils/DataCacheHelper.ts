@@ -3,7 +3,7 @@
 
 import { objDefine } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "../constants/InternalConstants";
-import { normalizeJsName } from "./HelperFuncsCore";
+import { normalizeJsName } from "./HelperFuncs";
 import { newId } from "./RandomHelper";
 
 const version = "#version#";

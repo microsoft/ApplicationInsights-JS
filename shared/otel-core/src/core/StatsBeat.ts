@@ -16,7 +16,7 @@ import { IStatsBeat, IStatsBeatConfig, IStatsBeatState, IStatsEndpointConfig } f
 import { IStatsMgr, IStatsMgrConfig } from "../interfaces/ai/IStatsMgr";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 import { IPayloadData } from "../interfaces/ai/IXHROverride";
-import { isFeatureEnabled } from "../utils/HelperFuncsCore";
+import { isFeatureEnabled } from "../utils/HelperFuncs";
 
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
 const STATS_MIN_INTERVAL_SECONDS = 60; // 1 minute

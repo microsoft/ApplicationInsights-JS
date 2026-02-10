@@ -349,7 +349,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                                     statusText: "Hello",
                                     trailer: null,
                                     type: "basic",
-                                    url: "https://httpbin.org/status/200"
+                                    url: "http://localhost:9002/README.md"
                                 } as any);
                             }, 0);
                         });
@@ -378,7 +378,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                         _ensureTraceStateValue(appInsightsCore);
 
                         // Use test hook to simulate the correct url location
-                        this._ajax["_currentWindowHost"] = "httpbin.org";
+                        this._ajax["_currentWindowHost"] = "localhost:9002";
 
                         // Setup
                         let headers = new Headers();
@@ -387,7 +387,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                             method: 'get',
                             headers: headers
                         };
-                        const url = 'https://httpbin.org/status/200';
+                        const url = 'http://localhost:9002/README.md';
 
                         // Act
                         Assert.ok(trackSpy.notCalled, "No fetch called yet");
@@ -454,7 +454,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                                     statusText: "Hello",
                                     trailer: null,
                                     type: "basic",
-                                    url: "https://httpbin.org/status/200"
+                                    url: "http://localhost:9002/README.md"
                                 } as any);
                             }, 0);
                         });
@@ -486,7 +486,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                         _ensureTraceStateValue(appInsightsCore);
 
                         // Use test hook to simulate the correct url location
-                        this._ajax["_currentWindowHost"] = "httpbin.org";
+                        this._ajax["_currentWindowHost"] = "localhost:9002";
 
                         // Setup
                         let headers = new Headers();
@@ -495,7 +495,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                             method: 'get',
                             headers: headers
                         };
-                        const url = 'https://httpbin.org/status/200';
+                        const url = 'http://localhost:9002/README.md';
 
                         // Act
                         Assert.ok(trackSpy.notCalled, "No fetch called yet");
@@ -561,7 +561,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                                     statusText: "Hello",
                                     trailer: null,
                                     type: "basic",
-                                    url: "https://httpbin.org/status/200"
+                                    url: "http://localhost:9002/README.md"
                                 } as any);
                             }, 0);
                         });
@@ -591,7 +591,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                         let trackSpy = this.sandbox.spy(appInsightsCore, "track");
 
                         // Use test hook to simulate the correct url location
-                        this._ajax["_currentWindowHost"] = "httpbin.org";
+                        this._ajax["_currentWindowHost"] = "localhost:9002";
 
                         // Setup
                         let headers = new Headers();
@@ -600,7 +600,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                             method: 'get',
                             headers: headers
                         };
-                        const url = 'https://httpbin.org/status/200';
+                        const url = 'http://localhost:9002/README.md';
 
                         // Act
                         Assert.ok(trackSpy.notCalled, "No fetch called yet");
@@ -666,7 +666,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                                     statusText: "Hello",
                                     trailer: null,
                                     type: "basic",
-                                    url: "https://httpbin.org/status/200"
+                                    url: "http://localhost:9002/README.md"
                                 } as any);
                             }, 0);
                         });
@@ -689,7 +689,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                         let trackSpy = this.sandbox.spy(appInsightsCore, "track");
 
                         // Use test hook to simulate the correct url location
-                        this._ajax["_currentWindowHost"] = "httpbin.org";
+                        this._ajax["_currentWindowHost"] = "localhost:9002";
 
                         // Setup
                         let headers = new Headers();
@@ -698,7 +698,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                             method: 'get',
                             headers: headers
                         };
-                        const url = 'https://httpbin.org/status/200';
+                        const url = 'http://localhost:9002/README.md';
 
                         // Act
                         Assert.ok(trackSpy.notCalled, "No fetch called yet");
@@ -764,7 +764,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                                     statusText: "Hello",
                                     trailer: null,
                                     type: "basic",
-                                    url: "https://httpbin.org/status/200"
+                                    url: "http://localhost:9002/README.md"
                                 } as any);
                             }, 0);
                         });
@@ -787,7 +787,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                         let trackSpy = this.sandbox.spy(appInsightsCore, "track");
 
                         // Use test hook to simulate the correct url location
-                        this._ajax["_currentWindowHost"] = "httpbin.org";
+                        this._ajax["_currentWindowHost"] = "localhost:9002";
 
                         // Setup
                         let headers = new Headers();
@@ -796,7 +796,7 @@ export class W3CTraceStateDependencyTests extends AITestClass {
                             method: 'get',
                             headers: headers
                         };
-                        const url = 'https://httpbin.org/status/200';
+                        const url = 'http://localhost:9002/README.md';
 
                         // Act
                         Assert.ok(trackSpy.notCalled, "No fetch called yet");

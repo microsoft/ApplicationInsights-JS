@@ -1,15 +1,15 @@
 import { AISKUSizeCheck } from "./AISKUSize.Tests";
-import { ApplicationInsightsTests } from './applicationinsights.e2e.tests';
-import { ApplicationInsightsFetchTests } from './applicationinsights.e2e.fetch.tests';
-import { CdnPackagingChecks } from './CdnPackaging.tests';
-import { GlobalTestHooks } from './GlobalTestHooks.Test';
-import { SanitizerE2ETests } from './sanitizer.e2e.tests';
-import { ValidateE2ETests } from './validate.e2e.tests';
-import { SenderE2ETests } from './sender.e2e.tests';
-import { SnippetInitializationTests } from './SnippetInitialization.Tests';
+import { ApplicationInsightsTests } from "./applicationinsights.e2e.tests";
+import { ApplicationInsightsFetchTests } from "./applicationinsights.e2e.fetch.tests";
+import { CdnPackagingChecks } from "./CdnPackaging.tests";
+import { GlobalTestHooks } from "./GlobalTestHooks.Test";
+import { SanitizerE2ETests } from "./sanitizer.e2e.tests";
+import { ValidateE2ETests } from "./validate.e2e.tests";
+import { SenderE2ETests } from "./sender.e2e.tests";
+import { SnippetInitializationTests } from "./SnippetInitialization.Tests";
 import { CdnThrottle} from "./CdnThrottle.tests";
 import { ThrottleSentMessage } from "./ThrottleSentMessage.tests";
-import { IAnalyticsConfigTests } from './IAnalyticsConfig.Tests';
+import { IAnalyticsConfigTests } from "./IAnalyticsConfig.Tests";
 
 export function runTests() {
     new GlobalTestHooks().registerTests();

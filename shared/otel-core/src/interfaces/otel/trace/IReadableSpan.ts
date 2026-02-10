@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import { OTelSpanKind } from "../../../enums/otel/OTelSpanKind";
-import { IOTelHrTime } from "../../../types/time";
+import { IOTelHrTime } from "../../../interfaces/IOTelHrTime";
+import { IDistributedTraceContext } from "../../ai/IDistributedTraceContext";
 import { IOTelAttributes } from "../IOTelAttributes";
 import { IOTelResource } from "../resources/IOTelResource";
 import { IOTelInstrumentationScope } from "./IOTelInstrumentationScope";
 import { IOTelLink } from "./IOTelLink";
 import { IOTelSpan } from "./IOTelSpan";
-import { IOTelSpanContext } from "./IOTelSpanContext";
 import { IOTelSpanStatus } from "./IOTelSpanStatus";
 import { IOTelTimedEvent } from "./IOTelTimedEvent";
 
@@ -33,12 +33,20 @@ export interface IReadableSpan extends IOTelSpan {
      * Identifies the type (or kind) that this span is representing.
      */
     readonly kind: OTelSpanKind;
-    readonly spanContext: () => IOTelSpanContext;
+    readonly spanContext: () => IDistributedTraceContext;
     readonly parentSpanId?: string;
-    readonly parentSpanContext?: IOTelSpanContext;
+    readonly parentSpanContext?: IDistributedTraceContext;
     readonly startTime: IOTelHrTime;
     readonly endTime: IOTelHrTime;
     readonly status: IOTelSpanStatus;
+
+    /**
+     * Provides a snapshot of the span's attributes at the time this span was ended.
+     * @returns A read-only snapshot of the span's attributes
+     * @remarks
+     * It is recommended that you only access this property sparingly due to the
+     * performance cost of taking a snapshot of all attributes.
+     */
     readonly attributes: IOTelAttributes;
     readonly links: IOTelLink[];
     readonly events: IOTelTimedEvent[];

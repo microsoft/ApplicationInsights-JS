@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IDistributedTraceContext } from "../../ai/IDistributedTraceContext";
 import { IOTelAttributes } from "../IOTelAttributes";
 import { IOTelSpanContext } from "./IOTelSpanContext";
 
@@ -35,7 +36,7 @@ export interface IOTelLink {
     /**
      * The {@link IOTelSpanContext} of a linked span.
      */
-    context: IOTelSpanContext;
+    context: IOTelSpanContext | IDistributedTraceContext;
 
     /**
      * A set of {@link IOTelAttributes} on the link.

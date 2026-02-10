@@ -3,16 +3,15 @@
 
 import { arrForEach, arrIndexOf, isNullOrUndefined, mathFloor, mathMin, objForEachKey, strTrim } from "@nevware21/ts-utils";
 import { onConfigChange } from "../config/DynamicConfig";
+import { _throwInternal, safeGetLogger } from "../diagnostics/DiagnosticLogger";
 import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
 import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { IConfig } from "../interfaces/ai/IConfig";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
 import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "../interfaces/ai/IThrottleMgr";
-import { isNotNullOrUndefined } from "../utils/HelperFuncsCore";
 import { randomValue } from "../utils/RandomHelper";
 import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "../utils/StorageHelperFuncs";
-import { safeGetLogger } from "./DiagnosticLogger";
 
 const THROTTLE_STORAGE_PREFIX = "appInsightsThrottle";
 
@@ -204,7 +203,7 @@ export class ThrottleMgr {
             _queue = {};
             _config = {};
             _setCfgByKey(_eInternalMessageId.DefaultThrottleMsgKey);
-            _namePrefix = isNotNullOrUndefined(namePrefix)? namePrefix : "";
+            _namePrefix = !isNullOrUndefined(namePrefix)? namePrefix : "";
 
             core.addUnloadHook(onConfigChange<IConfig & IConfiguration>(core.config, (details) => {
                 let coreConfig = details.cfg;
@@ -267,7 +266,7 @@ export class ThrottleMgr {
         }
 
         function _canThrottle(config: IThrottleMgrConfig, canUseLocalStorage: boolean, localStorageObj: IThrottleLocalStorageObj) {
-            if (config && !config.disabled && canUseLocalStorage && isNotNullOrUndefined(localStorageObj)) {
+            if (config && !config.disabled && canUseLocalStorage && !isNullOrUndefined(localStorageObj)) {
                 let curDate = _getThrottleDate();
                 let date = localStorageObj.date;
                 let interval = config.interval;
@@ -291,7 +290,7 @@ export class ThrottleMgr {
         }
 
         function _getLocalStorageName(msgKey: _eInternalMessageId | number, prefix?: string) {
-            let fix = isNotNullOrUndefined(prefix)? prefix : "";
+            let fix = !isNullOrUndefined(prefix)? prefix : "";
             if (msgKey) {
                 return THROTTLE_STORAGE_PREFIX + fix + "-" + msgKey;
             }
@@ -376,7 +375,7 @@ export class ThrottleMgr {
         }
         
         function _sendMessage(msgID: _eInternalMessageId, logger: IDiagnosticLogger, message: string, severity?: eLoggingSeverity) {
-            logger.throwInternal(
+            _throwInternal(logger,
                 severity || eLoggingSeverity.CRITICAL,
                 msgID,
                 message);
