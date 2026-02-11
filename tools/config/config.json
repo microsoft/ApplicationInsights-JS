@@ -1,5 +1,5 @@
 {
-    "version": "1.0.5",
+    "version": "1.0.6",
     "enabled": true,
     "featureOptIn": {
         "iKeyUsage": {
@@ -14,7 +14,7 @@
             }
         },
         "zipPayload": {
-            "mode": 1
+            "mode": 3
         },
         "CdnUsage": {
             "mode": 4,
