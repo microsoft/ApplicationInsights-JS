@@ -14,6 +14,11 @@ export interface IInternalStorageItem {
      * total retry count
      */
     cnt?: number;
+    /**
+     * baseType of the original telemetry item, used for SDK stats telemetry_type mapping.
+     * @since 3.3.6
+     */
+    bT?: string;
 }
 
 export interface ISenderConfig {

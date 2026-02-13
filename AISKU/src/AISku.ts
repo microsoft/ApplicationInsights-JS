@@ -11,11 +11,11 @@ import {
     IAutoExceptionTelemetry, IChannelControls, IConfig, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDependencyTelemetry,
     IDiagnosticLogger, IDistributedTraceContext, IDynamicConfigHandler, IEventTelemetry, IExceptionTelemetry, ILoadedPlugin,
     IMetricTelemetry, INotificationManager, IOTelApi, IOTelSpanOptions, IPageViewPerformanceTelemetry, IPageViewTelemetry, IPlugin,
-    IReadableSpan, IRequestHeaders, ISpanScope, ITelemetryContext as Common_ITelemetryContext, ITelemetryInitializerHandler, ITelemetryItem,
+    IReadableSpan, IRequestHeaders, ISdkStatsNotifCbk, ISpanScope, ITelemetryContext as Common_ITelemetryContext, ITelemetryInitializerHandler, ITelemetryItem,
     ITelemetryPlugin, ITelemetryUnloadState, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, ITraceApi, ITraceProvider,
     ITraceTelemetry, IUnloadHook, OTelTimeInput, PropertiesPluginIdentifier, ThrottleMgr, UnloadHandler, WatcherFunction,
     _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate,
-    createDynamicConfig, createOTelApi, createProcessTelemetryContext, createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity,
+    createDynamicConfig, createOTelApi, createProcessTelemetryContext, createSdkStatsNotifCbk, createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity,
     hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace,
     onConfigChange, parseConnectionString, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener, useSpan
 } from "@microsoft/applicationinsights-core-js";
@@ -64,6 +64,9 @@ const IKEY_USAGE = "iKeyUsage";
 const CDN_USAGE = "CdnUsage";
 const SDK_LOADER_VER = "SdkLoaderVer";
 const ZIP_PAYLOAD = "zipPayload";
+const SDK_STATS = "SdkStats";
+const SDK_STATS_VERSION = "#version#";
+const SDK_STATS_FLUSH_INTERVAL = 900000; // 15 minutes in ms
 
 const default_limit = {
     samplingRate: 100,
@@ -93,7 +96,8 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
         [IKEY_USAGE]: {mode: FeatureOptInMode.enable}, //for versions after 3.1.2 (>= 3.2.0)
         [CDN_USAGE]: {mode: FeatureOptInMode.disable},
         [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable},
-        [ZIP_PAYLOAD]: {mode: FeatureOptInMode.none}
+        [ZIP_PAYLOAD]: {mode: FeatureOptInMode.none},
+        [SDK_STATS]: {mode: FeatureOptInMode.enable}
     },
     throttleMgrCfg: cfgDfMerge<{[key:number]: IThrottleMgrConfig}>(
         {
@@ -196,6 +200,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
         let _cdnSentMessage: boolean;
         let _sdkVerSentMessage: boolean;
         let _otelApi: ICachedValue<IOTelApi>;
+        let _sdkStatsListener: ISdkStatsNotifCbk;
 
         dynamicProto(AppInsightsSku, this, (_self) => {
             _initDefaults();
@@ -390,6 +395,17 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                     // initialize core
                     _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin], logger, notificationManager);
 
+                    // Register SDK Stats notification listener (on by default)
+                    if (isFeatureEnabled(SDK_STATS, _config, true)) {
+                        _sdkStatsListener = createSdkStatsNotifCbk({
+                            trk: function (item: ITelemetryItem) { _core.track(item); },
+                            lang: "JavaScript",
+                            ver: SDK_STATS_VERSION,
+                            int: SDK_STATS_FLUSH_INTERVAL
+                        });
+                        _core.addNotificationListener(_sdkStatsListener);
+                    }
+
                     // Initialize the initial OTel API
                     _otelApi = _initOTel(_self, "aisku", _onEnd, _onException);
                     
@@ -573,6 +589,13 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                     if (!unloadDone) {
                         unloadDone = true;
 
+                        // Flush and remove SDK Stats listener before unload
+                        if (_sdkStatsListener && _core) {
+                            _sdkStatsListener.flush();
+                            _core.removeNotificationListener(_sdkStatsListener);
+                            _sdkStatsListener = null;
+                        }
+
                         // Reset OTel API to clean up all trace state before unloading core
                         if (_core) {
                             // Clear the trace provider to stop any active spans
@@ -710,6 +733,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                 _iKeySentMessage = false;
                 _cdnSentMessage = false;
                 _sdkVerSentMessage = false;
+                _sdkStatsListener = null;
                 _cfgSyncPlugin = new CfgSyncPlugin();
             }
 
