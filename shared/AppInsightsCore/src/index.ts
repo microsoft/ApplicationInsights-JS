@@ -39,6 +39,7 @@ export { parseResponse } from "./core/ResponseHelpers";
 export { IXDomainRequest, IBackendResponse } from "./interfaces/ai/IXDomainRequest";
 export { _ISenderOnComplete, _ISendPostMgrConfig, _ITimeoutOverrideWrapper, _IInternalXhrOverride } from "./interfaces/ai/ISenderPostManager";
 export { SenderPostManager } from "./core/SenderPostManager";
+export { createSdkStatsNotifCbk, ISdkStatsConfig, ISdkStatsNotifCbk } from "./core/SdkStatsNotificationCbk";
 //export { IStatsBeat, IStatsBeatConfig, IStatsBeatKeyMap as IStatsBeatEndpoints, IStatsBeatState} from "./interfaces/ai/IStatsBeat";
 //export { IStatsEventData } from "./interfaces/ai/IStatsEventData";
 //export { IStatsMgr, IStatsMgrConfig } from "./interfaces/ai/IStatsMgr";
