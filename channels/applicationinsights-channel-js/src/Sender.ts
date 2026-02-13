@@ -511,7 +511,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     _checkMaxSize(payload);
                     let payloadItem = {
                         item: payload,
-                        cnt: 0 // inital cnt will always be 0
+                        cnt: 0, // inital cnt will always be 0
+                        bT: telemetryItem.baseType // store baseType for SDK stats telemetry_type mapping
                     } as IInternalStorageItem;
 
                     // enqueue the payload
@@ -807,6 +808,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     { message });
         
                 _self._buffer && _self._buffer.clearSent(payload);
+
+                // Notify listeners of discarded events
+                let mgr = _getNotifyMgr();
+                if (mgr) {
+                    let items = _extractTelemetryItems(payload);
+                    if (items) {
+                        mgr.eventsDiscarded(items, 1 /* NonRetryableStatus */);
+                    }
+                }
             }
             /**
              * partial success handler
@@ -852,6 +862,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              */
             function _onSuccess(payload: IInternalStorageItem[], countOfItemsInPayload: number) {
                 _self._buffer && _self._buffer.clearSent(payload);
+
+                // Notify listeners of successful send
+                let mgr = _getNotifyMgr();
+                if (mgr) {
+                    let items = _extractTelemetryItems(payload);
+                    if (items) {
+                        mgr.eventsSent(items);
+                    }
+                }
             }
 
 
@@ -1124,6 +1143,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         if (!_isRetryDisabled) {
                             const offlineBackOffMultiplier = 10; // arbritrary number
                             _resendPayload(payload, offlineBackOffMultiplier);
+
+                            // Notify listeners of retry
+                            _notifyRetry(payload, status);
         
                             _throwInternal(_self.diagLog(),
                                 eLoggingSeverity.WARNING,
@@ -1133,6 +1155,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     }
                     if (!_isRetryDisabled && _isRetriable(status)) {
                         _resendPayload(payload);
+
+                        // Notify listeners of retry
+                        _notifyRetry(payload, status);
+
                         _throwInternal(_self.diagLog(),
                             eLoggingSeverity.WARNING,
                             _eInternalMessageId.TransmissionFailed, ". " +
@@ -1384,6 +1410,36 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             _eInternalMessageId.NotificationException,
                             "send request notification failed: " + getExceptionName(e),
                             { exception: dumpObj(e) });
+                    }
+                }
+            }
+
+            /**
+             * Extracts minimal ITelemetryItem objects from IInternalStorageItem[] for notification dispatch.
+             * Uses the stored baseType (bT) to reconstruct telemetry items.
+             */
+            function _extractTelemetryItems(payload: IInternalStorageItem[]): ITelemetryItem[] {
+                if (payload && payload.length) {
+                    let items: ITelemetryItem[] = [];
+                    arrForEach(payload, (p) => {
+                        if (p) {
+                            items.push({ name: "", baseType: p.bT || "EventData" } as ITelemetryItem);
+                        }
+                    });
+                    return items.length ? items : null;
+                }
+                return null;
+            }
+
+            /**
+             * Notify listeners of retry events.
+             */
+            function _notifyRetry(payload: IInternalStorageItem[], statusCode: number) {
+                let mgr = _getNotifyMgr();
+                if (mgr && mgr.eventsRetry) {
+                    let items = _extractTelemetryItems(payload);
+                    if (items) {
+                        mgr.eventsRetry(items, statusCode);
                     }
                 }
             }

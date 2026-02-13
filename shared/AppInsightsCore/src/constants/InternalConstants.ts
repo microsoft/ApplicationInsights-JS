@@ -19,6 +19,7 @@ export const STR_PRIORITY = "priority";
 export const STR_EVENTS_SENT = "eventsSent";
 export const STR_EVENTS_DISCARDED = "eventsDiscarded";
 export const STR_EVENTS_SEND_REQUEST = "eventsSendRequest";
+export const STR_EVENTS_RETRY = "eventsRetry";
 export const STR_PERF_EVENT = "perfEvent";
 export const STR_OFFLINE_STORE = "offlineEventsStored";
 export const STR_OFFLINE_SENT = "offlineBatchSent";
