@@ -5,7 +5,8 @@ import { IPromise, createAllPromise, createPromise, doAwaitResponse } from "@nev
 import { ITimerHandler, arrForEach, arrIndexOf, objDefine, safe, scheduleTimeout } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../config/DynamicConfig";
 import {
-    STR_EVENTS_DISCARDED, STR_EVENTS_RETRY, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_OFFLINE_DROP, STR_OFFLINE_SENT, STR_OFFLINE_STORE, STR_PERF_EVENT
+    STR_EVENTS_DISCARDED, STR_EVENTS_RETRY, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_OFFLINE_DROP, STR_OFFLINE_SENT, STR_OFFLINE_STORE,
+    STR_PERF_EVENT
 } from "../constants/InternalConstants";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import { INotificationListener } from "../interfaces/ai/INotificationListener";
