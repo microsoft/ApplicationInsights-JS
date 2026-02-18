@@ -11,13 +11,14 @@ import {
     IAutoExceptionTelemetry, IChannelControls, IConfig, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDependencyTelemetry,
     IDiagnosticLogger, IDistributedTraceContext, IDynamicConfigHandler, IEventTelemetry, IExceptionTelemetry, ILoadedPlugin,
     IMetricTelemetry, INotificationManager, IOTelApi, IOTelSpanOptions, IPageViewPerformanceTelemetry, IPageViewTelemetry, IPlugin,
-    IReadableSpan, IRequestHeaders, ISdkStatsNotifCbk, ISpanScope, ITelemetryContext as Common_ITelemetryContext, ITelemetryInitializerHandler, ITelemetryItem,
-    ITelemetryPlugin, ITelemetryUnloadState, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, ITraceApi, ITraceProvider,
-    ITraceTelemetry, IUnloadHook, OTelTimeInput, PropertiesPluginIdentifier, ThrottleMgr, UnloadHandler, WatcherFunction,
-    _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate,
-    createDynamicConfig, createOTelApi, createProcessTelemetryContext, createSdkStatsNotifCbk, createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity,
-    hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace,
-    onConfigChange, parseConnectionString, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener, useSpan
+    IReadableSpan, IRequestHeaders, ISdkStatsNotifCbk, ISpanScope, ITelemetryContext as Common_ITelemetryContext,
+    ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IThrottleInterval, IThrottleLimit,
+    IThrottleMgrConfig, ITraceApi, ITraceProvider, ITraceTelemetry, IUnloadHook, OTelTimeInput, PropertiesPluginIdentifier, ThrottleMgr,
+    UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge,
+    cfgDfValidate, createDynamicConfig, createOTelApi, createProcessTelemetryContext, createSdkStatsNotifCbk, createTraceProvider,
+    createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction, isNullOrUndefined,
+    isReactNative, isString, mergeEvtNamespace, onConfigChange, parseConnectionString, proxyAssign, proxyFunctions,
+    removePageHideEventListener, removePageUnloadEventListener, useSpan
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
@@ -398,10 +399,15 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                     // Register SDK Stats notification listener (on by default)
                     if (isFeatureEnabled(SDK_STATS, _config, true)) {
                         _sdkStatsListener = createSdkStatsNotifCbk({
-                            trk: function (item: ITelemetryItem) { _core.track(item); },
+                            trk: function (item: ITelemetryItem) {
+                                _core.track(item);
+                            },
                             lang: "JavaScript",
                             ver: SDK_STATS_VERSION,
-                            int: SDK_STATS_FLUSH_INTERVAL
+                            int: SDK_STATS_FLUSH_INTERVAL,
+                            fnFlush: function () {
+                                _self.onunloadFlush(false);
+                            }
                         });
                         _core.addNotificationListener(_sdkStatsListener);
                     }
@@ -589,13 +595,6 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                     if (!unloadDone) {
                         unloadDone = true;
 
-                        // Flush and remove SDK Stats listener before unload
-                        if (_sdkStatsListener && _core) {
-                            _sdkStatsListener.flush();
-                            _core.removeNotificationListener(_sdkStatsListener);
-                            _sdkStatsListener = null;
-                        }
-
                         // Reset OTel API to clean up all trace state before unloading core
                         if (_core) {
                             // Clear the trace provider to stop any active spans
@@ -618,6 +617,15 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                 _self.onunloadFlush(isAsync);
 
                 _removePageEventHandlers();
+
+                // Unload SDK Stats listener BEFORE core.unload() tears down the pipeline.
+                // unload() calls core.track() to enqueue the accumulated metrics,
+                // then calls fnFlush to flush the channel so they actually get sent.
+                if (_sdkStatsListener && _core) {
+                    _sdkStatsListener.unload();
+                    _core.removeNotificationListener(_sdkStatsListener);
+                    _sdkStatsListener = null;
+                }
 
                 _core.unload && _core.unload(isAsync, _unloadCallback, cbTimeout);
 
