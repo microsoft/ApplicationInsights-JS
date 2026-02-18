@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { ITimerHandler, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, objHasOwn, scheduleTimeout } from "@nevware21/ts-utils";
 import { INotificationListener } from "../interfaces/ai/INotificationListener";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 
@@ -51,6 +51,11 @@ export interface ISdkStatsConfig {
      * Flush interval override in ms (default 900000 = 15 min).
      */
     int?: number;
+    /**
+     * Optional callback to flush the channel after enqueuing SDK stats metrics.
+     * Called by unload() after core.track() so the metrics get transmitted before teardown.
+     */
+    fnFlush?: () => void;
 }
 
 /**
@@ -94,7 +99,7 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
 
     function _isSdkStatsMetric(item: ITelemetryItem): boolean {
         var n = item.name;
-        return n === "Item Success Count" || n === "Item Dropped Count" || n === "Item Retry Count";
+        return n === MET_SUCCESS || n === MET_DROPPED || n === MET_RETRY;
     }
 
     function _incSuccess(items: ITelemetryItem[]) {
@@ -145,8 +150,9 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
             name: name,
             baseType: "MetricData",
             baseData: {
-                ver: 2,
-                metrics: [{ name: name, value: value }],
+                name: name,
+                average: value,
+                sampleCount: 1,
                 properties: props
             }
         } as ITelemetryItem;
@@ -174,7 +180,7 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
 
         // Flush success counts
         for (telType in _successCounts) {
-            if (_successCounts.hasOwnProperty(telType)) {
+            if (objHasOwn(_successCounts, telType)) {
                 cnt = _successCounts[telType];
                 if (cnt > 0) {
                     var successProps: { [key: string]: any } = {};
@@ -186,10 +192,10 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
 
         // Flush dropped counts
         for (code in _droppedCounts) {
-            if (_droppedCounts.hasOwnProperty(code)) {
+            if (objHasOwn(_droppedCounts, code)) {
                 bucket = _droppedCounts[code];
                 for (telType in bucket) {
-                    if (bucket.hasOwnProperty(telType)) {
+                    if (objHasOwn(bucket, telType)) {
                         cnt = bucket[telType];
                         if (cnt > 0) {
                             var dropProps: { [key: string]: any } = {};
@@ -204,10 +210,10 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
 
         // Flush retry counts
         for (code in _retryCounts) {
-            if (_retryCounts.hasOwnProperty(code)) {
+            if (objHasOwn(_retryCounts, code)) {
                 bucket = _retryCounts[code];
                 for (telType in bucket) {
-                    if (bucket.hasOwnProperty(telType)) {
+                    if (objHasOwn(bucket, telType)) {
                         cnt = bucket[telType];
                         if (cnt > 0) {
                             var retryProps: { [key: string]: any } = {};
@@ -240,6 +246,8 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
         unload: function () {
             // Flush remaining counts before unload
             _flush();
+            // Flush the channel so the metrics just enqueued actually get sent
+            cfg.fnFlush && cfg.fnFlush();
             if (_timer) {
                 _timer.cancel();
                 _timer = null;
