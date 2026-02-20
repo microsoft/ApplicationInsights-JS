@@ -1,6 +1,6 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { asString, strRepeat } from "@nevware21/ts-utils";
-import { createW3cTraceState, isW3cTraceState, snapshotW3cTraceState } from "../../../src/telemetry/W3cTraceState";
+import { createW3cTraceState, isW3cTraceState, snapshotW3cTraceState } from "../../../../src/telemetry/W3cTraceState";
 
 export class W3cTraceStateTests extends AITestClass {
 

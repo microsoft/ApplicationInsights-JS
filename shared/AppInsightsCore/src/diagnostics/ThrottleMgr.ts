@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { arrForEach, arrIndexOf, isNullOrUndefined, mathFloor, mathMin, objForEachKey, strTrim } from "@nevware21/ts-utils";
 import { onConfigChange } from "../config/DynamicConfig";
 import { _throwInternal, safeGetLogger } from "../diagnostics/DiagnosticLogger";

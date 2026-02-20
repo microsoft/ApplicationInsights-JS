@@ -1,7 +1,11 @@
-import { IDistributedTraceContext } from "../../ai/IDistributedTraceContext";
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { IDistributedTraceContext, IDistributedTraceInit } from "../../ai/IDistributedTraceContext";
 import { ISpanScope } from "../../ai/ITraceProvider";
+import { IOTelSpanContext } from "./IOTelSpanContext";
 import { IOTelTracer } from "./IOTelTracer";
-import { IOTelTracerOptions } from "./IOTelTracerProvider";
+import { IOTelTracerOptions } from "./IOTelTracerOptions";
 import { IReadableSpan } from "./IReadableSpan";
 
 /**
@@ -25,13 +29,13 @@ export interface ITraceApi {
      * @param spanContext - The {@link IDistributedTraceContext} to be wrapped
      * @returns a new non-recording {@link IReadableSpan} with the provided context
      */
-    wrapSpanContext(spanContext: IDistributedTraceContext): IReadableSpan;
+    wrapSpanContext(spanContext: IDistributedTraceContext | IDistributedTraceInit | IOTelSpanContext): IReadableSpan;
 
     /**
      * Returns true if this {@link IDistributedTraceContext} is valid.
      * @return true if this {@link IDistributedTraceContext} is valid.
      */
-    isSpanContextValid(spanContext: IDistributedTraceContext): boolean;
+    isSpanContextValid(spanContext: IDistributedTraceContext | IDistributedTraceInit | IOTelSpanContext): boolean;
 
     /**
      * Gets the span from the current context, if one exists.

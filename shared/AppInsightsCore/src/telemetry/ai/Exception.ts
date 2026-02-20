@@ -373,7 +373,7 @@ function _getStackFromErrorObj(errorObj:any): IStackDetails {
                 details = errorObj;
             } else if (_isStackDetails(errorObj[strStackDetails])) {
                 details = errorObj[strStackDetails];
-            } else if (getWindow() && getWindow()["opera"] && errorObj[strMessage]) {
+            } else if (getWindow() && (getWindow() as any)["opera"] && errorObj[strMessage]) {
                 // Opera
                 details = _getOperaStack(errorObj.message);
             } else if (errorObj["reason"] && errorObj.reason[strStack]) {
@@ -756,7 +756,7 @@ export function _createExceptionDetails(logger: IDiagnosticLogger, exception: Er
 
         typeName = dataSanitizeString(logger, _getErrorType(error)) || strNotSpecified;
         message = dataSanitizeMessage(logger, _formatMessage(exception || error, typeName)) || strNotSpecified;
-        const stack = exception[strStackDetails] || _getStackFromErrorObj(exception);
+        const stack = (exception as any)[strStackDetails] || _getStackFromErrorObj(exception);
         parsedStack = _parseStack(stack);
 
         // after parsedStack is inited, iterate over each frame object, sanitize its assembly field

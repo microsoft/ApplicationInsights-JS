@@ -1,7 +1,7 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, createCookieMgr, IAppInsightsCore, IConfiguration, ICookieMgrConfig, IPlugin, ITelemetryItem, newId, objExtend } from "../../../src/index"
-import { _eInternalMessageId } from "../../../src/enums/ai/LoggingEnums";
-import { _InternalLogMessage } from "../../../src/diagnostics/DiagnosticLogger";
+import { AppInsightsCore, createCookieMgr, IAppInsightsCore, IConfiguration, ICookieMgrConfig, IPlugin, ITelemetryItem, newId, objExtend } from "../../../../src/index"
+import { _eInternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
+import { _InternalLogMessage } from "../../../../src/diagnostics/DiagnosticLogger";
 import { setBypassLazyCache } from "@nevware21/ts-utils";
 
 export class CookieManagerTests extends AITestClass {

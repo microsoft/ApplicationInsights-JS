@@ -34,9 +34,9 @@ export function createTelemetryItem<T>(item: T,
     }
     
     let iKey = "";
-    if (item[strIkey]) {
-        iKey = item[strIkey];
-        delete item[strIkey];
+    if ((item as any)[strIkey]) {
+        iKey = (item as any)[strIkey];
+        delete (item as any)[strIkey];
     }
 
     const telemetryItem: ITelemetryItem = {

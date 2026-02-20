@@ -11,6 +11,9 @@ import { ITelemetryPluginChain } from "../interfaces/ai/ITelemetryPluginChain";
 import { ITelemetryUnloadState } from "../interfaces/ai/ITelemetryUnloadState";
 import { IUnloadableComponent } from "../interfaces/ai/IUnloadableComponent";
 import { IW3cTraceState } from "../interfaces/ai/IW3cTraceState";
+import { IOTelSpanContext } from "../interfaces/otel/trace/IOTelSpanContext";
+import { createOTelSpanContext } from "../otel/api/trace/spanContext";
+import { isOTelTraceState } from "../otel/api/trace/traceState";
 import { createW3cTraceState } from "../telemetry/W3cTraceState";
 import { generateW3CId } from "../utils/CoreUtils";
 import { createElmNodeData } from "../utils/DataCacheHelper";
@@ -92,7 +95,7 @@ export function initializePlugins(processContext: IProcessTelemetryContext, exte
     });
 }
 
-export function sortPlugins<T = IPlugin>(plugins:T[]) {
+export function sortPlugins<T = IPlugin>(plugins: T[]) {
     // Sort by priority
     return plugins.sort((extA: any, extB: any) => {
         let result = 0;
@@ -158,10 +161,14 @@ export function isDistributedTraceContext(obj: any): obj is IDistributedTraceCon
  * Creates an IDistributedTraceContext instance that ensures a valid traceId is always available.
  * The traceId will be inherited from the parent context if valid, otherwise a new random W3C trace ID is generated.
  *
- * @param parent - An optional parent {@link IDistributedTraceContext} to inherit trace context values from. If
- * provided, the traceId and spanId will be copied from the parent if they are valid.
+ * @param parent - An optional parent {@link IDistributedTraceContext} or {@link IOTelSpanContext} to inherit
+ * trace context values from. If provided, the traceId and spanId will be copied from the parent if they are valid.
  * When the parent is an {@link IDistributedTraceContext}, it will be set as the parentCtx property to maintain
  * hierarchical relationships and enable parent context updates.
+ * When the parent is an {@link IOTelSpanContext}, the parentCtx will be null because OpenTelemetry span contexts
+ * are read-only data sources that don't support the same hierarchical management methods as IDistributedTraceContext.
+ * The core instance will create a wrapped IDistributedTraceContext instance from the IOTelSpanContext data
+ * to enable Application Insights distributed tracing functionality while maintaining OpenTelemetry compatibility.
  *
  * @returns A new IDistributedTraceContext instance with the following behavior:
  * - **traceId**: Always present - either inherited from parent (if valid) or newly generated W3C trace ID
@@ -175,11 +182,14 @@ export function isDistributedTraceContext(obj: any): obj is IDistributedTraceCon
  * which is essential for the refactored W3C trace state implementation. The spanId may be empty until a
  * specific span is created, which is normal behavior for trace contexts.
  *
+ * The distinction between IDistributedTraceContext and IOTelSpanContext parents is important:
+ * - IDistributedTraceContext parents enable bidirectional updates and hierarchical management
+ * - IOTelSpanContext parents are used only for initial data extraction and OpenTelemetry compatibility
  */
 /*#__NO_SIDE_EFFECTS__*/
-export function createDistributedTraceContext(parent?: IDistributedTraceContext | IDistributedTraceInit | undefined | null): IDistributedTraceContext {
+export function createDistributedTraceContext(parent?: IDistributedTraceContext | IOTelSpanContext | IDistributedTraceInit | undefined | null): IDistributedTraceContext {
     let parentCtx: IDistributedTraceContext = null;
-    let initCtx: IDistributedTraceInit = null;
+    let initCtx: IDistributedTraceInit | IOTelSpanContext = null;
     let traceId = (parent && isValidTraceId(parent.traceId)) ? parent.traceId : generateW3CId();
     let spanId = (parent && isValidSpanId(parent.spanId)) ? parent.spanId : STR_EMPTY;
     let traceFlags = parent ? parent.traceFlags : UNDEFINED_VALUE;
@@ -267,12 +277,29 @@ export function createDistributedTraceContext(parent?: IDistributedTraceContext 
 
     function _getTraceState(): IW3cTraceState {
         if (!traceState) {
-            traceState = createW3cTraceState(STR_EMPTY, parentCtx ? parentCtx.traceState : (initCtx ? initCtx.traceState : undefined));
+            if (!parentCtx) {
+                // The passed in parent was not an IDistributedTraceContext
+                if (initCtx) {
+                    if (isOTelTraceState(initCtx.traceState)) {
+                        // This looks like an IOTelSpanContext, so we have to just use the passed traceState as-is as it doesn't support
+                        // the W3cTraceState heirarchy methods
+                        traceState = createW3cTraceState(initCtx.traceState.serialize() || STR_EMPTY, parentCtx ? parentCtx.traceState : undefined);
+                    } else {
+                        // This looks like an IDistributedTraceInit, so we can create a new W3cTraceState
+                        traceState = createW3cTraceState(STR_EMPTY, initCtx.traceState || (parentCtx ? parentCtx.traceState : undefined));
+                    }
+                }
+            }
+
+            if (!traceState) {
+                traceState = createW3cTraceState(STR_EMPTY, parentCtx ? parentCtx.traceState : undefined);
+            }
         }
 
         return traceState;
     }
 
+    let otelSpanCtx: IOTelSpanContext = null;
     let traceCtx: IDistributedTraceContext = setProtoTypeName({
         getName: _getName,
         setName: _setPageNameFn(true),
@@ -287,7 +314,15 @@ export function createDistributedTraceContext(parent?: IDistributedTraceContext 
         traceFlags,
         traceState,
         isRemote,
-        pageName
+        pageName,
+        getOTelSpanContext: () => {
+            if (!otelSpanCtx) {
+                // Lazily create the OTel Span Context
+                otelSpanCtx = createOTelSpanContext(traceCtx);
+            }
+
+            return otelSpanCtx;
+        }
     }, "DistributedTraceContext");
 
     return objDefineProps<IDistributedTraceContext>(traceCtx, {
@@ -330,7 +365,7 @@ export function createDistributedTraceContext(parent?: IDistributedTraceContext 
                     result = {
                         t: "initCtx",
                         v: initCtx
-                    }
+                    };
                 }
                 return result;
             }

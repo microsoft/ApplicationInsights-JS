@@ -23,7 +23,7 @@
         "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/tools/release-tools"
     },
     "devDependencies": {
-        "grunt": "^1.5.3",
+        "grunt": "^1.6.1",
         "globby": "^11.0.0"
     }
 }

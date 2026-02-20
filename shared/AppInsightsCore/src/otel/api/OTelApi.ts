@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { ILazyValue, objDefineProps } from "@nevware21/ts-utils";
 import { IOTelApi } from "../../interfaces/otel/IOTelApi";
 import { IOTelApiCtx } from "../../interfaces/otel/IOTelApiCtx";

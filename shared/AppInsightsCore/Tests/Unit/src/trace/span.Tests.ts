@@ -558,10 +558,10 @@ export class SpanTests extends AITestClass {
 
                 // Assert
                 Assert.ok(span, "Span should be created via core.startSpan");
-                const readableSpan = span! as IReadableSpan;
+                const readableSpan = span as IReadableSpan;
                 Assert.equal(readableSpan.name, "integration-test-span", "Span name should match");
                 Assert.equal(readableSpan.kind, eOTelSpanKind.SERVER, "Span kind should match");
-                Assert.ok(span!.isRecording(), "Span should be recording");
+                Assert.ok(span?.isRecording(), "Span should be recording");
                 Assert.ok(!readableSpan.ended, "Span should not be ended initially");
             }
         });
@@ -576,10 +576,10 @@ export class SpanTests extends AITestClass {
 
                 // Act
                 Assert.ok(span, "Span should be created");
-                span!.end();
+                span?.end();
 
                 // Assert
-                const readableSpan = span! as IReadableSpan;
+                const readableSpan = span as IReadableSpan;
                 Assert.ok(readableSpan.ended, "Span should be ended");
                 Assert.equal(this._onEndCalls.length, 1, "onEnd callback should be called once");
                 Assert.equal(this._onEndCalls[0].name, "callback-test-span", "onEnd should receive the correct span");
@@ -605,9 +605,9 @@ export class SpanTests extends AITestClass {
 
                 // Assert
                 Assert.ok(span, "Child span should be created");
-                const spanContext = span!.spanContext();
-                Assert.equal(spanContext.traceId, parentTraceContext.traceId, "Child span should inherit parent trace ID");
-                Assert.notEqual(spanContext.spanId, parentTraceContext.spanId, "Child span should have different span ID");
+                const spanContext = span?.spanContext();
+                Assert.equal(spanContext?.traceId, parentTraceContext.traceId, "Child span should inherit parent trace ID");
+                Assert.notEqual(spanContext?.spanId, parentTraceContext.spanId, "Child span should have different span ID");
             }
         });
 
@@ -627,8 +627,8 @@ export class SpanTests extends AITestClass {
 
                 // Assert
                 Assert.ok(span, "Span should still be created when suppressTracing is enabled");
-                const readableSpan = span! as IReadableSpan;
-                Assert.ok(!span!.isRecording(), "Span should not be recording when suppressTracing is enabled");
+                const readableSpan = span as IReadableSpan;
+                Assert.ok(!span?.isRecording(), "Span should not be recording when suppressTracing is enabled");
                 Assert.equal(readableSpan.name, "suppressed-span", "Span name should be set correctly");
             }
         });
@@ -646,16 +646,16 @@ export class SpanTests extends AITestClass {
                 Assert.ok(span, "Span should be created");
                 
                 // Debug: Check if trace provider exists
-                const traceProvider = core.getTraceProvider!();
+                const traceProvider = core.getTraceProvider();
                 Assert.ok(traceProvider, "Trace provider should exist");
-                Assert.ok(traceProvider!.isAvailable(), "Trace provider should be available");
+                Assert.ok(traceProvider?.isAvailable(), "Trace provider should be available");
                 
                 // Debug: Check trace provider before setActiveSpan
                 const providerActiveSpanBefore = core.getActiveSpan();
                 Assert.equal(providerActiveSpanBefore, initialActiveSpan, "Trace provider should return the initially active span before setActiveSpan");
                 
                 // Manually set as active span (this would normally be done by startActiveSpan)
-                const scope = core.setActiveSpan(span!);
+                const scope = core.setActiveSpan(span);
 
                 // Assert scope object
                 Assert.ok(scope, "Scope should be returned");

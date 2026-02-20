@@ -2,15 +2,14 @@ import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework
 import { 
     IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, IAppInsightsCore, normalizeJsName,
     random32, mwcRandomSeed, newId, randomValue, mwcRandom32, isNullOrUndefined, SenderPostManager,
-    OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig, fieldRedaction,
-    isString
-} from "../../../src/index"
-import { AppInsightsCore } from "../../../src/core/AppInsightsCore";
-import { IChannelControls } from "../../../src/interfaces/ai/IChannelControls";
-import { _eInternalMessageId, LoggingSeverity } from "../../../src/enums/ai/LoggingEnums";
-import { _InternalLogMessage, DiagnosticLogger } from "../../../src/diagnostics/DiagnosticLogger";
-import { ActiveStatus } from "../../../src/enums/ai/InitActiveStatusEnum";
-import { createAsyncPromise, createAsyncRejectedPromise, createAsyncResolvedPromise, createPromise, createTimeoutPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
+    OnCompleteCallback, IPayloadData, _ISenderOnComplete, TransportType, _ISendPostMgrConfig, fieldRedaction
+} from "../../../../src/index"
+import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
+import { IChannelControls } from "../../../../src/interfaces/ai/IChannelControls";
+import { _eInternalMessageId, LoggingSeverity } from "../../../../src/enums/ai/LoggingEnums";
+import { _InternalLogMessage, DiagnosticLogger } from "../../../../src/diagnostics/DiagnosticLogger";
+import { ActiveStatus } from "../../../../src/enums/ai/InitActiveStatusEnum";
+import { createAsyncPromise, createAsyncRejectedPromise, createAsyncResolvedPromise, createTimeoutPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { setBypassLazyCache } from "@nevware21/ts-utils";
 
 const AIInternalMessagePrefix = "AITR_";

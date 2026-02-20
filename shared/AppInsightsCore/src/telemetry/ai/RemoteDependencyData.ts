@@ -5,7 +5,7 @@ import { FieldType } from "../../enums/ai/Enums";
 import { IDiagnosticLogger } from "../../interfaces/ai/IDiagnosticLogger";
 import { IRemoteDependencyData } from "../../interfaces/ai/contracts/IRemoteDependencyData";
 import { ISerializable } from "../../interfaces/ai/telemetry/ISerializable";
-import { msToTimeSpan } from "../../utils/HelperFuncsCore";
+import { msToTimeSpan } from "../../utils/HelperFuncs";
 import { AjaxHelperParseDependencyPath } from "../../utils/Util";
 import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl } from "./Common/DataSanitizer";
 import { RemoteDependencyDataType } from "./DataTypes";

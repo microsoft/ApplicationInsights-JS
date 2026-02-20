@@ -6,7 +6,8 @@ import { OTelTimeInput } from "../../IOTelHrTime";
 import { IOTelAttributes } from "../IOTelAttributes";
 
 /**
- * Options for creating a span.
+ * Provides an OpenTelemetry like Interface for the Open Telemetry Api (1.9.0) SpanOptions
+ * type. Where SpanOptions are options that can be used to configure a span.
  */
 export interface IOTelSpanOptions {
     /**

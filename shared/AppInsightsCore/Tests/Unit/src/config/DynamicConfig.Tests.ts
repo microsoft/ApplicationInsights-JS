@@ -1,21 +1,21 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { eLoggingSeverity, _eInternalMessageId, LoggingSeverity, _InternalMessageId } from "../../../src/enums/ai/LoggingEnums";
-import { _InternalLogMessage } from "../../../src/diagnostics/DiagnosticLogger";
-import { IConfigDefaults } from "../../../src/interfaces/config/IConfigDefaults";
-import { IConfiguration } from "../../../src/interfaces/ai/IConfiguration";
-import { blockDynamicConversion, forceDynamicConversion, getDynamicConfigHandler } from "../../../src/config/DynamicSupport";
-import { createDynamicConfig, onConfigChange } from "../../../src/config/DynamicConfig";
+import { eLoggingSeverity, _eInternalMessageId, LoggingSeverity, _InternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
+import { _InternalLogMessage } from "../../../../src/diagnostics/DiagnosticLogger";
+import { IConfigDefaults } from "../../../../src/interfaces/config/IConfigDefaults";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+import { blockDynamicConversion, forceDynamicConversion, getDynamicConfigHandler } from "../../../../src/config/DynamicSupport";
+import { createDynamicConfig, onConfigChange } from "../../../../src/config/DynamicConfig";
 import { arrForEach, dumpObj, isArray, isFunction, objForEachKey, objKeys, isPlainObject, objHasOwn, objDeepFreeze, objDefineProps, strContains } from "@nevware21/ts-utils";
-import { IAppInsightsCore } from "../../../src/interfaces/ai/IAppInsightsCore";
-import { INotificationManager } from "../../../src/interfaces/ai/INotificationManager";
-import { IPerfManager } from "../../../src/interfaces/ai/IPerfManager";
-import { AppInsightsCore, DiagnosticLogger, IDiagnosticLogger, IProcessTelemetryContext } from "../../../src/index";
-import { ITelemetryItem } from "../../../src/interfaces/ai/ITelemetryItem";
-import { ITelemetryPluginChain } from "../../../src/interfaces/ai/ITelemetryPluginChain";
-import { ITelemetryPlugin } from "../../../src/interfaces/ai/ITelemetryPlugin";
-import { IChannelControls } from "../../../src/interfaces/ai/IChannelControls";
-import { TestPlugin, TestSamplingPlugin, TrackPlugin } from "./TestPlugins";
-import { STR_CHANNELS, STR_CREATE_PERF_MGR, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE } from "../../../src/constants/InternalConstants";
+import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
+import { INotificationManager } from "../../../../src/interfaces/ai/INotificationManager";
+import { IPerfManager } from "../../../../src/interfaces/ai/IPerfManager";
+import { AppInsightsCore, DiagnosticLogger, IDiagnosticLogger, IProcessTelemetryContext } from "../../../../src/index";
+import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
+import { ITelemetryPluginChain } from "../../../../src/interfaces/ai/ITelemetryPluginChain";
+import { ITelemetryPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
+import { IChannelControls } from "../../../../src/interfaces/ai/IChannelControls";
+import { TestPlugin, TestSamplingPlugin, TrackPlugin } from "../ai/TestPlugins";
+import { STR_CHANNELS, STR_CREATE_PERF_MGR, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE } from "../../../../src/constants/InternalConstants";
 
 const coreDefaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     cookieCfg: {},

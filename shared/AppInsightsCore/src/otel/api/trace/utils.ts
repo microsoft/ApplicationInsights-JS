@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { doAwait, doFinally } from "@nevware21/ts-async";
 import { arrSlice, fnApply, isFunction, isObject, isPromiseLike } from "@nevware21/ts-utils";
 import { createDistributedTraceContext, isDistributedTraceContext } from "../../../core/TelemetryHelpers";
@@ -9,6 +12,7 @@ import { IDistributedTraceContext, IDistributedTraceInit } from "../../../interf
 import { ISpanScope, ITraceHost } from "../../../interfaces/ai/ITraceProvider";
 import { IOTelApi } from "../../../interfaces/otel/IOTelApi";
 import { ITraceCfg } from "../../../interfaces/otel/config/IOTelTraceCfg";
+import { IOTelSpanContext } from "../../../interfaces/otel/trace/IOTelSpanContext";
 import { IOTelSpanCtx } from "../../../interfaces/otel/trace/IOTelSpanCtx";
 import { IOTelSpanOptions } from "../../../interfaces/otel/trace/IOTelSpanOptions";
 import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
@@ -243,7 +247,7 @@ export function startActiveSpan<T extends ITraceHost, F extends (this: ThisParam
  * @return true if this {@link IDistributedTraceContext} is valid.
  */
 /*#__NO_SIDE_EFFECTS__*/
-export function isSpanContextValid(spanContext: IDistributedTraceContext | IDistributedTraceInit): boolean {
+export function isSpanContextValid(spanContext: IDistributedTraceContext | IDistributedTraceInit | IOTelSpanContext): boolean {
     return spanContext ? (isValidTraceId(spanContext.traceId) && isValidSpanId(spanContext.spanId)) : false;
 }
   
@@ -253,7 +257,7 @@ export function isSpanContextValid(spanContext: IDistributedTraceContext | IDist
  * @param spanContext - span context to be wrapped
  * @returns a new non-recording {@link IReadableSpan} with the provided context
  */
-export function wrapSpanContext(otelApi: IOTelApi, spanContext: IDistributedTraceContext | IDistributedTraceInit): IReadableSpan {
+export function wrapSpanContext(otelApi: IOTelApi, spanContext: IDistributedTraceContext | IDistributedTraceInit | IOTelSpanContext): IReadableSpan {
     if (!isDistributedTraceContext(spanContext)) {
         spanContext = createDistributedTraceContext(spanContext);
     }
@@ -270,11 +274,11 @@ export function wrapSpanContext(otelApi: IOTelApi, spanContext: IDistributedTrac
  * @param spanContext - The Span context to use for the span
  * @returns A new span that is marked as a non-recording span
  */
-export function createNonRecordingSpan(otelApi: IOTelApi, spanName: string, spanContext: IDistributedTraceContext): IReadableSpan {
+export function createNonRecordingSpan(otelApi: IOTelApi, spanName: string, spanContext: IDistributedTraceContext | IDistributedTraceInit | IOTelSpanContext): IReadableSpan {
     // Return a non-recording span
     let spanCtx: IOTelSpanCtx = {
         api: otelApi,
-        spanContext: spanContext,
+        spanContext: isDistributedTraceContext(spanContext) ? spanContext : createDistributedTraceContext(spanContext),
         isRecording: false
     };
     

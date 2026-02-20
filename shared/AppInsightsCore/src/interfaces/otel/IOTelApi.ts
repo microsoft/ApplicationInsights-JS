@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { ITraceHost } from "../ai/ITraceProvider";
 import { IOTelConfig } from "./config/IOTelConfig";
 import { ITraceApi } from "./trace/IOTelTraceApi";

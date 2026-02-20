@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { OTelException } from "../../IException";
 import { OTelTimeInput } from "../../IOTelHrTime";
 import { IDistributedTraceContext } from "../../ai/IDistributedTraceContext";
 import { IOTelAttributes, OTelAttributeValue } from "../IOTelAttributes";
-import { OTelException } from "../IOTelException";
 import { IAttributeContainer } from "../attribute/IAttributeContainer";
 import { IOTelSpanStatus } from "./IOTelSpanStatus";
 

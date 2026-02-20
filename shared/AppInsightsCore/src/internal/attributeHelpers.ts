@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { arrForEach, arrSlice, isArray, isObject, isString, objForEachKey } from "@nevware21/ts-utils";
 import { IOTelApi } from "../interfaces/otel/IOTelApi";
 import { IOTelAttributes, OTelAttributeValue } from "../interfaces/otel/IOTelAttributes";

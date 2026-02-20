@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { arrForEach, isArray, isNullOrUndefined, isString, strIndexOf, strLeft, strTrim } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { eW3CTraceFlags } from "../enums/W3CTraceFlags";
@@ -52,7 +55,6 @@ function _formatFlags(value: number): string {
  */
 /*#__NO_SIDE_EFFECTS__*/
 export function createTraceParent(traceId?: string, spanId?: string, flags?: number, version?: string): ITraceParent {
-
     return {
         version: _isValid(version, 2, INVALID_VERSION) ? version : DEFAULT_VERSION,
         traceId: isValidTraceId(traceId) ? traceId : generateW3CId(),
@@ -105,7 +107,7 @@ export function parseTraceParent(value: string, selectIdx?: number): ITraceParen
         traceId: (match[2] || STR_EMPTY).toLowerCase(),
         spanId: (match[3] || STR_EMPTY).toLowerCase(),
         traceFlags: parseInt(match[4], 16)
-    }
+    };
 }
 
 /**
@@ -225,7 +227,7 @@ export interface scriptsInfo {
  * @param doc - The document to search for script tags
  * @returns
  */
-export function findAllScripts(doc: any) {
+export function findAllScripts(doc: any): scriptsInfo[] {
     let scripts = doc.getElementsByTagName("script");
     let result: scriptsInfo[] = [];
     arrForEach(scripts, (script: any) => {
@@ -251,5 +253,6 @@ export function findAllScripts(doc: any) {
             result.push(info);
         }
     });
+
     return result;
 }
