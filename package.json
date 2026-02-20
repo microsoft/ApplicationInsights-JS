@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-web",
     "description": "Microsoft Application Insights JavaScript SDK",
-    "version": "3.3.11",
+    "version": "3.4.0-beta",
     "keywords": [
         "browser performance monitoring",
         "script errors",
@@ -82,5 +82,8 @@
     "overrides": {
         "glob": "7.2.3",
         "form-data": "^2.5.5"
+    },
+    "publishConfig": {
+        "tag": "beta3"
     }
 }

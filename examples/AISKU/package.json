@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-example-aisku",
     "author": "Microsoft Application Insights Team",
-    "version": "3.3.11",
+    "version": "3.4.0-beta",
     "description": "Microsoft Application Insights AISKU Example",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "keywords": [
@@ -52,8 +52,11 @@
     "dependencies": {
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/dynamicproto-js": "^2.0.3",
-        "@microsoft/applicationinsights-web": "3.3.11",
-        "@microsoft/applicationinsights-core-js": "3.3.11",
+        "@microsoft/applicationinsights-web": "3.4.0-beta",
+        "@microsoft/applicationinsights-core-js": "3.4.0-beta",
         "@nevware21/ts-utils": ">= 0.12.6 < 2.x"
+    },
+    "publishConfig": {
+        "tag": "beta3"
     }
 }
