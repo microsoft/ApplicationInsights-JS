@@ -94,7 +94,7 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
 
     function _getTelType(item: ITelemetryItem): string {
         var bt = item.baseType;
-        return (bt && _typeMap[bt]) || "CUSTOM_EVENT";
+        return (bt && objHasOwn(_typeMap, bt) && _typeMap[bt]) || "CUSTOM_EVENT";
     }
 
     function _isSdkStatsMetric(item: ITelemetryItem): boolean {
@@ -113,10 +113,13 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
     }
 
     function _incDropped(items: ITelemetryItem[], code: string) {
-        if (!_droppedCounts[code]) {
-            _droppedCounts[code] = {};
+        var bucket: { [telType: string]: number };
+        if (objHasOwn(_droppedCounts, code)) {
+            bucket = _droppedCounts[code];
+        } else {
+            bucket = {};
+            _droppedCounts[code] = bucket;
         }
-        var bucket = _droppedCounts[code];
         for (var i = 0; i < items.length; i++) {
             if (!_isSdkStatsMetric(items[i])) {
                 var t = _getTelType(items[i]);
@@ -127,10 +130,13 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
     }
 
     function _incRetry(items: ITelemetryItem[], code: string) {
-        if (!_retryCounts[code]) {
-            _retryCounts[code] = {};
+        var bucket: { [telType: string]: number };
+        if (objHasOwn(_retryCounts, code)) {
+            bucket = _retryCounts[code];
+        } else {
+            bucket = {};
+            _retryCounts[code] = bucket;
         }
-        var bucket = _retryCounts[code];
         for (var i = 0; i < items.length; i++) {
             if (!_isSdkStatsMetric(items[i])) {
                 var t = _getTelType(items[i]);
