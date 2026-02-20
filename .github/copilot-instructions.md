@@ -402,6 +402,12 @@ const config: IConfiguration = {
 - Bundle size monitoring
 - Browser compatibility verification
 
+## Related Context Documents
+
+When working on specific features, include these additional context documents:
+
+- **OpenTelemetry Web SDK**: [shared/otel-core/CONTEXT.md](../shared/otel-core/CONTEXT.md) - Complete implementation context for the OTel Web SDK including architecture requirements, patterns, and validation criteria
+
 ---
 
 *This document helps GitHub Copilot understand the unique patterns, architecture, and requirements of the Application Insights JavaScript SDK project.*
