@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { ITimerHandler, objHasOwn, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, objCreate, objHasOwn, scheduleTimeout } from "@nevware21/ts-utils";
 import { INotificationListener } from "../interfaces/ai/INotificationListener";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 
@@ -80,9 +80,9 @@ export interface ISdkStatsNotifCbk extends INotificationListener {
  */
 /*#__NO_SIDE_EFFECTS__*/
 export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk {
-    var _successCounts: { [telType: string]: number } = {};
-    var _droppedCounts: { [code: string]: { [telType: string]: number } } = {};
-    var _retryCounts: { [code: string]: { [telType: string]: number } } = {};
+    var _successCounts: { [telType: string]: number } = objCreate(null);
+    var _droppedCounts: { [code: string]: { [telType: string]: number } } = objCreate(null);
+    var _retryCounts: { [code: string]: { [telType: string]: number } } = objCreate(null);
     var _timer: ITimerHandler;
     var _interval = cfg.int || FLUSH_INTERVAL;
 
@@ -117,7 +117,7 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
         if (objHasOwn(_droppedCounts, code)) {
             bucket = _droppedCounts[code];
         } else {
-            bucket = {};
+            bucket = objCreate(null);
             _droppedCounts[code] = bucket;
         }
         for (var i = 0; i < items.length; i++) {
@@ -134,7 +134,7 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
         if (objHasOwn(_retryCounts, code)) {
             bucket = _retryCounts[code];
         } else {
-            bucket = {};
+            bucket = objCreate(null);
             _retryCounts[code] = bucket;
         }
         for (var i = 0; i < items.length; i++) {
@@ -233,9 +233,9 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
         }
 
         // Reset accumulators
-        _successCounts = {};
-        _droppedCounts = {};
-        _retryCounts = {};
+        _successCounts = objCreate(null);
+        _droppedCounts = objCreate(null);
+        _retryCounts = objCreate(null);
     }
 
     return {
