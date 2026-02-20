@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { ICachedValue, fnBind, getDeferred } from "@nevware21/ts-utils";
 import { UNDEFINED_VALUE } from "../../../constants/InternalConstants";
 import { IDistributedTraceContext } from "../../../interfaces/ai/IDistributedTraceContext";

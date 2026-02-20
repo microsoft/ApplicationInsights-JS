@@ -1,16 +1,16 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { _eInternalMessageId } from "../../../src/enums/ai/LoggingEnums";
-import { _InternalLogMessage } from "../../../src/diagnostics/DiagnosticLogger";
-import { ITelemetryItem } from "../../../src/interfaces/ai/ITelemetryItem";
-import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../../../src/interfaces/ai/IProcessTelemetryContext";
-import { TelemetryUpdateReason } from "../../../src/enums/ai/TelemetryUpdateReason";
-import { IConfiguration } from "../../../src/interfaces/ai/IConfiguration";
-import { IPlugin, ITelemetryPlugin } from "../../../src/interfaces/ai/ITelemetryPlugin";
-import { BaseTelemetryPlugin } from "../../../src/core/BaseTelemetryPlugin";
-import { IAppInsightsCore } from "../../../src/interfaces/ai/IAppInsightsCore";
-import { ITelemetryPluginChain } from "../../../src/interfaces/ai/ITelemetryPluginChain";
-import { ITelemetryUpdateState } from "../../../src/interfaces/ai/ITelemetryUpdateState";
-import { IChannelControls } from "../../../src/interfaces/ai/IChannelControls";
+import { _eInternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
+import { _InternalLogMessage } from "../../../../src/diagnostics/DiagnosticLogger";
+import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
+import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../../../../src/interfaces/ai/IProcessTelemetryContext";
+import { TelemetryUpdateReason } from "../../../../src/enums/ai/TelemetryUpdateReason";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+import { IPlugin, ITelemetryPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
+import { BaseTelemetryPlugin } from "../../../../src/core/BaseTelemetryPlugin";
+import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
+import { ITelemetryPluginChain } from "../../../../src/interfaces/ai/ITelemetryPluginChain";
+import { ITelemetryUpdateState } from "../../../../src/interfaces/ai/ITelemetryUpdateState";
+import { IChannelControls } from "../../../../src/interfaces/ai/IChannelControls";
 
 
 export class TestPlugin implements IPlugin {

@@ -1,5 +1,5 @@
 {
-    "version": "1.0.2",
+    "version": "1.0.6",
     "enabled": true,
     "featureOptIn": {
         "iKeyUsage": {
@@ -12,6 +12,9 @@
                 "throttleMgrCfg.109.disabled": true,
                 "throttleMgrCfg.106.disabled": true
             }
+        },
+        "zipPayload": {
+            "mode": 3
         },
         "CdnUsage": {
             "mode": 4,

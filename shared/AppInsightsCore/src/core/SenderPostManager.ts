@@ -5,6 +5,7 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import { AwaitResponse, IPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { arrForEach, dumpObj, getInst, getNavigator, getWindow, isFunction, isString, objKeys } from "@nevware21/ts-utils";
 import { DisabledPropertyName } from "../constants/Constants";
+import { STR_EMPTY } from "../constants/InternalConstants";
 import { _throwInternal, _warnToConsole } from "../diagnostics/DiagnosticLogger";
 import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
 import { SendRequestReason, TransportType } from "../enums/ai/SendRequestReason";
@@ -20,7 +21,6 @@ import { _noopVoid } from "../internal/noopHelpers";
 import { getLocation, isBeaconsSupported, isFetchSupported, isXhrSupported, useXDomainRequest } from "../utils/EnvUtils";
 import { _getAllResponseHeaders, formatErrorMessageXdr, formatErrorMessageXhr, getResponseText, openXhr } from "../utils/HelperFuncs";
 
-const STR_EMPTY = "";
 const STR_NO_RESPONSE_BODY = "NoResponseBody";
 const _noResponseQs =  "&" + STR_NO_RESPONSE_BODY + "=true";
 const STR_POST_METHOD = "POST";
@@ -31,7 +31,10 @@ declare var XDomainRequest: {
 
 
 /**
- * Manager for SendPost functions
+ * This Internal component
+ * Manager SendPost functions
+ * SendPostManger
+ * @internal for internal use only
  * @since 3.0.0
  */
 export class SenderPostManager {
@@ -469,7 +472,7 @@ export class SenderPostManager {
                    
                     _syncFetchPayload += batchLength;
                     if (_isOneDs) {
-                        if (payload["_sendReason"] === SendRequestReason.Unload) {
+                        if ((payload as any)["_sendReason"] === SendRequestReason.Unload) {
                             // As a sync request (during unload), it is unlikely that we will get a chance to process the response so
                             // just like beacon send assume that the events have been accepted and processed
                             ignoreResponse = true;
@@ -486,7 +489,7 @@ export class SenderPostManager {
                 const request = new Request(endPointUrl, init);
                 try {
                     // Also try and tag the request (just in case the value in init is not copied over)
-                    request[DisabledPropertyName] = true;
+                    (request as any)[DisabledPropertyName] = true;
                 } catch(e) {
                     // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
                     // cause the request to fail and we no telemetry would be sent
@@ -653,7 +656,7 @@ export class SenderPostManager {
         
                 // XDomainRequest requires the same protocol as the hosting page.
                 // If the protocol doesn't match, we can't send the telemetry :(.
-                const hostingProtocol = _window && _window.location && _window.location.protocol || "";
+                const hostingProtocol = _window && _window.location && _window.location.protocol || STR_EMPTY;
                 let endpoint = payload.urlString;
                 if (!endpoint) {
                     _onNoPayloadUrl(oncomplete);
@@ -669,7 +672,7 @@ export class SenderPostManager {
                     return;
                 }
         
-                const endpointUrl = _isOneDs? endpoint : endpoint.replace(/^(https?:)/, "");
+                const endpointUrl = _isOneDs? endpoint : endpoint.replace(/^(https?:)/, STR_EMPTY);
                 xdr.open(STR_POST_METHOD, endpointUrl);
                 if (payload.timeout) {
                     xdr.timeout = payload.timeout;

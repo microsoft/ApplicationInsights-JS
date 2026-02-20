@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { CustomErrorConstructor, createCustomError } from "@nevware21/ts-utils";
 
 let otelErrorType: OpenTelemetryErrorConstructor;

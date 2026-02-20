@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 import { getDocument, isFunction } from "@nevware21/ts-utils";
 
 export function createDomEvent(eventName: string): Event {

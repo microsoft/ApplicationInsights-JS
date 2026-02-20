@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 export { IConfiguration } from "./interfaces/ai/IConfiguration";
 export { IChannelControls, MinChannelPriorty, IInternalOfflineSupport } from "./interfaces/ai/IChannelControls";
 export { IChannelControlsHost } from "./interfaces/ai/IChannelControlsHost";
@@ -13,7 +14,7 @@ export { ITelemetryPluginChain } from "./interfaces/ai/ITelemetryPluginChain";
 export { IDiagnosticLogger } from "./interfaces/ai/IDiagnosticLogger";
 export { InstrumentorHooksCallback, IInstrumentHooksCallbacks, IInstrumentHooks, IInstrumentHook, IInstrumentCallDetails } from "./interfaces/ai/IInstrumentHooks";
 export { IUnloadableComponent } from "./interfaces/ai/IUnloadableComponent";
-export { IPayloadData, SendPOSTFunction, IXHROverride, OnCompleteCallback } from "./interfaces/ai/IXHROverride"
+export { IPayloadData, SendPOSTFunction, IXHROverride, OnCompleteCallback } from "./interfaces/ai/IXHROverride";
 export { IUnloadHook, ILegacyUnloadHook } from "./interfaces/ai/IUnloadHook";
 export { eEventsDiscardedReason, EventsDiscardedReason, eBatchDiscardedReason, BatchDiscardedReason } from "./enums/ai/EventsDiscardedReason";
 export { eDependencyTypes, DependencyTypes } from "./enums/ai/DependencyTypes";
@@ -21,7 +22,7 @@ export { SendRequestReason, TransportType } from "./enums/ai/SendRequestReason";
 //export { StatsType, eStatsType } from "./enums/ai/StatsType";
 export { TelemetryUpdateReason } from "./enums/ai/TelemetryUpdateReason";
 export { TelemetryUnloadReason } from "./enums/ai/TelemetryUnloadReason";
-export { eActiveStatus, ActiveStatus } from "./enums/ai/InitActiveStatusEnum"
+export { eActiveStatus, ActiveStatus } from "./enums/ai/InitActiveStatusEnum";
 export { throwAggregationError } from "./core/AggregationError";
 export { AppInsightsCore } from "./core/AppInsightsCore";
 export { BaseTelemetryPlugin } from "./core/BaseTelemetryPlugin";
@@ -32,7 +33,7 @@ export {
     normalizeJsName, toISOString, getExceptionName, strContains, setValue, getSetValue,
     proxyAssign, proxyFunctions, proxyFunctionAs, createClassFromInterface, optimizeObject,
     isNotUndefined, isNotNullOrUndefined, objExtend, isFeatureEnabled, getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports,
-    openXhr, _appendHeader, _getAllResponseHeaders, setObjStringTag, setProtoTypeName
+    openXhr, _appendHeader, _getAllResponseHeaders, setObjStringTag, setProtoTypeName, isTimeSpan
 } from "./utils/HelperFuncs";
 export { parseResponse } from "./core/ResponseHelpers";
 export { IXDomainRequest, IBackendResponse } from "./interfaces/ai/IXDomainRequest";
@@ -78,7 +79,7 @@ export { IPerfEvent } from "./interfaces/ai/IPerfEvent";
 export { IPerfManager, IPerfManagerProvider } from "./interfaces/ai/IPerfManager";
 export { PerfEvent, PerfManager, doPerf, getGblPerfMgr, setGblPerfMgr } from "./core/PerfManager";
 export { IFeatureOptInDetails, IFeatureOptIn } from "./interfaces/ai/IFeatureOptIn";
-export { FeatureOptInMode, CdnFeatureMode } from "./enums/ai/FeatureOptInEnums"
+export { FeatureOptInMode, CdnFeatureMode } from "./enums/ai/FeatureOptInEnums";
 export { safeGetLogger, DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole, _logInternalMessage } from "./diagnostics/DiagnosticLogger";
 export {
     createProcessTelemetryContext
@@ -92,18 +93,18 @@ export {
     createCookieMgr, safeGetCookieMgr, uaDisallowsSameSiteNone, areCookiesSupported
 } from "./core/CookieMgr";
 export { IDbgExtension } from "./interfaces/ai/IDbgExtension";
-export { getDebugListener, getDebugExt } from "./core/DbgExtensionUtils"
+export { getDebugListener, getDebugExt } from "./core/DbgExtensionUtils";
 export { TelemetryInitializerFunction, ITelemetryInitializerHandler, ITelemetryInitializerContainer } from "./interfaces/ai/ITelemetryInitializers";
 export { createUniqueNamespace } from "./utils/DataCacheHelper";
 export { UnloadHandler, IUnloadHandlerContainer, createUnloadHandlerContainer } from "./core/UnloadHandlerContainer";
-export { IUnloadHookContainer, createUnloadHookContainer,  _testHookMaxUnloadHooksCb } from "./core/UnloadHookContainer";
+export { IUnloadHookContainer, createUnloadHookContainer, _testHookMaxUnloadHooksCb } from "./core/UnloadHookContainer";
 export { ITelemetryUpdateState } from "./interfaces/ai/ITelemetryUpdateState";
 export { ITelemetryUnloadState } from "./interfaces/ai/ITelemetryUnloadState";
 export { IDistributedTraceContext, IDistributedTraceInit } from "./interfaces/ai/IDistributedTraceContext";
 export { ITraceParent } from "./interfaces/ai/ITraceParent";
 export {
     createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent,
-    findAllScripts
+    findAllScripts, INVALID_TRACE_ID, INVALID_SPAN_ID, scriptsInfo
 } from "./utils/TraceParent";
 
 // Dynamic Config definitions
@@ -120,17 +121,25 @@ export { eW3CTraceFlags } from "./enums/W3CTraceFlags";
 export { IW3cTraceState } from "./interfaces/ai/IW3cTraceState";
 export { createW3cTraceState, findW3cTraceState, isW3cTraceState, snapshotW3cTraceState } from "./telemetry/W3cTraceState";
 
+// ==========================================================================
+// OpenTelemetry exports
+// ==========================================================================
+
 // OpenTelemetry Trace support
 export { IOTelTraceState } from "./interfaces/otel/trace/IOTelTraceState";
 export { IOTelSpan } from "./interfaces/otel/trace/IOTelSpan";
 export { IOTelTracer } from "./interfaces/otel/trace/IOTelTracer";
-export { IOTelTracerProvider, IOTelTracerOptions } from "./interfaces/otel/trace/IOTelTracerProvider";
+export { IOTelTracerProvider } from "./interfaces/otel/trace/IOTelTracerProvider";
+export { IOTelTracerOptions } from "./interfaces/otel/trace/IOTelTracerOptions";
 export { ITraceProvider, ITraceHost, ISpanScope } from "./interfaces/ai/ITraceProvider";
 export { IOTelSpanOptions } from "./interfaces/otel/trace/IOTelSpanOptions";
-export { createOTelTraceState } from "./otel/api/trace/traceState";
+export { createOTelTraceState, isOTelTraceState } from "./otel/api/trace/traceState";
 export { createSpan } from "./otel/api/trace/span";
 export { createTraceProvider } from "./otel/api/trace/traceProvider";
-export { isSpanContextValid, wrapSpanContext, isReadableSpan, suppressTracing, unsuppressTracing, isTracingSuppressed, useSpan, withSpan, startActiveSpan } from "./otel/api/trace/utils";
+export {
+    createNonRecordingSpan, isSpanContextValid,
+    wrapSpanContext, isReadableSpan, isTracingSuppressed, suppressTracing, unsuppressTracing, useSpan, withSpan, startActiveSpan
+} from "./otel/api/trace/utils";
 
 export {
     AzureMonitorSampleRate, ApplicationInsightsCustomEventName, MicrosoftClientIp, ApplicationInsightsMessageName,
@@ -159,7 +168,7 @@ export {
 export { IOTelApi } from "./interfaces/otel/IOTelApi";
 export { IOTelApiCtx } from "./interfaces/otel/IOTelApiCtx";
 export { IOTelAttributes, OTelAttributeValue, ExtendedOTelAttributeValue } from "./interfaces/otel/IOTelAttributes";
-export { OTelException } from "./interfaces/otel/IOTelException";
+export { OTelException, IOTelExceptionWithCode, IOTelExceptionWithMessage, IOTelExceptionWithName } from "./interfaces/IException";
 export { IOTelHrTime, OTelTimeInput } from "./interfaces/IOTelHrTime";
 export { createOTelApi } from "./otel/api/OTelApi";
 
@@ -168,6 +177,7 @@ export { ITraceApi } from "./interfaces/otel/trace/IOTelTraceApi";
 export { IOTelSpanCtx } from "./interfaces/otel/trace/IOTelSpanCtx";
 export { IOTelSpanStatus } from "./interfaces/otel/trace/IOTelSpanStatus";
 export { IReadableSpan } from "./interfaces/otel/trace/IReadableSpan";
+export { IOTelSpanContext } from "./interfaces/otel/trace/IOTelSpanContext";
 
 // OpenTelemetry Configuration Interfaces
 export { IOTelConfig } from "./interfaces/otel/config/IOTelConfig";
@@ -188,7 +198,7 @@ export { eOTelSpanStatusCode, OTelSpanStatusCode } from "./enums/otel/OTelSpanSt
 // OpenTelemetry Helper Utilities
 export {
     hrTime, hrTimeToTimeStamp, hrTimeDuration, hrTimeToMilliseconds, timeInputToHrTime, millisToHrTime, hrTimeToNanoseconds,
-    addHrTimes, hrTimeToMicroseconds, zeroHrTime, nanosToHrTime, isTimeInput, isTimeInputHrTime, isTimeSpan
+    addHrTimes, hrTimeToMicroseconds, zeroHrTime, nanosToHrTime, isTimeInput, isTimeInputHrTime
 } from "./internal/timeHelpers";
 export { isAttributeValue, isAttributeKey, sanitizeAttributes } from "./internal/attributeHelpers";
 export {
@@ -221,7 +231,7 @@ export {
 
 export { ThrottleMgr } from "./diagnostics/ThrottleMgr";
 export { parseConnectionString, ConnectionStringParser } from "./telemetry/ConnectionStringParser";
-export type { ConnectionString } from "./interfaces/ai/ConnectionString";
+export { ConnectionString } from "./interfaces/ai/ConnectionString";
 export { FieldType } from "./enums/ai/Enums";
 export { IRequestHeaders, RequestHeaders, eRequestHeaders } from "./telemetry/RequestResponseHeaders";
 export {
@@ -324,9 +334,10 @@ export { ITelemetryTrace } from "./interfaces/ai/context/ITelemetryTrace";
 
 // Enums
 export { eDistributedTracingModes, DistributedTracingModes, EventPersistence } from "./enums/ai/Enums";
+export { eTraceHeadersMode } from "./enums/ai/TraceHeadersMode";
 
 // Helper functions
-export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./utils/HelperFuncsCore";
+export { stringToBoolOrDefault, msToTimeSpan, getExtensionByName, isCrossOriginError } from "./utils/HelperFuncs";
 export { createDomEvent } from "./utils/DomHelperFuncs";
 
 // Storage helpers

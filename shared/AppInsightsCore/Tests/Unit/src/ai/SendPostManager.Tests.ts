@@ -1,8 +1,8 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { _eInternalMessageId } from "../../../src/enums/ai/LoggingEnums";
-import { _InternalLogMessage } from "../../../src/diagnostics/DiagnosticLogger";
-import { SenderPostManager } from "../../../src/core/SenderPostManager";
-import { IPayloadData } from "../../../src/interfaces/ai/IXHROverride";
+import { _eInternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
+import { _InternalLogMessage } from "../../../../src/diagnostics/DiagnosticLogger";
+import { SenderPostManager } from "../../../../src/core/SenderPostManager";
+import { IPayloadData } from "../../../../src/interfaces/ai/IXHROverride";
 import { getInst, isFunction, mathRandom } from "@nevware21/ts-utils";
 import { createPromise, doAwaitResponse } from "@nevware21/ts-async";
 

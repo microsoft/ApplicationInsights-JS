@@ -3,13 +3,14 @@
 import { ObjAssign, ObjClass, ObjProto } from "@microsoft/applicationinsights-shims";
 import {
     ICachedValue, WellKnownSymbols, arrForEach, asString as asString21, createCachedValue, getKnownSymbol, isArray, isBoolean, isError,
-    isFunction, isNullOrUndefined, isNumber, isObject, isPlainObject, isString, isUndefined, newSymbol, objCreate, objDeepFreeze, objDefine,
-    objForEachKey, objGetPrototypeOf, objHasOwn, objSetPrototypeOf, safe, strIndexOf, strTrim
+    isFunction, isNullOrUndefined, isNumber, isObject, isPlainObject, isString, isUndefined, mathFloor, mathRound, newSymbol, objCreate,
+    objDeepFreeze, objDefine, objForEachKey, objGetPrototypeOf, objHasOwn, objSetPrototypeOf, safe, strIndexOf, strSplit, strTrim
 } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { FeatureOptInMode } from "../enums/ai/FeatureOptInEnums";
 import { TransportType } from "../enums/ai/SendRequestReason";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { IPlugin } from "../interfaces/ai/ITelemetryPlugin";
 import { IXDomainRequest } from "../interfaces/ai/IXDomainRequest";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
@@ -644,4 +645,95 @@ export function _getAllResponseHeaders(xhr: XMLHttpRequest, isOneDs?: boolean) {
     }
 
     return theHeaders;
+}
+
+/*#__NO_SIDE_EFFECTS__*/
+export function stringToBoolOrDefault(str: any, defaultValue = false): boolean {
+    if (str === undefined || str === null) {
+        return defaultValue;
+    }
+
+    return str.toString().toLowerCase() === "true";
+}
+
+/**
+ * Convert ms to c# time span format
+ */
+/*#__NO_SIDE_EFFECTS__*/
+export function msToTimeSpan(totalms: number | string): string {
+    if (isTimeSpan(totalms)) {
+        // Already in time span format
+        return totalms;
+    }
+
+    if (isNaN(totalms) || totalms < 0) {
+        totalms = 0;
+    }
+
+    totalms = mathRound(totalms);
+
+    let ms = STR_EMPTY + totalms % 1000;
+    let sec = STR_EMPTY + mathFloor(totalms / 1000) % 60;
+    let min = STR_EMPTY + mathFloor(totalms / (1000 * 60)) % 60;
+    let hour = STR_EMPTY + mathFloor(totalms / (1000 * 60 * 60)) % 24;
+    const days = mathFloor(totalms / (1000 * 60 * 60 * 24));
+
+    ms = ms.length === 1 ? "00" + ms : ms.length === 2 ? "0" + ms : ms;
+    sec = sec.length < 2 ? "0" + sec : sec;
+    min = min.length < 2 ? "0" + min : min;
+    hour = hour.length < 2 ? "0" + hour : hour;
+
+    return (days > 0 ? days + "." : STR_EMPTY) + hour + ":" + min + ":" + sec + "." + ms;
+}
+
+/*#__NO_SIDE_EFFECTS__*/
+export function getExtensionByName(extensions: IPlugin[], identifier: string): IPlugin | null {
+    let extension: IPlugin = null;
+    arrForEach(extensions, (value) => {
+        if (value.identifier === identifier) {
+            extension = value;
+            return -1;
+        }
+    });
+
+    return extension;
+}
+
+/*#__NO_SIDE_EFFECTS__*/
+export function isCrossOriginError(message: string|Event, url: string, lineNumber: number, columnNumber: number, error: Error | Event): boolean {
+    return !error && isString(message) && (message === "Script error." || message === "Script error");
+}
+
+/**
+ * A helper method to determine whether the provided value is in a ISO time span format (DD.HH:MM:SS.MMMMMM)
+ * @param value - The value to check
+ * @returns True if the value is in a time span format; false otherwise
+ */
+/*#__NO_SIDE_EFFECTS__*/
+export function isTimeSpan(value: any): value is string {
+    let result = false;
+
+    if (isString(value)) {
+        const parts = strSplit(value, ":");
+        if (parts.length === 3) {
+            // Looks like a candidate, now validate each part
+            const daysHours = strSplit(parts[0], ".");
+            if (daysHours.length === 2) {
+                result = !isNaN(parseInt(daysHours[0] || "0")) && !isNaN(parseInt(daysHours[1] || "0"));
+            } else {
+                result = !isNaN(parseInt(daysHours[0] || "0"));
+            }
+
+            result = result && !isNaN(parseInt(parts[1] || "0"));
+
+            const secondsParts = strSplit(parts[2], ".");
+            if (secondsParts.length === 2) {
+                result = result && !isNaN(parseInt(secondsParts[0] || "0")) && !isNaN(parseInt(secondsParts[1] || "0"));
+            } else {
+                result = result && !isNaN(parseInt(secondsParts[0] || "0"));
+            }
+        }
+    }
+
+    return result;
 }

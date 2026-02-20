@@ -128,12 +128,6 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
         // New configuration variables for trace context management
         let _routeTraceStrategy: eRouteTraceStrategy;
 
-        // Counts number of trackAjax invocations.
-        // By default we only monitor X ajax call per view to avoid too much load.
-        // Default value is set in config.
-        // This counter keeps increasing even after the limit is reached.
-        let _trackAjaxAttempts: number = 0;
-    
         // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
         let _prevUri: string; // Assigned in the constructor
         let _currUri: string;
@@ -153,7 +147,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             _self.processTelemetry = (env: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 _self.processNext(env, itemCtx);
             };
-        
+
             _self.trackEvent = (event: IEventTelemetry, customProperties?: ICustomProperties): void => {
                 try {
                     let telemetryItem = createTelemetryItem<IEventTelemetry>(
@@ -218,7 +212,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         TraceEnvelopeType,
                         _self.diagLog(),
                         customProperties);
-        
+
                     _self.core.track(telemetryItem);
                 } catch (e) {
                     _throwInternal(eLoggingSeverity.WARNING,
@@ -247,7 +241,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         _self.diagLog(),
                         customProperties
                     );
-        
+
                     _self.core.track(telemetryItem);
                 } catch (e) {
                     _throwInternal(eLoggingSeverity.CRITICAL,
@@ -269,7 +263,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     if (_self.core && _self.core.config) {
                         inPv.uri = fieldRedaction(inPv.uri, _self.core.config);
                     }
-                    _pageViewManager.trackPageView(inPv, {...inPv.properties, ...inPv.measurements, ...customProperties});
+                    _pageViewManager.trackPageView(inPv, { ...inPv.properties, ...inPv.measurements, ...customProperties });
 
                     if (_autoTrackPageVisitTime) {
                         _pageVisitTimeManager.trackPreviousPageVisit(inPv.name, inPv.uri);
@@ -328,7 +322,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _self.diagLog(),
                     properties,
                     systemProperties);
-        
+
                 _self.core.track(telemetryItem);
             };
 
@@ -363,7 +357,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         let doc = getDocument();
                         name = doc && doc.title || "";
                     }
-        
+
                     _pageTracking.start(name);
                 } catch (e) {
                     _throwInternal(
@@ -388,7 +382,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         let doc = getDocument();
                         name = doc && doc.title || "";
                     }
-        
+
                     if (typeof url !== "string") {
                         let loc = getLocation();
                         url = loc && loc.href || "";
@@ -397,7 +391,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         url = fieldRedaction(url, _self.core.config);
                     }
                     _pageTracking.stop(name, url, properties, measurement);
-        
+
                     if (_autoTrackPageVisitTime) {
                         _pageVisitTimeManager.trackPreviousPageVisit(name, url);
                     }
@@ -470,7 +464,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 if (exception && !exception.exception && (exception as any).error) {
                     exception.exception = (exception as any).error;
                 }
-        
+
                 try {
                     _self.sendExceptionInternal(exception, customProperties);
                 } catch (e) {
@@ -507,7 +501,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         columnNumber: exception.columnNumber || 0,
                         message: exception.message
                     };
-    
+
                     if (isCrossOriginError(exception.message, exception.url, exception.lineNumber, exception.columnNumber, exception.error)) {
                         _sendCORSException(Exception.CreateAutoException(
                             "Script error: The browser's same-origin policy prevents us from getting the details of this exception. Consider using the 'crossorigin' attribute.",
@@ -527,7 +521,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     }
                 } catch (e) {
                     const errorString = error ? (error.name + ", " + error.message) : "null";
-        
+
                     _throwInternal(
                         eLoggingSeverity.CRITICAL,
                         _eInternalMessageId.ExceptionWhileLoggingError,
@@ -552,7 +546,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                 _preInitTelemetryInitializers.push(telemetryInitializer);
             };
 
-            _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
+            _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) => {
                 if (_self.isInitialized()) {
                     return;
                 }
@@ -568,12 +562,12 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                         arrForEach(_preInitTelemetryInitializers, (initializer) => {
                             core.addTelemetryInitializer(initializer);
                         });
-    
+
                         _preInitTelemetryInitializers = null;
                     }
 
                     _populateDefaults(config);
-    
+
                     _pageViewPerformanceManager = createPageViewPerformanceManager(_self.core);
                     _pageViewManager = createPageViewManager(_self, _extConfig.overridePageViewDuration, _self.core, _pageViewPerformanceManager);
                     _pageVisitTimeManager = createPageVisitTimeManager(_self.diagLog(), (pageName, pageUrl, pageVisitTime) => trackPageVisitTime(pageName, pageUrl, pageVisitTime));
@@ -584,19 +578,19 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                             if (!properties) {
                                 properties = {};
                             }
-    
+
                             if (!measurements) {
                                 measurements = {};
                             }
-    
+
                             properties.duration = duration.toString();
                             _self.trackEvent({ name, properties, measurements } as IEventTelemetry);
                         }
-    
+
                     // initialize page view timing
                     _pageTracking = createTiming(_self.diagLog(), "trackPageView");
                     _pageTracking.action = (name, url, duration, properties, measurements) => {
-    
+
                         // duration must be a custom property in order for the collector to extract it
                         if (isNullOrUndefined(properties)) {
                             properties = {};

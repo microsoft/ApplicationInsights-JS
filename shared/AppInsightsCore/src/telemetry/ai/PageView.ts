@@ -6,7 +6,7 @@ import { FieldType } from "../../enums/ai/Enums";
 import { IDiagnosticLogger } from "../../interfaces/ai/IDiagnosticLogger";
 import { IPageViewData } from "../../interfaces/ai/contracts/IPageViewData";
 import { ISerializable } from "../../interfaces/ai/telemetry/ISerializable";
-import { msToTimeSpan } from "../../utils/HelperFuncsCore";
+import { msToTimeSpan } from "../../utils/HelperFuncs";
 import {
     dataSanitizeId, dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl
 } from "./Common/DataSanitizer";

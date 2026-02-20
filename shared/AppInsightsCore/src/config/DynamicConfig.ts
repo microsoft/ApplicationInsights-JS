@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { dumpObj, isUndefined, objDefine, objForEachKey } from "@nevware21/ts-utils";
-import { STR_NOT_DYNAMIC_ERROR } from "../constants/InternalConstants";
+import { STR_EMPTY, STR_NOT_DYNAMIC_ERROR } from "../constants/InternalConstants";
 import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
@@ -36,7 +36,7 @@ function _createAndUseHandler<T>(state: _IDynamicConfigHandlerState<T>, configHa
         }
     };
 
-    objDefine<any>(handler, "toJSON", { v: () => "WatcherHandler" + (handler.fn ? "" : "[X]") });
+    objDefine<any>(handler, "toJSON", { v: () => "WatcherHandler" + (handler.fn ? STR_EMPTY : "[X]") });
 
     state.use(handler, configHandler);
 

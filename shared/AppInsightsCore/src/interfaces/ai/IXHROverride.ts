@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { IPromise } from "@nevware21/ts-async";
 import { SendRequestReason } from "../../enums/ai/SendRequestReason";
 
@@ -20,9 +23,7 @@ export interface IPayloadData {
 */
 export type SendPOSTFunction = (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => void | IPromise<boolean>;
 
-export type OnCompleteCallback = (status: number, headers: { [headerName: string]: string; }, response?: string) => void;
-
-
+export type OnCompleteCallback = (status: number, headers: { [headerName: string]: string; }, response?: string, payload?: IPayloadData) => void;
 
 /**
 * The IXHROverride interface overrides the way HTTP requests are sent.
@@ -30,6 +31,3 @@ export type OnCompleteCallback = (status: number, headers: { [headerName: string
 export interface IXHROverride {
    sendPOST: SendPOSTFunction;
 }
-
-
-

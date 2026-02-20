@@ -44,8 +44,10 @@ import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
 import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "../interfaces/config/IDynamicConfigHandler";
 import { IWatchDetails, WatcherFunction } from "../interfaces/config/IDynamicWatcher";
 import { ITraceCfg } from "../interfaces/otel/config/IOTelTraceCfg";
+import { IOTelSpanContext } from "../interfaces/otel/trace/IOTelSpanContext";
 import { IOTelSpanOptions } from "../interfaces/otel/trace/IOTelSpanOptions";
 import { IReadableSpan } from "../interfaces/otel/trace/IReadableSpan";
+import { _noopVoid } from "../internal/noopHelpers";
 import { findW3cTraceState } from "../telemetry/W3cTraceState";
 import { createUniqueNamespace } from "../utils/DataCacheHelper";
 import { getSetValue, isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString } from "../utils/HelperFuncs";
@@ -101,7 +103,7 @@ const maxAttributeCount = 128;
 const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     cookieCfg: {},
     [STR_EXTENSIONS]: { rdOnly: true, ref: true, v: [] },
-    [STR_CHANNELS]: { rdOnly: true, ref: true, v:[] },
+    [STR_CHANNELS]: { rdOnly: true, ref: true, v: [] },
     [STR_EXTENSION_CONFIG]: { ref: true, v: {} },
     [STR_CREATE_PERF_MGR]: UNDEFINED_VALUE,
     loggingLevelConsole: eLoggingSeverity.DISABLED,
@@ -238,7 +240,7 @@ function _deepMergeConfig(details: IWatchDetails<IConfiguration>, target: any, n
                     _deepMergeConfig(details, target[key], value, merge);
                 }
             }
-    
+
             if (merge && isPlainObject(value) && isPlainObject(target[key])) {
                 // The target is an object and it has a value
                 _deepMergeConfig(details, target[key], value, merge);
@@ -251,8 +253,8 @@ function _deepMergeConfig(details: IWatchDetails<IConfiguration>, target: any, n
 }
 
 /*#__NO_SIDE_EFFECTS__*/
-function _findWatcher(listeners: { rm: () => void, w: WatcherFunction<IConfiguration>}[], newWatcher: WatcherFunction<IConfiguration>) {
-    let theListener: { rm: () => void, w: WatcherFunction<IConfiguration>} = null;
+function _findWatcher(listeners: { rm: () => void, w: WatcherFunction<IConfiguration> }[], newWatcher: WatcherFunction<IConfiguration>) {
+    let theListener: { rm: () => void, w: WatcherFunction<IConfiguration> } = null;
     let idx: number = -1;
     arrForEach(listeners, (listener, lp) => {
         if (listener.w === newWatcher) {
@@ -265,7 +267,7 @@ function _findWatcher(listeners: { rm: () => void, w: WatcherFunction<IConfigura
     return { i: idx, l: theListener };
 }
 
-function _addDelayedCfgListener(listeners: { rm: () => void, w: WatcherFunction<IConfiguration>}[], newWatcher: WatcherFunction<IConfiguration>) {
+function _addDelayedCfgListener(listeners: { rm: () => void, w: WatcherFunction<IConfiguration> }[], newWatcher: WatcherFunction<IConfiguration>) {
     let theListener = _findWatcher(listeners, newWatcher).l;
 
     if (!theListener) {
@@ -284,7 +286,7 @@ function _addDelayedCfgListener(listeners: { rm: () => void, w: WatcherFunction<
     return theListener;
 }
 
-function _registerDelayedCfgListener(config: IConfiguration, listeners: { rm: () => void, w: WatcherFunction<IConfiguration>}[], logger: IDiagnosticLogger) {
+function _registerDelayedCfgListener(config: IConfiguration, listeners: { rm: () => void, w: WatcherFunction<IConfiguration> }[], logger: IDiagnosticLogger) {
     arrForEach(listeners, (listener) => {
         let unloadHdl = onConfigChange(config, listener.w, logger);
         delete listener.w;      // Clear the listener reference so it will get garbage collected.
@@ -331,7 +333,7 @@ function _getParentTraceCtx(mode: eTraceHeadersMode): IDistributedTraceContext |
     let spanContext: IDistributedTraceContext | null = null;
     const parentTrace = (mode & eTraceHeadersMode.TraceParent) ? findW3cTraceParent() : null;
     const parentTraceState = (mode & eTraceHeadersMode.TraceState) ? findW3cTraceState() : null;
-    
+
     if (parentTrace || parentTraceState) {
         spanContext = createDistributedTraceContext({
             traceId: parentTrace ? parentTrace.traceId : null,
@@ -343,11 +345,6 @@ function _getParentTraceCtx(mode: eTraceHeadersMode): IDistributedTraceContext |
     }
 
     return spanContext;
-}
-
-/*#__NO_SIDE_EFFECTS__*/
-function _noOpFunc() {
-    // No-op function
 }
 
 /**
@@ -407,7 +404,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _traceProvider: ICachedValue<ITraceProvider> | null;
         let _activeSpan: IReadableSpan | null;
         let _instrumentationKey: string | null;
-        let _cfgListeners: { rm: () => void, w: WatcherFunction<CfgType>}[];
+        let _cfgListeners: { rm: () => void, w: WatcherFunction<CfgType> }[];
         let _extensions: IPlugin[];
         let _pluginVersionStringArr: string[];
         let _pluginVersionString: string;
@@ -416,7 +413,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _initInMemoMaxSize: number; // max event count limit during wait for init promises to be resolved
         let _isStatusSet: boolean; // track if active status is set in case of init timeout and init promises setting the status twice
         let _initTimer: ITimerHandler;
-    
+
         /**
          * Internal log poller
          */
@@ -450,7 +447,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 if (_isUnloading) {
                     throwError(strSdkUnloadingError);
                 }
-        
+
                 // Make sure core is only initialized once
                 if (_self.isInitialized()) {
                     throwError("Core cannot be initialized more than once");
@@ -1108,7 +1105,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 let scope: ISpanScope;
 
                 if (span) {
-                    let otelSpanContext: IDistributedTraceContext = null;
+                    let otelSpanContext: IDistributedTraceContext | IOTelSpanContext = null;
                     if (span.spanContext) {
                         // May be a valid IDistributedTraceContext or an OpenTelemetry SpanContext
                         otelSpanContext = span.spanContext();
@@ -1173,7 +1170,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                         }
 
                         // Clear the restore function, so that multiple calls to restore do not have any effect
-                        scope.restore = _noOpFunc;
+                        scope.restore = _noopVoid;
                     }
                 };
 
