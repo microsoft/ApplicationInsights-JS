@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-test-module-type-check",
     "author": "Microsoft Application Insights Team and Contributors",
-    "version": "3.3.11",
+    "version": "3.4.0-beta",
     "description": "Microsoft Application Insights ES6 Module and Type check Example",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "keywords": [
@@ -32,7 +32,10 @@
         "tslib": ">= 1.0.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "3.3.11",
-        "@microsoft/applicationinsights-web": "3.3.11"
+        "@microsoft/applicationinsights-core-js": "3.4.0-beta",
+        "@microsoft/applicationinsights-web": "3.4.0-beta"
+    },
+    "publishConfig": {
+        "tag": "beta3"
     }
 }
