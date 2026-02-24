@@ -3,11 +3,10 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
-import { DEFAULT_BREEZE_PATH, IConfig, parseConnectionString } from "@microsoft/applicationinsights-common";
 import {
-    AppInsightsCore, FeatureOptInMode, IConfigDefaults, IConfiguration, IDistributedTraceContext, IDynamicConfigHandler, ILoadedPlugin,
-    IPlugin, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IUnloadHook, UnloadHandler,
-    WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, proxyFunctions
+    AppInsightsCore, DEFAULT_BREEZE_PATH, FeatureOptInMode, IConfig, IConfigDefaults, IConfiguration, IDistributedTraceContext,
+    IDynamicConfigHandler, ILoadedPlugin, IPlugin, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState,
+    IUnloadHook, UnloadHandler, WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, parseConnectionString, proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createSyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { isNullOrUndefined, isPromiseLike, isString, objDefine, throwError } from "@nevware21/ts-utils";
@@ -142,6 +141,7 @@ export class ApplicationInsights {
                 item.baseData = item.baseData || {};
                 item.baseType = item.baseType || "EventData";
             }
+
             core.track(item);
         }
     }
@@ -236,7 +236,7 @@ export class ApplicationInsights {
     /**
      * Gets the current distributed trace context for this instance if available
      */
-    public getTraceCtx(): IDistributedTraceContext | null | undefined {
+    public getTraceCtx(): IDistributedTraceContext | null {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
@@ -294,6 +294,7 @@ export {
     IEventTelemetry,
     IMetricTelemetry,
     IPageViewPerformanceTelemetry,
-    ITraceTelemetry
-} from "@microsoft/applicationinsights-common";
+    ITraceTelemetry,
+    IRequestTelemetry
+} from "@microsoft/applicationinsights-core-js";
 export { Sender, ISenderConfig } from "@microsoft/applicationinsights-channel-js";

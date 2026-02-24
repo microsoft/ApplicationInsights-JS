@@ -10,6 +10,8 @@
 
 const _AUTHENTICATED_USER_CONTEXT = "AuthenticatedUserContext";
 const _TRACK = "track";
+
+export const UNDEFINED_VALUE: undefined = undefined;
 export const STR_EMPTY = "";
 export const STR_SNIPPET = "snippet";
 export const STR_GET_COOKIE_MGR = "getCookieMgr";

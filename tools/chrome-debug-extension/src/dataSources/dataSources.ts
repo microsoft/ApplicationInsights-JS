@@ -9,7 +9,7 @@ import { NoOpDataSource } from "./noOpDataSource";
 
 export function createDataSource(configuration: IConfiguration): IDataSource {
     // If on localhost, assume we are doing local testing (e.g. for accessibility issues) and use the NoOpDataSource
-    if (window.location.host.indexOf("localhost") === 0) {
+    if (window.location.host.indexOf("localhost:9001") === 0) {
         return new NoOpDataSource();
     }
 

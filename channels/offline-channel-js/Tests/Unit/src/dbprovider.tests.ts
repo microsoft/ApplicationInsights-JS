@@ -4,7 +4,7 @@ import { createAsyncPromise, createAsyncRejectedPromise, createSyncPromise, doAw
 import { arrForEach, strSubstr } from "@nevware21/ts-utils";
 import { TestChannel } from "./TestHelper";
 import { AppInsightsCore, IConfiguration, createDynamicConfig, generateW3CId, newGuid } from "@microsoft/applicationinsights-core-js";
-import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-common";
+import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-core-js";
 import { IStorageTelemetryItem } from "../../../src/Interfaces/IOfflineProvider";
 
 export class OfflineDbProviderTests extends AITestClass {

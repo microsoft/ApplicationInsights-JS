@@ -8,6 +8,7 @@
 // Generally you should only put values that are used more than 2 times and then only if not already exposed as a constant (such as SdkCoreNames)
 // as when using "short" named values from here they will be will be minified smaller than the SdkCoreNames[eSdkCoreNames.xxxx] value.
 
+export const UNDEFINED_VALUE: undefined = undefined;
 export const STR_DURATION = "duration";
 export const STR_PROPERTIES = "properties";
 

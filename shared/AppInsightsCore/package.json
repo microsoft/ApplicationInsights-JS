@@ -13,8 +13,8 @@
         "browser performance monitoring",
         "web analytics"
     ],
-    "main": "dist/es5/applicationinsights-core-js.js",
-    "module": "dist-es5/applicationinsights-core-js.js",
+    "main": "dist/es5/index.js",
+    "module": "dist-es5/index.js",
     "types": "types/applicationinsights-core-js.d.ts",
     "scripts": {
         "clean": "git clean -xdf",

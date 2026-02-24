@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 "use strict";
 
-import { IConfig } from "@microsoft/applicationinsights-common";
-import { IConfiguration } from "@microsoft/applicationinsights-core-js";
+import { IConfig, IConfiguration } from "@microsoft/applicationinsights-core-js";
 
 /**
  *

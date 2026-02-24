@@ -10,7 +10,7 @@ import { StepResult } from "./StepResult";
 import { IFakeXMLHttpRequest } from "./interfaces/FakeXMLHttpRequest";
 import { IFetchRequest } from "./interfaces/IFetchRequest";
 import { IBeaconRequest } from "./interfaces/IBeaconRequest";
-import { createPromise, createSyncPromise, createTaskScheduler, createTimeoutPromise, doAwait, doAwaitResponse, FinallyPromiseHandler, IPromise, RejectedPromiseHandler, ResolvedPromiseHandler } from "@nevware21/ts-async";
+import { createPromise, createSyncPromise, createTaskScheduler, createTimeoutPromise, doAwait, FinallyPromiseHandler, IPromise, RejectedPromiseHandler, ResolvedPromiseHandler } from "@nevware21/ts-async";
 import { AITestQueueTask, IAsyncQueue } from "./interfaces/IASyncQueue";
 
 const stepRetryCnt = "retryCnt";
@@ -1156,6 +1156,18 @@ export class AITestClass {
         }
     }
 
+    protected _clearSessionStorage() {
+        if (window.sessionStorage) {
+            window.sessionStorage.clear();
+        }
+    }
+
+    protected _clearLocalStorage() {
+        if (window.localStorage) {
+            window.localStorage.clear();
+        }
+    }
+
     protected _disableDynProtoBaseFuncs(dynamicProtoInst: typeof dynamicProto = dynamicProto) {
         let defOpts = dynamicProtoInst["_dfOpts"];
         if (defOpts) {
@@ -1226,7 +1238,10 @@ export class AITestClass {
         let _self = this;
         // Initialize the sandbox similar to what is done in sinon.js "test()" override. See note on class.
         _self.sandbox = createSandbox(this.sandboxConfig);
-
+        // Clear out all cookies
+        _self._deleteAllCookies();
+        _self._clearSessionStorage();
+        _self._clearLocalStorage();
 
         if (_self.isEmulatingIe) {
             // Reset any previously cached values, which may have grabbed the mocked values
@@ -1429,6 +1444,9 @@ export class AITestClass {
     }
 
     private _restoreIE() {
+        // We need to clear any lazy cached global values
+        setBypassLazyCache(true);
+
         this._restoreObject(this._orgObjectFuncs);
         this._orgObjectFuncs = null;
 
@@ -1438,8 +1456,6 @@ export class AITestClass {
             let global = window as any;
             global["Symbol"] = this._orgSymbol;
             this._orgSymbol = null;
-
-            setBypassLazyCache(true);
         }
     }
 
@@ -1453,6 +1469,9 @@ export class AITestClass {
                 Object[name] = null;
             }
         }
+
+        // clear any lazy cached global values
+        setBypassLazyCache(true);
 
         let global = getGlobal() as any;
         if (!this._orgFetch) {
@@ -1475,9 +1494,6 @@ export class AITestClass {
             this._orgSymbol = global["Symbol"];
             global["Symbol"] = undefined;
         }
-
-        // clear any lazy cached global values
-        setBypassLazyCache(true);
     }
 
     private _unhookXhr() {

@@ -1,6 +1,6 @@
 import { ApplicationInsights, ApplicationInsightsContainer, IApplicationInsights, IConfig, IConfiguration, LoggingSeverity, Snippet, _eInternalMessageId } from '../../../src/applicationinsights-web'
 import { AITestClass, Assert} from '@microsoft/ai-test-framework';
-import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig } from '@microsoft/applicationinsights-common';
+import { IThrottleInterval, IThrottleLimit, IThrottleMgrConfig } from '@microsoft/applicationinsights-core-js';
 import { SinonSpy } from 'sinon';
 import { AppInsightsSku } from '../../../src/AISku';
 import { createSnippetV5 } from './testSnippetV5';

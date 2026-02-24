@@ -19,11 +19,12 @@ import { FullVersionString, getTime, isLatency } from "./Utils";
  * WE MUST include all defaults here to ensure that the config is created with all of the properties
  * defined as dynamic.
  */
-const defaultConfig: IConfigDefaults<IExtendedConfiguration> = objDeepFreeze({
+const defaultConfig: IConfigDefaults<IExtendedConfiguration> = (/*#__PURE__*/ objDeepFreeze({
     endpointUrl: STR_DEFAULT_ENDPOINT_URL,
     propertyStorageOverride: { isVal: _chkPropOverride }
-});
+}));
 
+/*#__NO_SIDE_EFFECTS__*/
 function _chkPropOverride(propertyStorageOverride: IPropertyStorageOverride) {
     // Validate property storage override
     if (propertyStorageOverride && (!propertyStorageOverride.getProperty || !propertyStorageOverride.setProperty)) {

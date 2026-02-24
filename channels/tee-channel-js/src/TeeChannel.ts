@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IConfig } from "@microsoft/applicationinsights-common";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IChannelControlsHost, IConfigDefaults, IConfiguration, IPlugin,
+    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IChannelControlsHost, IConfig, IConfigDefaults, IConfiguration, IPlugin,
     IProcessTelemetryContext, IProcessTelemetryUnloadContext, IProcessTelemetryUpdateContext, ITelemetryItem, ITelemetryPluginChain,
     ITelemetryUnloadState, ITelemetryUpdateState, SendRequestReason, cfgDfBoolean, createProcessTelemetryContext, initializePlugins,
     onConfigChange, proxyFunctions

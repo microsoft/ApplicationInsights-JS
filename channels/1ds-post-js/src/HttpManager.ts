@@ -14,7 +14,7 @@ import {
 } from "@microsoft/1ds-core-js";
 import { arrAppend, getInst, isFunction } from "@nevware21/ts-utils";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
-import { ClockSkewManager } from "./ClockSkewManager";
+import { IClockSkewManager, createClockSkewManager } from "./ClockSkewManager";
 import {
     EventBatchNotificationReason, IChannelConfiguration, ICollectorResult, IPostChannel, IPostTransmissionTelemetryItem,
     PayloadListenerFunction, PayloadPreprocessorFunction
@@ -26,7 +26,7 @@ import {
     STR_NO_RESPONSE_BODY, STR_OTHER, STR_REQUEUE, STR_RESPONSE_FAIL, STR_SENDING, STR_TIME_DELTA_HEADER, STR_TIME_DELTA_TO_APPLY,
     STR_UPLOAD_TIME
 } from "./InternalConstants";
-import { KillSwitch } from "./KillSwitch";
+import { IKillSwitch, createKillSwitch } from "./KillSwitch";
 import { retryPolicyGetMillisToBackoffForRetry, retryPolicyShouldRetryForStatus } from "./RetryPolicy";
 import { ISerializedPayload, Serializer } from "./Serializer";
 import { ITimeoutOverrideWrapper, createTimeoutWrapper } from "./TimeoutOverrideWrapper";
@@ -147,9 +147,9 @@ export class HttpManager {
         // Only set "Default" values in the _initDefaults() method, unless value are not "reset" during unloading
         // ------------------------------------------------------------------------------------------------------------------------
         let _urlString: string;
-        let _killSwitch: KillSwitch;
+        let _killSwitch: IKillSwitch;
         let _paused: boolean;
-        let _clockSkewManager: ClockSkewManager;
+        let _clockSkewManager: IClockSkewManager;
         let _useBeacons = false;
         let _outstandingRequests: number;           // Holds the number of outstanding async requests that have not returned a response yet
         let _postManager: IPostChannel;
@@ -473,9 +473,9 @@ export class HttpManager {
             function _initDefaults() {
                 let undefValue: undefined;
                 _urlString = null
-                _killSwitch = new KillSwitch();
+                _killSwitch = createKillSwitch();
                 _paused = false;
-                _clockSkewManager = new ClockSkewManager();
+                _clockSkewManager = createClockSkewManager();
                 _useBeacons = false;
                 _outstandingRequests = 0;           // Holds the number of outstanding async requests that have not returned a response yet
                 _postManager = null

@@ -2,7 +2,7 @@ import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { 
     AnalyticsPluginIdentifier, BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DisabledPropertyName,
     DistributedTracingModes, PropertiesPluginIdentifier, RequestHeaders, SeverityLevel
-} from "@microsoft/applicationinsights-common";
+} from "@microsoft/applicationinsights-core-js";
 import { dumpObj, LoggingSeverity, objForEachKey, objKeys, strUndefined } from "@microsoft/applicationinsights-core-js";
 import { Snippet } from "../../../src/Snippet";
 

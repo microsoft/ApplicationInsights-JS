@@ -1,4 +1,4 @@
-import { IDependencyTelemetry } from "@microsoft/applicationinsights-common";
+import { IDependencyTelemetry } from "@microsoft/applicationinsights-core-js";
 import { IDependencyHandler } from "./DependencyListener";
 
 export interface IDependencyInitializerDetails {

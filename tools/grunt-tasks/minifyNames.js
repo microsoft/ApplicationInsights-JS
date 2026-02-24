@@ -29,7 +29,7 @@ var defaultInternalConstants = [
 
 var defaultIgnoreConst = [ ];
 var defaultIgnoreNames = [ 
-    "_e[A-Z]*", "e[A-Z]*", "[A-Z]*Type", "[A-Z]*Value", "[A-Z]*Reason", "chrome.*"
+    "_e[A-Z]*", "e[A-Z]*", "[A-Z]*Type", "[A-Z]*Value", "[A-Z]*Reason", "chrome.*", "WellKnownSymbols"
 ];
 
 function _createEnumWildcardRegEx(value) {
@@ -167,9 +167,9 @@ function readSourceValueMap(theReplacements, src, from) {
     }
 }
 
-
 function readInternalConstants(theReplacements, src, from) {
-    const getConstStrings = /export\sconst\s(\w+)\s=\s(["\w \t\+]*as\s)?\"(\w*)";/gm
+    // eslint-disable-next-line security/detect-unsafe-regex
+    const getConstStrings = /export\sconst\s(\w+)\s=\s(?:\(?\/\*\s*[#@]__PURE__\s*\*\/\s*){0,1}(["\w \t\+]*as\s)?\"(\w*)\"\)?;/gm
 
     var matches = getConstStrings.exec(src);
     while (matches != null) {
@@ -1217,7 +1217,8 @@ function minifyNamesFn(grunt) {
                 } catch (e) {
                     console.log(" ** Sleeping -- Error: " + e);
                     retry ++;
-                    child_process.execSync("sleep 1");
+                    // Cross-platform sleep: use timeout on Windows, sleep on Unix
+                    child_process.execSync(process.platform === "win32" ? "timeout /t 1 /nobreak >nul" : "sleep 1", { shell: true, stdio: "ignore" });
                 }
             }
         }

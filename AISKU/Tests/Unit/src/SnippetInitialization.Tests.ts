@@ -10,10 +10,10 @@ import { BaseTelemetryPlugin, IProcessTelemetryContext, isNotNullOrUndefined, IT
 import {
     BreezeChannelIdentifier, ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders,
     utlRemoveSessionStorage, utlSetSessionStorage
-} from "@microsoft/applicationinsights-common";
+} from "@microsoft/applicationinsights-core-js";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
-import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
-import { dumpObj, isPromiseLike, objHasOwnProperty } from "@nevware21/ts-utils";
+import { IPropTelemetryContext } from "@microsoft/applicationinsights-properties-js";
+import { dumpObj, isPromiseLike, objHasOwnProperty, strSubstring } from "@nevware21/ts-utils";
 import { AppInsightsSku } from "../../../src/AISku";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -678,7 +678,7 @@ export class SnippetInitializationTests extends AITestClass {
                     () => {
                         let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                         const xhr = new XMLHttpRequest();
-                        xhr.open('GET', 'https://httpbin.org/status/200');
+                        xhr.open('GET', 'http://localhost:9001/README.md');
                         xhr.send();
                         Assert.ok(true);
                     }
@@ -694,15 +694,15 @@ export class SnippetInitializationTests extends AITestClass {
                 steps: [
                     () => {
                         let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                        fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
+                        fetch('http://localhost:9001/README.md', { method: 'GET', headers: { 'header': 'value'} });
                         Assert.ok(true, "fetch monitoring is instrumented");
                     },
                     () => {
-                        fetch('https://httpbin.org/status/200', { method: 'GET' });
+                        fetch('http://localhost:9001/README.md', { method: 'GET' });
                         Assert.ok(true, "fetch monitoring is instrumented");
                     },
                     () => {
-                        fetch('https://httpbin.org/status/200');
+                        fetch('http://localhost:9001/README.md');
                         Assert.ok(true, "fetch monitoring is instrumented");
                     }
                 ]
@@ -733,6 +733,7 @@ export class SnippetInitializationTests extends AITestClass {
                         Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
                         Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
                         Assert.ok(baseData.properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparent");
+                        Assert.ok(!baseData.properties.requestHeaders[RequestHeaders.traceStateHeader], "traceState should not be present in outbound event");
                         const id: string = baseData.id;
                         const regex = id.match(/\|.{32}\..{16}\./g);
                         Assert.ok(id.length > 0);
@@ -865,7 +866,7 @@ export class SnippetInitializationTests extends AITestClass {
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    const context = (theSnippet.context) as TelemetryContext;
+                    const context = (theSnippet.context) as IPropTelemetryContext;
                     context.user.setAuthenticatedUserContext('10001');
                     theSnippet.trackTrace({ message: 'authUserContext test' });
                 }
@@ -897,7 +898,7 @@ export class SnippetInitializationTests extends AITestClass {
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    const context = (theSnippet.context) as TelemetryContext;
+                    const context = (theSnippet.context) as IPropTelemetryContext;
                     context.user.setAuthenticatedUserContext('10001', 'account123');
                     theSnippet.trackTrace({ message: 'authUserContext test' });
                 }
@@ -928,7 +929,7 @@ export class SnippetInitializationTests extends AITestClass {
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    const context = (theSnippet.context) as TelemetryContext;
+                    const context = (theSnippet.context) as IPropTelemetryContext;
                     context.user.setAuthenticatedUserContext("\u0428", "\u0429");
                     theSnippet.trackTrace({ message: 'authUserContext test' });
                 }
@@ -959,7 +960,7 @@ export class SnippetInitializationTests extends AITestClass {
             steps: [
                 () => {
                     let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    const context = (theSnippet.context) as TelemetryContext;
+                    const context = (theSnippet.context) as IPropTelemetryContext;
                     context.user.setAuthenticatedUserContext('10002', 'account567');
                     context.user.clearAuthenticatedUserContext();
                     theSnippet.trackTrace({ message: 'authUserContext test' });
@@ -991,7 +992,7 @@ export class SnippetInitializationTests extends AITestClass {
             test: () => {
                 // Setup
                 let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                const context = (theSnippet.context) as TelemetryContext;
+                const context = (theSnippet.context) as IPropTelemetryContext;
                 const authSpy: SinonSpy = this.sandbox.spy(context.user, 'setAuthenticatedUserContext');
                 let cookieMgr = theSnippet.getCookieMgr();
                 const cookieSpy: SinonSpy = this.sandbox.spy(cookieMgr, 'set');

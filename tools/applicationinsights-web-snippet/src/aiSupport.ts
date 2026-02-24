@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IEnvelope } from "@microsoft/applicationinsights-common";
+import { IEnvelope } from "@microsoft/applicationinsights-core-js";
 import { _getTime } from "./support";
 
 let strEmpty = "";

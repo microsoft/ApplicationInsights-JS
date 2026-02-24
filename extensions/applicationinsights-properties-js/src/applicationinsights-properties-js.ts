@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import PropertiesPlugin from "./PropertiesPlugin";
+import { ITelemetryTrace } from "@microsoft/applicationinsights-core-js";
 import { ISessionConfig, Session, _SessionManager } from "./Context/Session";
-import { TelemetryTrace } from "./Context/TelemetryTrace";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
-import { TelemetryContext } from "./TelemetryContext";
 
-export { PropertiesPlugin, TelemetryTrace, TelemetryContext, Session, ISessionConfig, IPropTelemetryContext, _SessionManager as SessionManager };
+export { PropertiesPlugin, ITelemetryTrace, Session, ISessionConfig, IPropTelemetryContext, _SessionManager as SessionManager };

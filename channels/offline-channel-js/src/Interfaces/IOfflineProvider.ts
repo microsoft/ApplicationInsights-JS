@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { EventPersistence } from "@microsoft/applicationinsights-common";
 import {
-    INotificationManager, IPayloadData, IProcessTelemetryContext, IXHROverride, createEnumStyle
+    EventPersistence, INotificationManager, IPayloadData, IProcessTelemetryContext, IXHROverride, createEnumStyle
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 
