@@ -31,6 +31,7 @@ import { SeverityLevelTests } from "./ai/SeverityLevel.tests";
 import { ThrottleMgrTest } from "./ai/ThrottleMgr.tests";
 import { UtilTests } from "./ai/Util.tests";
 import { W3CTraceStateModesTests } from "./trace/W3CTraceStateModes.tests";
+import { SdkStatsNotificationCbkTests } from "./ai/SdkStatsNotificationCbk.Tests";
 
 export function runTests() {
     new GlobalTestHooks().registerTests();
@@ -57,6 +58,7 @@ export function runTests() {
     // new StatsBeatTests(false).registerTests();
     // new StatsBeatTests(true).registerTests();
     new SendPostManagerTests().registerTests();
+    new SdkStatsNotificationCbkTests().registerTests();
 
     // Application Insights Common tests (merged from AppInsightsCommon)
     new ApplicationInsightsTests().registerTests();
