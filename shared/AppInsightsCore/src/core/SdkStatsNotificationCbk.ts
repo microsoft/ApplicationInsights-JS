@@ -18,6 +18,11 @@ var P_DROP_CODE = "drop.code";
 var P_RETRY_CODE = "retry.code";
 var DROP_CLIENT_EXCEPTION = "CLIENT_EXCEPTION";
 
+// Guard against prototype-polluting keys
+function _safeKey(key: string): boolean {
+    return key !== "__proto__" && key !== "constructor" && key !== "prototype";
+}
+
 // Map baseType to spec telemetry_type values
 var _typeMap: { [key: string]: string } = {
     "EventData": "CUSTOM_EVENT",
@@ -106,13 +111,18 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
         for (var i = 0; i < items.length; i++) {
             if (!_isSdkStatsMetric(items[i])) {
                 var t = _getTelType(items[i]);
-                _successCounts[t] = (_successCounts[t] || 0) + 1;
+                if (_safeKey(t)) {
+                    _successCounts[t] = (_successCounts[t] || 0) + 1;
+                }
             }
         }
         _ensureTimer();
     }
 
     function _incDropped(items: ITelemetryItem[], code: string) {
+        if (!_safeKey(code)) {
+            return;
+        }
         var bucket: { [telType: string]: number };
         if (objHasOwn(_droppedCounts, code)) {
             bucket = _droppedCounts[code];
@@ -123,13 +133,18 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
         for (var i = 0; i < items.length; i++) {
             if (!_isSdkStatsMetric(items[i])) {
                 var t = _getTelType(items[i]);
-                bucket[t] = (bucket[t] || 0) + 1;
+                if (_safeKey(t)) {
+                    bucket[t] = (bucket[t] || 0) + 1;
+                }
             }
         }
         _ensureTimer();
     }
 
     function _incRetry(items: ITelemetryItem[], code: string) {
+        if (!_safeKey(code)) {
+            return;
+        }
         var bucket: { [telType: string]: number };
         if (objHasOwn(_retryCounts, code)) {
             bucket = _retryCounts[code];
@@ -140,7 +155,9 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
         for (var i = 0; i < items.length; i++) {
             if (!_isSdkStatsMetric(items[i])) {
                 var t = _getTelType(items[i]);
-                bucket[t] = (bucket[t] || 0) + 1;
+                if (_safeKey(t)) {
+                    bucket[t] = (bucket[t] || 0) + 1;
+                }
             }
         }
         _ensureTimer();
