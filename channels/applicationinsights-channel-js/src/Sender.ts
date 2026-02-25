@@ -627,12 +627,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             /**
              * error handler
              */
-            _self._onError = (payload: IInternalStorageItem[] | string[], message: string, event?: ErrorEvent) => {
+            _self._onError = (payload: IInternalStorageItem[] | string[], message: string, event?: ErrorEvent, statusCode?: number) => {
                 // since version 3.1.3, string[] is no-op
                 if (_isStringArr(payload)) {
                     return;
                 }
-                return _onError(payload as IInternalStorageItem[], message, event);
+                return _onError(payload as IInternalStorageItem[], message, event, statusCode);
             };
         
             /**
@@ -800,7 +800,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             /**
              * error handler
              */
-            function _onError(payload: IInternalStorageItem[], message: string, event?: ErrorEvent) {
+            function _onError(payload: IInternalStorageItem[], message: string, event?: ErrorEvent, statusCode?: number) {
                 _throwInternal(_self.diagLog(),
                     eLoggingSeverity.WARNING,
                     _eInternalMessageId.OnError,
@@ -814,7 +814,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 if (mgr) {
                     let items = _extractTelemetryItems(payload);
                     if (items) {
-                        mgr.eventsDiscarded(items, 1 /* NonRetryableStatus */);
+                        mgr.eventsDiscarded(items, 1 /* NonRetryableStatus */, statusCode);
                     }
                 }
             }
@@ -1133,7 +1133,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     // Updates the end point url before retry
                     if(status === 301 || status === 307 || status === 308) {
                         if(!_checkAndUpdateEndPointUrl(responseUrl)) {
-                            _self._onError(payload, errorMessage);
+                            _self._onError(payload, errorMessage, undefined, status);
                             return;
                         }
                     }
@@ -1164,7 +1164,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             _eInternalMessageId.TransmissionFailed, ". " +
                             "Response code " + status + ". Will retry to send " + payload.length + " items.");
                     } else {
-                        _self._onError(payload, errorMessage);
+                        _self._onError(payload, errorMessage, undefined, status);
                     }
                 } else {
                     // check if the xhr's responseURL or fetch's response.url is same as endpoint url
@@ -1179,7 +1179,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         if (response && !_isRetryDisabled) {
                             _self._onPartialSuccess(payload, response);
                         } else {
-                            _self._onError(payload, errorMessage);
+                            _self._onError(payload, errorMessage, undefined, status);
                         }
                     } else {
                         _consecutiveErrors = 0;
@@ -1423,7 +1423,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let items: ITelemetryItem[] = [];
                     arrForEach(payload, (p) => {
                         if (p) {
-                            items.push({ name: "", baseType: p.bT || "EventData" } as ITelemetryItem);
+                            let baseType = p.bT || "EventData";
+                            items.push({ name: baseType, baseType: baseType } as ITelemetryItem);
                         }
                     });
                     return items.length ? items : null;

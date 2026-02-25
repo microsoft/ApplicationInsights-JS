@@ -56,11 +56,6 @@ export interface ISdkStatsConfig {
      * Flush interval override in ms (default 900000 = 15 min).
      */
     int?: number;
-    /**
-     * Optional callback to flush the channel after enqueuing SDK stats metrics.
-     * Called by unload() after core.track() so the metrics get transmitted before teardown.
-     */
-    fnFlush?: () => void;
 }
 
 /**
@@ -269,8 +264,6 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
         unload: function () {
             // Flush remaining counts before unload
             _flush();
-            // Flush the channel so the metrics just enqueued actually get sent
-            cfg.fnFlush && cfg.fnFlush();
             if (_timer) {
                 _timer.cancel();
                 _timer = null;
