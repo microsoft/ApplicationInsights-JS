@@ -264,10 +264,6 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
         unload: function () {
             // Flush remaining counts before unload
             _flush();
-            if (_timer) {
-                _timer.cancel();
-                _timer = null;
-            }
         }
     };
 }
