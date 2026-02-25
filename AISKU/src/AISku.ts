@@ -404,10 +404,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                             },
                             lang: "JavaScript",
                             ver: SDK_STATS_VERSION,
-                            int: SDK_STATS_FLUSH_INTERVAL,
-                            fnFlush: function () {
-                                _self.onunloadFlush(false);
-                            }
+                            int: SDK_STATS_FLUSH_INTERVAL
                         });
                         _core.addNotificationListener(_sdkStatsListener);
                     }
@@ -614,18 +611,23 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                     }
                 }
 
-                _self.onunloadFlush(isAsync);
-
                 _removePageEventHandlers();
 
-                // Unload SDK Stats listener BEFORE core.unload() tears down the pipeline.
+                // Unload SDK Stats listener BEFORE flushing the channel.
                 // unload() calls core.track() to enqueue the accumulated metrics,
-                // then calls fnFlush to flush the channel so they actually get sent.
+                // then the single onunloadFlush below sends everything (regular telemetry + SDK stats).
                 if (_sdkStatsListener && _core) {
-                    _sdkStatsListener.unload();
-                    _core.removeNotificationListener(_sdkStatsListener);
+                    try {
+                        _sdkStatsListener.unload();
+                        _core.removeNotificationListener(_sdkStatsListener);
+                    } catch (e) {
+                        // Swallow any errors to ensure core.unload() is still called
+                    }
                     _sdkStatsListener = null;
                 }
+
+                // Single flush sends both regular telemetry AND SDK stats metrics
+                _self.onunloadFlush(isAsync);
 
                 _core.unload && _core.unload(isAsync, _unloadCallback, cbTimeout);
 

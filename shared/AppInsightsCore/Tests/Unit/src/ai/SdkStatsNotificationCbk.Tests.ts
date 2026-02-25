@@ -5,13 +5,11 @@ import { NotificationManager } from "../../../../src/core/NotificationManager";
 
 export class SdkStatsNotificationCbkTests extends AITestClass {
     private _trackedItems: ITelemetryItem[];
-    private _flushCalled: boolean;
     private _listener: ISdkStatsNotifCbk;
 
     public testInitialize() {
         super.testInitialize();
         this._trackedItems = [];
-        this._flushCalled = false;
         this._listener = null;
     }
 
@@ -22,7 +20,6 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
             this._listener = null;
         }
         this._trackedItems = [];
-        this._flushCalled = false;
     }
 
     public registerTests() {
@@ -31,6 +28,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
         this._testEventsDiscarded();
         this._testEventsRetry();
         this._testFlush();
+        this._testTimerBasedFlush();
         this._testUnload();
         this._testBaseTypeMapping();
         this._testSdkStatsMetricFiltering();
@@ -45,10 +43,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
             },
             lang: "JavaScript",
             ver: "3.3.6",
-            int: 100, // short interval for testing
-            fnFlush: function () {
-                _self._flushCalled = true;
-            }
+            int: 100 // short interval for testing
         };
 
         if (overrides) {
@@ -309,9 +304,62 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
         });
     }
 
+    private _testTimerBasedFlush() {
+        this.testCase({
+            name: "SdkStatsNotifCbk: metrics are automatically flushed after the configured timer interval",
+            useFakeTimers: true,
+            test: () => {
+                let listener = this._createListener(); // interval = 100ms
+
+                // Queue some events — this starts the internal timer
+                listener.eventsSent([
+                    this._makeItem("EventData"),
+                    this._makeItem("ExceptionData")
+                ]);
+
+                // No flush called yet — nothing should have been emitted
+                Assert.equal(0, this._trackedItems.length, "No metrics should be emitted before timer fires");
+
+                // Advance the clock past the configured interval (100ms)
+                this.clock.tick(101);
+
+                // The timer should have fired and flushed the accumulated counts
+                Assert.equal(2, this._trackedItems.length, "Metrics should be emitted after timer fires");
+
+                let names = this._trackedItems.map(function (item) { return item.name; });
+                Assert.ok(names.indexOf("Item_Success_Count") >= 0, "Should contain Item_Success_Count");
+            }
+        });
+
+        this.testCase({
+            name: "SdkStatsNotifCbk: timer resets after flush and accumulates next interval independently",
+            useFakeTimers: true,
+            test: () => {
+                let listener = this._createListener(); // interval = 100ms
+
+                // First interval
+                listener.eventsSent([this._makeItem("EventData")]);
+                this.clock.tick(101);
+
+                Assert.equal(1, this._trackedItems.length, "First interval should emit 1 metric");
+                Assert.equal(1, this._trackedItems[0].baseData.average, "First interval count should be 1");
+
+                // Reset tracking for second interval
+                this._trackedItems = [];
+
+                // Second interval — new events
+                listener.eventsSent([this._makeItem("EventData"), this._makeItem("EventData")]);
+                this.clock.tick(101);
+
+                Assert.equal(1, this._trackedItems.length, "Second interval should emit 1 metric");
+                Assert.equal(2, this._trackedItems[0].baseData.average, "Second interval count should be 2");
+            }
+        });
+    }
+
     private _testUnload() {
         this.testCase({
-            name: "SdkStatsNotifCbk: unload flushes remaining counts and calls fnFlush",
+            name: "SdkStatsNotifCbk: unload flushes remaining counts",
             test: () => {
                 let listener = this._createListener();
 
@@ -321,12 +369,11 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 this._listener = null;
 
                 Assert.equal(1, this._trackedItems.length, "Should flush remaining counts on unload");
-                Assert.ok(this._flushCalled, "fnFlush should be called on unload");
             }
         });
 
         this.testCase({
-            name: "SdkStatsNotifCbk: unload with no pending data still calls fnFlush",
+            name: "SdkStatsNotifCbk: unload with no pending data emits nothing",
             test: () => {
                 let listener = this._createListener();
 
@@ -334,7 +381,6 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 this._listener = null;
 
                 Assert.equal(0, this._trackedItems.length, "Should not emit any metrics when no data");
-                Assert.ok(this._flushCalled, "fnFlush should still be called");
             }
         });
     }
