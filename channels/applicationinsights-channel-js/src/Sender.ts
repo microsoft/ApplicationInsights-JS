@@ -1,18 +1,16 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, Event, Exception, IConfig, IEnvelope, IOfflineListener, ISample,
-    IStorageBuffer, Metric, PageView, PageViewPerformance, ProcessLegacy, RemoteDependencyData, RequestHeaders, SampleRate, Trace,
-    createOfflineListener, eRequestHeaders, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, utlSetStoragePrefix
-} from "@microsoft/applicationinsights-common";
-import {
-    ActiveStatus, BaseTelemetryPlugin, IAppInsightsCore, IBackendResponse, IChannelControls, IConfigDefaults, IConfiguration,
-    IDiagnosticLogger, IInternalOfflineSupport, INotificationManager, IPayloadData, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXDomainRequest, IXHROverride,
-    OnCompleteCallback, SendPOSTFunction, SendRequestReason, SenderPostManager, TransportType, _ISendPostMgrConfig, _ISenderOnComplete,
-    _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createProcessTelemetryContext,
-    createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion,
-    isArray, isBeaconsSupported, isFeatureEnabled, isFetchSupported, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange,
-    parseResponse, prependTransports, runTargetUnload
+    ActiveStatus, BaseTelemetryPlugin, BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, EventDataType,
+    ExceptionDataType, IAppInsightsCore, IBackendResponse, IChannelControls, IConfig, IConfigDefaults, IConfiguration, IDiagnosticLogger,
+    IEnvelope, IInternalOfflineSupport, INotificationManager, IOfflineListener, IPayloadData, IPlugin, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, ISample, IStorageBuffer, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXDomainRequest,
+    IXHROverride, MetricDataType, OnCompleteCallback, PageViewDataType, PageViewPerformanceDataType, ProcessLegacy, RemoteDependencyDataType,
+    RequestDataType, RequestHeaders, SampleRate, SendPOSTFunction, SendRequestReason, SenderPostManager, TraceDataType, TransportType,
+    _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
+    createOfflineListener, createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, eRequestHeaders,
+    formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFeatureEnabled,
+    isFetchSupported, isInternalApplicationInsightsEndpoint, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse,
+    prependTransports, runTargetUnload, utlCanUseSessionStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
 import {
@@ -21,12 +19,12 @@ import {
 } from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator,
-    PageViewEnvelopeCreator, PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
+    PageViewEnvelopeCreator, PageViewPerformanceEnvelopeCreator, RequestEnvelopeCreator, TraceEnvelopeCreator
 } from "./EnvelopeCreator";
 import { IInternalStorageItem, ISenderConfig } from "./Interfaces";
 import { ArraySendBuffer, ISendBuffer, SessionStorageSendBuffer } from "./SendBuffer";
 import { Serializer } from "./Serializer";
-import { Sample } from "./TelemetryProcessors/Sample";
+import { createSampler } from "./TelemetryProcessors/Sample";
 
 const UNDEFINED_VALUE: undefined = undefined;
 const EMPTY_STR = "";
@@ -93,13 +91,14 @@ function _chkSampling(value: number) {
 type EnvelopeCreator = (logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any) => IEnvelope;
 
 const EnvelopeTypeCreator: { [key:string] : EnvelopeCreator } = {
-    [Event.dataType]:                   EventEnvelopeCreator,
-    [Trace.dataType]:                   TraceEnvelopeCreator,
-    [PageView.dataType]:                PageViewEnvelopeCreator,
-    [PageViewPerformance.dataType]:     PageViewPerformanceEnvelopeCreator,
-    [Exception.dataType]:               ExceptionEnvelopeCreator,
-    [Metric.dataType]:                  MetricEnvelopeCreator,
-    [RemoteDependencyData.dataType]:    DependencyEnvelopeCreator
+    [EventDataType]:                    EventEnvelopeCreator,
+    [TraceDataType]:                    TraceEnvelopeCreator,
+    [PageViewDataType]:                 PageViewEnvelopeCreator,
+    [PageViewPerformanceDataType]:      PageViewPerformanceEnvelopeCreator,
+    [ExceptionDataType]:                ExceptionEnvelopeCreator,
+    [MetricDataType]:                   MetricEnvelopeCreator,
+    [RemoteDependencyDataType]:         DependencyEnvelopeCreator,
+    [RequestDataType]:                  RequestEnvelopeCreator
 };
 
 export type SenderFunction = (payload: string[] | IInternalStorageItem[], isAsync: boolean) => void | IPromise<boolean>;
@@ -268,7 +267,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 if (_self.isInitialized()) {
                     _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "Sender is already initialized");
                 }
-
              
                 _base.initialize(config, core, extensions, pluginChain);
                 let identifier = _self.identifier;
@@ -408,7 +406,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     _fetchKeepAlive = !senderConfig.onunloadDisableFetch && isFetchSupported(true);
                     _disableBeaconSplit = !!senderConfig.disableSendBeaconSplit;
 
-                    _self._sample = new Sample(senderConfig.samplingPercentage, diagLog);
+                    _self._sample = createSampler(senderConfig.samplingPercentage, diagLog);
 
                     _instrumentationKey = senderConfig.instrumentationKey;
                     if(!isPromiseLike(_instrumentationKey) && !_validateInstrumentationKey(_instrumentationKey, config)) {
@@ -905,13 +903,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 }
               
                 // check if this item should be sampled in, else add sampleRate tag
-                if (!_isSampledIn(telemetryItem)) {
-                    // Item is sampled out, do not send it
-                    diagLogger && _throwInternal(diagLogger, eLoggingSeverity.WARNING, _eInternalMessageId.TelemetrySampledAndNotSent,
-                        "Telemetry item was sampled out and not sent", { SampleRate: _self._sample.sampleRate });
-                    return false;
-                } else {
-                    telemetryItem[SampleRate] = _self._sample.sampleRate;
+                let sampleRate = (telemetryItem as any).sampleRate;
+                if (isNullOrUndefined(sampleRate) || !isNumber(sampleRate) || sampleRate < 0 || sampleRate > 100) {
+                    if (!_isSampledIn(telemetryItem)) {
+                        // Item is sampled out, do not send it
+                        diagLogger && _throwInternal(diagLogger, eLoggingSeverity.WARNING, _eInternalMessageId.TelemetrySampledAndNotSent,
+                            "Telemetry item was sampled out and not sent", { SampleRate: _self._sample.sampleRate });
+                        return false;
+                    } else {
+                        telemetryItem[SampleRate] = _self._sample.sampleRate;
+                    }
                 }
                 return true;
             }

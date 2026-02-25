@@ -4,7 +4,7 @@ import { AppInsightsCore, arrForEach, createDynamicConfig, getJSON, IConfigurati
 import { OfflineBatchHandler } from "../../../src/OfflineBatchHandler";
 import { ILocalStorageProviderContext, IOfflineChannelConfiguration, IOfflineProvider, eStorageProviders } from "../../../src/Interfaces/IOfflineProvider";
 import { getTimeId } from "../../../src/Helpers/Utils";
-import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-common";
+import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, IConfig } from "@microsoft/applicationinsights-core-js";
 import { mockTelemetryItem, TestChannel } from "./TestHelper";
 import { OfflineChannel } from "../../../src/OfflineChannel";
 

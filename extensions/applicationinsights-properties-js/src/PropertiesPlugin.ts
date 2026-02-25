@@ -5,15 +5,13 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BreezeChannelIdentifier, IConfig, IPropertiesPlugin, PageView, PropertiesPluginIdentifier, createDistributedTraceContextFromTrace,
+    BaseTelemetryPlugin, BreezeChannelIdentifier, IAppInsightsCore, IConfig, IConfigDefaults, IConfiguration, IPlugin,
+    IProcessTelemetryContext, IProcessTelemetryUnloadContext, IPropertiesPlugin, ITelemetryItem, ITelemetryPluginChain,
+    ITelemetryUnloadState, PageView, PageViewEnvelopeType, PropertiesPluginIdentifier, _InternalLogMessage, _eInternalMessageId,
+    _logInternalMessage, createProcessTelemetryContext, eLoggingSeverity, getNavigator, getSetValue, isNullOrUndefined, onConfigChange,
     utlSetStoragePrefix
-} from "@microsoft/applicationinsights-common";
-import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IDistributedTraceContext, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, _InternalLogMessage, _eInternalMessageId,
-    _logInternalMessage, createProcessTelemetryContext, eLoggingSeverity, getNavigator, getSetValue, isNullOrUndefined, onConfigChange
 } from "@microsoft/applicationinsights-core-js";
-import { objDeepFreeze, objDefine } from "@nevware21/ts-utils";
+import { isString, objDeepFreeze, objDefine } from "@nevware21/ts-utils";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
 import { IPropertiesConfig } from "./Interfaces/IPropertiesConfig";
 import { TelemetryContext } from "./TelemetryContext";
@@ -49,8 +47,6 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
         super();
 
         let _extensionConfig: IPropertiesConfig;
-        let _distributedTraceCtx: IDistributedTraceContext;
-        let _previousTraceCtx: IDistributedTraceContext;
         let _context: IPropTelemetryContext;
         let _disableUserInitMessage: boolean;
 
@@ -77,15 +73,15 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 if (!isNullOrUndefined(event)) {
                     itemCtx = _self._getTelCtx(itemCtx);
                     // If the envelope is PageView, reset the internal message count so that we can send internal telemetry for the new page.
-                    if (event.name === PageView.envelopeType) {
+                    if (event.name === PageViewEnvelopeType) {
                         itemCtx.diagLog().resetInternalMessageCount();
                     }
 
-                    let theContext: TelemetryContext = (_context || {}) as TelemetryContext;
+                    let theContext: IPropTelemetryContext = (_context || {}) as IPropTelemetryContext;
     
                     if (theContext.session) {
                         // If customer did not provide custom session id update the session manager
-                        if (typeof _context.session.id !== "string" && theContext.sessionManager) {
+                        if (!isString(_context.session.id) && theContext.sessionManager) {
                             theContext.sessionManager.update();
                         }
                     }
@@ -110,21 +106,11 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
             };
 
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
-                let core = (unloadCtx || {} as any).core();
-                if (core && core.getTraceCtx) {
-                    let traceCtx = core.getTraceCtx(false);
-                    if (traceCtx === _distributedTraceCtx) {
-                        core.setTraceCtx(_previousTraceCtx);
-                    }
-                }
-
                 _initDefaults();
             };
     
             function _initDefaults() {
                 _extensionConfig = null;
-                _distributedTraceCtx = null;
-                _previousTraceCtx = null;
                 _context = null;
                 _disableUserInitMessage = true;
             }
@@ -147,10 +133,7 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 }));
 
                 // This is outside of the onConfigChange as we don't want to update (replace) these values whenever a referenced config item changes
-                _previousTraceCtx = core.getTraceCtx(false);
-                _context = new TelemetryContext(core, _extensionConfig, _previousTraceCtx, _self._unloadHooks);
-                _distributedTraceCtx = createDistributedTraceContextFromTrace(_self.context.telemetryTrace, _previousTraceCtx);
-                core.setTraceCtx(_distributedTraceCtx);
+                _context = new TelemetryContext(core, _extensionConfig, _self._unloadHooks);
                 _self.context.appId = () => {
                     let breezeChannel = core.getPlugin<IPlugin>(BreezeChannelIdentifier);
                     return breezeChannel ? breezeChannel.plugin["_appId"] : null;

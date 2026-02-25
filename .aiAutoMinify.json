@@ -5,6 +5,15 @@
                 "_eSetDynamicPropertyFlags",
                 "ePendingOp",
                 "CallbackType",
+                "eW3CTraceFlags",
+                "eRequestHeaders",
+                "eTraceStateKeyType",
+                "eOfflineValue",
+                "eDependencyTypes",
+                "eStorageType",
+                "FieldType",
+                "eDistributedTracingModes",
+                "EventPersistenceValue",
                 "eEventsDiscardedReason",
                 "eBatchDiscardedReason",
                 "FeatureOptInMode",
@@ -16,26 +25,27 @@
                 "TransportType",
                 "eStatsType",
                 "TelemetryUnloadReason",
-                "TelemetryUpdateReason"
+                "TelemetryUpdateReason",
+                "eTraceHeadersMode",
+                "eAttributeChangeOp",
+                "eOTelSamplingDecision",
+                "eOTelSpanKind",
+                "eOTelSpanStatusCode",
+                "eAttributeSource",
+                "AddAttributeResult",
+                "DataPointType",
+                "DependencyKind",
+                "DependencySourceType",
+                "eSeverityLevel",
+                "eAttributeFilter",
+                "DataSanitizerValues"
             ]
         },
         "@microsoft/applicationinsights-perfmarkmeasure-js": {
             "constEnums": []
         },
         "@microsoft/applicationinsights-common": {
-            "constEnums": [
-                "eStorageType",
-                "FieldType",
-                "eDistributedTracingModes",
-                "EventPersistenceValue",
-                "eOfflineValue",
-                "eRequestHeaders",
-                "DataPointType",
-                "DependencyKind",
-                "DependencySourceType",
-                "eSeverityLevel",
-                "DataSanitizerValues"
-            ]
+            "constEnums": []
         },
         "@microsoft/applicationinsights-properties-js": {
             "constEnums": []
@@ -47,7 +57,9 @@
             "constEnums": []
         },
         "@microsoft/applicationinsights-channel-js": {
-            "constEnums": []
+            "constEnums": [
+                "eSerializeType"
+            ]
         },
         "@microsoft/applicationinsights-react-native": {
             "constEnums": []
@@ -61,7 +73,9 @@
             "constEnums": []
         },
         "@microsoft/applicationinsights-analytics-js": {
-            "constEnums": []
+            "constEnums": [
+                "eRouteTraceStrategy"
+            ]
         },
         "@microsoft/applicationinsights-web": {
             "constEnums": []

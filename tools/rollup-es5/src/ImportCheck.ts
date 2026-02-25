@@ -24,7 +24,10 @@ export function importCheck(options:IImportCheckRollupOptions = {}) {
     checkOptions.keywords.push({
         funcNames: [ /(\w[\d\w]*)\[\1\.(\w[\w\d]*)\]/g ],
         errorMsg: "Incorrect usage of an indexed map lookup detected - [%funcName%] you should use the enum name value as the lookup not the map name -- eg. Name[eName.xxxx]",
-        errorTitle: "Incorrect usage of indexed map lookup"
+        errorTitle: "Incorrect usage of indexed map lookup",
+        ignoreIds: [
+            "tslib.es6"                    // tslib.es6 library has a pre existence check before usage
+        ]
     });
 
 

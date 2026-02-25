@@ -1,0 +1,2004 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import dynamicProto from "@microsoft/dynamicproto-js";
+import { IPromise, createPromise, createSyncAllSettledPromise, doAwaitResponse } from "@nevware21/ts-async";
+import {
+    ICachedValue, ITimerHandler, arrAppend, arrForEach, arrIndexOf, createTimeout, deepExtend, hasDocument, isFunction, isNullOrUndefined,
+    isPlainObject, isPromiseLike, objAssign, objDeepFreeze, objDefine, objForEachKey, objFreeze, objHasOwn, scheduleTimeout, throwError
+} from "@nevware21/ts-utils";
+import { cfgDfMerge } from "../config/ConfigDefaultHelpers";
+import { createDynamicConfig, onConfigChange } from "../config/DynamicConfig";
+import { ChannelControllerPriority } from "../constants/Constants";
+import {
+    STR_CHANNELS, STR_CREATE_PERF_MGR, STR_DISABLED, STR_EMPTY, STR_EXTENSIONS, STR_EXTENSION_CONFIG, UNDEFINED_VALUE
+} from "../constants/InternalConstants";
+import { DiagnosticLogger, _InternalLogMessage, _throwInternal, _warnToConsole } from "../diagnostics/DiagnosticLogger";
+import { eEventsDiscardedReason } from "../enums/ai/EventsDiscardedReason";
+import { ActiveStatus, eActiveStatus } from "../enums/ai/InitActiveStatusEnum";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { SendRequestReason } from "../enums/ai/SendRequestReason";
+import { TelemetryUnloadReason } from "../enums/ai/TelemetryUnloadReason";
+import { TelemetryUpdateReason } from "../enums/ai/TelemetryUpdateReason";
+import { eTraceHeadersMode } from "../enums/ai/TraceHeadersMode";
+import { IAppInsightsCore, ILoadedPlugin } from "../interfaces/ai/IAppInsightsCore";
+import { IChannelControls } from "../interfaces/ai/IChannelControls";
+import { IChannelControlsHost } from "../interfaces/ai/IChannelControlsHost";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { ICookieMgr } from "../interfaces/ai/ICookieMgr";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { IDistributedTraceContext } from "../interfaces/ai/IDistributedTraceContext";
+import { INotificationListener } from "../interfaces/ai/INotificationListener";
+import { INotificationManager } from "../interfaces/ai/INotificationManager";
+import { IPerfManager } from "../interfaces/ai/IPerfManager";
+import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../interfaces/ai/IProcessTelemetryContext";
+import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../interfaces/ai/ITelemetryInitializers";
+import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { IPlugin, ITelemetryPlugin } from "../interfaces/ai/ITelemetryPlugin";
+import { ITelemetryPluginChain } from "../interfaces/ai/ITelemetryPluginChain";
+import { ITelemetryUnloadState } from "../interfaces/ai/ITelemetryUnloadState";
+import { ITelemetryUpdateState } from "../interfaces/ai/ITelemetryUpdateState";
+import { ISpanScope, ITraceProvider } from "../interfaces/ai/ITraceProvider";
+import { ILegacyUnloadHook, IUnloadHook } from "../interfaces/ai/IUnloadHook";
+import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
+import { IDynamicConfigHandler, _IInternalDynamicConfigHandler } from "../interfaces/config/IDynamicConfigHandler";
+import { IWatchDetails, WatcherFunction } from "../interfaces/config/IDynamicWatcher";
+import { ITraceCfg } from "../interfaces/otel/config/IOTelTraceCfg";
+import { IOTelSpanContext } from "../interfaces/otel/trace/IOTelSpanContext";
+import { IOTelSpanOptions } from "../interfaces/otel/trace/IOTelSpanOptions";
+import { IReadableSpan } from "../interfaces/otel/trace/IReadableSpan";
+import { _noopVoid } from "../internal/noopHelpers";
+import { findW3cTraceState } from "../telemetry/W3cTraceState";
+import { createUniqueNamespace } from "../utils/DataCacheHelper";
+import { getSetValue, isNotNullOrUndefined, proxyFunctionAs, proxyFunctions, toISOString } from "../utils/HelperFuncs";
+import { findW3cTraceParent } from "../utils/TraceParent";
+import { doUnloadAll, runTargetUnload } from "./AsyncUtils";
+import { createCookieMgr } from "./CookieMgr";
+import { getDebugListener } from "./DbgExtensionUtils";
+import { NotificationManager } from "./NotificationManager";
+import { PerfManager, doPerf, getGblPerfMgr } from "./PerfManager";
+import {
+    createProcessTelemetryContext, createProcessTelemetryUnloadContext, createProcessTelemetryUpdateContext, createTelemetryProxyChain
+} from "./ProcessTelemetryContext";
+import {
+    _getPluginState, createDistributedTraceContext, initializePlugins, isDistributedTraceContext, sortPlugins
+} from "./TelemetryHelpers";
+import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
+import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
+import { IUnloadHookContainer, createUnloadHookContainer } from "./UnloadHookContainer";
+
+// import { IStatsBeat, IStatsBeatConfig, IStatsBeatState } from "../interfaces/ai/IStatsBeat";
+// import { IStatsMgr } from "../interfaces/ai/IStatsMgr";
+const strValidationError = "Plugins must provide initialize method";
+const strNotificationManager = "_notificationManager";
+const strSdkUnloadingError = "SDK is still unloading...";
+const strSdkNotInitialized = "SDK is not initialized";
+const maxInitQueueSize = 100;
+const maxInitTimeout = 50000;
+const maxAttributeCount = 128;
+// const strPluginUnloadFailed = "Failed to unload plugin";
+
+// /**
+//  * Default StatsBeatMgr configuration
+//  * @internal
+//  */
+// const defaultStatsCfg: IConfigDefaults<IStatsBeatConfig> = objDeepFreeze({
+//     shrtInt: UNDEFINED_VALUE,
+//     endCfg: cfgDfMerge([])
+// });
+
+// /**
+//  * Default SDK initialization configuration
+//  * @internal
+//  */
+// const defaultSdkConfig: IConfigDefaults<IInternalSdkConfiguration> = objDeepFreeze({
+//     stats: { rdOnly: true, mrg: true, v: defaultStatsCfg }
+// });
+
+/**
+ * The default settings for the config.
+ * WE MUST include all defaults here to ensure that the config is created with all of the properties
+ * defined as dynamic.
+ */
+const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
+    cookieCfg: {},
+    [STR_EXTENSIONS]: { rdOnly: true, ref: true, v: [] },
+    [STR_CHANNELS]: { rdOnly: true, ref: true, v: [] },
+    [STR_EXTENSION_CONFIG]: { ref: true, v: {} },
+    [STR_CREATE_PERF_MGR]: UNDEFINED_VALUE,
+    loggingLevelConsole: eLoggingSeverity.DISABLED,
+    diagnosticLogInterval: UNDEFINED_VALUE,
+    traceHdrMode: eTraceHeadersMode.All,
+    traceCfg: cfgDfMerge<ITraceCfg>({
+        generalLimits: cfgDfMerge({
+            attributeValueLengthLimit: undefined,
+            attributeCountLimit: maxAttributeCount
+        }),
+        // spanLimits: cfgDfMerge({
+        //     attributeValueLengthLimit: undefined,
+        //     attributeCountLimit: maxAttributeCount,
+        //     linkCountLimit: maxAttributeCount,
+        //     eventCountLimit: maxAttributeCount,
+        //     attributePerEventCountLimit: maxAttributeCount,
+        //     attributePerLinkCountLimit: maxAttributeCount
+        // }),
+        // idGenerator: null,
+        serviceName: null,
+        suppressTracing: false
+    })
+    // _sdk: { rdOnly: true, ref: true, v: defaultSdkConfig }
+});
+
+function _getDefaultConfig<CfgType>(core: IAppInsightsCore): IConfigDefaults<CfgType> {
+    let handlers = {
+        // Dynamic Default Error Handlers
+        errorHandlers: cfgDfMerge({
+            attribError: (message: string, key: string, value: any) => {
+                core.logger.throwInternal(eLoggingSeverity.WARNING, _eInternalMessageId.AttributeError, message, {
+                    attribName: key,
+                    value: value
+                });
+            },
+            spanError: (message: string, spanName: string) => {
+                core.logger.throwInternal(eLoggingSeverity.WARNING, _eInternalMessageId.SpanError, message, {
+                    spanName: spanName
+                });
+            },
+            debug: (message: string) => {
+                core.logger.debugToConsole(message);
+            },
+            warn: (message: string) => {
+                core.logger.warnToConsole(message)
+            },
+            error: (message: string) => {
+                core.logger.throwInternal(eLoggingSeverity.CRITICAL, _eInternalMessageId.TraceError, message);
+            },
+            notImplemented: (message: string) => {
+                core.logger.throwInternal(eLoggingSeverity.CRITICAL, _eInternalMessageId.NotImplementedError, message);
+            }
+        })
+    };
+    
+    return objDeepFreeze(objAssign({}, defaultConfig as any, handlers));
+}
+
+/**
+ * Helper to create the default performance manager
+ * @param core - The AppInsightsCore instance
+ * @param notificationMgr - The notification manager
+ */
+/*#__NO_SIDE_EFFECTS__*/
+function _createPerfManager (core: IAppInsightsCore, notificationMgr: INotificationManager) {
+    return new PerfManager(notificationMgr);
+}
+
+/*#__NO_SIDE_EFFECTS__*/
+function _validateExtensions(logger: IDiagnosticLogger, channelPriority: number, allExtensions: IPlugin[]): { core: IPlugin[], channels: IChannelControls[] } {
+    // Concat all available extensions
+    let coreExtensions: ITelemetryPlugin[] = [];
+    let channels: IChannelControls[] = [];
+
+    // Check if any two extensions have the same priority, then warn to console
+    // And extract the local extensions from the
+    let extPriorities: any = {};
+
+    // Extension validation
+    arrForEach(allExtensions, (ext: ITelemetryPlugin) => {
+        // Check for ext.initialize
+        if (isNullOrUndefined(ext) || isNullOrUndefined(ext.initialize)) {
+            throwError(strValidationError);
+        }
+
+        const extPriority = ext.priority;
+        const identifier = ext.identifier;
+
+        if (ext && extPriority) {
+            if (!isNullOrUndefined(extPriorities[extPriority])) {
+                _warnToConsole(logger, "Two extensions have same priority #" + extPriority + " - " + extPriorities[extPriority] + ", " + identifier);
+            } else {
+                // set a value
+                extPriorities[extPriority] = identifier;
+            }
+        }
+
+        // Split extensions to core and channels
+        if (!extPriority || extPriority < channelPriority) {
+            // Add to core extension that will be managed by AppInsightsCore
+            coreExtensions.push(ext);
+        } else {
+            channels.push(ext);
+        }
+    });
+
+    return {
+        core: coreExtensions,
+        channels: channels
+    };
+}
+
+/*#__NO_SIDE_EFFECTS__*/
+function _isPluginPresent(thePlugin: IPlugin, plugins: IPlugin[]) {
+    let exists = false;
+
+    arrForEach(plugins, (plugin) => {
+        if (plugin === thePlugin) {
+            exists = true;
+            return -1;
+        }
+    });
+
+    return exists;
+}
+
+function _deepMergeConfig(details: IWatchDetails<IConfiguration>, target: any, newValues: any, merge: boolean) {
+    // Lets assign the new values to the existing config
+    if (newValues) {
+        objForEachKey(newValues, (key, value) => {
+            if (merge) {
+                if (isPlainObject(value) && isPlainObject(target[key])) {
+                    // The target is an object and it has a value
+                    _deepMergeConfig(details, target[key], value, merge);
+                }
+            }
+
+            if (merge && isPlainObject(value) && isPlainObject(target[key])) {
+                // The target is an object and it has a value
+                _deepMergeConfig(details, target[key], value, merge);
+            } else {
+                // Just Assign (replace) and/or make the property dynamic
+                details.set(target, key, value);
+            }
+        });
+    }
+}
+
+/*#__NO_SIDE_EFFECTS__*/
+function _findWatcher(listeners: { rm: () => void, w: WatcherFunction<IConfiguration> }[], newWatcher: WatcherFunction<IConfiguration>) {
+    let theListener: { rm: () => void, w: WatcherFunction<IConfiguration> } = null;
+    let idx: number = -1;
+    arrForEach(listeners, (listener, lp) => {
+        if (listener.w === newWatcher) {
+            theListener = listener;
+            idx = lp;
+            return -1;
+        }
+    });
+
+    return { i: idx, l: theListener };
+}
+
+function _addDelayedCfgListener(listeners: { rm: () => void, w: WatcherFunction<IConfiguration> }[], newWatcher: WatcherFunction<IConfiguration>) {
+    let theListener = _findWatcher(listeners, newWatcher).l;
+
+    if (!theListener) {
+        theListener = {
+            w: newWatcher,
+            rm: () => {
+                let fnd = _findWatcher(listeners, newWatcher);
+                if (fnd.i !== -1) {
+                    listeners.splice(fnd.i, 1);
+                }
+            }
+        };
+        listeners.push(theListener);
+    }
+
+    return theListener;
+}
+
+function _registerDelayedCfgListener(config: IConfiguration, listeners: { rm: () => void, w: WatcherFunction<IConfiguration> }[], logger: IDiagnosticLogger) {
+    arrForEach(listeners, (listener) => {
+        let unloadHdl = onConfigChange(config, listener.w, logger);
+        delete listener.w;      // Clear the listener reference so it will get garbage collected.
+        // replace the remove function
+        listener.rm = () => {
+            unloadHdl.rm();
+        };
+    });
+}
+
+// Moved this outside of the closure to reduce the retained memory footprint
+function _initDebugListener(configHandler: IDynamicConfigHandler<IConfiguration>, unloadContainer: IUnloadHookContainer, notificationManager: INotificationManager, debugListener: INotificationListener) {
+    // Will get recalled if any referenced config values are changed
+    unloadContainer.add(configHandler.watch((details) => {
+        let disableDbgExt = details.cfg.disableDbgExt;
+
+        if (disableDbgExt === true && debugListener) {
+            // Remove any previously loaded debug listener
+            notificationManager.removeNotificationListener(debugListener);
+            debugListener = null;
+        }
+
+        if (notificationManager && !debugListener && disableDbgExt !== true) {
+            debugListener = getDebugListener(details.cfg);
+            notificationManager.addNotificationListener(debugListener);
+        }
+    }));
+
+    return debugListener
+}
+
+// Moved this outside of the closure to reduce the retained memory footprint
+/*#__NO_SIDE_EFFECTS__*/
+function _createUnloadHook(unloadHook: IUnloadHook): IUnloadHook {
+    return objDefine<IUnloadHook | any>({
+        rm: () => {
+            unloadHook.rm();
+        }
+    }, "toJSON", { v: () => "aicore::onCfgChange<" + JSON.stringify(unloadHook) + ">" });
+}
+
+/*#__NO_SIDE_EFFECTS__*/
+function _getParentTraceCtx(mode: eTraceHeadersMode): IDistributedTraceContext | null {
+    let spanContext: IDistributedTraceContext | null = null;
+    const parentTrace = (mode & eTraceHeadersMode.TraceParent) ? findW3cTraceParent() : null;
+    const parentTraceState = (mode & eTraceHeadersMode.TraceState) ? findW3cTraceState() : null;
+
+    if (parentTrace || parentTraceState) {
+        spanContext = createDistributedTraceContext({
+            traceId: parentTrace ? parentTrace.traceId : null,
+            spanId: parentTrace ? parentTrace.spanId : null,
+            traceFlags: parentTrace ? parentTrace.traceFlags : UNDEFINED_VALUE,
+            isRemote: true,  // Mark as remote since it's from an external source
+            traceState: parentTraceState
+        });
+    }
+
+    return spanContext;
+}
+
+/**
+ * @group Classes
+ * @group Entrypoint
+ */
+export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> implements IAppInsightsCore<CfgType> {
+    public config: CfgType;
+    public logger: IDiagnosticLogger;
+
+    /**
+     * An array of the installed plugins that provide a version
+     */
+     public readonly pluginVersionStringArr: string[];
+    
+    /**
+     * The formatted string of the installed plugins that contain a version number
+     */
+    public readonly pluginVersionString: string;
+
+    /**
+     * Returns a value that indicates whether the instance has already been previously initialized.
+     */
+    public isInitialized: () => boolean;
+
+    /**
+     * Function used to identify the get w parameter used to identify status bit to some channels
+     */
+    public getWParam: () => number;
+
+    constructor() {
+        // NOTE!: DON'T set default values here, instead set them in the _initDefaults() function as it is also called during teardown()
+        let _configHandler: IDynamicConfigHandler<CfgType>;
+        let _isInitialized: boolean;
+        let _logger: IDiagnosticLogger;
+        let _eventQueue: ITelemetryItem[];
+        let _notificationManager: INotificationManager | null | undefined;
+        // let _statsBeat: IStatsBeat | null;
+        // let _statsMgr: IStatsMgr | null;
+        let _perfManager: IPerfManager | null;
+        let _cfgPerfManager: IPerfManager | null;
+        let _cookieManager: ICookieMgr | null;
+        let _pluginChain: ITelemetryPluginChain | null;
+        let _configExtensions: IPlugin[];
+        let _channelConfig: IChannelControls[][] | null | undefined;
+        let _channels: IChannelControls[] | null;
+        let _isUnloading: boolean;
+        let _telemetryInitializerPlugin: TelemetryInitializerPlugin;
+        let _serverOTelCtx: IDistributedTraceContext | null;
+        let _serverTraceHdrMode: eTraceHeadersMode;
+        let _internalLogsEventName: string | null;
+        let _evtNamespace: string;
+        let _unloadHandlers: IUnloadHandlerContainer;
+        let _hookContainer: IUnloadHookContainer;
+        let _debugListener: INotificationListener | null;
+        let _traceCtx: IDistributedTraceContext | null;
+        let _traceProvider: ICachedValue<ITraceProvider> | null;
+        let _activeSpan: IReadableSpan | null;
+        let _instrumentationKey: string | null;
+        let _cfgListeners: { rm: () => void, w: WatcherFunction<CfgType> }[];
+        let _extensions: IPlugin[];
+        let _pluginVersionStringArr: string[];
+        let _pluginVersionString: string;
+        let _activeStatus: eActiveStatus; // to indicate if ikey or endpoint url promised is resolved or not
+        let _endpoint: string;
+        let _initInMemoMaxSize: number; // max event count limit during wait for init promises to be resolved
+        let _isStatusSet: boolean; // track if active status is set in case of init timeout and init promises setting the status twice
+        let _initTimer: ITimerHandler;
+
+        /**
+         * Internal log poller
+         */
+        let _internalLogPoller: ITimerHandler;
+        let _internalLogPollerListening: boolean;
+        let _forceStopInternalLogPoller: boolean;
+
+        dynamicProto(AppInsightsCore, this, (_self) => {
+
+            // Set the default values (also called during teardown)
+            _initDefaults();
+
+            // Special internal method to allow the unit tests and DebugPlugin to hook embedded objects
+            (_self as any)["_getDbgPlgTargets"] = () => {
+                return [_extensions, _eventQueue];
+            };
+
+            _self.isInitialized = () => _isInitialized;
+
+            // since version 3.3.0
+            _self.activeStatus = () => _activeStatus;
+
+            // since version 3.3.0
+            // internal
+            _self._setPendingStatus = () => {
+                _activeStatus = eActiveStatus.PENDING;
+            };
+
+            // Creating the self.initialize = ()
+            _self.initialize = (config: CfgType, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void => {
+                if (_isUnloading) {
+                    throwError(strSdkUnloadingError);
+                }
+
+                // Make sure core is only initialized once
+                if (_self.isInitialized()) {
+                    throwError("Core cannot be initialized more than once");
+                }
+
+                _configHandler = createDynamicConfig<CfgType>(config, _getDefaultConfig<CfgType>(_self), logger || _self.logger, false);
+
+                // Re-assigning the local config property so we don't have any references to the passed value and it can be garbage collected
+                config = _configHandler.cfg;
+
+                // This will be "re-run" if the referenced config properties are changed
+                _addUnloadHook(_configHandler.watch((details) => {
+                    let rootCfg = details.cfg;
+
+                    _initInMemoMaxSize = rootCfg.initInMemoMaxSize || maxInitQueueSize;
+
+                    _handleIKeyEndpointPromises(rootCfg);
+
+                    // Mark the extensionConfig and all first level keys as referenced
+                    // This is so that calls to getExtCfg() will always return the same object
+                    // Even when a user may "re-assign" the plugin properties (or it's unloaded/reloaded)
+                    let extCfg = details.ref(details.cfg, STR_EXTENSION_CONFIG);
+                    objForEachKey(extCfg, (key) => {
+                        details.ref(extCfg, key);
+                    });
+
+                    if (rootCfg.traceHdrMode !== _serverTraceHdrMode) {
+                        // Create a new trace context if it doesn't exist and the mode is not None
+                        _serverOTelCtx = _getParentTraceCtx(rootCfg.traceHdrMode);
+                        _serverTraceHdrMode = rootCfg.traceHdrMode;
+                    }
+                }));
+
+                _notificationManager = notificationManager;
+
+                // Initialize the debug listener outside of the closure to reduce the retained memory footprint
+                _debugListener = _initDebugListener(_configHandler, _hookContainer, _notificationManager && _self.getNotifyMgr(), _debugListener);
+                _initPerfManager();
+
+                _self.logger = logger;
+
+                let cfgExtensions = config.extensions;
+
+                // Extension validation
+                _configExtensions = [];
+                _configExtensions.push(...extensions, ...cfgExtensions);
+                _channelConfig = config.channels;
+
+                _initPluginChain(null);
+
+                if (!_channels || _channels.length === 0) {
+                    throwError("No " + STR_CHANNELS + " available");
+                }
+                
+                if (_channelConfig && _channelConfig.length > 1) {
+                    let teeController = _self.getPlugin("TeeChannelController");
+                    if (!teeController || !teeController.plugin) {
+                        _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.SenderNotInitialized, "TeeChannel required");
+                    }
+                }
+
+                _registerDelayedCfgListener(config, _cfgListeners, _logger);
+                _cfgListeners = null;
+
+                _isInitialized = true;
+                if (_activeStatus === ActiveStatus.ACTIVE) {
+                    _releaseQueues();
+                }
+                
+            };
+        
+            _self.getChannels = (): IChannelControls[] => {
+                let controls: IChannelControls[] = [];
+                if (_channels) {
+                    arrForEach(_channels, (channel) => {
+                        controls.push(channel);
+                    });
+                }
+
+                return objFreeze(controls);
+            };
+        
+            _self.track = (telemetryItem: ITelemetryItem) => {
+                doPerf(_self.getPerfMgr(), () => "AppInsightsCore:track", () => {
+                    if (telemetryItem === null) {
+                        _notifyInvalidEvent(telemetryItem);
+                        // throw error
+                        throwError("Invalid telemetry item");
+                    }
+                    
+                    // do basic validation before sending it through the pipeline
+                    if (!telemetryItem.name && isNullOrUndefined(telemetryItem.name)) {
+                        _notifyInvalidEvent(telemetryItem);
+                        throwError("telemetry name required");
+                    }
+            
+                    // setup default iKey if not passed in
+                    telemetryItem.iKey = telemetryItem.iKey || _instrumentationKey;
+
+                    // add default timestamp if not passed in
+                    telemetryItem.time = telemetryItem.time || toISOString(new Date());
+
+                    // Common Schema 4.0
+                    telemetryItem.ver = telemetryItem.ver || "4.0";
+            
+                    if (!_isUnloading && _self.isInitialized() && _activeStatus === ActiveStatus.ACTIVE) {
+                        // Process the telemetry plugin chain
+                        _createTelCtx().processNext(telemetryItem);
+                    } else if (_activeStatus !== ActiveStatus.INACTIVE){
+                        // Queue events until all extensions are initialized
+                        if (_eventQueue.length <= _initInMemoMaxSize) {
+                            // set limit, if full, stop adding new events
+                            _eventQueue.push(telemetryItem);
+                        }
+                     
+                    }
+                }, () => ({ item: telemetryItem }), !((telemetryItem as any).sync));
+            };
+        
+            _self.getProcessTelContext = _createTelCtx;
+
+            _self.getNotifyMgr = (): INotificationManager => {
+                if (!_notificationManager) {
+                    _notificationManager = new NotificationManager(_configHandler.cfg);
+                    // For backward compatibility only
+                    (_self as any)[strNotificationManager] = _notificationManager;
+                }
+
+                return _notificationManager;
+            };
+
+            /**
+             * Adds a notification listener. The SDK calls methods on the listener when an appropriate notification is raised.
+             * The added plugins must raise notifications. If the plugins do not implement the notifications, then no methods will be
+             * called.
+             * @param listener - An INotificationListener object.
+             */
+            _self.addNotificationListener = (listener: INotificationListener): void => {
+                _self.getNotifyMgr().addNotificationListener(listener);
+            };
+        
+            /**
+             * Removes all instances of the listener.
+             * @param listener - INotificationListener to remove.
+             */
+            _self.removeNotificationListener = (listener: INotificationListener): void => {
+                if (_notificationManager) {
+                    _notificationManager.removeNotificationListener(listener);
+                }
+            };
+        
+            _self.getCookieMgr = (): ICookieMgr => {
+                if (!_cookieManager) {
+                    _cookieManager = createCookieMgr(_configHandler.cfg, _self.logger);
+                }
+
+                return _cookieManager;
+            };
+
+            _self.setCookieMgr = (cookieMgr: ICookieMgr) => {
+                if (_cookieManager !== cookieMgr) {
+                    runTargetUnload(_cookieManager, false);
+    
+                    _cookieManager = cookieMgr;
+                }
+            };
+
+            _self.getPerfMgr = (): IPerfManager => {
+                return _perfManager || _cfgPerfManager || getGblPerfMgr();
+            };
+
+            _self.setPerfMgr = (perfMgr: IPerfManager) => {
+                _perfManager = perfMgr;
+            };
+
+            // _self.getStatsBeat = (statsBeatState: IStatsBeatState) => {
+            //     // create a new statsbeat if not initialize yet or the endpoint is different
+            //     // otherwise, return the existing one, or null
+
+            //     if (statsBeatState) {
+            //         if (_statsMgr && _statsMgr.enabled) {
+            //             if (_statsBeat && _statsBeat.endpoint !== statsBeatState.endpoint) {
+            //                 // Different endpoint, so unload the existing and create a new one
+            //                 _statsBeat.enabled = false;
+            //                 _statsBeat = null;
+            //             }
+
+            //             if (!_statsBeat) {
+            //                 // Create a new statsbeat instance
+            //                 _statsBeat = _statsMgr.newInst(statsBeatState);
+            //             }
+            //         } else if (_statsBeat) {
+            //             // Disable and remove any previously created statsbeat instance
+            //             _statsBeat.enabled = false;
+            //             _statsBeat = null;
+            //         }
+
+            //         // Return the current statsbeat instance or null if not created
+            //         return _statsBeat;
+            //     }
+
+            //     // Return null as no statsbeat state was provided
+            //     return null;
+            // };
+
+            // _self.setStatsMgr = (statsMgr: IStatsMgr) => {
+            //     if (_statsMgr && _statsMgr !== statsMgr) {
+            //         // Disable any previously created statsbeat instance
+            //         if (_statsBeat) {
+            //             _statsBeat.enabled = false;
+            //             _statsBeat = null;
+            //         }
+            //     }
+
+            //     _statsMgr = statsMgr;
+            // };
+
+            _self.eventCnt = (): number => {
+                return _eventQueue.length;
+            };
+
+            _self.releaseQueue = () => {
+                if (_isInitialized && _eventQueue.length > 0) {
+                    let eventQueue = _eventQueue;
+                    _eventQueue = [];
+                    if (_activeStatus === eActiveStatus.ACTIVE) {
+                        arrForEach(eventQueue, (event: ITelemetryItem) => {
+                            event.iKey = event.iKey || _instrumentationKey;
+                            _createTelCtx().processNext(event);
+                        });
+
+                    } else {
+                        // new one for msg ikey
+                        _throwInternal(_logger, eLoggingSeverity.WARNING, _eInternalMessageId.FailedToSendQueuedTelemetry, "core init status is not active");
+                    }
+
+               
+                }
+            };
+
+            _self.pollInternalLogs = (eventName?: string): ITimerHandler => {
+                _internalLogsEventName = eventName || null;
+                _forceStopInternalLogPoller = false;
+                _internalLogPoller && _internalLogPoller.cancel();
+
+                return _startLogPoller(true);
+            };
+
+            function _handleIKeyEndpointPromises(theConfig: IConfiguration) {
+                // app Insights core only handle ikey and endpointurl, aisku will handle cs
+                // But we want to reference these config values so that if any future changes are made
+                // this will trigger the re-run of the watch function
+                // and the ikey and endpointUrl will be set to the new values
+                let ikey = theConfig.instrumentationKey;
+                let endpointUrl = theConfig.endpointUrl; // do not need to validate endpoint url, if it is null, default one will be set by sender
+
+                // Check if we are waiting for previous promises to be resolved, won't apply new changes
+                if (_activeStatus !== eActiveStatus.PENDING) {
+                    if (isNullOrUndefined(ikey)) {
+                        _instrumentationKey = null;
+
+                        // if new ikey is null, set status to be inactive, all new events will be saved in memory or dropped
+                        _activeStatus = ActiveStatus.INACTIVE;
+                        let msg = "Please provide instrumentation key";
+
+                        if (!_isInitialized) {
+                            // only throw error during initialization
+                            throwError(msg);
+                        } else {
+                            _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InvalidInstrumentationKey, msg);
+                            _releaseQueues();
+                        }
+
+                        return;
+                    }
+
+                    let promises: IPromise<string>[] = [];
+                    if (isPromiseLike(ikey)) {
+                        promises.push(ikey);
+                        _instrumentationKey = null; // reset current local ikey variable (otherwise it will always be the previous ikeys if timeout is called before promise cb)
+                    } else {
+                        // string
+                        _instrumentationKey = ikey;
+                    }
+
+                    if (isPromiseLike(endpointUrl)) {
+                        promises.push(endpointUrl);
+                        _endpoint = null; // reset current local endpoint variable (otherwise it will always be the previous urls if timeout is called before promise cb)
+                    } else {
+                        // string or null
+                        _endpoint = endpointUrl;
+                    }
+
+                    // at least have one promise
+                    if (promises.length) {
+                        _waitForInitPromises(theConfig, promises);
+                    } else {
+                        // means no promises
+                        _setStatus();
+                    }
+                }
+            }
+
+            function _waitForInitPromises(theConfig: IConfiguration, promises: IPromise<string>[]) {
+                // reset to false for new dynamic changes
+                _isStatusSet = false;
+                _activeStatus = eActiveStatus.PENDING;
+                let initTimeout = isNotNullOrUndefined(theConfig.initTimeOut)?  theConfig.initTimeOut : maxInitTimeout; // theConfig.initTimeOut could be 0
+                let allPromises = createSyncAllSettledPromise<string>(promises);
+
+                if (_initTimer) {
+                    // Stop any previous timer
+                    _initTimer.cancel();
+                }
+
+                _initTimer = scheduleTimeout(() => {
+                    // set _isStatusSet to true
+                    // set active status
+                    // release queues
+                    _initTimer = null;
+                    if (!_isStatusSet) {
+                        _setStatus();
+                    }
+                }, initTimeout);
+            
+                doAwaitResponse(allPromises, (response) => {
+                    try {
+                        if (_isStatusSet) {
+                            // promises take too long to resolve, ignore them
+                            // active status should be set by timeout already
+                            return;
+                        }
+
+                        if (!response.rejected) {
+                            let values = response.value;
+                            if (values && values.length) {
+                                // ikey
+                                let ikeyRes = values[0];
+                                _instrumentationKey = ikeyRes && ikeyRes.value;
+
+                                // endpoint
+                                if (values.length > 1) {
+                                    let endpointRes = values[1];
+                                    _endpoint = endpointRes &&  endpointRes.value;
+                                }
+                            }
+
+                            if (_instrumentationKey) {
+                                // if ikey is null, no need to trigger extra dynamic changes for extensions
+                                theConfig.instrumentationKey = _instrumentationKey; // set config.instrumentationKey for extensions to consume
+                                theConfig.endpointUrl = _endpoint; // set config.endpointUrl for extensions to consume
+                            }
+                        }
+
+                        // set _isStatusSet to true
+                        // set active status
+                        // release queues
+                        _setStatus();
+                    } catch (e) {
+                        if (!_isStatusSet){
+                            _setStatus();
+                        }
+                    }
+                });
+            }
+    
+            function _setStatus() {
+                _isStatusSet = true;
+                if (isNullOrUndefined(_instrumentationKey)) {
+                    _activeStatus = ActiveStatus.INACTIVE;
+                    _throwInternal(_logger, eLoggingSeverity.CRITICAL, _eInternalMessageId.InitPromiseException, "ikey can't be resolved from promises");
+                } else {
+                    _activeStatus = ActiveStatus.ACTIVE;
+                }
+                _releaseQueues();
+
+            }
+
+            function _releaseQueues() {
+                if (_isInitialized) {
+                    _self.releaseQueue();
+                    _self.pollInternalLogs();
+                }
+            }
+
+            function _startLogPoller(alwaysStart?: boolean): ITimerHandler {
+                if ((!_internalLogPoller || !_internalLogPoller.enabled) && !_forceStopInternalLogPoller) {
+                    let shouldStart = alwaysStart || (_logger && _logger.queue.length > 0);
+                    if (shouldStart) {
+                        if (!_internalLogPollerListening) {
+                            _internalLogPollerListening = true;
+
+                            // listen for any configuration changes so that changes to the
+                            // interval will cause the timer to be re-initialized
+                            _addUnloadHook(_configHandler.watch((details) => {
+                                let interval: number = details.cfg.diagnosticLogInterval;
+                                if (!interval || !(interval > 0)) {
+                                    interval = 10000;
+                                }
+
+                                let isRunning = false;
+                                if (_internalLogPoller) {
+                                    // It was already created so remember it's running and cancel
+                                    isRunning = _internalLogPoller.enabled;
+                                    _internalLogPoller.cancel();
+                                }
+
+                                // Create / reconfigure
+                                _internalLogPoller = createTimeout(_flushInternalLogs, interval) as any;
+                                _internalLogPoller.unref();
+
+                                // Restart if previously running
+                                _internalLogPoller.enabled = isRunning;
+                            }));
+                        }
+
+                        _internalLogPoller.enabled = true;
+                    }
+                }
+
+                return _internalLogPoller;
+            }
+
+            _self.stopPollingInternalLogs = (): void => {
+                _forceStopInternalLogPoller = true;
+                _internalLogPoller && _internalLogPoller.cancel();
+                _flushInternalLogs();
+            };
+
+            // Add addTelemetryInitializer
+            proxyFunctions(_self, () => _telemetryInitializerPlugin, [ "addTelemetryInitializer" ]);
+
+            _self.unload = (isAsync: boolean = true, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState> => {
+                if (!_isInitialized) {
+                    // The SDK is not initialized
+                    throwError(strSdkNotInitialized);
+                }
+
+                // Check if the SDK still unloading so throw
+                if (_isUnloading) {
+                    // The SDK is already unloading
+                    throwError(strSdkUnloadingError);
+                }
+
+                let unloadState: ITelemetryUnloadState = {
+                    reason: TelemetryUnloadReason.SdkUnload,
+                    isAsync: isAsync,
+                    flushComplete: false
+                };
+
+                let result: IPromise<ITelemetryUnloadState>;
+                if (isAsync && !unloadComplete) {
+                    result = createPromise<ITelemetryUnloadState>((resolve) => {
+                        // Set the callback to the promise resolve callback
+                        unloadComplete = resolve;
+                    });
+                }
+
+                let processUnloadCtx = createProcessTelemetryUnloadContext(_getPluginChain(), _self);
+                processUnloadCtx.onComplete(() => {
+                    // if (_statsBeat) {
+                    //     // Disable any statsbeat instance
+                    //     _statsBeat.enabled = false;
+                    //     _statsBeat = null;
+                    // }
+
+                    _hookContainer.run(_self.logger);
+
+                    // Run any "unload" functions for the _cookieManager, _notificationManager and _logger
+                    doUnloadAll([_cookieManager, _notificationManager, _logger], isAsync, () => {
+                        _initDefaults();
+                        unloadComplete && unloadComplete(unloadState);
+                    });
+                }, _self);
+
+                function _doUnload(flushComplete: boolean) {
+                    unloadState.flushComplete = flushComplete;
+                    _isUnloading = true;
+
+                    // Run all of the unload handlers first (before unloading the plugins)
+                    _unloadHandlers.run(processUnloadCtx, unloadState);
+                    
+                    // Stop polling the internal logs
+                    _self.stopPollingInternalLogs();
+
+                    // Start unloading the components, from this point onwards the SDK should be considered to be in an unstable state
+                    processUnloadCtx.processNext(unloadState);
+                }
+
+                _flushInternalLogs();
+
+                if (!_flushChannels(isAsync, _doUnload, SendRequestReason.SdkUnload, cbTimeout)) {
+                    _doUnload(false);
+                }
+
+                return result;
+            };
+
+            _self.getPlugin = _getPlugin;
+
+            _self.addPlugin = <T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting?: boolean, isAsync?: boolean, addCb?: (added?: boolean) => void): void => {
+                if (!plugin) {
+                    addCb && addCb(false);
+                    _logOrThrowError(strValidationError);
+                    return;
+                }
+
+                let existingPlugin = _getPlugin(plugin.identifier);
+                if (existingPlugin && !replaceExisting) {
+                    addCb && addCb(false);
+
+                    _logOrThrowError("Plugin [" + plugin.identifier + "] is already loaded!");
+                    return;
+                }
+
+                let updateState: ITelemetryUpdateState = {
+                    reason: TelemetryUpdateReason.PluginAdded
+                };
+
+                function _addPlugin(removed: boolean) {
+                    _configExtensions.push(plugin);
+                    updateState.added = [plugin];
+
+                    // Re-Initialize the plugin chain
+                    _initPluginChain(updateState);
+                    addCb && addCb(true);
+                }
+
+                if (existingPlugin) {
+                    let removedPlugins: IPlugin[] = [existingPlugin.plugin];
+                    let unloadState: ITelemetryUnloadState = {
+                        reason: TelemetryUnloadReason.PluginReplace,
+                        isAsync: !!isAsync
+                    };
+
+                    _removePlugins(removedPlugins, unloadState, (removed) => {
+                        if (!removed) {
+                            // Previous plugin was successfully removed or was not installed
+                            addCb && addCb(false);
+                        } else {
+                            updateState.removed = removedPlugins
+                            updateState.reason |= TelemetryUpdateReason.PluginRemoved;
+                            _addPlugin(true);
+                        }
+                    });
+                } else {
+                    _addPlugin(false);
+                }
+            };
+
+            _self.updateCfg = (newConfig: CfgType, mergeExisting: boolean = true) => {
+                let updateState: ITelemetryUpdateState;
+                if (_self.isInitialized()) {
+                    updateState = {
+                        reason: TelemetryUpdateReason.ConfigurationChanged,
+                        cfg: _configHandler.cfg,
+                        oldCfg: deepExtend({}, _configHandler.cfg),
+                        newConfig: deepExtend({}, newConfig),
+                        merge: mergeExisting
+                    };
+
+                    newConfig = updateState.newConfig as CfgType;
+                    let cfg =  _configHandler.cfg;
+
+                    // replace the immutable (if initialized) values
+                    // We don't currently allow updating the extensions and channels via the update config
+                    // So overwriting any user provided values to reuse the existing values
+                    (newConfig as any).extensions = cfg.extensions;
+                    (newConfig as any).channels = cfg.channels;
+                }
+
+                // Explicitly blocking any previous config watchers so that they don't get called because
+                // of this bulk update (Probably not necessary)
+                (_configHandler as _IInternalDynamicConfigHandler<CfgType>)._block((details) => {
+
+                    // Lets assign the new values to the existing config either overwriting or re-assigning
+                    let theConfig = details.cfg;
+                    _deepMergeConfig(details, theConfig, newConfig, mergeExisting);
+
+                    if (!mergeExisting) {
+                        // Remove (unassign) the values "missing" from the newConfig and also not in the default config
+                        objForEachKey(theConfig, (key) => {
+                            if (!objHasOwn(newConfig, key)) {
+                                // Set the value to undefined
+                                details.set(theConfig, key, UNDEFINED_VALUE);
+                            }
+                        });
+                    }
+
+                    // Apply defaults to the new config
+                    details.setDf(theConfig, defaultConfig as any);
+                }, true);
+
+                // Now execute all of the listeners (synchronously) so they update their values immediately
+                _configHandler.notify();
+
+                if (updateState) {
+                    _doUpdate(updateState);
+                }
+            };
+
+            _self.evtNamespace = (): string => {
+                return _evtNamespace;
+            };
+
+            _self.flush = _flushChannels;
+        
+            _self.getTraceCtx = (createNew?: boolean): IDistributedTraceContext | null => {
+
+                if ((!_traceCtx && createNew !== false) || createNew === true) {
+                    _traceCtx = createDistributedTraceContext(_serverOTelCtx);
+                }
+
+                return _traceCtx;
+            };
+
+            _self.setTraceCtx = (traceCtx: IDistributedTraceContext): void => {
+                _traceCtx = traceCtx || null;
+            };
+
+            _self.startSpan = (name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan | null => {
+                if (!_traceProvider || !_traceProvider.v || !_traceProvider.v.isAvailable()) {
+                    // No trace provider available or provider is not ready
+                    return null;
+                }
+
+                return _traceProvider.v.createSpan(name, options, parent || _self.getTraceCtx());
+            };
+
+            /**
+             * Return the current active span
+             * @param createNew - Optional flag to create a non-recording span if no active span exists, defaults to true
+             */
+            _self.getActiveSpan = (createNew?: boolean): IReadableSpan | null => {
+                // Special case for when there is no active span but there is a trace provider
+                if (createNew !== false && _traceProvider && !_activeSpan && _traceProvider.v) {
+                    // Now that we have a trace provider, ensure that we return an active span (non-recording)
+                    _activeSpan = _traceProvider.v.createSpan(_traceProvider.v.getProviderId(), {
+                        recording: false,
+                        root: true
+                    });
+                }
+
+                return _activeSpan;
+            };
+
+            /**
+             * Set the current Active Span
+             * @param span - The span to set as the active span
+             */
+            _self.setActiveSpan = (span: IReadableSpan): ISpanScope => {
+                let theSpanContext: IDistributedTraceContext | null = null;
+                let currentCtx: IDistributedTraceContext = _self.getTraceCtx();
+                let currentSpan: IReadableSpan | null = _activeSpan;
+                let scope: ISpanScope;
+
+                if (span) {
+                    let otelSpanContext: IDistributedTraceContext | IOTelSpanContext = null;
+                    if (span.spanContext) {
+                        // May be a valid IDistributedTraceContext or an OpenTelemetry SpanContext
+                        otelSpanContext = span.spanContext();
+                    } else if ((span as any).context) {
+                        // Legacy OpenTelemetry API support (Note: The returned context won't be a valid IDistributedTraceContext)
+                        otelSpanContext = (span as any).context();
+                    }
+
+                    if (otelSpanContext) {
+                        if (isDistributedTraceContext(otelSpanContext)) {
+                            theSpanContext = otelSpanContext;
+                        } else {
+                            // Support Spans from other libraries that may not be using the IDistributedTraceContext
+                            // If the spanContext is not a valid IDistributedTraceContext then we need to create a new one
+                            // and optionally set the parentSpanContext if it exists
+
+                            // Create a new context using the current trace context as the parent
+                            theSpanContext = createDistributedTraceContext(currentCtx);
+
+                            let parentContext: any = span.parentSpanContext;
+                            if (!parentContext) {
+                                if (span.parentSpanId) {
+                                    parentContext = {
+                                        traceId: (otelSpanContext as any).traceId,
+                                        spanId: span.parentSpanId
+                                    };
+                                }
+                            }
+
+                            // Was there a defined parent context and is it different from the current basic context
+                            if (parentContext && parentContext.traceId !== theSpanContext.traceId &&
+                                    parentContext.spanId !== theSpanContext.spanId &&
+                                    parentContext.traceFlags !== theSpanContext.traceFlags) {
+
+                                // Assign the parent details to this new context
+                                theSpanContext.traceId = parentContext.traceId;
+                                theSpanContext.spanId = parentContext.spanId;
+                                theSpanContext.traceFlags = parentContext.traceFlags;
+
+                                // Now create a new "Child" context which is extending the parent context
+                                theSpanContext = createDistributedTraceContext(theSpanContext);
+                            }
+
+                            theSpanContext.traceId = (otelSpanContext as any).traceId;
+                            theSpanContext.spanId = (otelSpanContext as any).spanId;
+                            theSpanContext.traceFlags = (otelSpanContext as any).traceFlags;
+                        }
+                    }
+                }
+                
+                scope = {
+                    host: _self,
+                    span: span,
+                    prvSpan: currentSpan,
+                    restore: () => {
+                        // Restore the current span and trace context
+                        if (currentSpan) {
+                            _self.setActiveSpan(currentSpan);
+                        } else {
+                            _activeSpan = null;
+                            _self.setTraceCtx(currentCtx);
+                        }
+
+                        // Clear the restore function, so that multiple calls to restore do not have any effect
+                        scope.restore = _noopVoid;
+                    }
+                };
+
+                // Change the active span to the new span
+                _activeSpan = span;
+
+                // Set the current trace context for the core SDK
+                // This is REQUIRED for the SDK to correctly associate telemetry with the current span context
+                if (theSpanContext) {
+                    _self.setTraceCtx(theSpanContext);
+                }
+
+                return scope;
+            };
+
+            _self.setTraceProvider = (traceProvider: ICachedValue<ITraceProvider>): void => {
+                _traceProvider = traceProvider;
+            };
+
+            _self.getTraceProvider = (): ITraceProvider | null => {
+                return _traceProvider ? _traceProvider.v : null;
+            };
+
+            _self.addUnloadHook = _addUnloadHook;
+
+            // Create the addUnloadCb
+            proxyFunctionAs(_self, "addUnloadCb", () => _unloadHandlers, "add");
+
+            _self.onCfgChange = (handler: WatcherFunction<CfgType>): IUnloadHook => {
+                let unloadHook: IUnloadHook;
+                if (!_isInitialized) {
+                    unloadHook = _addDelayedCfgListener(_cfgListeners, handler);
+                } else {
+                    unloadHook = onConfigChange(_configHandler.cfg, handler, _self.logger);
+                }
+
+                return _createUnloadHook(unloadHook);
+            };
+
+            _self.getWParam = () => {
+                return (hasDocument() || !!_configHandler.cfg.enableWParam) ? 0 : -1;
+            };
+
+
+            function _setPluginVersions() {
+                let thePlugins: { [key: string]: IPlugin } = {};
+
+                _pluginVersionStringArr = [];
+
+                const _addPluginVersions = (plugins: IPlugin[]) => {
+                    if (plugins) {
+                        arrForEach(plugins, (plugin) => {
+                            if (plugin.identifier && plugin.version && !thePlugins[plugin.identifier]) {
+                                let ver = plugin.identifier + "=" + plugin.version;
+                                _pluginVersionStringArr.push(ver);
+                                thePlugins[plugin.identifier] = plugin;
+                            }
+                        });
+                    }
+                }
+
+                _addPluginVersions(_channels);
+                if (_channelConfig) {
+                    arrForEach(_channelConfig, (channels) => {
+                        _addPluginVersions(channels);
+                    });
+                }
+
+                _addPluginVersions(_configExtensions);
+            }
+
+            function _initDefaults() {
+                _isInitialized = false;
+
+                // Use a default logger so initialization errors are not dropped on the floor with full logging
+                _configHandler = createDynamicConfig({} as CfgType, defaultConfig as any, _self.logger);
+
+                // Set the logging level to critical so that any critical initialization failures are displayed on the console
+                _configHandler.cfg.loggingLevelConsole = eLoggingSeverity.CRITICAL;
+
+                // Define _self.config
+                objDefine(_self, "config", {
+                    g: () => _configHandler.cfg,
+                    s: (newValue) => {
+                        _self.updateCfg(newValue, false);
+                    }
+                });
+
+                objDefine(_self, "pluginVersionStringArr", {
+                    g: () => {
+                        if (!_pluginVersionStringArr) {
+                            _setPluginVersions();
+                        }
+
+                        return _pluginVersionStringArr;
+                    }
+                });
+
+                objDefine(_self, "pluginVersionString", {
+                    g: () => {
+                        if (!_pluginVersionString) {
+                            if (!_pluginVersionStringArr) {
+                                _setPluginVersions();
+                            }
+
+                            _pluginVersionString = _pluginVersionStringArr.join(";");
+                        }
+
+                        return _pluginVersionString || STR_EMPTY;
+                    }
+                });
+
+                objDefine(_self, "logger", {
+                    g: () => {
+                        if (!_logger) {
+                            _logger = new DiagnosticLogger(_configHandler.cfg);
+                            _configHandler.logger = _logger;
+                        }
+
+                        return _logger;
+                    },
+                    s: (newLogger) => {
+                        _configHandler.logger = newLogger;
+                        if (_logger !== newLogger) {
+                            runTargetUnload(_logger, false);
+                            _logger = newLogger;
+                        }
+                    }
+                });
+
+                _self.logger = new DiagnosticLogger(_configHandler.cfg);
+                _extensions = [];
+                let cfgExtensions = _self.config.extensions || [];
+                cfgExtensions.splice(0, cfgExtensions.length);
+                arrAppend(cfgExtensions, _extensions);
+
+                _telemetryInitializerPlugin = new TelemetryInitializerPlugin();
+                _serverOTelCtx = null;
+                _serverTraceHdrMode = eTraceHeadersMode.None;
+                _eventQueue = [];
+                runTargetUnload(_notificationManager, false);
+                _notificationManager = null;
+                _perfManager = null;
+                // _statsBeat = null;
+                _cfgPerfManager = null;
+                runTargetUnload(_cookieManager, false);
+                _cookieManager = null;
+                _pluginChain = null;
+                _configExtensions = [];
+                _channelConfig = null;
+                _channels = null;
+
+                _isUnloading = false;
+                _internalLogsEventName = null;
+                _evtNamespace = createUniqueNamespace("AIBaseCore", true);
+                _unloadHandlers = createUnloadHandlerContainer();
+                _traceCtx = null;
+                _traceProvider = null;
+                _instrumentationKey = null;
+                _hookContainer = createUnloadHookContainer();
+                _cfgListeners = [];
+                _pluginVersionString = null;
+                _pluginVersionStringArr = null;
+                _forceStopInternalLogPoller = false;
+                _internalLogPoller = null;
+                _internalLogPollerListening = false;
+                _activeStatus = eActiveStatus.NONE; // default is None
+                _endpoint = null;
+                _initInMemoMaxSize = null;
+                _isStatusSet = false;
+                _initTimer = null;
+                // if (_statsBeat) {
+                //     // Unload and disable any statsbeat instance
+                //     _statsBeat.enabled = false;
+                // }
+                // _statsBeat = null;
+            }
+
+            function _createTelCtx(): IProcessTelemetryContext {
+                let theCtx = createProcessTelemetryContext(_getPluginChain(), _configHandler.cfg, _self);
+                theCtx.onComplete(_startLogPoller);
+
+                return theCtx;
+            }
+
+            // Initialize or Re-initialize the plugins
+            function _initPluginChain(updateState: ITelemetryUpdateState | null) {
+                // Extension validation
+                let theExtensions = _validateExtensions(_self.logger, ChannelControllerPriority, _configExtensions);
+            
+                _pluginChain = null;
+                _pluginVersionString = null;
+                _pluginVersionStringArr = null;
+    
+                // Get the primary channel queue and include as part of the normal extensions
+                _channels = (_channelConfig || [])[0] ||[];
+                
+                // Add any channels provided in the extensions and sort them
+                _channels = sortPlugins(arrAppend(_channels, theExtensions.channels));
+
+                // Create an array of all extensions, including the _channels
+                let allExtensions = arrAppend(sortPlugins(theExtensions.core), _channels);
+
+                // Required to allow plugins to call core.getPlugin() during their own initialization
+                _extensions = objFreeze(allExtensions);
+
+                // This has a side effect of adding the extensions passed during initialization
+                // into the config.extensions, so you can see all of the extensions loaded.
+                // This will also get updated by the addPlugin() and remove plugin code.
+                let cfgExtensions = _self.config.extensions || [];
+                cfgExtensions.splice(0, cfgExtensions.length);
+                arrAppend(cfgExtensions, _extensions);
+
+                let rootCtx = _createTelCtx();
+
+                // Initializing the channels first
+                if (_channels && _channels.length > 0) {
+                    initializePlugins(rootCtx.createNew(_channels), allExtensions);
+                }
+
+                // Now initialize the normal extensions (explicitly not including the _channels as this can cause duplicate initialization)
+                initializePlugins(rootCtx, allExtensions);
+
+                if (updateState) {
+                    _doUpdate(updateState);
+                }
+            }
+
+            function _getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T> {
+                let theExt: ILoadedPlugin<T> = null;
+                let thePlugin: IPlugin = null;
+                let channelHosts: IChannelControlsHost[] = [];
+
+                arrForEach(_extensions, (ext: any) => {
+                    if (ext.identifier === pluginIdentifier && ext !== _telemetryInitializerPlugin) {
+                        thePlugin = ext;
+                        return -1;
+                    }
+
+                    if ((ext as IChannelControlsHost).getChannel) {
+                        channelHosts.push(ext as IChannelControlsHost);
+                    }
+                });
+
+                if (!thePlugin && channelHosts.length > 0) {
+                    arrForEach(channelHosts, (host) => {
+                        thePlugin = host.getChannel(pluginIdentifier);
+                        if (!thePlugin) {
+                            return -1;
+                        }
+                    });
+                }
+
+                if (thePlugin) {
+                    theExt = {
+                        plugin: thePlugin as T,
+                        setEnabled: (enabled: boolean) => {
+                            _getPluginState(thePlugin)[STR_DISABLED] = !enabled;
+                        },
+                        isEnabled: () => {
+                            let pluginState = _getPluginState(thePlugin);
+                            return !pluginState.teardown && !pluginState[STR_DISABLED];
+                        },
+                        remove: (isAsync: boolean = true, removeCb?: (removed?: boolean) => void): void => {
+                            let pluginsToRemove: IPlugin[] = [thePlugin];
+                            let unloadState: ITelemetryUnloadState = {
+                                reason: TelemetryUnloadReason.PluginUnload,
+                                isAsync: isAsync
+                            };
+
+                            _removePlugins(pluginsToRemove, unloadState, (removed) => {
+                                if (removed) {
+                                    // Re-Initialize the plugin chain
+                                    _initPluginChain({
+                                        reason: TelemetryUpdateReason.PluginRemoved,
+                                        removed: pluginsToRemove
+                                    });
+                                }
+
+                                removeCb && removeCb(removed);
+                            });
+                        }
+                    }
+                }
+
+                return theExt;
+            }
+
+            function _getPluginChain() {
+                if (!_pluginChain) {
+                    // copy the collection of extensions
+                    let extensions = (_extensions || []).slice();
+
+                    // During add / remove this may get called again, so don't read if already present
+                    if (arrIndexOf(extensions, _telemetryInitializerPlugin) === -1) {
+                        extensions.push(_telemetryInitializerPlugin);
+                    }
+
+                    _pluginChain = createTelemetryProxyChain(sortPlugins(extensions), _configHandler.cfg, _self);
+                }
+
+                return _pluginChain;
+            }
+
+            function _removePlugins(thePlugins: IPlugin[], unloadState: ITelemetryUnloadState, removeComplete: (removed: boolean) => void) {
+
+                if (thePlugins && thePlugins.length > 0) {
+                    let unloadChain = createTelemetryProxyChain(thePlugins, _configHandler.cfg, _self);
+                    let unloadCtx = createProcessTelemetryUnloadContext(unloadChain, _self);
+
+                    unloadCtx.onComplete(() => {
+                        let removed = false;
+
+                        // Remove the listed config extensions
+                        let newConfigExtensions: IPlugin[] = [];
+                        arrForEach(_configExtensions, (plugin, idx) => {
+                            if (!_isPluginPresent(plugin, thePlugins)) {
+                                newConfigExtensions.push(plugin);
+                            } else {
+                                removed = true;
+                            }
+                        });
+
+                        _configExtensions = newConfigExtensions;
+                        _pluginVersionString = null;
+                        _pluginVersionStringArr = null;
+
+                        // Re-Create the channel config
+                        let newChannelConfig: IChannelControls[][] = [];
+                        if (_channelConfig) {
+                            arrForEach(_channelConfig, (queue, idx) => {
+                                let newQueue: IChannelControls[] = [];
+                                arrForEach(queue, (channel) => {
+                                    if (!_isPluginPresent(channel, thePlugins)) {
+                                        newQueue.push(channel);
+                                    } else {
+                                        removed = true;
+                                    }
+                                });
+
+                                newChannelConfig.push(newQueue);
+                            });
+
+                            _channelConfig = newChannelConfig;
+                        }
+
+                        removeComplete && removeComplete(removed);
+                        _startLogPoller();
+                    });
+
+                    unloadCtx.processNext(unloadState);
+                } else {
+                    removeComplete(false);
+                }
+            }
+
+            function _flushInternalLogs() {
+                if (_logger && _logger.queue) {
+                    let queue: _InternalLogMessage[] = _logger.queue.slice(0);
+                    _logger.queue.length = 0;
+
+                    arrForEach(queue, (logMessage: _InternalLogMessage) => {
+                        const item: ITelemetryItem = {
+                            name: _internalLogsEventName ? _internalLogsEventName : "InternalMessageId: " + logMessage.messageId,
+                            iKey: _instrumentationKey,
+                            time: toISOString(new Date()),
+                            baseType: _InternalLogMessage.dataType,
+                            baseData: { message: logMessage.message }
+                        };
+                        _self.track(item);
+                    });
+                }
+            }
+
+            function _flushChannels(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason, cbTimeout?: number) {
+                // Setting waiting to one so that we don't call the callBack until we finish iterating
+                let waiting = 1;
+                let doneIterating = false;
+                let cbTimer: ITimerHandler = null;
+                cbTimeout = cbTimeout || 5000;
+
+                function doCallback() {
+                    waiting--;
+                    if (doneIterating && waiting === 0) {
+                        cbTimer && cbTimer.cancel();
+                        cbTimer = null;
+    
+                        callBack && callBack(doneIterating);
+                        callBack = null;
+                    }
+                }
+                    
+                if (_channels && _channels.length > 0) {
+                    let flushCtx = _createTelCtx().createNew(_channels);
+                    flushCtx.iterate<IChannelControls>((plugin) => {
+                        if (plugin.flush) {
+                            waiting ++;
+
+                            let handled = false;
+                            // Not all channels will call this callback for every scenario
+                            if (!plugin.flush(isAsync, () => {
+                                handled = true;
+                                doCallback();
+                            }, sendReason)) {
+                                if (!handled) {
+                                    // If any channel doesn't return true and it didn't call the callback, then we should assume that the callback
+                                    // will never be called, so use a timeout to allow the channel(s) some time to "finish" before triggering any
+                                    // followup function (such as unloading)
+                                    if (isAsync && cbTimer == null) {
+                                        cbTimer = scheduleTimeout(() => {
+                                            cbTimer = null;
+                                            doCallback();
+                                        }, cbTimeout);
+                                    } else {
+                                        doCallback();
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                doneIterating = true;
+                doCallback();
+                
+                return true;
+            }
+
+            function _initPerfManager() {
+                // Save the previous config based performance manager creator to avoid creating new perf manager instances if unchanged
+                let prevCfgPerfMgr: (core: IAppInsightsCore, notificationManager: INotificationManager) => IPerfManager;
+
+                // Will get recalled if any referenced config values are changed
+                _addUnloadHook(_configHandler.watch((details) => {
+                    let enablePerfMgr = details.cfg.enablePerfMgr;
+                    if (enablePerfMgr) {
+                        let createPerfMgr = details.cfg.createPerfMgr;
+                        // for preCfgPerfMgr = createPerfMgr = null
+                        // initial createPerfMgr function should be _createPerfManager
+                        if ((prevCfgPerfMgr !== createPerfMgr) || !prevCfgPerfMgr) {
+                            if (!createPerfMgr) {
+                                createPerfMgr = _createPerfManager;
+                            }
+
+                            // Set the performance manager creation function if not defined
+                            getSetValue(details.cfg, STR_CREATE_PERF_MGR, createPerfMgr);
+                            prevCfgPerfMgr = createPerfMgr;
+
+                            // Remove any existing config based performance manager
+                            _cfgPerfManager = null;
+                        }
+
+                        // Only create the performance manager if it's not already created or manually set
+                        if (!_perfManager && !_cfgPerfManager && isFunction(createPerfMgr)) {
+                            // Create a new config based performance manager
+                            _cfgPerfManager = createPerfMgr(_self, _self.getNotifyMgr());
+                        }
+                    } else {
+                        // Remove any existing config based performance manager
+                        _cfgPerfManager = null;
+
+                        // Clear the previous cached value so it can be GC'd
+                        prevCfgPerfMgr = null;
+                    }
+                }));
+            }
+
+            function _doUpdate(updateState: ITelemetryUpdateState): void {
+                let updateCtx = createProcessTelemetryUpdateContext(_getPluginChain(), _self);
+                updateCtx.onComplete(_startLogPoller);
+
+                if (!_self._updateHook || _self._updateHook(updateCtx, updateState) !== true) {
+                    updateCtx.processNext(updateState);
+                }
+            }
+
+            function _logOrThrowError(message: string) {
+                let logger = _self.logger;
+                if (logger) {
+                    // there should always be a logger
+                    _throwInternal(logger, eLoggingSeverity.WARNING, _eInternalMessageId.PluginException, message);
+                    _startLogPoller();
+                } else {
+                    throwError(message);
+                }
+            }
+
+            function _notifyInvalidEvent(telemetryItem: ITelemetryItem): void {
+                let manager = _self.getNotifyMgr();
+                if (manager) {
+                    manager.eventsDiscarded([telemetryItem], eEventsDiscardedReason.InvalidEvent);
+                }
+            }
+
+            function _addUnloadHook(hooks: IUnloadHook | IUnloadHook[] | Iterator<IUnloadHook> | ILegacyUnloadHook | ILegacyUnloadHook[] | Iterator<ILegacyUnloadHook>) {
+                _hookContainer.add(hooks);
+            }
+        });
+    }
+
+    public initialize(config: CfgType, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    public getChannels(): IChannelControls[] {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    public track(telemetryItem: ITelemetryItem) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    public getProcessTelContext(): IProcessTelemetryContext {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    public getNotifyMgr(): INotificationManager {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Adds a notification listener. The SDK calls methods on the listener when an appropriate notification is raised.
+     * The added plugins must raise notifications. If the plugins do not implement the notifications, then no methods will be
+     * called.
+     * @param listener - An INotificationListener object.
+     */
+    public addNotificationListener(listener: INotificationListener): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Removes all instances of the listener.
+     * @param listener - INotificationListener to remove.
+     */
+    public removeNotificationListener(listener: INotificationListener): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Get the current cookie manager for this instance
+     */
+    public getCookieMgr(): ICookieMgr {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Set the current cookie manager for this instance
+     * @param cookieMgr - The manager, if set to null/undefined will cause the default to be created
+     */
+    public setCookieMgr(cookieMgr: ICookieMgr) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    public getPerfMgr(): IPerfManager {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    // public getStatsBeat(statsBeatState: IStatsBeatState): IStatsBeat {
+    //     // @ DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    //     return null;
+    // }
+
+    // public setStatsMgr(statsMgr?: IStatsMgr): void {
+    //     // @ DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    // }
+
+    public setPerfMgr(perfMgr: IPerfManager) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    public eventCnt(): number {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return 0;
+    }
+
+    /**
+     * Enable the timer that checks the logger.queue for log messages to be flushed.
+     * Note: Since 3.0.1 and 2.8.13 this is no longer an interval timer but is a normal
+     * timer that is only started when this function is called and then subsequently
+     * only _if_ there are any logger.queue messages to be sent.
+     */
+    public pollInternalLogs(eventName?: string): ITimerHandler {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Stop the timer that log messages from logger.queue when available
+     */
+    public stopPollingInternalLogs(): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Add a telemetry processor to decorate or drop telemetry events.
+     * @param telemetryInitializer - The Telemetry Initializer function
+     * @returns - A ITelemetryInitializerHandler to enable the initializer to be removed
+     */
+    public addTelemetryInitializer(telemetryInitializer: TelemetryInitializerFunction): ITelemetryInitializerHandler {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Unload and Tear down the SDK and any initialized plugins, after calling this the SDK will be considered
+     * to be un-initialized and non-operational, re-initializing the SDK should only be attempted if the previous
+     * unload call return `true` stating that all plugins reported that they also unloaded, the recommended
+     * approach is to create a new instance and initialize that instance.
+     * This is due to possible unexpected side effects caused by plugins not supporting unload / teardown, unable
+     * to successfully remove any global references or they may just be completing the unload process asynchronously.
+     * If you pass isAsync as `true` (also the default) and DO NOT pass a callback function then an [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will be returned which will resolve once the unload is complete. The actual implementation of the `IPromise`
+     * will be a native Promise (if supported) or the default as supplied by [ts-async library](https://github.com/nevware21/ts-async)
+     * @param isAsync - Can the unload be performed asynchronously (default)
+     * @param unloadComplete - An optional callback that will be called once the unload has completed
+     * @param cbTimeout - An optional timeout to wait for any flush operations to complete before proceeding with the
+     * unload. Defaults to 5 seconds.
+     * @returns Nothing or if occurring asynchronously a [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * which will be resolved once the unload is complete, the [IPromise](https://nevware21.github.io/ts-async/typedoc/interfaces/IPromise.html)
+     * will only be returned when no callback is provided and isAsync is true
+     */
+    public unload(isAsync?: boolean, unloadComplete?: (unloadState: ITelemetryUnloadState) => void, cbTimeout?: number): void | IPromise<ITelemetryUnloadState> {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    public getPlugin<T extends IPlugin = IPlugin>(pluginIdentifier: string): ILoadedPlugin<T> {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Add a new plugin to the installation
+     * @param plugin - The new plugin to add
+     * @param replaceExisting - should any existing plugin be replaced, default is false
+     * @param doAsync - Should the add be performed asynchronously
+     * @param addCb - [Optional] callback to call after the plugin has been added
+     */
+    public addPlugin<T extends IPlugin = ITelemetryPlugin>(plugin: T, replaceExisting?: boolean, doAsync?: boolean, addCb?: (added?: boolean) => void): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Update the configuration used and broadcast the changes to all loaded plugins
+     * @param newConfig - The new configuration is apply
+     * @param mergeExisting - Should the new configuration merge with the existing or just replace it. Default is to true.
+     */
+    public updateCfg(newConfig: CfgType, mergeExisting?: boolean): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Returns the unique event namespace that should be used
+     */
+    public evtNamespace(): string {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Add an unload handler that will be called when the SDK is being unloaded
+     * @param handler - the handler
+     */
+    public addUnloadCb(handler: UnloadHandler): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Flush and send any batched / cached data immediately
+     * @param async - send data asynchronously when true (defaults to true)
+     * @param callBack - if specified, notify caller when send is complete, the channel should return true to indicate to the caller that it will be called.
+     * If the caller doesn't return true the caller should assume that it may never be called.
+     * @param sendReason - specify the reason that you are calling "flush" defaults to ManualFlush (1) if not specified
+     * @returns true if the callback will be return after the flush is complete otherwise the caller should assume that any provided callback will never be called
+     */
+    public flush(isAsync?: boolean, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+        
+    /**
+     * Gets the current distributed trace context for this instance if available, you can optional
+     * create a new instance if one does not currently exist or return null if one does not currently exist.
+     * When a server context is available it will be used as the parent context for the any new instance created
+     * (when createNew is true or no instance currently exists), calling this function will not
+     * change the current distributed trace context, it will only return the current context
+     * or create a new instance if one does not currently exist.
+     * @param createNew - Optional flag to create a new instance if one doesn't currently exist, defaults to
+     * undefined which will only create a new instance if one does not currently exist.
+     * If set to `false` then it will return null if no distributed trace context is available.
+     * If set to `true` then a new instance will be created even if one already exists.
+     * @param createNew - Optional flag to create a new instance if one doesn't currently exist, defaults to
+     */
+    public getTraceCtx(createNew?: boolean): IDistributedTraceContext | null {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Sets the current distributed trace context for this instance if available
+     */
+    public setTraceCtx(newTracectx: IDistributedTraceContext): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Start a new span with the given name and optional parent context.
+     * The span will become the active span for its duration unless a different
+     * span is explicitly set as active.
+     *
+     * @param name - The name of the span
+     * @param options - Options for creating the span (kind, attributes, startTime)
+     * @param parent - Optional parent context. If not provided, uses the current active trace context
+     * @returns A new span instance, or null if no trace provider is available
+     * @since 3.4.0
+     */
+    public startSpan(name: string, options?: IOTelSpanOptions, parent?: IDistributedTraceContext): IReadableSpan | null {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Return the current active span, if no trace provider is available null will be returned
+     * but when a trace provider is available a span instance will always be returned, even if
+     * there is no active span (in which case a non-recording span will be returned).
+     * @param createNew - Optional flag to create a non-recording span if no active span exists, defaults to true.
+     * When false, returns the existing active span or null without creating a non-recording span.
+     * @returns The current active span or null if no trace provider is available or if createNew is false and no active span exists
+     * @since 3.4.0
+     */
+    public getActiveSpan(createNew?: boolean): IReadableSpan | null {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Set the current Active Span
+     * @param span - The span to set as the active span
+     * @returns An ISpanScope instance that provides the current scope, the span will always be the span passed in
+     * even when no trace provider is available
+     * @since 3.4.0
+     */
+    public setActiveSpan(span: IReadableSpan): ISpanScope {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Set the trace provider for creating spans.
+     * This allows different SKUs to provide their own span implementations.
+     *
+     * @param provider - The trace provider to use for span creation, it is passed as a cached value so that it may
+     * be implemented via a lazy / deferred initializer.
+     * @since 3.4.0
+     */
+    public setTraceProvider(provider: ICachedValue<ITraceProvider>): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Get the current trace provider.
+     *
+     * @returns The current trace provider, or null if none is set
+     * @since 3.4.0
+     */
+    public getTraceProvider(): ITraceProvider | null {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Add this hook so that it is automatically removed during unloading
+     * @param hooks - The single hook or an array of IInstrumentHook objects
+     */
+    public addUnloadHook(hooks: IUnloadHook | IUnloadHook[] | Iterator<IUnloadHook> | ILegacyUnloadHook | ILegacyUnloadHook[] | Iterator<ILegacyUnloadHook>): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Watches and tracks changes for accesses to the current config, and if the accessed config changes the
+     * handler will be recalled.
+     * @param handler - The watcher handler to call when the config changes
+     * @returns A watcher handler instance that can be used to remove itself when being unloaded
+     */
+    public onCfgChange(handler: WatcherFunction<CfgType>): IUnloadHook {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Watches and tracks status of initialization process
+     * @returns ActiveStatus
+     * @since 3.3.0
+     * If returned status is active, it means initialization process is completed.
+     * If returned status is pending, it means the initialization process is waiting for promieses to be resolved.
+     * If returned status is inactive, it means ikey is invalid or can 't get ikey or enpoint url from promsises.
+     */
+    public activeStatus(): eActiveStatus | number {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Set Active Status to pending, which will block the incoming changes until internal promises are resolved
+     * @internal Internal use
+     * @since 3.3.0
+     */
+    public _setPendingStatus(): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+
+    protected releaseQueue() {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Hook for Core extensions to allow them to update their own configuration before updating all of the plugins.
+     * @param updateCtx - The plugin update context
+     * @param updateState - The Update State
+     * @returns boolean - True means the extension class will call updateState otherwise the Core will
+     */
+    protected _updateHook?(updateCtx: IProcessTelemetryUpdateContext, updateState: ITelemetryUpdateState): void | boolean {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return false;
+    }
+}

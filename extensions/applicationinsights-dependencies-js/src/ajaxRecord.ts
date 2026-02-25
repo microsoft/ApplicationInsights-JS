@@ -1,16 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import dynamicProto from "@microsoft/dynamicproto-js";
+import type { IAjaxRecordInternal } from "./ajax";
 import {
-    Extensions, IDependencyTelemetry, dataSanitizeUrl, dateTimeUtilsDuration, msToTimeSpan, urlGetAbsoluteUrl, urlGetCompleteUrl
-} from "@microsoft/applicationinsights-common";
-import {
-    IDiagnosticLogger, IDistributedTraceContext, arrForEach, isNullOrUndefined, isNumber, isString, normalizeJsName, objForEachKey, objKeys
+    Extensions, IDependencyTelemetry, IDiagnosticLogger, IDistributedTraceContext, arrForEach, dataSanitizeUrl, dateTimeUtilsDuration,
+    isNullOrUndefined, isNumber, isString, msToTimeSpan, normalizeJsName, objForEachKey, objKeys, urlGetAbsoluteUrl, urlGetCompleteUrl
 } from "@microsoft/applicationinsights-core-js";
 import { mathRound } from "@nevware21/ts-utils";
 import { STR_DURATION, STR_PROPERTIES } from "./InternalConstants";
 
+// Type-only import to avoid circular dependency
 export interface IAjaxRecordResponse {
     statusText: string,
     headerMap: Object,
@@ -20,17 +19,11 @@ export interface IAjaxRecordResponse {
     response?: Object
 }
 
-interface ITraceCtx {
-    traceId: string;
-    spanId: string;
-    traceFlags: number;
-}
-
 /** @ignore */
 function _calcPerfDuration(resourceEntry:PerformanceResourceTiming, start:string, end:string) {
     let result = 0;
-    let from = resourceEntry[start];
-    let to = resourceEntry[end];
+    let from = (resourceEntry as any)[start];
+    let to = (resourceEntry as any)[end];
     if (from && to) {
         result = dateTimeUtilsDuration(from, to);
     }
@@ -63,7 +56,7 @@ function _setPerfValue(props:any, name:string, value:any): number {
 }
 
 /** @ignore */
-function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry) {
+function _populatePerfData(ajaxData:IAjaxRecordInternal, dependency:IDependencyTelemetry) {
     /*
     * https://developer.mozilla.org/en-US/docs/Web/API/Resource_Timing_API/Using_the_Resource_Timing_API
     *  | -startTime
@@ -144,9 +137,9 @@ function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry)
         propsSet |= _setPerfValue(props, STR_DURATION, duration);
         propsSet |= _setPerfValue(props, "perfTotal", duration);
 
-        var serverTiming = resourceEntry[strServerTiming];
+        var serverTiming = (resourceEntry as any)[strServerTiming];
         if (serverTiming) {
-            let server = {};
+            let server: any = {};
             arrForEach(serverTiming, (value, idx) => {
                 let name = normalizeJsName(value[strName] || "" + idx);
                 let newValue = server[name] || {};
@@ -166,9 +159,9 @@ function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry)
             propsSet |= _setPerfValue(props, strServerTiming, server);
         }
 
-        propsSet |= _setPerfValue(props, strTransferSize, resourceEntry[strTransferSize]);
-        propsSet |= _setPerfValue(props, strEncodedBodySize, resourceEntry[strEncodedBodySize]);
-        propsSet |= _setPerfValue(props, strDecodedBodySize, resourceEntry[strDecodedBodySize]);
+        propsSet |= _setPerfValue(props, strTransferSize, (resourceEntry as any)[strTransferSize]);
+        propsSet |= _setPerfValue(props, strEncodedBodySize, (resourceEntry as any)[strEncodedBodySize]);
+        propsSet |= _setPerfValue(props, strDecodedBodySize, (resourceEntry as any)[strDecodedBodySize]);
     } else {
         if (ajaxData.perfMark) {
             propsSet |= _setPerfValue(props, "missing", ajaxData.perfAttempts);
@@ -180,258 +173,173 @@ function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry)
     }
 }
 
-export class XHRMonitoringState {
-    public openDone: boolean;
-    public setRequestHeaderDone: boolean;
-    public sendDone: boolean;
-    public abortDone: boolean;
-
-    // <summary>True, if onreadyStateChangeCallback function attached to xhr, otherwise false</summary>
-    public stateChangeAttached: boolean;
-
-    constructor() {
-        let self = this;
-        self.openDone = false;
-        self.setRequestHeaderDone = false;
-        self.sendDone = false;
-        self.abortDone = false;
+/**
+ * Interface defining the XHR monitoring state properties
+ */
+export interface IXHRMonitoringState {
+    openDone: boolean;
+    setRequestHeaderDone: boolean;
+    sendDone: boolean;
+    abortDone: boolean;
     
-        // <summary>True, if onreadyStateChangeCallback function attached to xhr, otherwise false</summary>
-        self.stateChangeAttached = false;
-    }
+    // True, if onreadyStateChangeCallback function attached to xhr, otherwise false
+    stateChangeAttached: boolean;
 }
 
-export class ajaxRecord {
-    public completed:boolean;
-    public requestHeadersSize:number;
-    public requestHeaders:any;
-    public responseReceivingDuration:number;
-    public callbackDuration:number;
-    public ajaxTotalDuration:number;
-    public aborted:number;
-    public pageUrl:string;
-    public requestUrl:string;
-    public requestSize:number;
-    public method:string;
-    public perfMark:PerformanceMark;
-    public perfTiming:PerformanceResourceTiming;
-    public perfAttempts?:number;
-    public async?:boolean;
+/**
+ * Factory function to create an XHR monitoring state object
+ * @returns An object implementing IXHRMonitoringState interface
+ */
+export function createXHRMonitoringState(): IXHRMonitoringState {
+    return {
+        openDone: false,
+        setRequestHeaderDone: false,
+        sendDone: false,
+        abortDone: false,
+        stateChangeAttached: false
+    };
+}
 
-    /// <summary>Should the Error Status text be included in the response</summary>
-    public errorStatusText?:boolean;
+/**
+ * Factory function to create an ajax record that implements IAjaxRecordInternal
+ * @param traceCtx - The distributed trace context for the ajax request
+ * @param logger - The diagnostic logger instance
+ * @returns An object implementing IAjaxRecordInternal interface
+ */
+export function createAjaxRecord(traceCtx: IDistributedTraceContext, logger: IDiagnosticLogger): IAjaxRecordInternal {
+    let _logger: IDiagnosticLogger = logger;
 
-    /// <summary>Returns the HTTP status code.</summary>
-    public status:string|number;
+    // Create the ajax record object implementing IAjaxRecordInternal
+    let ajaxRecord: IAjaxRecordInternal = {
+        // Initialize all properties with default values
+        perfMark: null,
+        completed: false,
+        requestHeadersSize: null,
+        requestHeaders: null,
+        responseReceivingDuration: null,
+        callbackDuration: null,
+        ajaxTotalDuration: null,
+        aborted: 0,
+        pageUrl: null,
+        requestUrl: null,
+        requestSize: 0,
+        method: null,
+        status: null,
+        requestSentTime: null,
+        responseStartedTime: null,
+        responseFinishedTime: null,
+        callbackFinishedTime: null,
+        endTime: null,
+        xhrMonitoringState: createXHRMonitoringState(),
+        clientFailure: 0,
+        traceCtx: traceCtx,
+        perfTiming: null,
 
-    // <summary>The timestamp when open method was invoked</summary>
-    public requestSentTime: number;
+        getAbsoluteUrl: function(): string {
+            return ajaxRecord.requestUrl ? urlGetAbsoluteUrl(ajaxRecord.requestUrl) : null;
+        },
 
-    // <summary>The timestamps when first byte was received</summary>
-    public responseStartedTime: number;
+        getPathName: function(): string {
+            return ajaxRecord.requestUrl ? dataSanitizeUrl(_logger, urlGetCompleteUrl(ajaxRecord.method, ajaxRecord.requestUrl)) : null;
+        },
 
-    // <summary>The timestamp when last byte was received</summary>
-    public responseFinishedTime: number;
+        CreateTrackItem: function(ajaxType: string, enableRequestHeaderTracking: boolean, getResponse: () => IAjaxRecordResponse): IDependencyTelemetry {
+            // round to 3 decimal points
+            ajaxRecord.ajaxTotalDuration = mathRound(dateTimeUtilsDuration(ajaxRecord.requestSentTime, ajaxRecord.responseFinishedTime) * 1000) / 1000;
+            if (ajaxRecord.ajaxTotalDuration < 0) {
+                return null;
+            }
 
-    // <summary>The timestamp when onreadystatechange callback in readyState 4 finished</summary>
-    public callbackFinishedTime: number;
+            let dependency = {
+                // Always use the traceId and spanId from the traceCtx, this is the same as the
+                // traceId and spanId used to create the ajaxRecord, this is to ensure that
+                // the traceId and spanId are always the same for the ajaxRecord and the dependency
+                // This is important for the distributed tracing to work correctly
+                id: "|" + traceCtx.traceId + "." + traceCtx.spanId,
+                target: ajaxRecord.getAbsoluteUrl(),
+                name: ajaxRecord.getPathName(),
+                type: ajaxType,
+                startTime: null,
+                duration: ajaxRecord.ajaxTotalDuration,
+                success: (+(ajaxRecord.status)) >= 200 && (+(ajaxRecord.status)) < 400,
+                responseCode: (+(ajaxRecord.status)),
+                [STR_PROPERTIES]: { HttpMethod: ajaxRecord.method }
+            } as IDependencyTelemetry;
 
-    // <summary>The timestamp at which ajax was ended</summary>
-    public endTime: number;
+            let props = dependency[STR_PROPERTIES];
+            if (ajaxRecord.aborted) {
+                props.aborted = true;
+            }
 
-    public xhrMonitoringState: XHRMonitoringState;
+            if (ajaxRecord.requestSentTime) {
+                // Set the correct dependency start time
+                dependency.startTime = new Date();
+                dependency.startTime.setTime(ajaxRecord.requestSentTime);
+            }
 
-    // <summary>Determines whether or not JavaScript exception occurred in xhr.onreadystatechange code. 1 if occurred, otherwise 0.</summary>
-    public clientFailure: number;
+            // Add Ajax perf details if available
+            _populatePerfData(this, dependency);
 
-    /**
-     * The traceId to use for the dependency call
-     */
-    public traceID: string;
+            if (enableRequestHeaderTracking) {
+                if (objKeys(ajaxRecord.requestHeaders).length > 0) {
+                    props.requestHeaders = ajaxRecord.requestHeaders;
+                }
+            }
 
-    /**
-     * The spanId to use for the dependency call
-     */
-    public spanID: string;
+            if (getResponse) {
+                let response: IAjaxRecordResponse = getResponse();
+                if (response) {
 
-    /**
-     * The traceFlags to use for the dependency call
-     */
-    public traceFlags?: number;
+                    // enrich dependency target with correlation context from the server
+                    const correlationContext = response.correlationContext;
+                    if (correlationContext) {
+                        dependency.correlationContext = /* dependency.target + " | " + */ correlationContext;
+                    }
 
-    /**
-     * The trace context to use for reporting the remote dependency call
-     */
-    public eventTraceCtx: ITraceCtx;
+                    if (response.headerMap) {
+                        if (objKeys(response.headerMap).length > 0) {
+                            props.responseHeaders = response.headerMap;
+                        }
+                    }
 
-    /**
-     * The listener assigned context values that will be passed to any dependency initializer
-     */
-    public context?: { [key: string]: any };
+                    if (ajaxRecord.errorStatusText) {
+                        if ((+(ajaxRecord.status)) >= 400) {
+                            const responseType = response.type;
+                            if (responseType === "" || responseType === "text") {
+                                props.responseText = response.responseText ? response.statusText + " - " + response.responseText : response.statusText;
+                            }
+                            if (responseType === "json") {
+                                props.responseText = response.response ? response.statusText + " - " + JSON.stringify(response.response) : response.statusText;
+                            }
+                        } else if (ajaxRecord.status === 0) {
+                            props.responseText = response.statusText || "";
+                        }
+                    }
+                }
+            }
 
-    constructor(traceId: string, spanId: string, logger: IDiagnosticLogger, traceCtx?: IDistributedTraceContext) {
-        let self = this;
-        let _logger: IDiagnosticLogger = logger;
-        let strResponseText = "responseText";
+            return dependency;
+        },
 
-        // Assigning the initial/default values within the constructor to avoid typescript from creating a bunch of
-        // this.XXXX = null
-        self.perfMark = null;
-        self.completed = false;
-        self.requestHeadersSize = null;
-        self.requestHeaders = null;
-        self.responseReceivingDuration = null;
-        self.callbackDuration = null;
-        self.ajaxTotalDuration = null;
-        self.aborted = 0;
-        self.pageUrl = null;
-        self.requestUrl = null;
-        self.requestSize = 0;
-        self.method = null;
-        self.status = null;
-        self.requestSentTime = null;
-        self.responseStartedTime = null;
-        self.responseFinishedTime = null;
-        self.callbackFinishedTime = null;
-        self.endTime = null;
-        self.xhrMonitoringState = new XHRMonitoringState();
-        self.clientFailure = 0;
+        getPartAProps: function(): { [key: string]: any } {
+            let partA: { [key: string]: any } = null;
 
-        self.traceID = traceId;
-        self.spanID = spanId;
-        self.traceFlags = traceCtx?.getTraceFlags();
+            let parentCtx = ajaxRecord.traceCtx.parentCtx;
+            if (parentCtx && (parentCtx.traceId || parentCtx.spanId)) {
+                partA = {};
+                let traceExt = partA[Extensions.TraceExt] = {
+                    traceID: parentCtx.traceId,
+                    parentID: parentCtx.spanId
+                } as { [key: string]: any };
 
-        if (traceCtx) {
-            self.eventTraceCtx = {
-                traceId: traceCtx.getTraceId(),
-                spanId: traceCtx.getSpanId(),
-                traceFlags: traceCtx.getTraceFlags()
-            };
-        } else {
-            self.eventTraceCtx = null;
+                if (!isNullOrUndefined(parentCtx.traceFlags)) {
+                    traceExt.traceFlags = parentCtx.traceFlags;
+                }
+            }
+
+            return partA;
         }
+    };
 
-        dynamicProto(ajaxRecord, self, (self) => {
-            self.getAbsoluteUrl= () => {
-                return self.requestUrl ? urlGetAbsoluteUrl(self.requestUrl) : null;
-            }
-        
-            self.getPathName = () => {
-                return self.requestUrl ? dataSanitizeUrl(_logger, urlGetCompleteUrl(self.method, self.requestUrl)) : null;
-            }
-        
-            self.CreateTrackItem = (ajaxType:string, enableRequestHeaderTracking:boolean, getResponse:() => IAjaxRecordResponse):IDependencyTelemetry => {
-                // round to 3 decimal points
-                self.ajaxTotalDuration = mathRound(dateTimeUtilsDuration(self.requestSentTime, self.responseFinishedTime) * 1000) / 1000;
-                if (self.ajaxTotalDuration < 0) {
-                    return null;
-                }
-        
-                let dependency = {
-                    id: "|" + self.traceID + "." + self.spanID,
-                    target: self.getAbsoluteUrl(),
-                    name: self.getPathName(),
-                    type: ajaxType,
-                    startTime: null,
-                    duration: self.ajaxTotalDuration,
-                    success: (+(self.status)) >= 200 && (+(self.status)) < 400,
-                    responseCode: (+(self.status)),
-                    [STR_PROPERTIES]: { HttpMethod: self.method }
-                } as IDependencyTelemetry;
-
-                let props = dependency[STR_PROPERTIES];
-                if (self.aborted) {
-                    props.aborted = true;
-                }
-
-                if (self.requestSentTime) {
-                    // Set the correct dependency start time
-                    dependency.startTime = new Date();
-                    dependency.startTime.setTime(self.requestSentTime);
-                }
-        
-                // Add Ajax perf details if available
-                _populatePerfData(self, dependency);
-        
-                if (enableRequestHeaderTracking) {
-                    if (objKeys(self.requestHeaders).length > 0) {
-                        props.requestHeaders = self.requestHeaders;
-                    }
-                }
-        
-                if (getResponse) {
-                    let response:IAjaxRecordResponse = getResponse();
-                    if (response) {
-        
-                        // enrich dependency target with correlation context from the server
-                        const correlationContext = response.correlationContext;
-                        if (correlationContext) {
-                            dependency.correlationContext = /* dependency.target + " | " + */ correlationContext;
-                        }
-        
-                        if (response.headerMap) {
-                            if (objKeys(response.headerMap).length > 0) {
-                                props.responseHeaders = response.headerMap;
-                            }
-                        }
-        
-                        if (self.errorStatusText) {
-                            if (self.status >= 400) {
-                                const responseType = response.type;
-                                if (responseType === "" || responseType === "text") {
-                                    props.responseText = response.responseText ? response.statusText + " - " + response[strResponseText] : response.statusText;
-                                }
-                                if (responseType === "json") {
-                                    props.responseText = response.response ? response.statusText + " - " + JSON.stringify(response.response) : response.statusText;
-                                }
-                            } else if (self.status === 0) {
-                                props.responseText = response.statusText || "";
-                            }
-                        }
-                    }
-                }
-        
-                return dependency;
-            }
-
-            self.getPartAProps = () => {
-                let partA: { [key: string]: any } = null;
-
-                let traceCtx = self.eventTraceCtx;
-                if (traceCtx && (traceCtx.traceId || traceCtx.spanId)) {
-                    partA = {};
-                    let traceExt = partA[Extensions.TraceExt] = {
-                        traceID: traceCtx.traceId,
-                        parentID: traceCtx.spanId
-                    } as  { [key: string]: any };
-
-                    if (!isNullOrUndefined(traceCtx.traceFlags)) {
-                        traceExt.traceFlags = traceCtx.traceFlags;
-                    }
-                }
-
-                return partA
-            };
-        });
-    }
-
-    public getAbsoluteUrl(): string {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return null;
-    }
-
-    public getPathName(): string {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return null;
-    }
-
-    public CreateTrackItem(ajaxType:string, enableRequestHeaderTracking:boolean, getResponse:() => IAjaxRecordResponse):IDependencyTelemetry {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return null;
-    }
-
-    public getPartAProps(): { [key: string]: any } {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return null;
-    }
+    return ajaxRecord;
 }

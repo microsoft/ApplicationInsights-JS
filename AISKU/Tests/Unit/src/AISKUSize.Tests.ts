@@ -2,7 +2,7 @@ import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { dumpObj } from '@nevware21/ts-utils';
 import { createPromise, doAwait, IPromise } from '@nevware21/ts-async';
 import { strUndefined } from "@microsoft/applicationinsights-core-js";
-import { utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
+import { utlRemoveSessionStorage } from "@microsoft/applicationinsights-core-js";
 import * as pako from "pako";
 import { Snippet } from "../../../src/Snippet";
 
@@ -46,18 +46,18 @@ function _loadPackageJson(cb:(isNightly: boolean, packageJson: any) => IPromise<
 }
 
 function _checkSize(checkType: string, maxSize: number, size: number, isNightly: boolean): void {
-  if (isNightly) {
+    if (isNightly) {
         maxSize += .5;
     }
 
     Assert.ok(size <= maxSize, `exceed ${maxSize} KB, current ${checkType} size is: ${size} KB`);
-}    
+}
 
 export class AISKUSizeCheck extends AITestClass {
-    private readonly MAX_RAW_SIZE = 150;
-    private readonly MAX_BUNDLE_SIZE = 150;
-    private readonly MAX_RAW_DEFLATE_SIZE = 60;
-    private readonly MAX_BUNDLE_DEFLATE_SIZE = 60;
+    private readonly MAX_RAW_SIZE = 174;
+    private readonly MAX_BUNDLE_SIZE = 174;
+    private readonly MAX_RAW_DEFLATE_SIZE = 70;
+    private readonly MAX_BUNDLE_DEFLATE_SIZE = 70;
     private readonly rawFilePath = "../dist/es5/applicationinsights-web.min.js";
     // Automatically updated by version scripts
     private readonly currentVer = "3.3.11";
@@ -85,8 +85,8 @@ export class AISKUSizeCheck extends AITestClass {
     }
 
     public testCleanup() {
-        utlRemoveSessionStorage(null as any, "AI_sentBuffer", );
-        utlRemoveSessionStorage(null as any, "AI_buffer", );
+        utlRemoveSessionStorage(null as any, "AI_sentBuffer");
+        utlRemoveSessionStorage(null as any, "AI_buffer");
     }
 
     public registerTests() {

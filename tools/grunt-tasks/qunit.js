@@ -321,12 +321,54 @@ module.exports = function(grunt) {
 
     // The final tasks to run before terminating the task
     function finishTask(success) {
-      // Close the puppeteer browser
-      if (browser) {
-        browser.close();
+      function closeBrowserWithTimeout(timeoutMs) {
+        return new Promise(function(resolve) {
+          var resolved = false;
+          
+          // Set a timeout to force resolve if browser.close() hangs
+          var timeout = setTimeout(function() {
+            if (!resolved) {
+              resolved = true;
+              grunt.log.warn('Browser close timed out after ' + timeoutMs + 'ms, forcing completion');
+              // Try to force kill the browser process
+              if (browser && browser.process()) {
+                try {
+                  browser.process().kill('SIGKILL');
+                } catch (e) {
+                  // Ignore kill errors
+                }
+              }
+              resolve();
+            }
+          }, timeoutMs);
+          
+          if (browser) {
+            browser.close().then(function() {
+              if (!resolved) {
+                resolved = true;
+                clearTimeout(timeout);
+                resolve();
+              }
+            }).catch(function(e) {
+              if (!resolved) {
+                resolved = true;
+                clearTimeout(timeout);
+                grunt.log.error('Error closing browser: ' + e);
+                resolve();
+              }
+            });
+          } else {
+            resolved = true;
+            clearTimeout(timeout);
+            resolve();
+          }
+        });
       }
-      // Finish the task
-      done(success);
+      
+      // Close browser with 10 second timeout
+      closeBrowserWithTimeout(10000).then(function() {
+        done(success);
+      });
     }
 
     function appendToUrls (queryParam, value) {

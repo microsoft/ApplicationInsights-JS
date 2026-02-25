@@ -67,7 +67,6 @@
         "@microsoft/applicationinsights-analytics-js": "3.3.11",
         "@microsoft/applicationinsights-channel-js": "3.3.11",
         "@microsoft/applicationinsights-cfgsync-js": "3.3.11",
-        "@microsoft/applicationinsights-common": "3.3.11",
         "@microsoft/applicationinsights-core-js": "3.3.11",
         "@microsoft/applicationinsights-dependencies-js": "3.3.11",
         "@microsoft/applicationinsights-properties-js": "3.3.11",

@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { BreezeChannelIdentifier, IConfig, utlSetStoragePrefix } from "@microsoft/applicationinsights-common";
 import {
-    IAppInsightsCore, IConfiguration, IDiagnosticLogger, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryUnloadState,
-    IUnloadHookContainer, IXDomainRequest, IXHROverride, OnCompleteCallback, SendRequestReason, SenderPostManager, TransportType,
-    _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, createProcessTelemetryContext, eLoggingSeverity,
-    formatErrorMessageXdr, getResponseText, onConfigChange, parseResponse, prependTransports
+    BreezeChannelIdentifier, IAppInsightsCore, IConfig, IConfiguration, IDiagnosticLogger, IProcessTelemetryContext,
+    IProcessTelemetryUnloadContext, ITelemetryUnloadState, IUnloadHookContainer, IXDomainRequest, IXHROverride, OnCompleteCallback,
+    SendRequestReason, SenderPostManager, TransportType, _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal,
+    createProcessTelemetryContext, eLoggingSeverity, formatErrorMessageXdr, getResponseText, onConfigChange, parseResponse,
+    prependTransports, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise } from "@nevware21/ts-async";
 import { isFunction } from "@nevware21/ts-utils";

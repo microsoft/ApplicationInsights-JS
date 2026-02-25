@@ -1,8 +1,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { utlGetSessionStorage, utlRemoveSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
 import {
     IDiagnosticLogger, _eInternalMessageId, _throwInternal, arrForEach, arrIndexOf, dumpObj, eLoggingSeverity, getExceptionName, getJSON,
-    isArray, isFunction, isNullOrUndefined, isString
+    isArray, isFunction, isNullOrUndefined, isString, utlGetSessionStorage, utlRemoveSessionStorage, utlSetSessionStorage
 } from "@microsoft/applicationinsights-core-js";
 import { IInternalStorageItem, ISenderConfig } from "./Interfaces";
 

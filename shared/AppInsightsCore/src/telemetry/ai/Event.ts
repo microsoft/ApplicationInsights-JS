@@ -1,0 +1,61 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { strNotSpecified } from "../../constants/Constants";
+import { FieldType } from "../../enums/ai/Enums";
+import { IDiagnosticLogger } from "../../interfaces/ai/IDiagnosticLogger";
+import { IEventData } from "../../interfaces/ai/contracts/IEventData";
+import { ISerializable } from "../../interfaces/ai/telemetry/ISerializable";
+import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString } from "./Common/DataSanitizer";
+import { EventDataType } from "./DataTypes";
+import { EventEnvelopeType } from "./EnvelopeTypes";
+
+export class Event implements IEventData, ISerializable {
+    /**
+     * @deprecated Use the constant EventEnvelopeType instead.
+     */
+    public static envelopeType = EventEnvelopeType;
+
+    /**
+     * @deprecated Use the constant EventDataType instead.
+     */
+    public static dataType = EventDataType;
+
+    public aiDataContract = {
+        ver: FieldType.Required,
+        name: FieldType.Required,
+        properties: FieldType.Default,
+        measurements: FieldType.Default
+    };
+
+    /**
+     * Schema version
+     */
+    public ver: number; /* 2 */
+
+    /**
+     * Event name. Keep it low cardinality to allow proper grouping and useful metrics.
+     */
+    public name: string;
+
+    /**
+     * Collection of custom properties.
+     */
+    public properties: any; /* {} */
+
+    /**
+     * Collection of custom measurements.
+     */
+    public measurements: any; /* {} */
+
+    /**
+     * Constructs a new instance of the EventTelemetry object
+     */
+    constructor(logger: IDiagnosticLogger, name: string, properties?: any, measurements?: any) {
+        let _self = this;
+        _self.ver = 2;
+        _self.name = dataSanitizeString(logger, name) || strNotSpecified;
+        _self.properties = dataSanitizeProperties(logger, properties);
+        _self.measurements = dataSanitizeMeasurements(logger, measurements);
+    }
+}

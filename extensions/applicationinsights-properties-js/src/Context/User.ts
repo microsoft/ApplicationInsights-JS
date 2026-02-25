@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { IUserContext, utlRemoveStorage } from "@microsoft/applicationinsights-common";
 import {
-    IAppInsightsCore, ICookieMgr, IUnloadHookContainer, _eInternalMessageId, _throwInternal, eLoggingSeverity, newId, onConfigChange,
-    safeGetCookieMgr, safeGetLogger, toISOString
+    IAppInsightsCore, ICookieMgr, IUnloadHookContainer, IUserContext, _eInternalMessageId, _throwInternal, eLoggingSeverity, newId,
+    onConfigChange, safeGetCookieMgr, safeGetLogger, toISOString, utlRemoveStorage
 } from "@microsoft/applicationinsights-core-js";
 import { objDefine } from "@nevware21/ts-utils";
 import { IPropertiesConfig } from "../Interfaces/IPropertiesConfig";

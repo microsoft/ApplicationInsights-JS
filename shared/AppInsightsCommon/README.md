@@ -1,10 +1,29 @@
-# Microsoft Application Insights JavaScript SDK - Common
+# ⚠️ DEPRECATED - This package has been merged into @microsoft/applicationinsights-core-js
+
+> **Migration Notice**: As of version 3.4.0, the functionality of `@microsoft/applicationinsights-common` 
+> has been merged into `@microsoft/applicationinsights-core-js`. This package now serves only as a 
+> compatibility layer and will be removed in version 4.0.0.
+>
+> **Action Required**: Please update your imports from:
+> ```typescript
+> import { IConfig, ContextTagKeys } from "@microsoft/applicationinsights-common";
+> ```
+> to:
+> ```typescript
+> import { IConfig, ContextTagKeys } from "@microsoft/applicationinsights-core-js";
+> ```
+>
+> See the [Migration Guide](../../docs/upgrade/MergeCommonToCore.md) for more details.
+
+---
+
+# Microsoft Application Insights JavaScript SDK - Common (Compatibility Layer)
 
 [![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
 [![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status%2FAppInsights%20-%20DevTools%2F1DS%20JavaScript%20SDK%20web%20SKU%20(main%3B%20master)?branchName=main)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=main)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-common.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-common)
 
-Common library for the Application Insights Javascript SDK
+This package is deprecated and maintained only for backward compatibility. All new development should use `@microsoft/applicationinsights-core-js`.
 
 ## V3.x Release Breaking changes
 

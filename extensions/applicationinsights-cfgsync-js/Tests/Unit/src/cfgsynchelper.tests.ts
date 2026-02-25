@@ -1,7 +1,7 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import { NonOverrideCfg } from "../../../src/Interfaces/ICfgSyncConfig";
-import { ICookieMgrConfig, AppInsightsCore, CdnFeatureMode, FeatureOptInMode, IAppInsightsCore, IConfiguration, IFeatureOptIn, IFeatureOptInDetails, INotificationManager, IPlugin, ITelemetryItem, PerfManager } from "@microsoft/applicationinsights-core-js";
-import { IConfig, IStorageBuffer } from "@microsoft/applicationinsights-common";
+import { ICookieMgrConfig, AppInsightsCore, CdnFeatureMode, FeatureOptInMode, IAppInsightsCore, IConfiguration, IFeatureOptIn, IFeatureOptInDetails, INotificationManager, IPlugin, ITelemetryItem, PerfManager, suppressTracing } from "@microsoft/applicationinsights-core-js";
+import { IConfig, IStorageBuffer } from "@microsoft/applicationinsights-core-js";
 import { resolveCdnFeatureCfg, replaceByNonOverrideCfg, applyCdnfeatureCfg } from "../../../src/CfgSyncHelperFuncs";
 import { ICfgSyncCdnConfig } from "../../../src/Interfaces/ICfgSyncCdnConfig";
 
@@ -106,9 +106,25 @@ export class CfgSyncHelperTests extends AITestClass {
                     //        endCfg: []
                     //    }
                     //},
-                    enableDebug: false,
-                }
-               
+                    traceHdrMode: 3,
+                    traceCfg: {
+                        generalLimits: {
+                            attributeCountLimit: 128
+                        },
+                        // spanLimits: {
+                        //     attributeCountLimit: 128,
+                        //     linkCountLimit: 128,
+                        //     eventCountLimit: 128,
+                        //     attributePerEventCountLimit: 128,
+                        //     attributePerLinkCountLimit: 128
+                        // },
+                        serviceName: null,
+                        suppressTracing: false
+                    },
+                    errorHandlers: {},
+                    enableDebug: false
+                };
+
                 let core = new AppInsightsCore();
                 this.onDone(() => {
                     core.unload(false);
@@ -123,7 +139,6 @@ export class CfgSyncHelperTests extends AITestClass {
                 this.clock.tick(1);
                 coreCfg = core.config;
                 Assert.deepEqual(JSON.stringify(coreCfg), JSON.stringify(expectedCoreCfg), "core config should be updated as expected");
-
             }
 
         });

@@ -1,9 +1,12 @@
 import { AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
 import { Sender } from "../../../src/Sender";
-import { IOfflineListener, createOfflineListener, utlGetSessionStorageKeys, utlRemoveSessionStorage } from "@microsoft/applicationinsights-common";
+import { ExceptionDataType, IOfflineListener, createOfflineListener, utlGetSessionStorageKeys, utlRemoveSessionStorage } from "@microsoft/applicationinsights-core-js";
 import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
-import { Exception, CtxTagKeys, isBeaconApiSupported, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, safeGetLogger, isString, isArray, arrForEach, isBeaconsSupported, IXHROverride, IPayloadData,TransportType, getWindow, ActiveStatus } from "@microsoft/applicationinsights-core-js";
+import {
+    Exception, CtxTagKeys, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage,
+    ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, safeGetLogger,
+    isString, isArray, arrForEach, isBeaconsSupported, IXHROverride, IPayloadData,TransportType, getWindow, ActiveStatus
+} from "@microsoft/applicationinsights-core-js";
 import { ArraySendBuffer, SessionStorageSendBuffer } from "../../../src/SendBuffer";
 import { IInternalStorageItem, ISenderConfig } from "../../../src/Interfaces";
 import { createAsyncResolvedPromise } from "@nevware21/ts-async";
@@ -168,6 +171,276 @@ export class SenderTests extends AITestClass {
                 this.clock.tick(1);
                 QUnit.assert.equal("https://dc.services.visualstudio.com/v2/track", this._sender._senderConfig.endpointUrl, "Channel default endpointUrl config is set");
                 QUnit.assert.equal(false,  this._sender._senderConfig.emitLineDelimitedJson, "Channel default emitLineDelimitedJson config is set");
+            }
+        });
+
+        this.testCaseAsync({
+            name: "zip test: gzip encode is working and content-encode header is set (feature opt-in)",
+            stepDelay: 10,
+            useFakeTimers: true,
+            useFakeServer: true,
+            steps: [
+                () => {
+                    this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                    let core = new AppInsightsCore();
+                   
+                    let coreConfig = {
+                        instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                        featureOptIn : {["zipPayload"]: {mode: 3}},
+                        extensionConfig: {
+                            [this._sender.identifier]: {
+                                httpXHROverride: this.xhrOverride,
+                                alwaysUseXhrOverride: true,
+                            }
+                        }
+                    }
+            
+                    core.initialize(coreConfig, [this._sender]);
+        
+                    const telemetryItem: ITelemetryItem = {
+                        name: 'fake item with some really long name to take up space quickly',
+                        iKey: 'iKey',
+                        baseType: 'some type',
+                        baseData: {}
+                    };
+                    this._sender.processTelemetry(telemetryItem);
+                    this._sender.flush();
+                    this.clock.tick(10);
+                }].concat(PollingAssert.createPollingAssert(() => {
+                    if (this.genericSpy.called){
+                        let request = this.genericSpy.getCall(0).args[0];
+                        let gzipData = request.data;
+                        QUnit.assert.ok(gzipData, "data should be set");
+                        QUnit.assert.equal(true, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should be gzip encoded");
+                        QUnit.assert.equal(request.headers["Content-Encoding"], "gzip", "telemetry should be gzip encoded");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+            });
+
+            this.testCaseAsync({
+                name: "zip test: gzip encode is disabled (feature opt-in not set)",
+                stepDelay: 10,
+                useFakeTimers: true,
+                useFakeServer: true,
+                steps: [
+                    () => {
+                        this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                        let core = new AppInsightsCore();
+                       
+                        let coreConfig = {
+                            instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                            extensionConfig: {
+                                [this._sender.identifier]: {
+                                    httpXHROverride: this.xhrOverride,
+                                    alwaysUseXhrOverride: true,
+                                }
+                            }
+                        }
+                
+                        core.initialize(coreConfig, [this._sender]);
+            
+                        const telemetryItem: ITelemetryItem = {
+                            name: 'fake item with some really long name to take up space quickly',
+                            iKey: 'iKey',
+                            baseType: 'some type',
+                            baseData: {}
+                        };
+                        this._sender.processTelemetry(telemetryItem);
+                        this._sender.flush();
+                        this.clock.tick(10);
+                    }].concat(PollingAssert.createPollingAssert(() => {
+                        if (this.genericSpy.called){
+                            let request = this.genericSpy.getCall(0).args[0];
+                            let gzipData = request.data;
+                            QUnit.assert.ok(gzipData, "data should be set");
+                            QUnit.assert.equal(false, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should not be gzip encoded");
+                            QUnit.assert.ok(!("Content-Encoding" in request.headers), "telemetry should not be gzip encoded");                            return true;
+                        }
+                        return false;
+                    }, "Wait for promise response" + new Date().toISOString(), 60, 1000) as any)
+                });
+
+        this.testCase({
+            name: "zip test: gzip encode is working and content-encode header is set (feature opt-in)",
+            pollDelay: 10,
+            useFakeTimers: true,
+            useFakeServer: true,
+            test: () => {
+                this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                let core = new AppInsightsCore();
+
+                let coreConfig = {
+                    instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                    featureOptIn : {["zipPayload"]: {mode: 3}},
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            httpXHROverride: this.xhrOverride,
+                            alwaysUseXhrOverride: true,
+                        }
+                    }
+                }
+        
+                core.initialize(coreConfig, [this._sender]);
+    
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item with some really long name to take up space quickly',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                this._sender.processTelemetry(telemetryItem);
+                this._sender.flush();
+                this.clock.tick(10);
+
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    if (this.genericSpy.called) {
+                        let request = this.genericSpy.getCall(0).args[0];
+                        let gzipData = request.data;
+                        QUnit.assert.ok(gzipData, "data should be set");
+                        QUnit.assert.equal(true, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should be gzip encoded");
+                        QUnit.assert.equal(request.headers["Content-Encoding"], "gzip", "telemetry should be gzip encoded");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
+        });
+
+        this.testCase({
+            name: "zip test: gzip encode is disabled (feature opt-in not set)",
+            pollDelay: 10,
+            useFakeTimers: true,
+            useFakeServer: true,
+            test: () => {
+                this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                let core = new AppInsightsCore();
+                
+                let coreConfig = {
+                    instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            httpXHROverride: this.xhrOverride,
+                            alwaysUseXhrOverride: true,
+                        }
+                    }
+                }
+        
+                core.initialize(coreConfig, [this._sender]);
+    
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item with some really long name to take up space quickly',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                this._sender.processTelemetry(telemetryItem);
+                this._sender.flush();
+                this.clock.tick(10);
+
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    if (this.genericSpy.called){
+                        let request = this.genericSpy.getCall(0).args[0];
+                        let gzipData = request.data;
+                        QUnit.assert.ok(gzipData, "data should be set");
+                        QUnit.assert.equal(false, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should not be gzip encoded");
+                        QUnit.assert.ok(!("Content-Encoding" in request.headers), "telemetry should not be gzip encoded");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
+        });
+
+        this.testCase({
+            name: "zip test: gzip encode is working and content-encode header is set (feature opt-in)",
+            pollDelay: 10,
+            useFakeTimers: true,
+            useFakeServer: true,
+            test: () => {
+                this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                let core = new AppInsightsCore();
+
+                let coreConfig = {
+                    instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                    featureOptIn : {["zipPayload"]: {mode: 3}},
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            httpXHROverride: this.xhrOverride,
+                            alwaysUseXhrOverride: true,
+                        }
+                    }
+                }
+        
+                core.initialize(coreConfig, [this._sender]);
+    
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item with some really long name to take up space quickly',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                this._sender.processTelemetry(telemetryItem);
+                this._sender.flush();
+                this.clock.tick(10);
+
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    if (this.genericSpy.called) {
+                        let request = this.genericSpy.getCall(0).args[0];
+                        let gzipData = request.data;
+                        QUnit.assert.ok(gzipData, "data should be set");
+                        QUnit.assert.equal(true, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should be gzip encoded");
+                        QUnit.assert.equal(request.headers["Content-Encoding"], "gzip", "telemetry should be gzip encoded");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
+        });
+
+        this.testCase({
+            name: "zip test: gzip encode is disabled (feature opt-in not set)",
+            pollDelay: 10,
+            useFakeTimers: true,
+            useFakeServer: true,
+            test: () => {
+                this.genericSpy = this.sandbox.spy(this.xhrOverride, 'sendPOST');
+                let core = new AppInsightsCore();
+                
+                let coreConfig = {
+                    instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                    extensionConfig: {
+                        [this._sender.identifier]: {
+                            httpXHROverride: this.xhrOverride,
+                            alwaysUseXhrOverride: true,
+                        }
+                    }
+                }
+        
+                core.initialize(coreConfig, [this._sender]);
+    
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item with some really long name to take up space quickly',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                this._sender.processTelemetry(telemetryItem);
+                this._sender.flush();
+                this.clock.tick(10);
+
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    if (this.genericSpy.called){
+                        let request = this.genericSpy.getCall(0).args[0];
+                        let gzipData = request.data;
+                        QUnit.assert.ok(gzipData, "data should be set");
+                        QUnit.assert.equal(false, gzipData[0] === 0x1F && gzipData[1] === 0x8B, "telemetry should not be gzip encoded");
+                        QUnit.assert.ok(!("Content-Encoding" in request.headers), "telemetry should not be gzip encoded");
+                        return true;
+                    }
+                    return false;
+                }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
             }
         });
 
@@ -1484,7 +1757,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -1528,7 +1801,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -1601,7 +1874,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -1674,7 +1947,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -1748,7 +2021,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -1821,7 +2094,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -1873,7 +2146,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -1947,7 +2220,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -2020,7 +2293,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -2086,7 +2359,7 @@ export class SenderTests extends AITestClass {
 
                 let buffer = sender._buffer;
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
@@ -2173,7 +2446,7 @@ export class SenderTests extends AITestClass {
 
                 let buffer = sender._buffer;
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
@@ -2263,7 +2536,7 @@ export class SenderTests extends AITestClass {
 
                 let buffer = sender._buffer;
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
@@ -2350,7 +2623,7 @@ export class SenderTests extends AITestClass {
 
                 let buffer = sender._buffer;
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
@@ -2449,7 +2722,7 @@ export class SenderTests extends AITestClass {
 
                 let buffer = sender._buffer;
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
@@ -2544,7 +2817,7 @@ export class SenderTests extends AITestClass {
 
                 let buffer = sender._buffer;
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
@@ -2650,7 +2923,7 @@ export class SenderTests extends AITestClass {
 
                 let buffer = sender._buffer;
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(0, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
                 QUnit.assert.equal(0, buffer.getItems().length, "sender buffer should be clear");
@@ -2717,7 +2990,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -2768,7 +3041,7 @@ export class SenderTests extends AITestClass {
                     baseData: {}
                 };
 
-                QUnit.assert.ok(isBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.ok(isBeaconsSupported(), "Beacon API is supported");
                 QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
                 QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
@@ -3485,7 +3758,7 @@ export class SenderTests extends AITestClass {
                     name: "test",
                     time: new Date("2018-06-12").toISOString(),
                     iKey: "iKey",
-                    baseType: Exception.dataType,
+                    baseType: ExceptionDataType,
                     baseData: bd,
                     data: {
                         "property3": "val3",
@@ -4146,7 +4419,7 @@ export class SenderTests extends AITestClass {
                     name: "test",
                     time: new Date("2018-06-12").toISOString(),
                     iKey: "iKey",
-                    baseType: Exception.dataType,
+                    baseType: ExceptionDataType,
                     baseData: bd,
                     data: {
                         "property3": "val3",

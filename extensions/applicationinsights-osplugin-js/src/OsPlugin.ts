@@ -5,13 +5,11 @@
 */
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    Extensions, IConfig, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage
-} from "@microsoft/applicationinsights-common";
-import {
-    BaseTelemetryPlugin, IAppInsightsCore, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
+    BaseTelemetryPlugin, Extensions, IAppInsightsCore, IConfig, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
     IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryUnloadState, _eInternalMessageId, _throwInternal, addPageHideEventListener,
     addPageUnloadEventListener, arrForEach, createProcessTelemetryContext, createUniqueNamespace, eLoggingSeverity, getSetValue,
-    mergeEvtNamespace, onConfigChange, removePageHideEventListener, removePageUnloadEventListener, setValue
+    mergeEvtNamespace, onConfigChange, removePageHideEventListener, removePageUnloadEventListener, setValue, utlCanUseSessionStorage,
+    utlGetSessionStorage, utlSetSessionStorage
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { ITimerHandler, isString, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";

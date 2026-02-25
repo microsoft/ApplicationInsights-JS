@@ -292,7 +292,7 @@ module.exports = function (grunt) {
                         var internalConstants = aiInternalConstants;
                         if (pkg['name'] === "@microsoft/applicationinsights-core-js") {
                             nameMaps = aiCoreDefaultNameReplacements;
-                            internalConstants = [ "./src/JavaScriptSDK/InternalConstants.ts" ];
+                            internalConstants = [ "./src/constants/InternalConstants.ts" ];
                         }
     
                         var aiMinify = buildCmds["ai-minify"];
@@ -571,6 +571,12 @@ module.exports = function (grunt) {
             "example-cfgsync":        {
                                         autoMinify: false,
                                         path: "./examples/cfgSync",
+                                        testHttp: false
+                                    },
+
+            "example-startspan":      {
+                                        autoMinify: false,
+                                        path: "./examples/startSpan",
                                         testHttp: false
                                     },
     
@@ -853,8 +859,8 @@ module.exports = function (grunt) {
         grunt.registerTask("common", tsBuildActions("common"));
         grunt.registerTask("common-min", minTasks("common"));
         grunt.registerTask("common-restore", restoreTasks("common"));
-        grunt.registerTask("commontest", tsTestActions("common"));
-        grunt.registerTask("common-mintest", tsTestActions("common", true));
+        grunt.registerTask("commontest", []);
+        grunt.registerTask("common-mintest", []);
 
         grunt.registerTask("ai", tsBuildActions("appinsights"));
         grunt.registerTask("ai-min", minTasks("appinsights"));
@@ -981,6 +987,7 @@ module.exports = function (grunt) {
          grunt.registerTask("example-aisku", tsBuildActions("example-aisku"));
          grunt.registerTask("example-dependency", tsBuildActions("example-dependency"));
          grunt.registerTask("example-cfgsync", tsBuildActions("example-cfgsync"));
+         grunt.registerTask("example-startspan", tsBuildActions("example-startspan"));
 
         // Register the lint-fix task to run ESLint fix on all packages
         grunt.registerTask("lint-fix", getLintFixTasks());

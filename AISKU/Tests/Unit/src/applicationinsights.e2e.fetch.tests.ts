@@ -1,4 +1,4 @@
-import { DistributedTracingModes, IConfig } from '@microsoft/applicationinsights-common';
+import { DistributedTracingModes, IConfig } from '@microsoft/applicationinsights-core-js';
 import { ApplicationInsightsTests } from './applicationinsights.e2e.tests';
 import { IConfiguration } from '@microsoft/applicationinsights-core-js';
 

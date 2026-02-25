@@ -8,6 +8,17 @@
 
 Core SDK layer for next version of application insights javascript SDK.
 
+## V3.4.0 - Common Package Merged
+
+As of version 3.4.0, the functionality from `@microsoft/applicationinsights-common` has been merged into this package (`@microsoft/applicationinsights-core-js`). This consolidation simplifies the dependency tree and improves tree-shaking capabilities.
+
+**What this means:**
+- All exports previously in `applicationinsights-common` are now available from `applicationinsights-core-js`
+- The `applicationinsights-common` package continues to work as a compatibility layer (re-exports from Core)
+- No breaking changes to existing APIs
+
+See the [Migration Guide](../../docs/upgrade/MergeCommonToCore.md) for details on updating your imports.
+
 ## V3.x Release Breaking changes
 
 - Removed ES3 / IE8 Support

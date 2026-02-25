@@ -54,7 +54,7 @@ export class TestHelper {
                 },
                 app: { sesId: "####" },
                 user: { locale: "en-US" },
-                web: { domain: "localhost" },
+                web: { domain: "localhost:9001" },
                 intweb: { },
                 utc: { popSample: 100 },
                 loc: { tz: "-08:00" },

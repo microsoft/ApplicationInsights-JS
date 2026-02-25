@@ -2,21 +2,21 @@ import { AITestClass, Assert, PollingAssert, EventValidator, TraceValidator, Exc
 import { SinonSpy } from 'sinon';
 import { ApplicationInsights } from '../../../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig, EventPersistence } from '@microsoft/applicationinsights-common';
+import { IDependencyTelemetry, ContextTagKeys, Exception, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig, EventPersistence, EventDataType, PageViewDataType, TraceDataType, ExceptionDataType, MetricDataType, PageViewPerformanceDataType, RemoteDependencyDataType } from '@microsoft/applicationinsights-core-js';
 import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus, FeatureOptInMode } from "@microsoft/applicationinsights-core-js";
-import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
+import { IPropTelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { createAsyncResolvedPromise } from '@nevware21/ts-async';
 import { CONFIG_ENDPOINT_URL } from '../../../src/InternalConstants';
 import { OfflineChannel } from '@microsoft/applicationinsights-offlinechannel-js';
-import { IStackFrame } from '@microsoft/applicationinsights-common/src/Interfaces/Contracts/IStackFrame';
+import { IStackFrame } from '@microsoft/applicationinsights-core-js';
 import { utcNow } from '@nevware21/ts-utils';
 
-function _checkExpectedFrame(expectedFrame: IStackFrame, actualFrame: IStackFrame,  index: number) {
+function _checkExpectedFrame(expectedFrame: IStackFrame, actualFrame: IStackFrame, index: number) {
     Assert.equal(expectedFrame.assembly, actualFrame.assembly, index + ") Assembly is not as expected");
     Assert.equal(expectedFrame.fileName, actualFrame.fileName, index + ") FileName is not as expected");
     Assert.equal(expectedFrame.line, actualFrame.line, index + ") Line is not as expected");
     Assert.equal(expectedFrame.method, actualFrame.method, index + ") Method is not as expected");
-    Assert.equal(expectedFrame.level, actualFrame.level, index + ") Level is not as expected");    
+    Assert.equal(expectedFrame.level, actualFrame.level, index + ") Level is not as expected");
 }
 
 export class ApplicationInsightsTests extends AITestClass {
@@ -40,7 +40,7 @@ export class ApplicationInsightsTests extends AITestClass {
 
     private _ai: ApplicationInsights;
     private _aiName: string = 'AppInsightsSDK';
-    private isFetchPolyfill:boolean = false;
+    private isFetchPolyfill: boolean = false;
 
     // Sinon
     private errorSpy: SinonSpy;
@@ -61,7 +61,7 @@ export class ApplicationInsightsTests extends AITestClass {
     constructor(testName?: string) {
         super(testName || "ApplicationInsightsTests");
     }
-    
+
     protected _getTestConfig(sessionPrefix: string) {
         let config: IConfiguration | IConfig = {
             connectionString: ApplicationInsightsTests._connectionString,
@@ -76,7 +76,7 @@ export class ApplicationInsightsTests extends AITestClass {
             distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
             samplingPercentage: 50,
             convertUndefined: "test-value",
-            disablePageUnloadEvents: [ "beforeunload" ],
+            disablePageUnloadEvents: ["beforeunload"],
             extensionConfig: {
                 ["AppInsightsCfgSyncPlugin"]: {
                     //cfgUrl: ""
@@ -229,7 +229,7 @@ export class ApplicationInsightsTests extends AITestClass {
 
                 let onChangeCalled = 0;
                 let handler = this._ai.onCfgChange((details) => {
-                    onChangeCalled ++;
+                    onChangeCalled++;
                     Assert.equal(expectedIkey, details.cfg.instrumentationKey, "Expect the iKey to be set");
                     Assert.equal(expectedEndpointUrl, details.cfg.endpointUrl, "Expect the endpoint to be set");
                     Assert.equal(expectedLoggingLevel, details.cfg.diagnosticLogInterval, "Expect the diagnosticLogInterval to be set");
@@ -256,7 +256,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(3, onChangeCalled, "Expected the onChanged was called");
                 this.clock.tick(1);
                 Assert.equal(4, onChangeCalled, "Expected the onChanged was called again");
-                
+
                 // Remove the handler
                 handler.rm();
             }
@@ -274,15 +274,15 @@ export class ApplicationInsightsTests extends AITestClass {
                     // force unload
                     oriInst.unload(false);
                 }
-        
+
                 if (oriInst && oriInst["dependencies"]) {
                     oriInst["dependencies"].teardown();
                 }
-        
+
                 this._config = this._getTestConfig(this._sessionPrefix);
                 let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
                 this._config.connectionString = csPromise;
-                this._config.initTimeOut= 80000;
+                this._config.initTimeOut = 80000;
                 this._ctx.csPromise = csPromise;
 
 
@@ -295,17 +295,17 @@ export class ApplicationInsightsTests extends AITestClass {
                 let core = this._ai.core;
                 let status = core.activeStatus && core.activeStatus();
                 Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
-                
-                
+
+
             }].concat(PollingAssert.createPollingAssert(() => {
                 let core = this._ai.core
                 let activeStatus = core.activeStatus && core.activeStatus();
                 let csPromise = this._ctx.csPromise;
                 let config = this._ai.config;
-            
+
                 if (csPromise.state === "resolved" && activeStatus === ActiveStatus.ACTIVE) {
                     Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl, "endpoint shoule be set");
 
                     config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
                     this.clock.tick(1);
@@ -318,10 +318,10 @@ export class ApplicationInsightsTests extends AITestClass {
             }, "Wait for promise response" + new Date().toISOString(), 60) as any).concat(PollingAssert.createPollingAssert(() => {
                 let core = this._ai.core
                 let activeStatus = core.activeStatus && core.activeStatus();
-            
+
                 if (activeStatus === ActiveStatus.ACTIVE) {
                     Assert.equal("testIkey1", core.config.instrumentationKey, "ikey should be set test1");
-                    Assert.equal("testUrl1/v2/track", core.config.endpointUrl ,"endpoint shoule be set test1");
+                    Assert.equal("testUrl1/v2/track", core.config.endpointUrl, "endpoint shoule be set test1");
                     return true;
                 }
                 return false;
@@ -340,15 +340,15 @@ export class ApplicationInsightsTests extends AITestClass {
                     // force unload
                     oriInst.unload(false);
                 }
-        
+
                 if (oriInst && oriInst["dependencies"]) {
                     oriInst["dependencies"].teardown();
                 }
-        
+
                 this._config = this._getTestConfig(this._sessionPrefix);
                 let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
                 this._config.connectionString = csPromise;
-                this._config.initTimeOut= 80000;
+                this._config.initTimeOut = 80000;
                 this._ctx.csPromise = csPromise;
 
 
@@ -361,22 +361,22 @@ export class ApplicationInsightsTests extends AITestClass {
                 let core = this._ai.core;
                 let status = core.activeStatus && core.activeStatus();
                 Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
-                
+
                 config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1";
                 this.clock.tick(1);
                 status = core.activeStatus && core.activeStatus();
                 Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
                 // Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
 
-                
-                
+
+
             }].concat(PollingAssert.createPollingAssert(() => {
                 let core = this._ai.core
                 let activeStatus = core.activeStatus && core.activeStatus();
-            
+
                 if (activeStatus === ActiveStatus.ACTIVE) {
                     Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl, "endpoint shoule be set");
                     return true;
                 }
                 return false;
@@ -396,17 +396,17 @@ export class ApplicationInsightsTests extends AITestClass {
                     // force unload
                     oriInst.unload(false);
                 }
-        
+
                 if (oriInst && oriInst["dependencies"]) {
                     oriInst["dependencies"].teardown();
                 }
-        
+
                 this._config = this._getTestConfig(this._sessionPrefix);
                 let csPromise = createAsyncResolvedPromise("InstrumentationKey=testIkey;ingestionendpoint=testUrl");
                 this._config.connectionString = csPromise;
                 let offlineChannel = new OfflineChannel();
                 this._config.channels = [[offlineChannel]];
-                this._config.initTimeOut= 80000;
+                this._config.initTimeOut = 80000;
 
 
                 let init = new ApplicationInsights({
@@ -419,21 +419,21 @@ export class ApplicationInsightsTests extends AITestClass {
                 let status = core.activeStatus && core.activeStatus();
                 Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
 
-                
+
                 config.connectionString = "InstrumentationKey=testIkey1;ingestionendpoint=testUrl1"
                 this.clock.tick(1);
                 status = core.activeStatus && core.activeStatus();
                 Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
                 // Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending test1");
-                
-                
+
+
             }].concat(PollingAssert.createPollingAssert(() => {
                 let core = this._ai.core
                 let activeStatus = core.activeStatus && core.activeStatus();
-            
+
                 if (activeStatus === ActiveStatus.ACTIVE) {
                     Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl, "endpoint shoule be set");
                     let sendChannel = this._ai.getPlugin(BreezeChannelIdentifier);
                     let offlineChannelPlugin = this._ai.getPlugin("OfflineChannel").plugin;
                     Assert.equal(sendChannel.plugin.isInitialized(), true, "sender is initialized");
@@ -447,7 +447,7 @@ export class ApplicationInsightsTests extends AITestClass {
         });
 
 
-        
+
         this.testCaseAsync({
             name: "Init: init with cs string, change with cs promise",
             stepDelay: 100,
@@ -472,15 +472,15 @@ export class ApplicationInsightsTests extends AITestClass {
                 status = core.activeStatus && core.activeStatus();
                 Assert.equal(status, ActiveStatus.ACTIVE, "active status should be set to active in next executing cycle");
                 //Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
-                
-                
+
+
             }].concat(PollingAssert.createPollingAssert(() => {
                 let core = this._ai.core
                 let activeStatus = core.activeStatus && core.activeStatus();
-            
+
                 if (activeStatus === ActiveStatus.ACTIVE) {
                     Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl/v2/track", core.config.endpointUrl ,"endpoint shoule be set");
+                    Assert.equal("testUrl/v2/track", core.config.endpointUrl, "endpoint shoule be set");
                     return true;
                 }
                 return false;
@@ -499,11 +499,11 @@ export class ApplicationInsightsTests extends AITestClass {
                     // force unload
                     oriInst.unload(false);
                 }
-        
+
                 if (oriInst && oriInst["dependencies"]) {
                     oriInst["dependencies"].teardown();
                 }
-        
+
                 this._config = this._getTestConfig(this._sessionPrefix);
                 let ikeyPromise = createAsyncResolvedPromise("testIkey");
                 let endpointPromise = createAsyncResolvedPromise("testUrl");
@@ -512,7 +512,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 this._config.connectionString = null;
                 this._config.instrumentationKey = ikeyPromise;
                 this._config.endpointUrl = endpointPromise;
-                this._config.initTimeOut= 80000;
+                this._config.initTimeOut = 80000;
 
 
 
@@ -525,16 +525,16 @@ export class ApplicationInsightsTests extends AITestClass {
                 let core = this._ai.core;
                 let status = core.activeStatus && core.activeStatus();
                 Assert.equal(status, ActiveStatus.PENDING, "status should be set to pending");
-                Assert.equal(config.connectionString,null, "connection string shoule be null");
-                
-                
+                Assert.equal(config.connectionString, null, "connection string shoule be null");
+
+
             }].concat(PollingAssert.createPollingAssert(() => {
                 let core = this._ai.core
                 let activeStatus = core.activeStatus && core.activeStatus();
-            
+
                 if (activeStatus === ActiveStatus.ACTIVE) {
                     Assert.equal("testIkey", core.config.instrumentationKey, "ikey should be set");
-                    Assert.equal("testUrl", core.config.endpointUrl ,"endpoint shoule be set");
+                    Assert.equal("testUrl", core.config.endpointUrl, "endpoint shoule be set");
                     return true;
                 }
                 return false;
@@ -548,21 +548,21 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 let fetchcalled = 0;
                 let overrideFetchFn = (url: string, oncomplete: any, isAutoSync?: boolean) => {
-                    fetchcalled ++;
+                    fetchcalled++;
                     Assert.equal(url, CONFIG_ENDPOINT_URL, "fetch should be called with prod cdn");
                 };
                 let config = {
                     instrumentationKey: "testIKey",
-                    extensionConfig:{
+                    extensionConfig: {
                         ["AppInsightsCfgSyncPlugin"]: {
                             overrideFetchFn: overrideFetchFn
                         }
 
                     }
                 } as IConfiguration & IConfig;
-                let ai = new ApplicationInsights({config: config});
+                let ai = new ApplicationInsights({ config: config });
                 ai.loadAppInsights();
-          
+
                 ai.config.extensionConfig = ai.config.extensionConfig || {};
                 let extConfig = ai.config.extensionConfig["AppInsightsCfgSyncPlugin"];
                 Assert.equal(extConfig.cfgUrl, CONFIG_ENDPOINT_URL, "default cdn endpoint should be set");
@@ -570,7 +570,7 @@ export class ApplicationInsightsTests extends AITestClass {
 
                 let featureOptIn = config.featureOptIn || {};
                 Assert.equal(featureOptIn["iKeyUsage"].mode, FeatureOptInMode.enable, "ikey message should be turned on");
-               
+
                 Assert.equal(fetchcalled, 1, "fetch should be called once");
                 config.extensionConfig = config.extensionConfig || {};
                 let expectedTimeout = 2000000000;
@@ -596,15 +596,15 @@ export class ApplicationInsightsTests extends AITestClass {
                 let config = {
                     instrumentationKey: "testIKey",
                     endpointUrl: "testUrl",
-                    extensionConfig:{
+                    extensionConfig: {
                         ["AppInsightsCfgSyncPlugin"]: {
                             cfgUrl: ""
                         }
 
                     },
-                    extensions:[offlineChannel]
+                    extensions: [offlineChannel]
                 } as IConfiguration & IConfig;
-                let ai = new ApplicationInsights({config: config});
+                let ai = new ApplicationInsights({ config: config });
                 ai.loadAppInsights();
                 this.clock.tick(1);
 
@@ -620,7 +620,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     ai["dependencies"].teardown();
                 }
                 //offlineChannel.teardown();
-                
+
             }
         });
 
@@ -633,15 +633,15 @@ export class ApplicationInsightsTests extends AITestClass {
                 let config = {
                     instrumentationKey: "testIKey",
                     endpointUrl: "testUrl",
-                    extensionConfig:{
+                    extensionConfig: {
                         ["AppInsightsCfgSyncPlugin"]: {
                             cfgUrl: ""
                         }
 
                     },
-                    channels:[[offlineChannel]]
+                    channels: [[offlineChannel]]
                 } as IConfiguration & IConfig;
-                let ai = new ApplicationInsights({config: config});
+                let ai = new ApplicationInsights({ config: config });
                 ai.loadAppInsights();
                 this.clock.tick(1);
 
@@ -651,13 +651,13 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(offlineChannelPlugin.isInitialized(), true, "offline channel is initialized");
                 let urlConfig = offlineChannelPlugin["_getDbgPlgTargets"]()[0];
                 Assert.ok(urlConfig, "offline url config is initialized");
-             
+
 
                 ai.unload(false);
                 if (ai && ai["dependencies"]) {
                     ai["dependencies"].teardown();
                 }
-                
+
             }
         });
 
@@ -669,15 +669,15 @@ export class ApplicationInsightsTests extends AITestClass {
                 let offlineChannel = new OfflineChannel();
                 let config = {
                     connectionString: "InstrumentationKey=testIKey",
-                    extensionConfig:{
+                    extensionConfig: {
                         ["AppInsightsCfgSyncPlugin"]: {
                             cfgUrl: ""
                         }
 
                     },
-                    channels:[[offlineChannel]]
+                    channels: [[offlineChannel]]
                 } as IConfiguration & IConfig;
-                let ai = new ApplicationInsights({config: config});
+                let ai = new ApplicationInsights({ config: config });
                 ai.loadAppInsights();
                 this.clock.tick(1);
 
@@ -696,7 +696,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 }
             }
         });
-        
+
     }
 
     public addCDNOverrideTests(): void {
@@ -766,15 +766,15 @@ export class ApplicationInsightsTests extends AITestClass {
                         headers.forEach((val, key) => {
                             if (key === "content-type") {
                                 Assert.deepEqual(val, "text/javascript; charset=utf-8", "should have correct content-type response header");
-                                headerCnt ++;
+                                headerCnt++;
                             }
                             if (key === "x-ms-meta-aijssdksrc") {
                                 Assert.ok(val, "should have sdk src response header");
-                                headerCnt ++;
+                                headerCnt++;
                             }
                             if (key === "x-ms-meta-aijssdkver") {
                                 Assert.ok(val, "should have version number for response header");
-                                headerCnt ++;
+                                headerCnt++;
                             }
                         });
                         Assert.equal(headerCnt, 3, "all expected headers should be present");
@@ -819,15 +819,15 @@ export class ApplicationInsightsTests extends AITestClass {
                         headers.forEach((val, key) => {
                             if (key === "content-type") {
                                 Assert.deepEqual(val, "text/javascript; charset=utf-8", "should have correct content-type response header");
-                                headerCnt ++;
+                                headerCnt++;
                             }
                             if (key === "x-ms-meta-aijssdksrc") {
                                 Assert.ok(val, "should have sdk src response header");
-                                headerCnt ++;
+                                headerCnt++;
                             }
                             if (key === "x-ms-meta-aijssdkver") {
                                 Assert.ok(val, "should have version number for response header");
-                                headerCnt ++;
+                                headerCnt++;
                             }
                         });
                         Assert.equal(headerCnt, 3, "all expected headers should be present");
@@ -855,7 +855,60 @@ export class ApplicationInsightsTests extends AITestClass {
 
                     if (res.ok) {
                         let val = await res.text();
-                        Assert.ok(val, "Response text should be returned" );
+                        Assert.ok(val, "Response text should be returned");
+                    } else {
+                        Assert.fail("Fetch failed with status: " + dumpObj(res));
+                    }
+                } catch (e) {
+                    Assert.fail("Fetch Error: " + dumpObj(e));
+                }
+            }
+        });
+
+        this.testCase({
+            name: "E2E.GenericTests: Fetch Static Web js1 - CDN V3",
+            useFakeServer: false,
+            useFakeFetch: false,
+            fakeFetchAutoRespond: false,
+            test: async () => {
+                // Use beta endpoint to pre-test any changes before public V3 cdn
+                let random = utcNow();
+                // Under Cors Mode, Options request will be auto-triggered
+                try {
+                    let res = await fetch(`https://js1.tst.applicationinsights.io/scripts/b/ai.3.gbl.min.js?${random}`, {
+                        method: "GET"
+                    });
+
+                    if (res.ok) {
+                        let val = await res.text();
+                        Assert.ok(val, "Response text should be returned");
+                    } else {
+                        Assert.fail("Fetch failed with status: " + dumpObj(res));
+                    }
+                } catch (e) {
+                    this._ctx.err = e;
+                    Assert.fail("Fetch Error: " + dumpObj(e));
+                }
+            }
+        });
+
+        this.testCase({
+            name: "E2E.GenericTests: Fetch Static Web js2 - CDN V3",
+            useFakeServer: false,
+            useFakeFetch: false,
+            fakeFetchAutoRespond: false,
+            test: async () => {
+                // Use beta endpoint to pre-test any changes before public V3 cdn
+                let random = utcNow();
+                // Under Cors Mode, Options request will be auto-triggered
+                try {
+                    let res = await fetch(`https://js2.tst.applicationinsights.io/scripts/b/ai.3.gbl.min.js?${random}`, {
+                        method: "GET"
+                    });
+
+                    if (res.ok) {
+                        let val = await res.text();
+                        Assert.ok(val, "Response text should be returned");
                     } else {
                         Assert.fail("Fetch failed with status: " + dumpObj(res));
                     }
@@ -906,8 +959,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 if (payloadStr.length > 0) {
                     const payload = JSON.parse(payloadStr[0]);
                     const data = payload.data;
-                    Assert.ok( payload && payload.iKey);
-                    Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
+                    Assert.ok(payload && payload.iKey);
+                    Assert.equal(ApplicationInsightsTests._instrumentationKey, payload.iKey, "payload ikey is not set correctly");
                     Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
                     Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
                 }
@@ -923,8 +976,8 @@ export class ApplicationInsightsTests extends AITestClass {
                 if (payloadStr.length > 0) {
                     const payload = JSON.parse(payloadStr[0]);
                     const data = payload.data;
-                    Assert.ok( payload && payload.iKey);
-                    Assert.equal( ApplicationInsightsTests._instrumentationKey,payload.iKey,"payload ikey is not set correctly" );
+                    Assert.ok(payload && payload.iKey);
+                    Assert.equal(ApplicationInsightsTests._instrumentationKey, payload.iKey, "payload ikey is not set correctly");
                     Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
                     Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
                 }
@@ -981,7 +1034,7 @@ export class ApplicationInsightsTests extends AITestClass {
                         error: e,
                         evt: null
                     } as IAutoExceptionTelemetry;
-    
+
                     exception = e;
                     this._ai.trackException({ exception: autoTelemetry });
                 }
@@ -1007,7 +1060,7 @@ export class ApplicationInsightsTests extends AITestClass {
                         error: e,
                         evt: null
                     } as IAutoExceptionTelemetry;
-    
+
                     exception = e;
                     this._ai.trackException({ exception: autoTelemetry }, { custom: "custom value" });
                 }
@@ -1033,7 +1086,7 @@ export class ApplicationInsightsTests extends AITestClass {
                         error: e.toString(),
                         evt: null
                     } as IAutoExceptionTelemetry;
-    
+
                     exception = e;
                     this._ai.trackException({ exception: autoTelemetry });
                 }
@@ -1059,7 +1112,7 @@ export class ApplicationInsightsTests extends AITestClass {
                         error: undefined,
                         evt: null
                     } as IAutoExceptionTelemetry;
-    
+
                     try {
                         exception = e;
                         this._ai.trackException({ exception: autoTelemetry });
@@ -1091,7 +1144,7 @@ export class ApplicationInsightsTests extends AITestClass {
                         error: undefined,
                         evt: null
                     } as IAutoExceptionTelemetry;
-    
+
                     try {
                         exception = e;
                         this._ai.trackException({ exception: autoTelemetry }, { custom: "custom value" });
@@ -1155,7 +1208,7 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'E2E.GenericTests: trackException will keep id from the original exception',
             stepDelay: 1,
             steps: [() => {
-                this._ai.trackException({id:"testId", error: new Error("test local exception"), severityLevel: 3});
+                this._ai.trackException({ id: "testId", error: new Error("test local exception"), severityLevel: 3 });
             }].concat(this.asserts(1)).concat(() => {
                 const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                 if (payloadStr.length > 0) {
@@ -1213,7 +1266,7 @@ export class ApplicationInsightsTests extends AITestClass {
             steps: [() => {
                 let errObj = {
                     name: "E2E.GenericTests",
-                    reason:{
+                    reason: {
                         message: "Test_Error_Throwing_Inside_UseCallback",
                         stack: "Error: Test_Error_Throwing_Inside_UseCallback\n" +
                             "at http://localhost:3000/static/js/main.206f4846.js:2:296748\n" +                      // Anonymous function with no function name attribution (firefox/ios)
@@ -1233,7 +1286,7 @@ export class ApplicationInsightsTests extends AITestClass {
                             " Line 11 of inline#1 script in http://localhost:3000/static/js/main.206f4846.js:2:296748\n" + // With Line 11 of inline#1 script attribution
                             " Line 68 of inline#2 script in file://localhost/teststack.html\n" +                    // With Line 68 of inline#2 script attribution
                             "at Function.Module._load (module.js:407:3)\n" +
-                            " at Function.Module.runMain (module.js:575:10)\n"+ 
+                            " at Function.Module.runMain (module.js:575:10)\n" +
                             " at startup (node.js:159:18)\n" +
                             "at Global code (http://example.com/stacktrace.js:11:1)\n" +
                             "at Object.Module._extensions..js (module.js:550:10)\n" +
@@ -1306,7 +1359,7 @@ export class ApplicationInsightsTests extends AITestClass {
                             Assert.equal(ex.parsedStack.length, 29);
                             for (let lp = 0; lp < ex.parsedStack.length; lp++) {
                                 _checkExpectedFrame(expectedParsedStack[lp], ex.parsedStack[lp], lp);
-                            }                            
+                            }
 
                             Assert.ok(baseData.properties, "Has BaseData properties");
                             Assert.equal(baseData.properties.custom, "custom value");
@@ -1322,13 +1375,13 @@ export class ApplicationInsightsTests extends AITestClass {
             stepDelay: 1,
             steps: [() => {
                 let message = "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n" +
-                            "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
-                            "2. You might be breaking the Rules of Hooks\n" +
-                            "3. You might have more than one copy of React in the same app\n" + 
-                            "See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.";
+                    "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
+                    "2. You might be breaking the Rules of Hooks\n" +
+                    "3. You might have more than one copy of React in the same app\n" +
+                    "See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.";
                 let errObj = {
                     typeName: "Error",
-                    reason:{
+                    reason: {
                         message: "Error: " + message,
                         stack: "Error: " + message + "\n" +
                             "    at Object.throwInvalidHookError (https://localhost:44365/static/js/bundle.js:201419:13)\n" +
@@ -1383,7 +1436,7 @@ export class ApplicationInsightsTests extends AITestClass {
                             Assert.equal(ex.parsedStack.length, 10);
                             for (let lp = 0; lp < ex.parsedStack.length; lp++) {
                                 _checkExpectedFrame(expectedParsedStack[lp], ex.parsedStack[lp], lp);
-                            }                            
+                            }
 
                             Assert.ok(baseData.properties, "Has BaseData properties");
                             Assert.equal(baseData.properties.custom, "custom value");
@@ -1401,7 +1454,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 () => {
                     console.log("* calling trackMetric " + new Date().toISOString());
                     for (let i = 0; i < 100; i++) {
-                        this._ai.trackMetric({ name: "test" + i, average: Math.round(100 * Math.random()), min: 1, max: i+1, stdDev: 10.0 * Math.random() });
+                        this._ai.trackMetric({ name: "test" + i, average: Math.round(100 * Math.random()), min: 1, max: i + 1, stdDev: 10.0 * Math.random() });
                     }
                     console.log("* done calling trackMetric " + new Date().toISOString());
                 }
@@ -1431,21 +1484,21 @@ export class ApplicationInsightsTests extends AITestClass {
                     this._ai.trackPageView(); // sends 2
                 }
             ]
-            .concat(this.asserts(2))
-            .concat(() => {
+                .concat(this.asserts(2))
+                .concat(() => {
 
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    const data = payload.data;
-                    Assert.ok(data.baseData.id, "pageView id is defined");
-                    Assert.ok(data.baseData.id.length > 0);
-                    Assert.ok(payload.tags["ai.operation.id"]);
-                    Assert.equal(data.baseData.id, payload.tags["ai.operation.id"], "pageView id matches current operation id");
-                } else {
-                    Assert.ok(false, "successSpy not called");
-                }
-            })
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        const data = payload.data;
+                        Assert.ok(data.baseData.id, "pageView id is defined");
+                        Assert.ok(data.baseData.id.length > 0);
+                        Assert.ok(payload.tags["ai.operation.id"]);
+                        Assert.equal(data.baseData.id, payload.tags["ai.operation.id"], "pageView id matches current operation id");
+                    } else {
+                        Assert.ok(false, "successSpy not called");
+                    }
+                })
         });
 
         this.testCaseAsync({
@@ -1545,20 +1598,20 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'E2E.GenericTests: undefined properties are replaced by customer defined value with config convertUndefined.',
             stepDelay: 1,
             steps: [() => {
-                this._ai.trackPageView({ name: 'pageview', properties: { 'prop1': 'val1' }});
+                this._ai.trackPageView({ name: 'pageview', properties: { 'prop1': 'val1' } });
                 this._ai.trackEvent({ name: 'event', properties: { 'prop2': undefined } });
             }].concat(this.asserts(3)).concat(() => {
                 const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                 for (let i = 0; i < payloadStr.length; i++) {
-                    const payload = JSON.parse(payloadStr[i]);const baseType = payload.data.baseType;
+                    const payload = JSON.parse(payloadStr[i]); const baseType = payload.data.baseType;
                     // Make the appropriate assersion depending on the baseType
                     switch (baseType) {
-                        case Event.dataType:
+                        case EventDataType:
                             const eventData = payload.data;
                             Assert.ok(eventData && eventData.baseData && eventData.baseData.properties['prop2']);
                             Assert.equal(eventData.baseData.properties['prop2'], 'test-value');
                             break;
-                        case PageView.dataType:
+                        case PageViewDataType:
                             const pageViewData = payload.data;
                             Assert.ok(pageViewData && pageViewData.baseData && pageViewData.baseData.properties['prop1']);
                             Assert.equal(pageViewData.baseData.properties['prop1'], 'val1');
@@ -1597,7 +1650,7 @@ export class ApplicationInsightsTests extends AITestClass {
             steps: [
                 () => {
                     const xhr = new XMLHttpRequest();
-                    xhr.open('GET', 'https://httpbin.org/status/200');
+                    xhr.open('GET', 'https://localhost:9001/AISKU');
                     xhr.send();
                     Assert.ok(true);
                 }
@@ -1612,22 +1665,22 @@ export class ApplicationInsightsTests extends AITestClass {
                 fakeFetchAutoRespond: true,
                 steps: [
                     () => {
-                        fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
+                        fetch('http://localhost:9001/README.md', { method: 'GET', headers: { 'header': 'value' } });
                         Assert.ok(true, "fetch monitoring is instrumented");
                     },
                     () => {
-                        fetch('https://httpbin.org/status/200', { method: 'GET' });
+                        fetch('http://localhost:9001/README.md', { method: 'GET' });
                         Assert.ok(true, "fetch monitoring is instrumented");
                     },
                     () => {
-                        fetch('https://httpbin.org/status/200');
+                        fetch('http://localhost:9001/README.md');
                         Assert.ok(true, "fetch monitoring is instrumented");
                     }
                 ].concat(this.asserts(3, false, false))
                     .concat(() => {
                         let args = [];
                         this.trackSpy.args.forEach(call => {
-                            let message = call[0].baseData.message||"";
+                            let message = call[0].baseData.message || "";
                             // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
                             if (message.indexOf("AI (Internal): 72 ") == -1) {
                                 args.push(call[0]);
@@ -1651,6 +1704,7 @@ export class ApplicationInsightsTests extends AITestClass {
                         Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
                         Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
                         Assert.ok(baseData.properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparent");
+                        Assert.ok(!baseData.properties.requestHeaders[RequestHeaders.traceStateHeader], "traceState should not be present in outbound event");
                         const id: string = baseData.id;
                         const regex = id.match(/\|.{32}\..{16}\./g);
                         Assert.ok(id.length > 0);
@@ -1680,23 +1734,23 @@ export class ApplicationInsightsTests extends AITestClass {
                     this._ai.trackEvent({ name: "Custom event via addTelemetryInitializer" });
                 }
             ]
-            .concat(this.asserts(1, false, false))
-            .concat(PollingAssert.createPollingAssert(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length) {
-                    const payload = JSON.parse(payloadStr[0]);
+                .concat(this.asserts(1, false, false))
+                .concat(PollingAssert.createPollingAssert(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length) {
+                        const payload = JSON.parse(payloadStr[0]);
                         Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
                         Assert.ok(payload);
 
-                    if (payload && payload.tags) {
-                        const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
-                        const tagExpect: string = 'my.custom.cloud.name';
-                        Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
-                        return true;
+                        if (payload && payload.tags) {
+                            const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                            const tagExpect: string = 'my.custom.cloud.name';
+                            Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
+                            return true;
+                        }
+                        return false;
                     }
-                    return false;
-                }
-            }, 'Set custom tags') as any)
+                }, 'Set custom tags') as any)
         });
 
         this.testCaseAsync({
@@ -1705,28 +1759,28 @@ export class ApplicationInsightsTests extends AITestClass {
             steps: [
                 () => {
                     this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
-                        item.tags.push({[this.tagKeys.cloudName]: "my.shim.cloud.name"});
+                        item.tags.push({ [this.tagKeys.cloudName]: "my.shim.cloud.name" });
                     });
                     this._ai.trackEvent({ name: "Custom event" });
                 }
             ]
-            .concat(this.asserts(1))
-            .concat(PollingAssert.createPollingAssert(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
-                    const payload = JSON.parse(payloadStr[0]);
-                    Assert.ok(payload);
+                .concat(this.asserts(1))
+                .concat(PollingAssert.createPollingAssert(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                        const payload = JSON.parse(payloadStr[0]);
+                        Assert.ok(payload);
 
-                    if (payload && payload.tags) {
-                        const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
-                        const tagExpect: string = 'my.shim.cloud.name';
-                        Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
-                        return true;
+                        if (payload && payload.tags) {
+                            const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                            const tagExpect: string = 'my.shim.cloud.name';
+                            Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
+                            return true;
+                        }
+                        return false;
                     }
-                    return false;
-                }
-            }, 'Set custom tags') as any)
+                }, 'Set custom tags') as any)
         });
 
         this.testCaseAsync({
@@ -1737,41 +1791,41 @@ export class ApplicationInsightsTests extends AITestClass {
                     this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
                         item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
                         item.tags[this.tagKeys.locationCity] = "my.custom.location.city";
-                        item.tags.push({[this.tagKeys.locationCountry]: "my.custom.location.country"});
-                        item.tags.push({[this.tagKeys.operationId]: "my.custom.operation.id"});
+                        item.tags.push({ [this.tagKeys.locationCountry]: "my.custom.location.country" });
+                        item.tags.push({ [this.tagKeys.operationId]: "my.custom.operation.id" });
                     });
                     this._ai.trackEvent({ name: "Custom event via shimmed addTelemetryInitializer" });
                 }
             ]
-            .concat(this.asserts(1))
-            .concat(PollingAssert.createPollingAssert(() => {
-                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
-                if (payloadStr.length > 0) {
-                    const payload = JSON.parse(payloadStr[0]);
-                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
-                    if (payloadStr.length > 1) {
-                        this.dumpPayloadMessages(this.successSpy);
-                    }
-                    Assert.ok(payload);
+                .concat(this.asserts(1))
+                .concat(PollingAssert.createPollingAssert(() => {
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
+                        if (payloadStr.length > 1) {
+                            this.dumpPayloadMessages(this.successSpy);
+                        }
+                        Assert.ok(payload);
 
-                    if (payload && payload.tags) {
-                        const tagResult1: string = payload.tags && payload.tags[this.tagKeys.cloudName];
-                        const tagExpect1: string = 'my.custom.cloud.name';
-                        Assert.equal(tagResult1, tagExpect1, 'telemetryinitializer tag override successful');
-                        const tagResult2: string = payload.tags && payload.tags[this.tagKeys.locationCity];
-                        const tagExpect2: string = 'my.custom.location.city';
-                        Assert.equal(tagResult2, tagExpect2, 'telemetryinitializer tag override successful');
-                        const tagResult3: string = payload.tags && payload.tags[this.tagKeys.locationCountry];
-                        const tagExpect3: string = 'my.custom.location.country';
-                        Assert.equal(tagResult3, tagExpect3, 'telemetryinitializer tag override successful');
-                        const tagResult4: string = payload.tags && payload.tags[this.tagKeys.operationId];
-                        const tagExpect4: string = 'my.custom.operation.id';
-                        Assert.equal(tagResult4, tagExpect4, 'telemetryinitializer tag override successful');
-                        return true;
+                        if (payload && payload.tags) {
+                            const tagResult1: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                            const tagExpect1: string = 'my.custom.cloud.name';
+                            Assert.equal(tagResult1, tagExpect1, 'telemetryinitializer tag override successful');
+                            const tagResult2: string = payload.tags && payload.tags[this.tagKeys.locationCity];
+                            const tagExpect2: string = 'my.custom.location.city';
+                            Assert.equal(tagResult2, tagExpect2, 'telemetryinitializer tag override successful');
+                            const tagResult3: string = payload.tags && payload.tags[this.tagKeys.locationCountry];
+                            const tagExpect3: string = 'my.custom.location.country';
+                            Assert.equal(tagResult3, tagExpect3, 'telemetryinitializer tag override successful');
+                            const tagResult4: string = payload.tags && payload.tags[this.tagKeys.operationId];
+                            const tagExpect4: string = 'my.custom.operation.id';
+                            Assert.equal(tagResult4, tagExpect4, 'telemetryinitializer tag override successful');
+                            return true;
+                        }
+                        return false;
                     }
-                    return false;
-                }
-            }, 'Set custom tags') as any)
+                }, 'Set custom tags') as any)
         });
 
         this.testCaseAsync({
@@ -1779,7 +1833,7 @@ export class ApplicationInsightsTests extends AITestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = (this._ai.context) as TelemetryContext;
+                    const context = (this._ai.context) as IPropTelemetryContext;
                     context.user.setAuthenticatedUserContext('10001');
                     this._ai.trackTrace({ message: 'authUserContext test' });
                 }
@@ -1789,7 +1843,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     let payloadStr = this.getPayloadMessages(this.successSpy);
                     if (payloadStr.length > 0) {
                         let payloadEvents = payloadStr.length;
-                        let thePayload:string = payloadStr[0];
+                        let thePayload: string = payloadStr[0];
 
                         if (payloadEvents !== 1) {
                             // Only 1 track should be sent
@@ -1810,7 +1864,7 @@ export class ApplicationInsightsTests extends AITestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = (this._ai.context) as TelemetryContext;
+                    const context = (this._ai.context) as IPropTelemetryContext;
                     context.user.setAuthenticatedUserContext('10001', 'account123');
                     this._ai.trackTrace({ message: 'authUserContext test' });
                 }
@@ -1840,7 +1894,7 @@ export class ApplicationInsightsTests extends AITestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = (this._ai.context) as TelemetryContext;
+                    const context = (this._ai.context) as IPropTelemetryContext;
                     context.user.setAuthenticatedUserContext("\u0428", "\u0429");
                     this._ai.trackTrace({ message: 'authUserContext test' });
                 }
@@ -1870,7 +1924,7 @@ export class ApplicationInsightsTests extends AITestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = (this._ai.context) as TelemetryContext;
+                    const context = (this._ai.context) as IPropTelemetryContext;
                     context.user.setAuthenticatedUserContext('10002', 'account567');
                     context.user.clearAuthenticatedUserContext();
                     this._ai.trackTrace({ message: 'authUserContext test' });
@@ -1901,7 +1955,7 @@ export class ApplicationInsightsTests extends AITestClass {
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext does not set the cookie by default',
             test: () => {
                 // Setup
-                const context = (this._ai.context) as TelemetryContext;
+                const context = (this._ai.context) as IPropTelemetryContext;
                 const authSpy: SinonSpy = this.sandbox.spy(context.user, 'setAuthenticatedUserContext');
                 let cookieMgr = this._ai.getCookieMgr();
                 const cookieSpy: SinonSpy = this.sandbox.spy(cookieMgr, 'set');
@@ -1930,7 +1984,7 @@ export class ApplicationInsightsTests extends AITestClass {
         this.testCase({
             name: 'iKey replacement: envelope will use the non-empty iKey defined in track method',
             test: () => {
-                this._ai.trackEvent({ name: 'event1', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 }, iKey:"1a6933ad-aaaa-aaaa-aaaa-000000000000" });
+                this._ai.trackEvent({ name: 'event1', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 }, iKey: "1a6933ad-aaaa-aaaa-aaaa-000000000000" });
                 Assert.ok(this.envelopeConstructorSpy.called);
                 const envelope = this.envelopeConstructorSpy.returnValues[0];
                 Assert.equal(envelope.iKey, "1a6933ad-aaaa-aaaa-aaaa-000000000000", "trackEvent iKey is replaced");
@@ -1940,7 +1994,7 @@ export class ApplicationInsightsTests extends AITestClass {
         this.testCase({
             name: 'iKey replacement: envelope will use the config iKey if defined ikey in track method is empty',
             test: () => {
-                this._ai.trackEvent({ name: 'event1', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 }, iKey:"" });
+                this._ai.trackEvent({ name: 'event1', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 }, iKey: "" });
                 Assert.ok(this.envelopeConstructorSpy.called);
                 const envelope = this.envelopeConstructorSpy.returnValues[0];
                 Assert.equal(envelope.iKey, ApplicationInsightsTests._instrumentationKey, "trackEvent iKey should not be replaced");
@@ -1959,7 +2013,7 @@ export class ApplicationInsightsTests extends AITestClass {
             }
         }
     }
-    private asserts: any = (expectedCount: number, includeInit:boolean = false, doBoilerPlate:boolean = true) => [
+    private asserts: any = (expectedCount: number, includeInit: boolean = false, doBoilerPlate: boolean = true) => [
         () => {
             const message = "polling: " + new Date().toISOString();
             Assert.ok(true, message);
@@ -1989,21 +2043,22 @@ export class ApplicationInsightsTests extends AITestClass {
                     if (currentCount === expectedCount && !!this._ai.context.appId()) {
                         const payload = JSON.parse(payloadStr[0]);
                         const baseType = payload.data.baseType;
+
                         // call the appropriate Validate depending on the baseType
                         switch (baseType) {
-                            case Event.dataType:
+                            case EventDataType:
                                 return EventValidator.EventValidator.Validate(payload, baseType);
-                            case Trace.dataType:
+                            case TraceDataType:
                                 return TraceValidator.TraceValidator.Validate(payload, baseType);
-                            case Exception.dataType:
+                            case ExceptionDataType:
                                 return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
-                            case Metric.dataType:
+                            case MetricDataType:
                                 return MetricValidator.MetricValidator.Validate(payload, baseType);
-                            case PageView.dataType:
+                            case PageViewDataType:
                                 return PageViewValidator.PageViewValidator.Validate(payload, baseType);
-                            case PageViewPerformance.dataType:
+                            case PageViewPerformanceDataType:
                                 return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
-                            case RemoteDependencyData.dataType:
+                            case RemoteDependencyDataType:
                                 return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
 
                             default:
@@ -2020,9 +2075,9 @@ export class ApplicationInsightsTests extends AITestClass {
 
 class CustomTestError extends Error {
     constructor(message = "") {
-      super(message);
-      this.name = "CustomTestError";
-      this.message = message + " -- test error.";
+        super(message);
+        this.name = "CustomTestError";
+        this.message = message + " -- test error.";
     }
 }
 
