@@ -1591,7 +1591,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
      * @internal
      * since version 3.2.0, if the payload is string[], this function is no-op (string[] is only used for backwards Compatibility)
      */
-    public _onError(payload: string[] | IInternalStorageItem[], message: string, event?: ErrorEvent) {
+    public _onError(payload: string[] | IInternalStorageItem[], message: string, event?: ErrorEvent, statusCode?: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
