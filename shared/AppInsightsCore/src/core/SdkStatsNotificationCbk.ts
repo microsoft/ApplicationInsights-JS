@@ -103,6 +103,7 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
     }
 
     function _incSuccess(items: ITelemetryItem[]) {
+        if (!items || !items.length) return;
         for (var i = 0; i < items.length; i++) {
             if (!_isSdkStatsMetric(items[i])) {
                 var t = _getTelType(items[i]);
@@ -115,6 +116,7 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
     }
 
     function _incDropped(items: ITelemetryItem[], code: string) {
+        if (!items || !items.length) return;
         if (!_safeKey(code)) {
             return;
         }
@@ -137,6 +139,7 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
     }
 
     function _incRetry(items: ITelemetryItem[], code: string) {
+        if (!items || !items.length) return;
         if (!_safeKey(code)) {
             return;
         }
