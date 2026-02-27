@@ -64,6 +64,14 @@ export interface INotificationManager {
     unload?(isAsync?: boolean): void | IPromise<void>;
 
     /**
+     * Notification for events being retried.
+     * @param events - The array of events that are being retried.
+     * @param statusCode - The HTTP status code that triggered the retry.
+     * @since 3.3.6
+     */
+    eventsRetry?(events: ITelemetryItem[], statusCode: number): void;
+
+    /**
      * [Optional] A function called when the offline events have been stored to the persistent storage
      * @param events - items that are stored in the persistent storage
      * @since v3.1.1

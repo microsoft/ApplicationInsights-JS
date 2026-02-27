@@ -33,6 +33,8 @@ export class PostChannelTest extends AITestClass {
     private core: AppInsightsCore;
     private eventsSent: Array<IExtendedTelemetryItem> = [];
     private eventsDiscarded: Array<IExtendedTelemetryItem> = [];
+    private eventsRetried: Array<IExtendedTelemetryItem> = [];
+    private eventsRetriedStatusCodes: Array<number> = [];
     private eventsSendRequests: Array<IEventsSendRequests> = [];
     private testMessage: string;
     private beaconCalls = [];
@@ -64,6 +66,8 @@ export class PostChannelTest extends AITestClass {
         this.testMessage = "";
         this.eventsSent = [];
         this.eventsDiscarded = [];
+        this.eventsRetried = [];
+        this.eventsRetriedStatusCodes = [];
         this.eventsSendRequests = [];
         this.xhrOverride = new AutoCompleteXhrOverride();
         this.setTimeoutOverride = (handler: Function, timeout?: number) => {
@@ -1009,6 +1013,66 @@ export class PostChannelTest extends AITestClass {
                 }
                 QUnit.assert.equal(this.eventsSent.length, 1, "There should have been 1 event");
                 QUnit.assert.equal(this.eventsDiscarded.length, 0, "No events should have been discarded");
+            }
+        });
+
+        this.testCase({
+            name: "eventsRetry notification fires when events are requeued after retriable failure",
+            useFakeTimers: true,
+            test: () => {
+                // Use an xhrOverride that returns a retriable 503 status
+                let sendCount = 0;
+                let retryXhrOverride: IXHROverride = {
+                    sendPOST: (payload: IPayloadData, oncomplete: (status: number, headers: { [headerName: string]: string }) => void, sync?: boolean) => {
+                        sendCount++;
+                        // Always return 503 to trigger retry/requeue
+                        oncomplete(503, {});
+                    }
+                };
+
+                this.config.extensionConfig[this.postChannel.identifier] = {
+                    httpXHROverride: retryXhrOverride,
+                    maxEventRetryAttempts: 3
+                };
+
+                this.core.initialize(this.config, [this.postChannel]);
+                this.core.addNotificationListener({
+                    eventsRetry: (events: IExtendedTelemetryItem[], statusCode: number) => {
+                        for (var i = 0; i < events.length; i++) {
+                            this.eventsRetried.push(events[i]);
+                        }
+                        this.eventsRetriedStatusCodes.push(statusCode);
+                    }
+                });
+
+                var event: IPostTransmissionTelemetryItem = {
+                    name: 'testEvent',
+                    sync: false,
+                    latency: EventLatency.Normal,
+                    iKey: 'testIkey'
+                };
+                this.postChannel.processTelemetry(event);
+
+                // Use synchronous flush to trigger immediate send via HttpManager
+                // For synchronous sends, HttpManager skips internal retry and directly
+                // calls _requeueEvents when a retriable status code (503) is received
+                this.postChannel.flush(false);
+                QUnit.assert.ok(sendCount > 0, "XHR should have been called, got " + sendCount);
+
+                // The NotificationManager dispatches eventsRetry asynchronously via scheduleTimeout(0)
+                // Allow time for async notification dispatch and any backoff timers
+                for (var i = 0; i < 20; i++) {
+                    this.clock.tick(1000);
+                    if (this.eventsRetried.length > 0) {
+                        break;
+                    }
+                }
+
+                // Verify that eventsRetry notification fired when events were requeued
+                QUnit.assert.ok(this.eventsRetried.length > 0, "eventsRetry should have been called at least once, got " + this.eventsRetried.length);
+                if (this.eventsRetried.length > 0) {
+                    QUnit.assert.equal(this.eventsRetried[0].name, 'testEvent', "Retried event should be the test event");
+                }
             }
         });
 
