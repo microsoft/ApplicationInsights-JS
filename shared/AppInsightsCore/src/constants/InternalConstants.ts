@@ -32,3 +32,7 @@ export const STR_NOT_DYNAMIC_ERROR = "Not dynamic - ";
 
 export const STR_REDACTED = "REDACTED";
 export const DEFAULT_SENSITIVE_PARAMS = ["sig", "Signature", "AWSAccessKeyId", "X-Goog-Signature"];
+
+export const STR_DEFAULT_ENDPOINT_URL = "https://browser.events.data.microsoft.com/OneCollector/1.0/";
+export const STR_VERSION = "version";
+export const STR_NOT_SPECIFIED = "not_specified";

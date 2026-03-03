@@ -5,10 +5,12 @@ import {
     ILazyValue, arrIncludes, asString, getLazy, getNavigator, isBoolean, isNullOrUndefined, isNumber, isString, strLower, strStartsWith,
     throwError
 } from "@nevware21/ts-utils";
+import { STR_NOT_SPECIFIED } from "../constants/InternalConstants";
 import { eOTelSpanKind } from "../enums/otel/OTelSpanKind";
 import { eOTelSpanStatusCode } from "../enums/otel/OTelSpanStatus";
 import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { IExtendedTelemetryItem } from "../interfaces/ext/DataModels";
 import { OTelAttributeValue } from "../interfaces/otel/IOTelAttributes";
 import { IAttributeContainer } from "../interfaces/otel/attribute/IAttributeContainer";
 import { IReadableSpan } from "../interfaces/otel/trace/IReadableSpan";
@@ -32,8 +34,6 @@ import {
 import { createAttributeContainer } from "../otel/attribute/attributeContainer";
 import { fieldRedaction } from "../utils/EnvUtils";
 import { toISOString } from "../utils/HelperFuncs";
-import { IExtendedTelemetryItem } from "./DataModels";
-import { STR_NOT_SPECIFIED } from "./InternalConstants";
 
 /**
  * Azure SDK namespace.

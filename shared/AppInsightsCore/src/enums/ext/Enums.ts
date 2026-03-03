@@ -5,8 +5,8 @@
 * File containing the enums as constants.
 */
 
-import { createEnumStyle } from "../enums/EnumHelperFuncs";
-import { _eInternalMessageId } from "../enums/ai/LoggingEnums";
+import { createEnumStyle } from "../EnumHelperFuncs";
+import { _eInternalMessageId } from "../ai/LoggingEnums";
 
 /**
  * The eValueKind contains a set of values that specify value kind of the property.

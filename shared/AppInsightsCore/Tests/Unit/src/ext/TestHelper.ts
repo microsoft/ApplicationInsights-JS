@@ -1,4 +1,4 @@
-import { IExtendedTelemetryItem } from '../../../../src/ext/DataModels';
+import { IExtendedTelemetryItem } from '../../../../src/interfaces/ext/DataModels';
 
 export class TestHelper {
     private static _idCount = 0;

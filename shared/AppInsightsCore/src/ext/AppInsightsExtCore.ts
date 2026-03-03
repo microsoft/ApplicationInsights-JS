@@ -6,19 +6,19 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { ITimerHandler, dumpObj, objDeepFreeze, throwError } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../config/DynamicConfig";
+import { STR_DEFAULT_ENDPOINT_URL, STR_EMPTY, STR_VERSION } from "../constants/InternalConstants";
 import { AppInsightsCore } from "../core/AppInsightsCore";
 import { doPerf } from "../core/PerfManager";
 import { _throwInternal } from "../diagnostics/DiagnosticLogger";
 import { eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { EventLatencyValue, _eExtendedInternalMessageId } from "../enums/ext/Enums";
 import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
 import { INotificationManager } from "../interfaces/ai/INotificationManager";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 import { IPlugin } from "../interfaces/ai/ITelemetryPlugin";
 import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
-import { IExtendedConfiguration, IExtendedTelemetryItem, IPropertyStorageOverride } from "./DataModels";
-import { EventLatencyValue, _eExtendedInternalMessageId } from "./Enums";
-import { STR_DEFAULT_ENDPOINT_URL, STR_EMPTY, STR_VERSION } from "./InternalConstants";
-import { FullVersionString, getTime, isLatency } from "./Utils";
+import { IExtendedConfiguration, IExtendedTelemetryItem, IPropertyStorageOverride } from "../interfaces/ext/DataModels";
+import { FullVersionString, getTime, isLatency } from "./extUtils";
 
 /**
  * The default settings for the config.

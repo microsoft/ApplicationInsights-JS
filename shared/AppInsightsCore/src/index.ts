@@ -383,7 +383,7 @@ export {
     _ExtendedInternalMessageId, _eExtendedInternalMessageId,
     GuidStyle, FieldValueSanitizerType,
     TransportType
-} from "./ext/Enums";
+} from "./enums/ext/Enums";
 
 // 1DS Data Models (interfaces)
 export {
@@ -391,7 +391,7 @@ export {
     IEventProperty, IExtendedTelemetryItem, IEventTiming,
     FieldValueSanitizerFunc, FieldValueSanitizerTypes,
     IFieldSanitizerDetails, IFieldValueSanitizerProvider, IValueSanitizer
-} from "./ext/DataModels";
+} from "./interfaces/ext/DataModels";
 
 // 1DS Classes
 export { AppInsightsExtCore } from "./ext/AppInsightsExtCore";
@@ -405,7 +405,7 @@ export {
     setProcessTelemetryTimings, getTime,
     isArrayValid, isValueKind, getFieldValueType,
     isChromium, isGreaterThanZero
-} from "./ext/Utils";
+} from "./ext/extUtils";
 
 // 1DS Span Utils
 export { createExtendedTelemetryItemFromSpan } from "./ext/extSpanUtils";

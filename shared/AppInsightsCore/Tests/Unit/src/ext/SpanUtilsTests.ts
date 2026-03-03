@@ -39,7 +39,7 @@ import {
     IOTelConfig
 } from "../../../../src/index";
 import { createExtendedTelemetryItemFromSpan, IMsWebSpanTelemetry } from "../../../../src/ext/extSpanUtils";
-import { IExtendedTelemetryItem } from "../../../../src/ext/DataModels";
+import { IExtendedTelemetryItem } from "../../../../src/interfaces/ext/DataModels";
 
 export class SpanUtilsTests extends AITestClass {
     private _core!: AppInsightsCore;

@@ -1,7 +1,7 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { uaDisallowsSameSiteNone } from "../../../../src/index";
-import { EventPropertyType, ValueKind  } from '../../../../src/ext/Enums';
-import * as Utils from '../../../../src/ext/Utils';
+import { EventPropertyType, ValueKind  } from '../../../../src/enums/ext/Enums';
+import * as Utils from '../../../../src/ext/extUtils';
 
 export class UtilsTest extends AITestClass {
     public registerTests() {

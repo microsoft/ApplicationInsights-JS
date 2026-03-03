@@ -1,10 +1,10 @@
 import { arrForEach, arrIncludes, arrIndexOf, getLength, isNullOrUndefined, isString, objForEachKey } from "@nevware21/ts-utils";
+import { STR_EMPTY } from "../constants/InternalConstants";
+import { FieldValueSanitizerType } from "../enums/ext/Enums";
 import {
     FieldValueSanitizerFunc, FieldValueSanitizerTypes, IEventProperty, IFieldSanitizerDetails, IFieldValueSanitizerProvider, IValueSanitizer
-} from "./DataModels";
-import { FieldValueSanitizerType } from "./Enums";
-import { STR_EMPTY } from "./InternalConstants";
-import { getFieldValueType, isValueAssigned, isValueKind } from "./Utils";
+} from "../interfaces/ext/DataModels";
+import { getFieldValueType, isValueAssigned, isValueKind } from "./extUtils";
 
 interface ISanitizerMapValue {
     canHandle: boolean;
