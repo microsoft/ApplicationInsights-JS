@@ -1,6 +1,5 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import dynamicProto from '@microsoft/dynamicproto-js';
-import * as sinon from 'sinon';
 
 interface IInheritTest {
     executionOrder:string[];

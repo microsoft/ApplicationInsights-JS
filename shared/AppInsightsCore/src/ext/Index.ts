@@ -3,14 +3,12 @@
 */
 import { AppInsightsExtCore } from "./AppInsightsExtCore";
 import {
-    FieldValueSanitizerFunc, FieldValueSanitizerTypes, IEventProperty, IEventTiming,
-    IExtendedConfiguration, IExtendedTelemetryItem,
+    FieldValueSanitizerFunc, FieldValueSanitizerTypes, IEventProperty, IEventTiming, IExtendedConfiguration, IExtendedTelemetryItem,
     IFieldSanitizerDetails, IFieldValueSanitizerProvider, IPropertyStorageOverride, IValueSanitizer
 } from "./DataModels";
 import {
-    EventLatency, EventLatencyValue, EventPersistence, EventPersistenceValue, EventPropertyType,
-    EventSendType, FieldValueSanitizerType, GuidStyle, TraceLevel, ValueKind,
-    _ExtendedInternalMessageId, _eExtendedInternalMessageId, eEventPropertyType, eTraceLevel, eValueKind
+    EventLatency, EventLatencyValue, EventPersistence, EventPersistenceValue, EventPropertyType, EventSendType, FieldValueSanitizerType,
+    GuidStyle, TraceLevel, ValueKind, _ExtendedInternalMessageId, _eExtendedInternalMessageId, eEventPropertyType, eTraceLevel, eValueKind
 } from "./Enums";
 import { ValueSanitizer } from "./ValueSanitizer";
 

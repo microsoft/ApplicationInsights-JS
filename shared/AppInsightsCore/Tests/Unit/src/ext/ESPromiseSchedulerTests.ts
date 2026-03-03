@@ -2,7 +2,6 @@ import { AITestClass } from "@microsoft/ai-test-framework";
 import { DiagnosticLogger } from '../../../../src/index';
 import { strIndexOf } from '@nevware21/ts-utils';
 import { createAsyncPromise, createNativePromise, createNativeResolvedPromise, createTaskScheduler } from '@nevware21/ts-async';
-import * as sinon from 'sinon';
 
 export function makeRegex(value: string) {
     if (value && value.length > 0) {

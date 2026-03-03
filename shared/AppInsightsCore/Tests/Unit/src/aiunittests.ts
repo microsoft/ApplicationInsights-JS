@@ -32,6 +32,9 @@ import { ThrottleMgrTest } from "./ai/ThrottleMgr.tests";
 import { UtilTests } from "./ai/Util.tests";
 import { W3CTraceStateModesTests } from "./trace/W3CTraceStateModes.tests";
 
+// 1DS (OneCollector) extended tests (merged from 1ds-core-js)
+import { registerTests as registerExtTests } from "./ext/core.unittests";
+
 export function runTests() {
     new GlobalTestHooks().registerTests();
     new DynamicTests().registerTests();
@@ -67,4 +70,7 @@ export function runTests() {
     new ThrottleMgrTest().registerTests();
     new UtilTests().registerTests();
     new W3CTraceStateModesTests().registerTests();
+
+    // 1DS (OneCollector) extended tests
+    registerExtTests();
 }

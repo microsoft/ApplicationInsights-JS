@@ -1,30 +1,37 @@
 /**
 * Index.ts
-* @author Abhilash Panwar (abpanwar)
-* @copyright Microsoft 2018
-* File to export public classes, interfaces and enums.
+* Re-export package — all implementation merged into @microsoft/applicationinsights-core-js.
+* This package exists for backward compatibility with consumers of @microsoft/1ds-core-js.
 */
-import { AppInsightsCore } from "./AppInsightsCore";
-import {
-    FieldValueSanitizerFunc, FieldValueSanitizerTypes, IEventProperty, IEventTiming, IExtendedConfiguration, IExtendedTelemetryItem,
-    IFieldSanitizerDetails, IFieldValueSanitizerProvider, IPropertyStorageOverride, IValueSanitizer
-} from "./DataModels";
-import {
-    EventLatency, EventLatencyValue, EventPersistence, EventPersistenceValue, EventPropertyType, EventSendType, FieldValueSanitizerType,
-    GuidStyle, TraceLevel, ValueKind, _ExtendedInternalMessageId, _eExtendedInternalMessageId, eEventPropertyType, eTraceLevel, eValueKind
-} from "./Enums";
-import { ValueSanitizer } from "./ValueSanitizer";
 
+// Re-export AppInsightsExtCore as AppInsightsCore so existing consumers are not broken
+export { AppInsightsExtCore as AppInsightsCore } from "@microsoft/applicationinsights-core-js";
+
+// Re-export all 1DS-specific types from core
 export {
-    ValueKind, eValueKind, IExtendedConfiguration, IPropertyStorageOverride,
-    EventLatency, EventPersistence, TraceLevel, eTraceLevel, IEventProperty, IExtendedTelemetryItem,
-    AppInsightsCore, _ExtendedInternalMessageId, _eExtendedInternalMessageId, EventPropertyType, eEventPropertyType,
-    IEventTiming, GuidStyle,
-    FieldValueSanitizerFunc, FieldValueSanitizerType, FieldValueSanitizerTypes, IFieldSanitizerDetails,
-    IFieldValueSanitizerProvider, IValueSanitizer, ValueSanitizer,
-    EventLatencyValue, EventPersistenceValue, EventSendType
-};
+    ValueKind, eValueKind,
+    EventLatency, EventLatencyValue,
+    EventPersistence, EventPersistenceValue,
+    EventPropertyType, eEventPropertyType,
+    EventSendType,
+    TraceLevel, eTraceLevel,
+    _ExtendedInternalMessageId, _eExtendedInternalMessageId,
+    GuidStyle, FieldValueSanitizerType,
+    IExtendedConfiguration, IPropertyStorageOverride,
+    IEventProperty, IExtendedTelemetryItem, IEventTiming,
+    FieldValueSanitizerFunc, FieldValueSanitizerTypes,
+    IFieldSanitizerDetails, IFieldValueSanitizerProvider, IValueSanitizer,
+    ValueSanitizer,
+    isValueAssigned, isLatency, isUint8ArrayAvailable, getTenantId, sanitizeProperty,
+    Version, FullVersionString, getCommonSchemaMetaData, getCookieValue,
+    extend, createGuid, isDocumentObjectAvailable, isWindowObjectAvailable,
+    setProcessTelemetryTimings, getTime,
+    isArrayValid, isValueKind, getFieldValueType,
+    isChromium, isGreaterThanZero,
+    createExtendedTelemetryItemFromSpan
+} from "@microsoft/applicationinsights-core-js";
 
+// Re-export all core types that were previously re-exported by this package
 export {
     IAppInsightsCore, IChannelControls, IPlugin, INotificationManager, NotificationManager, INotificationListener,
     IConfiguration, ITelemetryItem, ITelemetryPlugin, BaseTelemetryPlugin, IProcessTelemetryContext, ITelemetryPluginChain,
@@ -32,24 +39,19 @@ export {
     IPerfEvent, IPerfManager, IPerfManagerProvider, PerfEvent, PerfManager, doPerf, ICustomProperties, Tags,
     AppInsightsCore as InternalAppInsightsCore, _InternalLogMessage, _InternalMessageId, eActiveStatus, ActiveStatus,
     createEnumStyle, eLoggingSeverity, _eInternalMessageId, _throwInternal, _warnToConsole, _logInternalMessage,
-    // The HelperFuncs functions
     isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, attachEvent, detachEvent, normalizeJsName,
     objForEachKey, strStartsWith, strEndsWith, strContains, strTrim, isDate, isArray, isError, isString, isNumber, isBoolean,
     toISOString, arrForEach, arrIndexOf, arrMap, arrReduce, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError,
     setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, proxyFunctions, proxyFunctionAs, optimizeObject,
     addEventHandler, newGuid, perfNow, newId, generateW3CId, safeGetLogger, objFreeze, objSeal, fieldRedaction,
-    // EnvUtils
     getGlobal, getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
     isReactNative, getConsole, dumpObj, isIE, getIEVersion, strUndefined, strObject, strPrototype, strFunction,
     setEnableEnvMocks, strUndefined as Undefined,
-    // Random
     randomValue, random32,
-    // Cookie Handling
     ICookieMgr, ICookieMgrConfig, uaDisallowsSameSiteNone as disallowsSameSiteNone,
     areCookiesSupported, areCookiesSupported as cookieAvailable, createCookieMgr, safeGetCookieMgr,
-    // Aliases
-    toISOString as getISOString,
+    toISOString as getISOString, openXhr,
     isBeaconsSupported, isFetchSupported, isXhrSupported, useXDomainRequest,
     addPageHideEventListener, addPageShowEventListener, addEventListeners, addPageUnloadEventListener,
     removeEventHandler, removeEventListeners, removePageUnloadEventListener, removePageHideEventListener, removePageShowEventListener, eventOn, eventOff, mergeEvtNamespace,
@@ -61,8 +63,6 @@ export {
     ITelemetryUpdateState, IUnloadableComponent,
     IDistributedTraceContext, createTraceParent, parseTraceParent, isValidTraceId, isValidSpanId, isValidTraceParent, isSampledFlag, formatTraceParent, findW3cTraceParent,
     IUnloadHook, ILegacyUnloadHook, IUnloadHookContainer,
-    
-    // Dynamic Config definitions
     IConfigCheckFn, IConfigDefaultCheck, IConfigDefaults, IConfigSetFn, IDynamicConfigHandler, IDynamicPropertyHandler,
     IWatchDetails, IWatcherHandler, WatcherFunction,
     createDynamicConfig, onConfigChange, getDynamicConfigHandler, blockDynamicConversion, forceDynamicConversion,
@@ -70,20 +70,5 @@ export {
     getResponseText, formatErrorMessageXdr, formatErrorMessageXhr, prependTransports, parseResponse, _getAllResponseHeaders, _appendHeader, _IInternalXhrOverride,
     _ITimeoutOverrideWrapper, IXDomainRequest, isFeatureEnabled, FeatureOptInMode,
     TransportType,
-
-    // Test Hooks
     _testHookMaxUnloadHooksCb
 } from "@microsoft/applicationinsights-core-js";
-
-export {
-    isValueAssigned, isLatency, isUint8ArrayAvailable, getTenantId, sanitizeProperty,
-    Version, FullVersionString, getCommonSchemaMetaData, getCookieValue,
-    extend, createGuid, isDocumentObjectAvailable, isWindowObjectAvailable,
-    setProcessTelemetryTimings, getTime,
-    isArrayValid, isValueKind, getFieldValueType,
-    isChromium,     // Replace with ai-core version once published in ai-core
-    openXhr,
-    isGreaterThanZero
-} from "./Utils";
-
-export { createExtendedTelemetryItemFromSpan } from "./extSpanUtils";

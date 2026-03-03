@@ -368,3 +368,44 @@ export {
 export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
 export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";
 export const AnalyticsPluginIdentifier = "ApplicationInsightsAnalytics";
+
+// ==========================================================================
+// 1DS (OneCollector) exports - merged from @microsoft/1ds-core-js
+// ==========================================================================
+
+// 1DS Enums
+export {
+    ValueKind, eValueKind,
+    EventLatency, EventLatencyValue,
+    EventPersistenceValue,
+    EventPropertyType, eEventPropertyType,
+    EventSendType,
+    TraceLevel, eTraceLevel,
+    _ExtendedInternalMessageId, _eExtendedInternalMessageId,
+    GuidStyle, FieldValueSanitizerType
+} from "./ext/Enums";
+
+// 1DS Data Models (interfaces)
+export {
+    IExtendedConfiguration, IPropertyStorageOverride,
+    IEventProperty, IExtendedTelemetryItem, IEventTiming,
+    FieldValueSanitizerFunc, FieldValueSanitizerTypes,
+    IFieldSanitizerDetails, IFieldValueSanitizerProvider, IValueSanitizer
+} from "./ext/DataModels";
+
+// 1DS Classes
+export { AppInsightsExtCore } from "./ext/AppInsightsExtCore";
+export { ValueSanitizer } from "./ext/ValueSanitizer";
+
+// 1DS Utils
+export {
+    isValueAssigned, isLatency, isUint8ArrayAvailable, getTenantId, sanitizeProperty,
+    Version, FullVersionString, getCommonSchemaMetaData, getCookieValue,
+    extend, createGuid, isDocumentObjectAvailable, isWindowObjectAvailable,
+    setProcessTelemetryTimings, getTime,
+    isArrayValid, isValueKind, getFieldValueType,
+    isChromium, isGreaterThanZero
+} from "./ext/Utils";
+
+// 1DS Span Utils
+export { createExtendedTelemetryItemFromSpan } from "./ext/extSpanUtils";

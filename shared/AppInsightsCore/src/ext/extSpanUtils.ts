@@ -5,32 +5,31 @@ import {
     ILazyValue, arrIncludes, asString, getLazy, getNavigator, isBoolean, isNullOrUndefined, isNumber, isString, strLower, strStartsWith,
     throwError
 } from "@nevware21/ts-utils";
-import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
-import { IConfiguration } from "../interfaces/ai/IConfiguration";
-import { IAttributeContainer } from "../interfaces/otel/attribute/IAttributeContainer";
-import { OTelAttributeValue } from "../interfaces/otel/IOTelAttributes";
-import { IReadableSpan } from "../interfaces/otel/trace/IReadableSpan";
 import { eOTelSpanKind } from "../enums/otel/OTelSpanKind";
 import { eOTelSpanStatusCode } from "../enums/otel/OTelSpanStatus";
+import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { OTelAttributeValue } from "../interfaces/otel/IOTelAttributes";
+import { IAttributeContainer } from "../interfaces/otel/attribute/IAttributeContainer";
+import { IReadableSpan } from "../interfaces/otel/trace/IReadableSpan";
+import {
+    getHttpClientIp, getHttpHost, getHttpMethod, getHttpScheme, getHttpStatusCode, getHttpUrl, getSyntheticType, getUserAgent
+} from "../internal/commonUtils";
+import { hrTimeToMilliseconds } from "../internal/timeHelpers";
 import {
     ATTR_CLIENT_ADDRESS, ATTR_CLIENT_PORT, ATTR_ENDUSER_ID, ATTR_ENDUSER_PSEUDO_ID, ATTR_ERROR_TYPE, ATTR_EXCEPTION_MESSAGE,
     ATTR_EXCEPTION_STACKTRACE, ATTR_EXCEPTION_TYPE, ATTR_HTTP_REQUEST_METHOD, ATTR_HTTP_RESPONSE_STATUS_CODE, ATTR_NETWORK_LOCAL_ADDRESS,
     ATTR_NETWORK_LOCAL_PORT, ATTR_NETWORK_PEER_ADDRESS, ATTR_NETWORK_PEER_PORT, ATTR_NETWORK_PROTOCOL_NAME, ATTR_NETWORK_PROTOCOL_VERSION,
     ATTR_NETWORK_TRANSPORT, ATTR_SERVER_ADDRESS, ATTR_SERVER_PORT, ATTR_URL_FULL, ATTR_URL_PATH, ATTR_URL_QUERY, ATTR_URL_SCHEME,
-    ATTR_USER_AGENT_ORIGINAL, EXP_ATTR_ENDUSER_ID, EXP_ATTR_ENDUSER_PSEUDO_ID, EXP_ATTR_SYNTHETIC_TYPE,
-    SEMATTRS_DB_NAME, SEMATTRS_DB_OPERATION, SEMATTRS_DB_STATEMENT,
-    SEMATTRS_DB_SYSTEM, SEMATTRS_ENDUSER_ID, SEMATTRS_EXCEPTION_MESSAGE, SEMATTRS_EXCEPTION_STACKTRACE, SEMATTRS_EXCEPTION_TYPE,
-    SEMATTRS_HTTP_CLIENT_IP, SEMATTRS_HTTP_FLAVOR, SEMATTRS_HTTP_HOST, SEMATTRS_HTTP_METHOD, SEMATTRS_HTTP_ROUTE, SEMATTRS_HTTP_SCHEME,
-    SEMATTRS_HTTP_STATUS_CODE, SEMATTRS_HTTP_TARGET, SEMATTRS_HTTP_URL, SEMATTRS_HTTP_USER_AGENT, SEMATTRS_NET_HOST_IP,
-    SEMATTRS_NET_HOST_NAME, SEMATTRS_NET_HOST_PORT, SEMATTRS_NET_PEER_IP, SEMATTRS_NET_PEER_NAME, SEMATTRS_NET_PEER_PORT,
-    SEMATTRS_NET_TRANSPORT, SEMATTRS_PEER_SERVICE, SEMATTRS_RPC_GRPC_STATUS_CODE, SEMATTRS_RPC_SYSTEM
+    ATTR_USER_AGENT_ORIGINAL, EXP_ATTR_ENDUSER_ID, EXP_ATTR_ENDUSER_PSEUDO_ID, EXP_ATTR_SYNTHETIC_TYPE, SEMATTRS_DB_NAME,
+    SEMATTRS_DB_OPERATION, SEMATTRS_DB_STATEMENT, SEMATTRS_DB_SYSTEM, SEMATTRS_ENDUSER_ID, SEMATTRS_EXCEPTION_MESSAGE,
+    SEMATTRS_EXCEPTION_STACKTRACE, SEMATTRS_EXCEPTION_TYPE, SEMATTRS_HTTP_CLIENT_IP, SEMATTRS_HTTP_FLAVOR, SEMATTRS_HTTP_HOST,
+    SEMATTRS_HTTP_METHOD, SEMATTRS_HTTP_ROUTE, SEMATTRS_HTTP_SCHEME, SEMATTRS_HTTP_STATUS_CODE, SEMATTRS_HTTP_TARGET, SEMATTRS_HTTP_URL,
+    SEMATTRS_HTTP_USER_AGENT, SEMATTRS_NET_HOST_IP, SEMATTRS_NET_HOST_NAME, SEMATTRS_NET_HOST_PORT, SEMATTRS_NET_PEER_IP,
+    SEMATTRS_NET_PEER_NAME, SEMATTRS_NET_PEER_PORT, SEMATTRS_NET_TRANSPORT, SEMATTRS_PEER_SERVICE, SEMATTRS_RPC_GRPC_STATUS_CODE,
+    SEMATTRS_RPC_SYSTEM
 } from "../otel/attribute/SemanticConventions";
 import { createAttributeContainer } from "../otel/attribute/attributeContainer";
-import {
-    getHttpClientIp, getHttpHost, getHttpMethod, getHttpScheme, getHttpStatusCode,
-    getHttpUrl, getSyntheticType, getUserAgent
-} from "../internal/commonUtils";
-import { hrTimeToMilliseconds } from "../internal/timeHelpers";
 import { fieldRedaction } from "../utils/EnvUtils";
 import { toISOString } from "../utils/HelperFuncs";
 import { IExtendedTelemetryItem } from "./DataModels";

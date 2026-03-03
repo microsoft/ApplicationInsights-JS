@@ -5,14 +5,13 @@
 * File containing utility functions.
 */
 import {
-    arrForEach, getInst as getGlobalInst, getNavigator, hasDocument, hasWindow, isArray, isBoolean, isNullOrUndefined,
-    isNumber, isObject, isString, isUndefined, objForEachKey, perfNow
+    arrForEach, getInst as getGlobalInst, getNavigator, hasDocument, hasWindow, isArray, isBoolean, isNullOrUndefined, isNumber, isObject,
+    isString, isUndefined, objForEachKey, perfNow, strIndexOf, strLeft
 } from "@nevware21/ts-utils";
-import { strIndexOf, strLeft } from "@nevware21/ts-utils";
 import { ICookieMgr } from "../interfaces/ai/ICookieMgr";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
-import { isReactNative } from "../utils/EnvUtils";
 import { newGuid } from "../utils/CoreUtils";
+import { isReactNative } from "../utils/EnvUtils";
 import { IEventProperty, IExtendedTelemetryItem } from "./DataModels";
 import { EventLatency, EventLatencyValue, FieldValueSanitizerType, GuidStyle, eEventPropertyType, eValueKind } from "./Enums";
 import { STR_EMPTY } from "./InternalConstants";
