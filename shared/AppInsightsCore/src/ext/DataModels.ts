@@ -4,9 +4,10 @@
 * @copyright Microsoft 2018
 * File containing the interfaces for Web JS SDK.
 */
+import { EventPersistenceValue } from "../enums/ai/Enums";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
-import { EventLatencyValue, EventPersistenceValue, EventSendType, FieldValueSanitizerType } from "./Enums";
+import { EventLatencyValue, EventSendType, FieldValueSanitizerType } from "./Enums";
 
 /**
  * An interface used to create an event property value along with tagging it as PII, or customer content.

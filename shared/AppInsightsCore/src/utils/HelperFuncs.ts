@@ -8,7 +8,7 @@ import {
 } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { FeatureOptInMode } from "../enums/ai/FeatureOptInEnums";
-import { TransportType } from "../enums/ai/SendRequestReason";
+import { TransportType } from "../ext/Enums";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import { IPlugin } from "../interfaces/ai/ITelemetryPlugin";
 import { IXDomainRequest } from "../interfaces/ai/IXDomainRequest";

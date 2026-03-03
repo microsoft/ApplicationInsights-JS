@@ -11,7 +11,7 @@ import {
     _throwInternal, _warnToConsole, arrForEach, dateNow, doPerf, dumpObj, eLoggingSeverity, extend, getCommonSchemaMetaData, getNavigator,
     getResponseText, getTime, hasOwnProperty, isBeaconsSupported, isFeatureEnabled, isFetchSupported, isNullOrUndefined, isReactNative,
     isUndefined, isValueAssigned, objForEachKey, objKeys, onConfigChange, optimizeObject, prependTransports, strUndefined
-} from "@microsoft/1ds-core-js";
+} from "@microsoft/applicationinsights-core-js";
 import { arrAppend, getInst, isFunction } from "@nevware21/ts-utils";
 import { BatchNotificationAction, BatchNotificationActions } from "./BatchNotificationActions";
 import { IClockSkewManager, createClockSkewManager } from "./ClockSkewManager";

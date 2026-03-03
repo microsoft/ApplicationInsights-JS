@@ -7,7 +7,7 @@
 import {
     IDiagnosticLogger, IExtendedTelemetryItem, IPayloadData, IProcessTelemetryContext, ITelemetryPlugin, IUnloadHook, IValueSanitizer,
     IXHROverride
-} from "@microsoft/1ds-core-js";
+} from "@microsoft/applicationinsights-core-js";
 
 /**
  * Defines the function signature for the Payload Preprocessor.

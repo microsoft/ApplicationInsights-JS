@@ -1,7 +1,7 @@
 import { AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
 import { HttpManager } from "../../../src/HttpManager";
-import { AppInsightsCore, BaseTelemetryPlugin, EventSendType, IAppInsightsCore, IConfiguration, IExtendedConfiguration, IPlugin, IProcessTelemetryContext, ITelemetryItem, SendRequestReason, TransportType, isBeaconsSupported} from "@microsoft/1ds-core-js";
-import { PostChannel, IXHROverride, IPayloadData } from "../../../src/Index";
+import { AppInsightsExtCore, BaseTelemetryPlugin, EventSendType, IAppInsightsCore, IExtendedConfiguration, IPlugin, IProcessTelemetryContext, ITelemetryItem, SendRequestReason, TransportType, isBeaconsSupported, IXHROverride, IPayloadData } from "@microsoft/applicationinsights-core-js";
+import { PostChannel } from "../../../src/PostChannel";
 import { IPostTransmissionTelemetryItem, EventBatchNotificationReason, IChannelConfiguration } from "../../../src/DataModels";
 import { EventBatch } from "../../../src/EventBatch";
 import { retryPolicyShouldRetryForStatus } from "../../../src/RetryPolicy";
@@ -22,7 +22,7 @@ export class HttpManagerTest extends AITestClass {
 
     private postManager: PostChannel
     private xhrOverrideSpy: any;
-    private core: AppInsightsCore;
+    private core: IAppInsightsCore;
     private _requeueEvents: EventDetail[] = [];
     private _sendEvents: EventDetail[] = [];
     private _sentEvents: EventDetail[] = [];
@@ -48,7 +48,7 @@ export class HttpManagerTest extends AITestClass {
         this._sentEvents = [];
         this._dropEvents = [];
         this._hookCalls = [];
-        this.core = new AppInsightsCore();
+        this.core = new AppInsightsExtCore();
         var config = {
             instrumentationKey: ""
         };
@@ -837,7 +837,7 @@ export class HttpManagerTest extends AITestClass {
                         transports: TransportType.Fetch,
                     };
 
-                    let core = new AppInsightsCore();
+                    let core = new AppInsightsExtCore();
                     var config: IExtendedConfiguration = {
                         instrumentationKey: "",
                         extensionConfig: {
@@ -899,7 +899,7 @@ export class HttpManagerTest extends AITestClass {
                         useSendBeacon: true
                     };
 
-                    let core = new AppInsightsCore();
+                    let core = new AppInsightsExtCore();
                     var config: IExtendedConfiguration = {
                         instrumentationKey: "",
                         extensionConfig: {
@@ -965,7 +965,7 @@ export class HttpManagerTest extends AITestClass {
                         addNoResponse: false
                     };
 
-                    let core = new AppInsightsCore();
+                    let core = new AppInsightsExtCore();
                     var config: IExtendedConfiguration = {
                         instrumentationKey: "",
                         extensionConfig: {
@@ -1029,7 +1029,7 @@ export class HttpManagerTest extends AITestClass {
                         useSendBeacon: false
                     };
 
-                    let core = new AppInsightsCore();
+                    let core = new AppInsightsExtCore();
                     var config: IExtendedConfiguration = {
                         instrumentationKey: "",
                         extensionConfig: {
@@ -1093,7 +1093,7 @@ export class HttpManagerTest extends AITestClass {
                         unloadTransports: TransportType.Fetch
                     };
 
-                    let core = new AppInsightsCore();
+                    let core = new AppInsightsExtCore();
                     var config: IExtendedConfiguration = {
                         instrumentationKey: "",
                         extensionConfig: {
@@ -1161,7 +1161,7 @@ export class HttpManagerTest extends AITestClass {
                         disableFetchKeepAlive: true
                     };
 
-                    let core = new AppInsightsCore();
+                    let core = new AppInsightsExtCore();
                     var config: IExtendedConfiguration = {
                         instrumentationKey: "",
                         extensionConfig: {
@@ -1229,7 +1229,7 @@ export class HttpManagerTest extends AITestClass {
                         unloadTransports: [ TransportType.Fetch ]
                     };
 
-                    let core = new AppInsightsCore();
+                    let core = new AppInsightsExtCore();
                     var config: IExtendedConfiguration = {
                         instrumentationKey: "",
                         extensionConfig: {
@@ -1298,7 +1298,7 @@ export class HttpManagerTest extends AITestClass {
                         addNoResponse: false
                     };
 
-                    let core = new AppInsightsCore();
+                    let core = new AppInsightsExtCore();
                     var config: IExtendedConfiguration = {
                         instrumentationKey: "",
                         extensionConfig: {
@@ -2627,7 +2627,7 @@ export class HttpManagerTest extends AITestClass {
                         xhrTimeout: 500
                     };
     
-                    let core = new AppInsightsCore();
+                    let core = new AppInsightsExtCore();
                     var config: IExtendedConfiguration = {
                         instrumentationKey: "",
                         extensionConfig: {

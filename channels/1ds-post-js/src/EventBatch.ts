@@ -3,7 +3,7 @@
 * @author Nev Wylie (newylie)
 * @copyright Microsoft 2020
 */
-import { isNullOrUndefined, isValueAssigned } from "@microsoft/1ds-core-js";
+import { isNullOrUndefined, isValueAssigned } from "@microsoft/applicationinsights-core-js";
 import { IPostTransmissionTelemetryItem } from "./DataModels";
 import { STR_EMPTY, STR_MSFPC } from "./InternalConstants";
 

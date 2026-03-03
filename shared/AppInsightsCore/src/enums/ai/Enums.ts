@@ -119,7 +119,7 @@ export const DistributedTracingModes = (/* @__PURE__ */ createEnumStyle<typeof e
 export type DistributedTracingModes = number | eDistributedTracingModes;
 
 /**
- * The EventPersistence contains a set of values that specify the event's persistence.
+ * The EventPersistenceValue contains a set of values that specify the event's persistence.
  */
 export const enum EventPersistenceValue {
     /**
@@ -147,3 +147,4 @@ export const EventPersistence = (/* @__PURE__ */ createEnumStyle<typeof EventPer
     Critical: EventPersistenceValue.Critical
 }));
 export type EventPersistence = number | EventPersistenceValue;
+

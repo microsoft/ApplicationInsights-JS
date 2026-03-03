@@ -1,7 +1,7 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { HttpManager } from '../../../src/HttpManager';
-import { AppInsightsCore, EventLatency, EventSendType, IEventProperty, SendRequestReason } from '@microsoft/1ds-core-js';
-import { PostChannel, IXHROverride, IPayloadData } from '../../../src/Index';
+import { AppInsightsCore, EventLatency, EventSendType, IEventProperty, SendRequestReason, IXHROverride, IPayloadData } from '@microsoft/applicationinsights-core-js';
+import { PostChannel } from '../../../src/PostChannel';
 import { IPostTransmissionTelemetryItem, EventBatchNotificationReason, IChannelConfiguration } from '../../../src/DataModels';
 import { Serializer } from '../../../src/Serializer';
 import { EventBatch } from "../../../src/EventBatch";

@@ -18,7 +18,7 @@ export { IPayloadData, SendPOSTFunction, IXHROverride, OnCompleteCallback } from
 export { IUnloadHook, ILegacyUnloadHook } from "./interfaces/ai/IUnloadHook";
 export { eEventsDiscardedReason, EventsDiscardedReason, eBatchDiscardedReason, BatchDiscardedReason } from "./enums/ai/EventsDiscardedReason";
 export { eDependencyTypes, DependencyTypes } from "./enums/ai/DependencyTypes";
-export { SendRequestReason, TransportType } from "./enums/ai/SendRequestReason";
+export { SendRequestReason } from "./enums/ai/SendRequestReason";
 //export { StatsType, eStatsType } from "./enums/ai/StatsType";
 export { TelemetryUpdateReason } from "./enums/ai/TelemetryUpdateReason";
 export { TelemetryUnloadReason } from "./enums/ai/TelemetryUnloadReason";
@@ -332,7 +332,7 @@ export { IUser, IUserContext } from "./interfaces/ai/context/IUser";
 export { ITelemetryTrace } from "./interfaces/ai/context/ITelemetryTrace";
 
 // Enums
-export { eDistributedTracingModes, DistributedTracingModes, EventPersistence } from "./enums/ai/Enums";
+export { eDistributedTracingModes, DistributedTracingModes, EventPersistence, EventPersistenceValue } from "./enums/ai/Enums";
 export { eTraceHeadersMode } from "./enums/ai/TraceHeadersMode";
 
 // Helper functions
@@ -368,3 +368,44 @@ export {
 export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
 export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";
 export const AnalyticsPluginIdentifier = "ApplicationInsightsAnalytics";
+
+// ==========================================================================
+// 1DS (OneCollector) exports - merged from @microsoft/1ds-core-js
+// ==========================================================================
+
+// 1DS Enums
+export {
+    ValueKind, eValueKind,
+    EventLatency, EventLatencyValue,
+    EventPropertyType, eEventPropertyType,
+    EventSendType,
+    TraceLevel, eTraceLevel,
+    _ExtendedInternalMessageId, _eExtendedInternalMessageId,
+    GuidStyle, FieldValueSanitizerType,
+    TransportType
+} from "./ext/Enums";
+
+// 1DS Data Models (interfaces)
+export {
+    IExtendedConfiguration, IPropertyStorageOverride,
+    IEventProperty, IExtendedTelemetryItem, IEventTiming,
+    FieldValueSanitizerFunc, FieldValueSanitizerTypes,
+    IFieldSanitizerDetails, IFieldValueSanitizerProvider, IValueSanitizer
+} from "./ext/DataModels";
+
+// 1DS Classes
+export { AppInsightsExtCore } from "./ext/AppInsightsExtCore";
+export { ValueSanitizer } from "./ext/ValueSanitizer";
+
+// 1DS Utils
+export {
+    isValueAssigned, isLatency, isUint8ArrayAvailable, getTenantId, sanitizeProperty,
+    Version, FullVersionString, getCommonSchemaMetaData, getCookieValue,
+    extend, createGuid, isDocumentObjectAvailable, isWindowObjectAvailable,
+    setProcessTelemetryTimings, getTime,
+    isArrayValid, isValueKind, getFieldValueType,
+    isChromium, isGreaterThanZero
+} from "./ext/Utils";
+
+// 1DS Span Utils
+export { createExtendedTelemetryItemFromSpan } from "./ext/extSpanUtils";

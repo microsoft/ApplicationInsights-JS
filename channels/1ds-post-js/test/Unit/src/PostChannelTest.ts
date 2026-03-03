@@ -1,10 +1,14 @@
 import { AITestClass, PollingAssert, TestHelper } from "@microsoft/ai-test-framework";
-import { IExtendedConfiguration, AppInsightsCore, EventLatency, ITelemetryItem, IExtendedTelemetryItem, SendRequestReason, EventSendType, isFetchSupported, objKeys, arrForEach, isBeaconsSupported, EventPersistence, isNullOrUndefined, getGlobal } from '@microsoft/1ds-core-js';
-import { PostChannel, IXHROverride, IPayloadData } from '../../../src/Index';
+import { 
+    IExtendedConfiguration, EventLatency, ITelemetryItem, IExtendedTelemetryItem, SendRequestReason, EventSendType,
+    isFetchSupported, objKeys, arrForEach, isBeaconsSupported, EventPersistence, isNullOrUndefined, IXHROverride,
+    IPayloadData
+} from '@microsoft/applicationinsights-core-js';
+import { PostChannel } from '../../../src/PostChannel';
 import { IPostTransmissionTelemetryItem, IChannelConfiguration } from '../../../src/DataModels';
 import { SinonSpy } from 'sinon';
-import { createAsyncResolvedPromise, IPromise } from "@nevware21/ts-async";
-import { ActiveStatus } from "@microsoft/1ds-core-js";
+import { createAsyncResolvedPromise } from "@nevware21/ts-async";
+import { ActiveStatus, AppInsightsExtCore } from "@microsoft/applicationinsights-core-js";
 import { setBypassLazyCache } from "@nevware21/ts-utils";
 
 
@@ -30,7 +34,7 @@ export class PostChannelTest extends AITestClass {
     private setTimeoutOverride: Function;
     private clearTimeoutOverride: Function;
     private genericSpy: SinonSpy;
-    private core: AppInsightsCore;
+    private core: AppInsightsExtCore;
     private eventsSent: Array<IExtendedTelemetryItem> = [];
     private eventsDiscarded: Array<IExtendedTelemetryItem> = [];
     private eventsSendRequests: Array<IEventsSendRequests> = [];
@@ -53,7 +57,7 @@ export class PostChannelTest extends AITestClass {
         // Reset the cached isBeacons supported
         isBeaconsSupported(false);
 
-        this.core = new AppInsightsCore();
+        this.core = new AppInsightsExtCore();
         this.config = {
             instrumentationKey: 'testIkey',
             endpointUrl: 'https://testEndpoint',

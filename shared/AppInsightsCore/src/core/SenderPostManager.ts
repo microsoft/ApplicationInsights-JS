@@ -8,7 +8,8 @@ import { DisabledPropertyName } from "../constants/Constants";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { _throwInternal, _warnToConsole } from "../diagnostics/DiagnosticLogger";
 import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
-import { SendRequestReason, TransportType } from "../enums/ai/SendRequestReason";
+import { SendRequestReason } from "../enums/ai/SendRequestReason";
+import { TransportType } from "../ext/Enums";
 import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
 import { IProcessTelemetryUnloadContext } from "../interfaces/ai/IProcessTelemetryContext";
 import {

@@ -208,36 +208,6 @@ export const EventPropertyType = (/* @__PURE__ */ createEnumStyle<typeof eEventP
 export type EventPropertyType = number | eEventPropertyType
 
 /**
- * The EventPersistence contains a set of values that specify the event's persistence.
- */
-export const enum EventPersistenceValue {
-    /**
-     * Normal persistence.
-     */
-    Normal = 1,
-    /**
-     * Critical persistence.
-     */
-    Critical = 2
-}
-
-/**
- * The EventPersistence contains a set of values that specify the event's persistence.
- */
-export const EventPersistence = (/* @__PURE__ */ createEnumStyle<typeof EventPersistenceValue>({
-    /**
-     * Normal persistence.
-     */
-    Normal: EventPersistenceValue.Normal,
-
-    /**
-     * Critical persistence.
-     */
-    Critical: EventPersistenceValue.Critical
-}));
-export type EventPersistence = number | EventPersistenceValue;
-
-/**
  * Define a specific way to send an event synchronously
  */
 export const enum EventSendType {

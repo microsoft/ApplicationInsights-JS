@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { ITimerHandler } from "@nevware21/ts-utils";
-import { TransportType } from "../../enums/ai/SendRequestReason";
+import { TransportType } from "../../ext/Enums";
 import { IXDomainRequest } from "./IXDomainRequest";
 import { IPayloadData, IXHROverride, OnCompleteCallback } from "./IXHROverride";
 

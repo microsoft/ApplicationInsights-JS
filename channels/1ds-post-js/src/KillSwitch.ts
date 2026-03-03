@@ -4,7 +4,7 @@
 * @copyright Microsoft 2018
 */
 
-import { arrForEach, dateNow, strTrim } from "@microsoft/1ds-core-js";
+import { arrForEach, dateNow, strTrim } from "@microsoft/applicationinsights-core-js";
 
 const SecToMsMultiplier = 1000;
 

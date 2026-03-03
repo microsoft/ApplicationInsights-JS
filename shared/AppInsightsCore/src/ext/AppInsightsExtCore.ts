@@ -6,15 +6,15 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { ITimerHandler, dumpObj, objDeepFreeze, throwError } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../config/DynamicConfig";
-import { AppInsightsCore as InternalCore } from "../core/AppInsightsCore";
+import { AppInsightsCore } from "../core/AppInsightsCore";
 import { doPerf } from "../core/PerfManager";
 import { _throwInternal } from "../diagnostics/DiagnosticLogger";
 import { eLoggingSeverity } from "../enums/ai/LoggingEnums";
-import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
 import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
 import { INotificationManager } from "../interfaces/ai/INotificationManager";
-import { IPlugin } from "../interfaces/ai/ITelemetryPlugin";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { IPlugin } from "../interfaces/ai/ITelemetryPlugin";
+import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
 import { IExtendedConfiguration, IExtendedTelemetryItem, IPropertyStorageOverride } from "./DataModels";
 import { EventLatencyValue, _eExtendedInternalMessageId } from "./Enums";
 import { STR_DEFAULT_ENDPOINT_URL, STR_EMPTY, STR_VERSION } from "./InternalConstants";
@@ -44,7 +44,7 @@ function _chkPropOverride(propertyStorageOverride: IPropertyStorageOverride) {
  * @group Classes
  * @group Entrypoint
  */
-export class AppInsightsExtCore<C extends IExtendedConfiguration = IExtendedConfiguration> extends InternalCore<C> {
+export class AppInsightsExtCore<C extends IExtendedConfiguration = IExtendedConfiguration> extends AppInsightsCore<C> {
     constructor() {
         super();
 

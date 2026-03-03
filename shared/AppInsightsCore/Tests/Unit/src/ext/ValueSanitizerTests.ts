@@ -1,10 +1,11 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { TestHelper } from './TestHelper';
 import { IExtendedTelemetryItem, IValueSanitizer } from '../../../../src/ext/DataModels';
-import { EventPersistence, EventPropertyType, ValueKind } from '../../../../src/ext/Enums';
+import { EventPropertyType, ValueKind } from '../../../../src/ext/Enums';
 import { sanitizeProperty, getCommonSchemaMetaData } from '../../../../src/ext/Utils';
 import { arrForEach, isNullOrUndefined, objKeys } from '../../../../src/index';
 import { ValueSanitizer  } from '../../../../src/ext/ValueSanitizer';
+import { EventPersistence } from "../../../../src/enums/ai/Enums";
 
 export class ValueSanitizerTests extends AITestClass {
 
