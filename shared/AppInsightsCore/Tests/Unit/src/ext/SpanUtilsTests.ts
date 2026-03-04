@@ -37,9 +37,9 @@ import {
     IOTelSpanCtx,
     IOTelApi,
     IOTelConfig
-} from "@microsoft/applicationinsights-core-js";
-import { createExtendedTelemetryItemFromSpan, IMsWebSpanTelemetry } from "../../../src/extSpanUtils";
-import { IExtendedTelemetryItem } from "../../../src/DataModels";
+} from "../../../../src/index";
+import { createExtendedTelemetryItemFromSpan, IMsWebSpanTelemetry } from "../../../../src/ext/extSpanUtils";
+import { IExtendedTelemetryItem } from "../../../../src/interfaces/ext/DataModels";
 
 export class SpanUtilsTests extends AITestClass {
     private _core!: AppInsightsCore;

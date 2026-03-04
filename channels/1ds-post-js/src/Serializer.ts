@@ -10,7 +10,7 @@ import {
     EventSendType, FieldValueSanitizerFunc, FieldValueSanitizerType, IEventProperty, IPerfManagerProvider, IValueSanitizer,
     SendRequestReason, arrIndexOf, doPerf, getCommonSchemaMetaData, getTenantId, isArray, isValueAssigned, objForEachKey, sanitizeProperty,
     strStartsWith
-} from "@microsoft/1ds-core-js";
+} from "@microsoft/applicationinsights-core-js";
 import { IChannelConfiguration, IPostTransmissionTelemetryItem, IRequestSizeLimit } from "./DataModels";
 import { EventBatch } from "./EventBatch";
 import { STR_EMPTY } from "./InternalConstants";

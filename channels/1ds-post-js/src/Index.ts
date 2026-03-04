@@ -5,7 +5,7 @@
 * File to export public classes.
 */
 
-import { IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction } from "@microsoft/1ds-core-js";
+import { IPayloadData, IXHROverride, OnCompleteCallback, SendPOSTFunction } from "@microsoft/applicationinsights-core-js";
 import {
     BE_PROFILE, IChannelConfiguration, IPostChannel, IRequestSizeLimit, NRT_PROFILE, PayloadListenerFunction, PayloadPreprocessorFunction,
     RT_PROFILE

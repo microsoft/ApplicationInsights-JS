@@ -22,11 +22,19 @@
                 "eLoggingSeverity",
                 "_eInternalMessageId",
                 "SendRequestReason",
-                "TransportType",
                 "eStatsType",
                 "TelemetryUnloadReason",
                 "TelemetryUpdateReason",
                 "eTraceHeadersMode",
+                "eValueKind",
+                "EventLatencyValue",
+                "eEventPropertyType",
+                "EventSendType",
+                "eTraceLevel",
+                "_eExtendedInternalMessageId",
+                "GuidStyle",
+                "FieldValueSanitizerType",
+                "TransportType",
                 "eAttributeChangeOp",
                 "eOTelSamplingDecision",
                 "eOTelSpanKind",
@@ -65,9 +73,7 @@
             "constEnums": []
         },
         "@microsoft/applicationinsights-clickanalytics-js": {
-            "constEnums": [
-                "_eExtendedInternalMessageId"
-            ]
+            "constEnums": []
         },
         "@microsoft/applicationinsights-web-basic": {
             "constEnums": []
@@ -92,18 +98,7 @@
             ]
         },
         "@microsoft/1ds-core-js": {
-            "constEnums": [
-                "eValueKind",
-                "EventLatencyValue",
-                "eEventPropertyType",
-                "EventPersistenceValue",
-                "EventSendType",
-                "eTraceLevel",
-                "_eExtendedInternalMessageId",
-                "GuidStyle",
-                "FieldValueSanitizerType",
-                "TransportType"
-            ]
+            "constEnums": []
         },
         "@microsoft/1ds-post-js": {
             "constEnums": [

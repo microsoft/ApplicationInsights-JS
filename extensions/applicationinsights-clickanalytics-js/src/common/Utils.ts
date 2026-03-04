@@ -3,21 +3,12 @@
 * File containing utility functions.
 */
 
-import { _eInternalMessageId, arrForEach, isNullOrUndefined } from "@microsoft/applicationinsights-core-js";
+import { arrForEach, isNullOrUndefined } from "@microsoft/applicationinsights-core-js";
 import { IClickAnalyticsConfiguration } from "../Interfaces/Datamodel";
 
 export const DEFAULT_DONOT_TRACK_TAG = "ai-dnt";
 export const DEFAULT_AI_BLOB_ATTRIBUTE_TAG = "ai-blob";
 export const DEFAULT_DATA_PREFIX = "data-";
-
-export const enum _eExtendedInternalMessageId {
-    CannotParseAiBlobValue = 101,
-    InvalidContentBlob = 102,
-    TrackPageActionEventFailed = 103
-}
-
-export type _ExtendedInternalMessageId = number | _eExtendedInternalMessageId | _eInternalMessageId;
-
 
 /**
  * Finds attributes in overrideConfig which are invalid or should be objects

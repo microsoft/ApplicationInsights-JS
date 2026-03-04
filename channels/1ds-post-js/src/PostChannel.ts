@@ -12,7 +12,7 @@ import {
     createUniqueNamespace, doPerf, eLoggingSeverity, getWindow, isChromium, isGreaterThanZero, isNumber, mergeEvtNamespace, objForEachKey,
     onConfigChange, optimizeObject, proxyFunctions, removePageHideEventListener, removePageShowEventListener, removePageUnloadEventListener,
     setProcessTelemetryTimings
-} from "@microsoft/1ds-core-js";
+} from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise } from "@nevware21/ts-async";
 import { ITimerHandler, isPromiseLike, mathCeil, mathMax, mathMin, objDeepFreeze } from "@nevware21/ts-utils";
 import {

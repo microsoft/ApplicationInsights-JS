@@ -1,9 +1,5 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
-import {
-    AppInsightsCore, IExtendedConfiguration, IPropertyStorageOverride,
-    IExtendedTelemetryItem, EventLatency, FullVersionString
-} from '../../../src/Index';
-import { AppInsightsCore as AIInternalCore, IChannelControls, blockDynamicConversion } from '@microsoft/applicationinsights-core-js';
+import { AppInsightsCore as AIInternalCore, AppInsightsExtCore, EventLatency, FullVersionString, IChannelControls, IExtendedConfiguration, IExtendedTelemetryItem, IPropertyStorageOverride, blockDynamicConversion } from '../../../../src/index';
 import dynamicProto from "@microsoft/dynamicproto-js";
 
 export class CoreTest extends AITestClass {
@@ -53,7 +49,7 @@ export class CoreTest extends AITestClass {
                 this._disableDynProtoBaseFuncs(dynamicProto); // We need to disable the useBaseInst performance setting as the sinon spy fools the internal logic and the spy is bypassed
 
                 let coreTrackSpy = this.sandbox.spy(AIInternalCore.prototype, 'initialize');
-                var core: AppInsightsCore = new AppInsightsCore();
+                var core: AppInsightsExtCore = new AppInsightsExtCore();
 
                 // As we are now using the module as is we need to reach inside the current instance to get the correct instance of applicationinsights-core-js
                 QUnit.assert.notEqual(AIInternalCore.prototype.initialize, Object.getPrototypeOf(core).initialize, 'The prototype method must not be the same as the current instance');
@@ -93,7 +89,7 @@ export class CoreTest extends AITestClass {
                 let expectedIkey: string = "test";
                 let expectedEndpointUrl: string = "https://browser.events.data.microsoft.com/OneCollector/1.0/";
                 let expectedPropertyStorageOverride: IPropertyStorageOverride;
-                let core: AppInsightsCore = new AppInsightsCore();
+                let core: AppInsightsExtCore = new AppInsightsExtCore();
                 
                 let onChangeCalled = 0;
                 let handler = core.onCfgChange((details) => {
@@ -134,7 +130,7 @@ export class CoreTest extends AITestClass {
             test: () => {
                 this._disableDynProtoBaseFuncs(dynamicProto); // We need to disable the useBaseInst performance setting as the sinon spy fools the internal logic and the spy is bypassed
                 let coreTrackSpy = this.sandbox.spy(AIInternalCore.prototype, 'track');
-                var core: AppInsightsCore = new AppInsightsCore();
+                var core: AppInsightsExtCore = new AppInsightsExtCore();
 
                 QUnit.assert.notEqual(AIInternalCore.prototype.track, Object.getPrototypeOf(core).track, 'The prototype method must not be the same as the current instance');
 
@@ -163,7 +159,7 @@ export class CoreTest extends AITestClass {
             test: () => {
                 this._disableDynProtoBaseFuncs(dynamicProto); // We need to disable the useBaseInst performance setting as the sinon spy fools the internal logic and the spy is bypassed
                 let coreTrackSpy = this.sandbox.spy(AIInternalCore.prototype, 'track');
-                var core: AppInsightsCore = new AppInsightsCore();
+                var core: AppInsightsExtCore = new AppInsightsExtCore();
 
                 QUnit.assert.notEqual(AIInternalCore.prototype.track, Object.getPrototypeOf(core).track, 'The prototype method must not be the same as the current instance');
 
@@ -193,7 +189,7 @@ export class CoreTest extends AITestClass {
             test: () => {
                 this._disableDynProtoBaseFuncs(dynamicProto); // We need to disable the useBaseInst performance setting as the sinon spy fools the internal logic and the spy is bypassed
                 let coreTrackSpy = this.sandbox.spy(AIInternalCore.prototype, 'track');
-                var core: AppInsightsCore = new AppInsightsCore();
+                var core: AppInsightsExtCore = new AppInsightsExtCore();
 
                 QUnit.assert.notEqual(AIInternalCore.prototype.track, Object.getPrototypeOf(core).track, 'The prototype method must not be the same as the current instance');
 
@@ -218,8 +214,8 @@ export class CoreTest extends AITestClass {
         this.testCase({
             name: "Check inheritence implementation",
             test: () => {
-                var core1: AppInsightsCore = new AppInsightsCore();
-                var core2: AppInsightsCore = new AppInsightsCore();
+                var core1: AppInsightsExtCore = new AppInsightsExtCore();
+                var core2: AppInsightsExtCore = new AppInsightsExtCore();
 
                 // Make sure the 2 initialize methods are actually different function instances
                 QUnit.assert.ok(!core1.hasOwnProperty("initialize"), "initialize should not be an instance function");

@@ -1,4 +1,4 @@
-import { IExtendedTelemetryItem } from '@microsoft/1ds-core-js';
+import { IExtendedTelemetryItem } from '@microsoft/applicationinsights-core-js';
 
 export class TestHelper {
     private static _idCount = 0;

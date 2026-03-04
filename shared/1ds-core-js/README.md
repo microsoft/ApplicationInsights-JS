@@ -1,5 +1,61 @@
 # Microsoft 1DS Web SDK Core
 
+> ## :warning: Deprecated
+>
+> **This package (`@microsoft/1ds-core-js`) is deprecated.** All functionality has been merged into
+> [`@microsoft/applicationinsights-core-js`](https://www.npmjs.com/package/@microsoft/applicationinsights-core-js)
+> and should be consumed directly from that package.
+>
+> This package now re-exports everything from `@microsoft/applicationinsights-core-js` for backward
+> compatibility, but it will not receive new features or enhancements. Please migrate to
+> `@microsoft/applicationinsights-core-js` at your earliest convenience.
+
+## Upgrade Guide
+
+To migrate, replace your `@microsoft/1ds-core-js` import with `@microsoft/applicationinsights-core-js` and
+apply the name changes listed below.
+
+### Class Name Changes
+
+| 1ds-core-js (old) | applicationinsights-core-js (new) | Notes |
+|--------------------|-----------------------------------|-------|
+| `AppInsightsCore` | `AppInsightsExtCore` | The 1DS extended core class was renamed to `AppInsightsExtCore` |
+| `InternalAppInsightsCore` | `AppInsightsCore` | The base `AppInsightsCore` is now the AI-specific core class |
+
+### Import Changes
+
+**Before (deprecated):**
+
+```typescript
+import { AppInsightsCore, IExtendedConfiguration } from '@microsoft/1ds-core-js';
+```
+
+**After:**
+
+```typescript
+import { AppInsightsExtCore, IExtendedConfiguration } from '@microsoft/applicationinsights-core-js';
+```
+
+### Other Name Changes
+
+The following functions/exports were also renamed. The old names are still available from this
+compatibility package, but when migrating to `@microsoft/applicationinsights-core-js` you must
+use the new names.
+
+| 1ds-core-js (old) | applicationinsights-core-js (new) | Notes |
+|--------------------|-----------------------------------|-------|
+| `Undefined` | `strUndefined` | String constant |
+| `disallowsSameSiteNone` | `uaDisallowsSameSiteNone` | Cookie utility function |
+| `cookieAvailable` | `areCookiesSupported` | Cookie utility function |
+| `getISOString` | `toISOString` | Date formatting utility |
+
+### All Other Exports
+
+All other types, interfaces, enums, and utility functions retain the same names and are available
+directly from `@microsoft/applicationinsights-core-js`.
+
+---
+
 ## Description
 
 1DS Web SDK Core is the telemetry orchestrator, responsible for initializing all attached plugins and calling process() on each of them.

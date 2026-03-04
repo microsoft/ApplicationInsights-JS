@@ -5,19 +5,21 @@
 * File containing utility functions.
 */
 import {
-    ICookieMgr, ITelemetryItem, arrForEach, getGlobalInst, getNavigator, hasDocument, hasWindow, isArray, isBoolean, isNullOrUndefined,
-    isNumber, isObject, isReactNative, isString, isUndefined, newGuid, objForEachKey, perfNow
-} from "@microsoft/applicationinsights-core-js";
-import { ObjProto, strShimObject } from "@microsoft/applicationinsights-shims";
-import { strIndexOf, strLeft } from "@nevware21/ts-utils";
-import { IEventProperty, IExtendedTelemetryItem } from "./DataModels";
-import { EventLatency, EventLatencyValue, FieldValueSanitizerType, GuidStyle, eEventPropertyType, eValueKind } from "./Enums";
-import { STR_EMPTY } from "./InternalConstants";
+    arrForEach, getInst as getGlobalInst, getNavigator, hasDocument, hasWindow, isArray, isBoolean, isNullOrUndefined, isNumber, isObject,
+    isString, isUndefined, objForEachKey, perfNow, strIndexOf, strLeft
+} from "@nevware21/ts-utils";
+import { STR_EMPTY } from "../constants/InternalConstants";
+import { EventLatency, EventLatencyValue, FieldValueSanitizerType, GuidStyle, eEventPropertyType, eValueKind } from "../enums/ext/Enums";
+import { ICookieMgr } from "../interfaces/ai/ICookieMgr";
+import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { IEventProperty, IExtendedTelemetryItem } from "../interfaces/ext/DataModels";
+import { newGuid } from "../utils/CoreUtils";
+import { isReactNative } from "../utils/EnvUtils";
 
 export const Version = "#version#";
 export const FullVersionString = "1DS-Web-JS-" + Version;
 
-const ObjHasOwnProperty = ObjProto.hasOwnProperty;
+const ObjHasOwnProperty = Object.prototype.hasOwnProperty;
 
 // Defining here so we don't need to take (import) the ApplicationInsights Common module
 const strDisabledPropertyName: string = "Microsoft_ApplicationInsights_BypassAjaxInstrumentation";
@@ -40,18 +42,18 @@ const _fieldTypeEventPropMap = {
  */
 // let _uaDisallowsSameSiteNone = null;
 
-var uInt8ArraySupported: boolean | null = null;
+var uInt8ArraySupported: boolean | null = (/* #__PURE__*/ null);
 // var _areCookiesAvailable: boolean | undefined;
 
 /**
  * Checks if document object is available
  */
-export const isDocumentObjectAvailable: boolean = hasDocument();
+export const isDocumentObjectAvailable: boolean = (/* #__PURE__*/ hasDocument());
 
 /**
  * Checks if window object is available
  */
-export const isWindowObjectAvailable: boolean = hasWindow();
+export const isWindowObjectAvailable: boolean = (/* #__PURE__*/ hasWindow());
 
 /**
  * Checks if value is assigned to the given param.
@@ -343,7 +345,7 @@ export function getFieldValueType(value: any): FieldValueSanitizerType {
             theType = FieldValueSanitizerType.Number;
         } else if (objType === "boolean") {
             theType = FieldValueSanitizerType.Boolean;
-        } else if (objType === strShimObject) {
+        } else if (objType === "object") {
             theType = FieldValueSanitizerType.Object;
             if (isArray(value)) {
                 theType = FieldValueSanitizerType.Array;

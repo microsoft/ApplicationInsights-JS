@@ -4,15 +4,21 @@
 * @copyright Microsoft 2018
 */
 import dynamicProto from "@microsoft/dynamicproto-js";
-import {
-    AppInsightsCore as InternalCore, IConfigDefaults, IDiagnosticLogger, INotificationManager, IPlugin, ITelemetryItem, _throwInternal,
-    createDynamicConfig, doPerf, dumpObj, eLoggingSeverity, throwError
-} from "@microsoft/applicationinsights-core-js";
-import { ITimerHandler, objDeepFreeze } from "@nevware21/ts-utils";
-import { IExtendedConfiguration, IExtendedTelemetryItem, IPropertyStorageOverride } from "./DataModels";
-import { EventLatencyValue, _eExtendedInternalMessageId } from "./Enums";
-import { STR_DEFAULT_ENDPOINT_URL, STR_EMPTY, STR_VERSION } from "./InternalConstants";
-import { FullVersionString, getTime, isLatency } from "./Utils";
+import { ITimerHandler, dumpObj, objDeepFreeze, throwError } from "@nevware21/ts-utils";
+import { createDynamicConfig } from "../config/DynamicConfig";
+import { STR_DEFAULT_ENDPOINT_URL, STR_EMPTY, STR_VERSION } from "../constants/InternalConstants";
+import { AppInsightsCore } from "../core/AppInsightsCore";
+import { doPerf } from "../core/PerfManager";
+import { _throwInternal } from "../diagnostics/DiagnosticLogger";
+import { eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { EventLatencyValue, _eExtendedInternalMessageId } from "../enums/ext/Enums";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import { INotificationManager } from "../interfaces/ai/INotificationManager";
+import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { IPlugin } from "../interfaces/ai/ITelemetryPlugin";
+import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
+import { IExtendedConfiguration, IExtendedTelemetryItem, IPropertyStorageOverride } from "../interfaces/ext/DataModels";
+import { FullVersionString, getTime, isLatency } from "./extUtils";
 
 /**
  * The default settings for the config.
@@ -38,11 +44,11 @@ function _chkPropOverride(propertyStorageOverride: IPropertyStorageOverride) {
  * @group Classes
  * @group Entrypoint
  */
-export class AppInsightsCore<C extends IExtendedConfiguration = IExtendedConfiguration> extends InternalCore<C> {
+export class AppInsightsExtCore<C extends IExtendedConfiguration = IExtendedConfiguration> extends AppInsightsCore<C> {
     constructor() {
         super();
 
-        dynamicProto(AppInsightsCore, this, (_self, _base) => {
+        dynamicProto(AppInsightsExtCore, this, (_self, _base) => {
 
             _self.initialize = (config: C, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager) => {
                 doPerf(_self, () => "AppInsightsCore.initialize", () => {

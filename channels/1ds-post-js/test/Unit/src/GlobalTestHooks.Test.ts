@@ -1,4 +1,4 @@
-import { _testHookMaxUnloadHooksCb } from "@microsoft/1ds-core-js";
+import { _testHookMaxUnloadHooksCb } from "@microsoft/applicationinsights-core-js";
 import { Assert } from "@microsoft/ai-test-framework";
 import { dumpObj } from "@nevware21/ts-utils";
 

@@ -5,7 +5,8 @@
 * File containing the enums as constants.
 */
 
-import { _eInternalMessageId, createEnumStyle } from "@microsoft/applicationinsights-core-js";
+import { createEnumStyle } from "../EnumHelperFuncs";
+import { _eInternalMessageId } from "../ai/LoggingEnums";
 
 /**
  * The eValueKind contains a set of values that specify value kind of the property.
@@ -205,36 +206,6 @@ export const EventPropertyType = (/* @__PURE__ */ createEnumStyle<typeof eEventP
     DateTime: eEventPropertyType.DateTime
 }));
 export type EventPropertyType = number | eEventPropertyType
-
-/**
- * The EventPersistence contains a set of values that specify the event's persistence.
- */
-export const enum EventPersistenceValue {
-    /**
-     * Normal persistence.
-     */
-    Normal = 1,
-    /**
-     * Critical persistence.
-     */
-    Critical = 2
-}
-
-/**
- * The EventPersistence contains a set of values that specify the event's persistence.
- */
-export const EventPersistence = (/* @__PURE__ */ createEnumStyle<typeof EventPersistenceValue>({
-    /**
-     * Normal persistence.
-     */
-    Normal: EventPersistenceValue.Normal,
-
-    /**
-     * Critical persistence.
-     */
-    Critical: EventPersistenceValue.Critical
-}));
-export type EventPersistence = number | EventPersistenceValue;
 
 /**
  * Define a specific way to send an event synchronously

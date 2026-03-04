@@ -3,7 +3,7 @@
 * @author Nev Wylie (newylie)
 * @copyright Microsoft 2020
 */
-import { EventSendType } from "@microsoft/1ds-core-js";
+import { EventSendType } from "@microsoft/applicationinsights-core-js";
 import { EventBatchNotificationReason } from "./DataModels";
 import { EventBatch } from "./EventBatch";
 
