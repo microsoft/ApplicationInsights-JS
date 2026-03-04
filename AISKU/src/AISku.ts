@@ -396,19 +396,6 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                     // initialize core
                     _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin], logger, notificationManager);
 
-                    // Register SDK Stats notification listener (on by default)
-                    if (isFeatureEnabled(SDK_STATS, _config, true)) {
-                        _sdkStatsListener = createSdkStatsNotifCbk({
-                            trk: function (item: ITelemetryItem) {
-                                _core.track(item);
-                            },
-                            lang: "JavaScript",
-                            ver: SDK_STATS_VERSION,
-                            int: SDK_STATS_FLUSH_INTERVAL
-                        });
-                        _core.addNotificationListener(_sdkStatsListener);
-                    }
-
                     // Initialize the initial OTel API
                     _otelApi = _initOTel(_self, "aisku", _onEnd, _onException);
                     
@@ -454,6 +441,27 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                         if (!_sdkVerSentMessage && parseInt(_snippetVersion) < 6 && isFeatureEnabled(SDK_LOADER_VER, _config, true)) {
                             _throttleMgr.sendMessage( _eInternalMessageId.SdkLdrUpdate, "An updated Sdk Loader is available, see aka.ms/SnippetVer");
                             _sdkVerSentMessage = true;
+                        }
+
+                        // Enable/disable SDK Stats listener dynamically based on config
+                        if (isFeatureEnabled(SDK_STATS, _config, true)) {
+                            if (!_sdkStatsListener) {
+                                _sdkStatsListener = createSdkStatsNotifCbk({
+                                    core: _core,
+                                    lang: "JavaScript",
+                                    ver: SDK_STATS_VERSION,
+                                    int: SDK_STATS_FLUSH_INTERVAL
+                                });
+                                _core.addNotificationListener(_sdkStatsListener);
+                            }
+                        } else if (_sdkStatsListener) {
+                            try {
+                                _sdkStatsListener.unload();
+                                _core.removeNotificationListener(_sdkStatsListener);
+                            } catch (e) {
+                                // Swallow any errors
+                            }
+                            _sdkStatsListener = null;
                         }
                         
                     }));
