@@ -38,9 +38,11 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
     private _createListener(overrides?: Partial<ISdkStatsConfig>): ISdkStatsNotifCbk {
         let _self = this;
         let cfg: ISdkStatsConfig = {
-            trk: function (item: ITelemetryItem) {
-                _self._trackedItems.push(item);
-            },
+            core: {
+                track: function (item: ITelemetryItem) {
+                    _self._trackedItems.push(item);
+                }
+            } as any,
             lang: "JavaScript",
             ver: "3.3.6",
             int: 100 // short interval for testing
@@ -600,9 +602,11 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 let listener1 = this._createListener();
                 let trackedItems2: ITelemetryItem[] = [];
                 let listener2 = createSdkStatsNotifCbk({
-                    trk: function (item: ITelemetryItem) {
-                        trackedItems2.push(item);
-                    },
+                    core: {
+                        track: function (item: ITelemetryItem) {
+                            trackedItems2.push(item);
+                        }
+                    } as any,
                     lang: "JavaScript",
                     ver: "3.3.6",
                     int: 100

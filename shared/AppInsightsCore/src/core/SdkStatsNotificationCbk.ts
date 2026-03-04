@@ -3,19 +3,15 @@
 "use strict";
 
 import { ITimerHandler, objCreate, objHasOwn, scheduleTimeout } from "@nevware21/ts-utils";
+import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { INotificationListener } from "../interfaces/ai/INotificationListener";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { MetricDataType } from "../telemetry/ai/DataTypes";
 
 var FLUSH_INTERVAL = 900000; // 15 min default
 var MET_SUCCESS = "Item_Success_Count";
 var MET_DROPPED = "Item_Dropped_Count";
 var MET_RETRY = "Item_Retry_Count";
-var P_LANG = "language";
-var P_VER = "version";
-var P_COMPUTE = "computeType";
-var P_TEL_TYPE = "telemetry_type";
-var P_DROP_CODE = "drop.code";
-var P_RETRY_CODE = "retry.code";
 var DROP_CLIENT_EXCEPTION = "CLIENT_EXCEPTION";
 
 // Guard against prototype-polluting keys
@@ -41,9 +37,9 @@ var _typeMap: { [key: string]: string } = {
  */
 export interface ISdkStatsConfig {
     /**
-     * The track function to call when flushing metrics. Typically core.track().
+     * The IAppInsightsCore instance used to call track() when flushing metrics.
      */
-    trk: (item: ITelemetryItem) => void;
+    core: IAppInsightsCore;
     /**
      * SDK language identifier, e.g. "JavaScript"
      */
@@ -104,72 +100,57 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
 
     function _incSuccess(items: ITelemetryItem[]) {
         if (!items || !items.length) return;
+        var changed = false;
         for (var i = 0; i < items.length; i++) {
             if (!_isSdkStatsMetric(items[i])) {
                 var t = _getTelType(items[i]);
                 if (_safeKey(t)) {
                     _successCounts[t] = (_successCounts[t] || 0) + 1;
+                    changed = true;
                 }
             }
         }
-        _ensureTimer();
+        if (changed) {
+            _ensureTimer();
+        }
     }
 
-    function _incDropped(items: ITelemetryItem[], code: string) {
+    /**
+     * Common helper to increment a bucketed counter (dropped or retry) keyed by code and telemetry type.
+     */
+    function _incBucketed(counters: { [code: string]: { [telType: string]: number } }, items: ITelemetryItem[], code: string) {
         if (!items || !items.length) return;
         if (!_safeKey(code)) {
             return;
         }
-        var bucket: { [telType: string]: number };
-        if (objHasOwn(_droppedCounts, code)) {
-            bucket = _droppedCounts[code];
-        } else {
-            bucket = objCreate(null);
-            _droppedCounts[code] = bucket;
+        var bucket = counters[code];
+        if (!bucket) {
+            bucket = counters[code] = objCreate(null);
         }
+        var changed = false;
         for (var i = 0; i < items.length; i++) {
             if (!_isSdkStatsMetric(items[i])) {
                 var t = _getTelType(items[i]);
                 if (_safeKey(t)) {
                     bucket[t] = (bucket[t] || 0) + 1;
+                    changed = true;
                 }
             }
         }
-        _ensureTimer();
-    }
-
-    function _incRetry(items: ITelemetryItem[], code: string) {
-        if (!items || !items.length) return;
-        if (!_safeKey(code)) {
-            return;
+        if (changed) {
+            _ensureTimer();
         }
-        var bucket: { [telType: string]: number };
-        if (objHasOwn(_retryCounts, code)) {
-            bucket = _retryCounts[code];
-        } else {
-            bucket = objCreate(null);
-            _retryCounts[code] = bucket;
-        }
-        for (var i = 0; i < items.length; i++) {
-            if (!_isSdkStatsMetric(items[i])) {
-                var t = _getTelType(items[i]);
-                if (_safeKey(t)) {
-                    bucket[t] = (bucket[t] || 0) + 1;
-                }
-            }
-        }
-        _ensureTimer();
     }
 
     function _createMetric(name: string, value: number, props: { [key: string]: any }): ITelemetryItem {
-        // Merge standard dimensions
-        props[P_LANG] = cfg.lang;
-        props[P_VER] = cfg.ver;
-        props[P_COMPUTE] = "unknown"; // Browser SDK cannot reliably detect compute type
+        // Merge standard dimensions inline (single-use, no constants needed per minification best practice)
+        props["language"] = cfg.lang;
+        props["version"] = cfg.ver;
+        props["computeType"] = "unknown"; // Browser SDK cannot reliably detect compute type
 
         return {
             name: name,
-            baseType: "MetricData",
+            baseType: MetricDataType,
             baseData: {
                 name: name,
                 average: value,
@@ -188,64 +169,52 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
         return DROP_CLIENT_EXCEPTION;
     }
 
+    /**
+     * Common helper to flush bucketed counters (dropped or retry).
+     * @param counters - The bucketed counter object
+     * @param metricName - The metric name to emit (e.g. MET_DROPPED or MET_RETRY)
+     * @param codePropKey - The property key for the code dimension (e.g. "drop.code" or "retry.code")
+     */
+    function _flushBucketed(counters: { [code: string]: { [telType: string]: number } }, metricName: string, codePropKey: string) {
+        for (var code in counters) {
+            if (objHasOwn(counters, code)) {
+                var bucket = counters[code];
+                for (var telType in bucket) {
+                    if (objHasOwn(bucket, telType)) {
+                        var cnt = bucket[telType];
+                        if (cnt > 0) {
+                            var props: { [key: string]: any } = {};
+                            props["telemetry_type"] = telType;
+                            props[codePropKey] = code;
+                            cfg.core.track(_createMetric(metricName, cnt, props));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     function _flush() {
         if (_timer) {
             _timer.cancel();
             _timer = null;
         }
 
-        var telType: string;
-        var code: string;
-        var cnt: number;
-        var bucket: { [telType: string]: number };
-
         // Flush success counts
-        for (telType in _successCounts) {
+        for (var telType in _successCounts) {
             if (objHasOwn(_successCounts, telType)) {
-                cnt = _successCounts[telType];
+                var cnt = _successCounts[telType];
                 if (cnt > 0) {
                     var successProps: { [key: string]: any } = {};
-                    successProps[P_TEL_TYPE] = telType;
-                    cfg.trk(_createMetric(MET_SUCCESS, cnt, successProps));
+                    successProps["telemetry_type"] = telType;
+                    cfg.core.track(_createMetric(MET_SUCCESS, cnt, successProps));
                 }
             }
         }
 
-        // Flush dropped counts
-        for (code in _droppedCounts) {
-            if (objHasOwn(_droppedCounts, code)) {
-                bucket = _droppedCounts[code];
-                for (telType in bucket) {
-                    if (objHasOwn(bucket, telType)) {
-                        cnt = bucket[telType];
-                        if (cnt > 0) {
-                            var dropProps: { [key: string]: any } = {};
-                            dropProps[P_TEL_TYPE] = telType;
-                            dropProps[P_DROP_CODE] = code;
-                            cfg.trk(_createMetric(MET_DROPPED, cnt, dropProps));
-                        }
-                    }
-                }
-            }
-        }
-
-        // Flush retry counts
-        for (code in _retryCounts) {
-            if (objHasOwn(_retryCounts, code)) {
-                bucket = _retryCounts[code];
-                for (telType in bucket) {
-                    if (objHasOwn(bucket, telType)) {
-                        cnt = bucket[telType];
-                        if (cnt > 0) {
-                            var retryProps: { [key: string]: any } = {};
-                            retryProps[P_TEL_TYPE] = telType;
-                            retryProps[P_RETRY_CODE] = code;
-                            cfg.trk(_createMetric(MET_RETRY, cnt, retryProps));
-                        }
-                    }
-                }
-            }
-        }
+        // Flush dropped and retry counts via common helper
+        _flushBucketed(_droppedCounts, MET_DROPPED, "drop.code");
+        _flushBucketed(_retryCounts, MET_RETRY, "retry.code");
 
         // Reset accumulators
         _successCounts = objCreate(null);
@@ -257,11 +226,11 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
         eventsSent: _incSuccess,
         eventsDiscarded: function (events: ITelemetryItem[], reason: number, sendType?: number) {
             var code = _mapDropCode(reason, sendType);
-            _incDropped(events, code);
+            _incBucketed(_droppedCounts, events, code);
         },
         eventsRetry: function (events: ITelemetryItem[], statusCode: number) {
             var code = "" + statusCode; // numeric status code as string per spec
-            _incRetry(events, code);
+            _incBucketed(_retryCounts, events, code);
         },
         flush: _flush,
         unload: function () {
