@@ -99,7 +99,9 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
     }
 
     function _incSuccess(items: ITelemetryItem[]) {
-        if (!items || !items.length) return;
+        if (!items || !items.length) {
+            return;
+        }
         var changed = false;
         for (var i = 0; i < items.length; i++) {
             if (!_isSdkStatsMetric(items[i])) {
@@ -119,7 +121,9 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
      * Common helper to increment a bucketed counter (dropped or retry) keyed by code and telemetry type.
      */
     function _incBucketed(counters: { [code: string]: { [telType: string]: number } }, items: ITelemetryItem[], code: string) {
-        if (!items || !items.length) return;
+        if (!items || !items.length) {
+            return;
+        }
         if (!_safeKey(code)) {
             return;
         }
