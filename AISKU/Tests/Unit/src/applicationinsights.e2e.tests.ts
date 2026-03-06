@@ -51,7 +51,7 @@ export class ApplicationInsightsTests extends AITestClass {
 
     // Context
     private tagKeys = new ContextTagKeys();
-    private _config;
+    private _config: IConfiguration;
     private _appId: string;
     private _ctx: any;
 

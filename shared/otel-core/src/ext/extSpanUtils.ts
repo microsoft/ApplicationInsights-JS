@@ -216,7 +216,7 @@ function _initIgnoreSemanticValues(): string[] {
         SEMATTRS_ENDUSER_ID,
         HTTP_DOT + "status_text",
 
-        // http Semabtic conventions
+        // http Semantic conventions
         ATTR_CLIENT_ADDRESS,
         ATTR_CLIENT_PORT,
         ATTR_SERVER_ADDRESS,

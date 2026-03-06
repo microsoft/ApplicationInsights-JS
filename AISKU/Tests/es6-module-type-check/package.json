@@ -10,7 +10,9 @@
     "module": "dist-es5/applicationinsights-test-module-type-check.js",
     "types": "types/applicationinsights-test-module-type-check.d.ts",
     "scripts": {
-        "clean": "git clean -xdf",
+        "clean": "node -e \"['dist','dist-es5','build','browser','types','temp','rush-logs'].forEach(d=>{try{require('fs').rmSync(d,{recursive:true,force:true})}catch(e){}})\"",
+        "clean-modules": "node -e \"['node_modules'].forEach(d=>{try{require('fs').rmSync(d,{recursive:true,force:true})}catch(e){}})\"",
+        "full-clean": "npm run clean-modules && npm run clean && git clean -xdf",
         "build": "tsc --project tsconfig.json --noEmit",
         "rebuild": "npm run build",
         "test": "",

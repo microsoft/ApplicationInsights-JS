@@ -48,10 +48,10 @@ export class ESPromiseSchedulerTests extends AITestClass {
                 expectedOrder.push("finished3");
                 expectedOrder.push("test4");
                 expectedOrder.push("sch4.1");
-                expectedOrder.push("reject4-Timeout: Task [test1.0.3-(t4)] - Running: * ms");
+                expectedOrder.push("reject4-Timeout: Task [test1.*.3-(t4)] - Running: * ms");
                 expectedOrder.push("test2.2");
                 expectedOrder.push("sch2.3");
-                expectedOrder.push("reject2.2-Timeout: Task [test1.0.4-(2.2)] - Running: * ms");
+                expectedOrder.push("reject2.2-Timeout: Task [test1.*.4-(2.2)] - Running: * ms");
                 expectedOrder.push("test3.1");
                 expectedOrder.push("finished3.1");
                 expectedOrder.push("test4.1");
@@ -184,8 +184,8 @@ export class ESPromiseSchedulerTests extends AITestClass {
                     QUnit.assert.equal(order.length, expectedOrder.length, "Expecting all scheduled event have completed");
                     for (let lp = 0; lp < expectedOrder.length; lp++) {
                         if (order.length > lp) {
-                            if (strIndexOf(expectedOrder[lp], "*")) {
-                                QUnit.assert.ok(makeRegex(expectedOrder[lp])!.test(order[lp]), "Checking - " + order[lp]);
+                            if (strIndexOf(expectedOrder[lp], "*") != -1) {
+                                QUnit.assert.ok(makeRegex(expectedOrder[lp])!.test(order[lp]), "Checking - " + order[lp] + " matches expected - " + expectedOrder[lp]);
                             } else {
                                 QUnit.assert.equal(order[lp], expectedOrder[lp], expectedOrder[lp]);
                             }

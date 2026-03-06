@@ -1,5 +1,5 @@
 /**
-* AppInsightsCore.ts
+* AppInsightsExtCore.ts
 * @author Abhilash Panwar (abpanwar) Hector Hernandez (hectorh)
 * @copyright Microsoft 2018
 */
@@ -51,7 +51,7 @@ export class AppInsightsExtCore<C extends IExtendedConfiguration = IExtendedConf
         dynamicProto(AppInsightsExtCore, this, (_self, _base) => {
 
             _self.initialize = (config: C, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager) => {
-                doPerf(_self, () => "AppInsightsCore.initialize", () => {
+                doPerf(_self, () => "AppInsightsExtCore.initialize", () => {
                     try {
                         _base.initialize(createDynamicConfig<C>(config, defaultConfig as C, logger || _self.logger, false).cfg, extensions, logger, notificationManager);
                     } catch (e) {
@@ -70,7 +70,7 @@ export class AppInsightsExtCore<C extends IExtendedConfiguration = IExtendedConf
             };
 
             _self.track = (item: IExtendedTelemetryItem|ITelemetryItem) => {
-                doPerf(_self, () => "AppInsightsCore.track", () => {
+                doPerf(_self, () => "AppInsightsExtCore.track", () => {
                     let telemetryItem: IExtendedTelemetryItem = item as IExtendedTelemetryItem;
                     if (telemetryItem) {
                         telemetryItem.timings = telemetryItem.timings || {};

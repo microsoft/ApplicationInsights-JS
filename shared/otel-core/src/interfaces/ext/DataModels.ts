@@ -114,7 +114,7 @@ export interface IExtendedConfiguration extends IConfiguration {
      * Default is false
      */
     enableWParam?: boolean;
- 
+
      // End of Internal note: remove these after consuming the ApplicationInsights Core version that defines these on IConfiguration
  }
 

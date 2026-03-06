@@ -16,7 +16,8 @@
     "module": "dist-es5/applicationinsights-shims.js",
     "types": "types/applicationinsights-shims.d.ts",
     "scripts": {
-        "clean": "git clean -xdf",
+        "clean": "node -e \"['dist','dist-es5','build','browser','types','temp','rush-logs'].forEach(d=>{try{require('fs').rmSync(d,{recursive:true,force:true})}catch(e){}})\"",
+        "full-clean": "git clean -xdf",
         "build": "npm run build:esm && npm run build:bundle",
         "build:esm": "grunt shims",
         "build:bundle": "rollup -c rollup.config.js --bundleConfigAsCjs",
@@ -42,8 +43,8 @@
         "@microsoft/applicationinsights-rollup-es5": "1.0.2",
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
-        "@nevware21/grunt-ts-plugin": "^0.5.1",
-        "@nevware21/grunt-eslint-ts": "^0.5.1",
+        "@nevware21/grunt-ts-plugin": "^0.5.2",
+        "@nevware21/grunt-eslint-ts": "^0.5.2",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
@@ -54,6 +55,6 @@
         "typescript": "^4.9.3"
     },
     "dependencies": {
-        "@nevware21/ts-utils": ">= 0.12.6 < 2.x"
+        "@nevware21/ts-utils": ">= 0.13.0 < 2.x"
     }
 }

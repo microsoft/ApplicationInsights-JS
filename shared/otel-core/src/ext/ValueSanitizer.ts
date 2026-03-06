@@ -1,4 +1,4 @@
-import { arrForEach, arrIncludes, arrIndexOf, getLength, isNullOrUndefined, isString, objForEachKey } from "@nevware21/ts-utils";
+import { arrForEach, arrIncludes, arrIndexOf, getLength, isNullOrUndefined, isString, objCreate, objForEachKey } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { FieldValueSanitizerType } from "../enums/ext/Enums";
 import {
@@ -84,7 +84,7 @@ export class ValueSanitizer implements IValueSanitizer {
         let _self = this;
 
         // To aid with performance this is a lookup map to check if the field value sanitizer supports this field
-        let _sanitizerMap: { [path: string]: { [field: string]: ISanitizerMapValue } } = {};
+        let _sanitizerMap: { [path: string]: { [field: string]: ISanitizerMapValue } } = objCreate(null);
         let _sanitizers: IValueSanitizer[] = [];
         let _fieldSanitizers: IFieldValueSanitizerProvider[] = [];
         if (fieldSanitizerProvider) {
@@ -92,10 +92,10 @@ export class ValueSanitizer implements IValueSanitizer {
         }
 
         function _getFieldSanitizer(path: string, name: string): ISanitizerMapValue {
-            let result: ISanitizerMapValue;
+            let result: ISanitizerMapValue | null;
             let fieldLookup = _sanitizerMap[path];
             if (fieldLookup) {
-                result = fieldLookup[name];
+                result = fieldLookup[name] as ISanitizerMapValue | null;
             }
 
             if (!result && result !== null) {
@@ -142,7 +142,7 @@ export class ValueSanitizer implements IValueSanitizer {
                         return null;
                     }
 
-                    fieldLookup = _sanitizerMap[path] = {};
+                    fieldLookup = _sanitizerMap[path] = objCreate(null);
                 }
 
                 // Handle edge case to avoid prototype pollution
@@ -157,7 +157,7 @@ export class ValueSanitizer implements IValueSanitizer {
         }
 
         _self.clearCache = () => {
-            _sanitizerMap = {};
+            _sanitizerMap = objCreate(null);
         };
 
         _self.addSanitizer = (newSanitizer: IValueSanitizer) => {
@@ -167,7 +167,7 @@ export class ValueSanitizer implements IValueSanitizer {
                 }
 
                 // Invalidate any previously mapped fields
-                _sanitizerMap = {};
+                _sanitizerMap = objCreate(null);
             }
         };
 
@@ -178,7 +178,7 @@ export class ValueSanitizer implements IValueSanitizer {
                 }
 
                 // Invalidate any previously mapped fields
-                _sanitizerMap = {};
+                _sanitizerMap = objCreate(null);
             }
         };
 
@@ -188,7 +188,7 @@ export class ValueSanitizer implements IValueSanitizer {
                 if (idx !== -1) {
                     _sanitizers.splice(idx, 1);
                     // Invalidate any previously mapped fields
-                    _sanitizerMap = {};
+                    _sanitizerMap = objCreate(null);
                 }
 
                 // Try and remove the sanitizer from any chained sanitizer as well
@@ -204,7 +204,7 @@ export class ValueSanitizer implements IValueSanitizer {
                 if (idx !== -1) {
                     _fieldSanitizers.splice(idx, 1);
                     // Invalidate any previously mapped fields
-                    _sanitizerMap = {};
+                    _sanitizerMap = objCreate(null);
                 }
 
                 // Try and remove the field sanitizer from any chained sanitizer as well
@@ -226,10 +226,6 @@ export class ValueSanitizer implements IValueSanitizer {
         _self.value = (path: string, name: string, value: FieldValueSanitizerTypes, stringifyObjects?: boolean): IEventProperty | null => {
             let mapValue: ISanitizerMapValue = _getFieldSanitizer(path, name);
             if (mapValue && mapValue.canHandle) {
-                if (!mapValue.canHandle) {
-                    return null;
-                }
-
                 if (mapValue.handler) {
                     // This value sanitizer can't handle this field so pass it only the next one
                     return mapValue.handler.value(path, name, value, stringifyObjects);

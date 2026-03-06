@@ -9,7 +9,8 @@
         "url": "git+https://github.com/microsoft/ApplicationInsights-JS.git"
     },
     "scripts": {
-        "clean": "git clean -xdf",
+        "clean": "node -e \"['dist','dist-es5','build','browser','types','temp','rush-logs'].forEach(d=>{try{require('fs').rmSync(d,{recursive:true,force:true})}catch(e){}})\"",
+        "full-clean": "git clean -xdf",
         "build": "npm run build:browser && npm run build:test",
         "build:browser": "grunt copy-config",
         "build:test": "grunt copy-testConfig",

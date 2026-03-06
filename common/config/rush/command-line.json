@@ -96,6 +96,16 @@
         },
         {
             "commandKind": "bulk",
+            "name": "full-clean",
+            "summary": "Run all full clean tasks to clean each project",
+            "description": "Run all full clean tasks to clean each project",
+            "safeForSimultaneousRushProcesses": true,
+            "enableParallelism": true,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
+        },
+        {
+            "commandKind": "bulk",
             "name": "api-docs",
             "summary": "Run all api-docs tasks for each project",
             "description": "Run all api-docs tasks for each project",

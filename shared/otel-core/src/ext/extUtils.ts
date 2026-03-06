@@ -246,9 +246,10 @@ export function createGuid(style: GuidStyle = GuidStyle.Digits): string {
  * @param obj5 - object to merge.
  * @returns The extended object.
  */
-export function extend(obj?: any, obj2?: any, obj3?: any, obj4?: any, obj5?: any): any {
+export function extend(obj?: any, obj2?: any, obj3?: any, obj4?: any, obj5?: any): any;
+export function extend(): any {
     // Variables
-    var extended = {};
+    var extended: any = {};
     var deep = false;
     var i = 0;
     var length = arguments.length;
@@ -262,7 +263,7 @@ export function extend(obj?: any, obj2?: any, obj3?: any, obj4?: any, obj5?: any
 
     // Loop through each object and conduct a merge
     for (; i < length; i++) {
-        var obj = theArgs[i];
+        let obj = theArgs[i];
         objForEachKey(obj, (prop, value) => {
             // If deep merge and property is an object, merge properties
             if (deep && value && isObject(value)) {
