@@ -66,8 +66,6 @@ const CDN_USAGE = "CdnUsage";
 const SDK_LOADER_VER = "SdkLoaderVer";
 const ZIP_PAYLOAD = "zipPayload";
 const SDK_STATS = "SdkStats";
-const SDK_STATS_VERSION = "#version#";
-const SDK_STATS_FLUSH_INTERVAL = 900000; // 15 minutes in ms
 
 const default_limit = {
     samplingRate: 100,
@@ -446,12 +444,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                         // Enable/disable SDK Stats listener dynamically based on config
                         if (isFeatureEnabled(SDK_STATS, _config, true)) {
                             if (!_sdkStatsListener) {
-                                _sdkStatsListener = createSdkStatsNotifCbk({
-                                    core: _core,
-                                    lang: "JavaScript",
-                                    ver: SDK_STATS_VERSION,
-                                    int: SDK_STATS_FLUSH_INTERVAL
-                                });
+                                _sdkStatsListener = createSdkStatsNotifCbk(_core);
                                 _core.addNotificationListener(_sdkStatsListener);
                             }
                         } else if (_sdkStatsListener) {

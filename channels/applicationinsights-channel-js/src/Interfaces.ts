@@ -16,7 +16,7 @@ export interface IInternalStorageItem {
     cnt?: number;
     /**
      * baseType of the original telemetry item, used for SDK stats telemetry_type mapping.
-     * @since 3.3.6
+     * @since 3.3.12
      */
     bT?: string;
 }
