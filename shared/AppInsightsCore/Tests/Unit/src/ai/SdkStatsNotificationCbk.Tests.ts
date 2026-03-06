@@ -1,6 +1,8 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { createSdkStatsNotifCbk, ISdkStatsConfig, ISdkStatsNotifCbk } from "../../../../src/core/SdkStatsNotificationCbk";
 import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
+import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
+import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
 import { NotificationManager } from "../../../../src/core/NotificationManager";
 
 export class SdkStatsNotificationCbkTests extends AITestClass {
@@ -37,12 +39,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
     private _createListener(overrides?: Partial<ISdkStatsConfig>): ISdkStatsNotifCbk {
         let _self = this;
-        let cfg: ISdkStatsConfig = {
-            core: {
-                track: function (item: ITelemetryItem) {
-                    _self._trackedItems.push(item);
-                }
-            } as any,
+        let sdkStats: ISdkStatsConfig = {
             lang: "JavaScript",
             ver: "3.3.6",
             int: 100 // short interval for testing
@@ -51,12 +48,19 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
         if (overrides) {
             for (var key in overrides) {
                 if (overrides.hasOwnProperty(key)) {
-                    (cfg as any)[key] = (overrides as any)[key];
+                    (sdkStats as any)[key] = (overrides as any)[key];
                 }
             }
         }
 
-        _self._listener = createSdkStatsNotifCbk(cfg);
+        let mockCore = {
+            track: function (item: ITelemetryItem) {
+                _self._trackedItems.push(item);
+            },
+            config: { sdkStats: sdkStats } as IConfiguration
+        } as any as IAppInsightsCore;
+
+        _self._listener = createSdkStatsNotifCbk(mockCore);
         return _self._listener;
     }
 
@@ -601,16 +605,20 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
             test: () => {
                 let listener1 = this._createListener();
                 let trackedItems2: ITelemetryItem[] = [];
-                let listener2 = createSdkStatsNotifCbk({
-                    core: {
+                let listener2 = createSdkStatsNotifCbk(
+                    {
                         track: function (item: ITelemetryItem) {
                             trackedItems2.push(item);
-                        }
-                    } as any,
-                    lang: "JavaScript",
-                    ver: "3.3.6",
-                    int: 100
-                });
+                        },
+                        config: {
+                            sdkStats: {
+                                lang: "JavaScript",
+                                ver: "3.3.6",
+                                int: 100
+                            }
+                        } as IConfiguration
+                    } as any as IAppInsightsCore
+                );
 
                 let mgr = new NotificationManager();
                 mgr.addNotificationListener(listener1);

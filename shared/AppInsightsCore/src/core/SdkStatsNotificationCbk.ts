@@ -33,23 +33,21 @@ var _typeMap: { [key: string]: string } = {
 };
 
 /**
- * Configuration interface for the SDK Stats notification callback.
+ * Configuration for SDK Stats periodic reporting.
  */
 export interface ISdkStatsConfig {
     /**
-     * The IAppInsightsCore instance used to call track() when flushing metrics.
+     * SDK language identifier, e.g. "JavaScript".
+     * @defaultValue "JavaScript"
      */
-    core: IAppInsightsCore;
-    /**
-     * SDK language identifier, e.g. "JavaScript"
-     */
-    lang: string;
+    lang?: string;
     /**
      * SDK version string.
      */
-    ver: string;
+    ver?: string;
     /**
-     * Flush interval override in ms (default 900000 = 15 min).
+     * Flush interval in ms.
+     * @defaultValue 900000 (15 minutes)
      */
     int?: number;
 }
@@ -71,16 +69,17 @@ export interface ISdkStatsNotifCbk extends INotificationListener {
 /**
  * Creates an INotificationListener that accumulates success/dropped/retry counts and periodically
  * flushes them as Item_Success_Count, Item_Dropped_Count, and Item_Retry_Count metrics via core.track().
- * @param cfg - The SDK stats configuration
+ * Reads config.sdkStats (lang, ver, int) dynamically from core.config on each flush.
+ * @param core - The IAppInsightsCore instance (provides track() and config)
  * @returns An INotificationListener with flush and unload methods
  */
 /*#__NO_SIDE_EFFECTS__*/
-export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk {
+export function createSdkStatsNotifCbk(core: IAppInsightsCore): ISdkStatsNotifCbk {
     var _successCounts: { [telType: string]: number } = objCreate(null);
     var _droppedCounts: { [code: string]: { [telType: string]: number } } = objCreate(null);
     var _retryCounts: { [code: string]: { [telType: string]: number } } = objCreate(null);
     var _timer: ITimerHandler;
-    var _interval = cfg.int || FLUSH_INTERVAL;
+    var _interval = (core.config.sdkStats && core.config.sdkStats.int) || FLUSH_INTERVAL;
 
     function _ensureTimer() {
         if (!_timer) {
@@ -147,10 +146,11 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
     }
 
     function _createMetric(name: string, value: number, props: { [key: string]: any }): ITelemetryItem {
-        // Merge standard dimensions inline (single-use, no constants needed per minification best practice)
-        props["language"] = cfg.lang;
-        props["version"] = cfg.ver;
-        props["computeType"] = "unknown"; // Browser SDK cannot reliably detect compute type
+        // Re-read from core.config each flush so dynamic config changes are picked up
+        var statsCfg = (core.config && core.config.sdkStats) || {};
+        props.language = statsCfg.lang || "JavaScript";
+        props.version = statsCfg.ver || "unknown";
+        props.computeType = "unknown";
 
         return {
             name: name,
@@ -188,9 +188,9 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
                         var cnt = bucket[telType];
                         if (cnt > 0) {
                             var props: { [key: string]: any } = {};
-                            props["telemetry_type"] = telType;
+                            props.telemetry_type = telType;
                             props[codePropKey] = code;
-                            cfg.core.track(_createMetric(metricName, cnt, props));
+                            core.track(_createMetric(metricName, cnt, props));
                         }
                     }
                 }
@@ -204,14 +204,18 @@ export function createSdkStatsNotifCbk(cfg: ISdkStatsConfig): ISdkStatsNotifCbk 
             _timer = null;
         }
 
+        // Re-read interval from core.config in case it changed dynamically
+        var statsCfg = (core.config && core.config.sdkStats) || {};
+        _interval = statsCfg.int || FLUSH_INTERVAL;
+
         // Flush success counts
         for (var telType in _successCounts) {
             if (objHasOwn(_successCounts, telType)) {
                 var cnt = _successCounts[telType];
                 if (cnt > 0) {
                     var successProps: { [key: string]: any } = {};
-                    successProps["telemetry_type"] = telType;
-                    cfg.core.track(_createMetric(MET_SUCCESS, cnt, successProps));
+                    successProps.telemetry_type = telType;
+                    core.track(_createMetric(MET_SUCCESS, cnt, successProps));
                 }
             }
         }

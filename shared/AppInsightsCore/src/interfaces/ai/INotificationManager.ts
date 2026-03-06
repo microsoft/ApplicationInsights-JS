@@ -67,7 +67,7 @@ export interface INotificationManager {
      * Notification for events being retried.
      * @param events - The array of events that are being retried.
      * @param statusCode - The HTTP status code that triggered the retry.
-     * @since 3.3.6
+     * @since 3.3.12
      */
     eventsRetry?(events: ITelemetryItem[], statusCode: number): void;
 
