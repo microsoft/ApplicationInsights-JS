@@ -720,7 +720,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
         });
 
         this.testCase({
-            name: "SdkStatsNotifCbk: changing int on core.config.sdkStats changes the timer interval",
+            name: "SdkStatsNotifCbk: changing int on core.config.sdkStats changes the timer interval after next flush",
             useFakeTimers: true,
             test: () => {
                 let _self = this;
@@ -740,26 +740,20 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 let listener = createSdkStatsNotifCbk(mockCore);
                 _self._listener = listener;
 
-                // Queue events - starts timer at 200ms interval
                 listener.eventsSent([_self._makeItem("EventData")]);
                 Assert.equal(0, _self._trackedItems.length, "Nothing emitted before timer fires");
 
-                // Timer fires at 200ms
-                this.clock.tick(201);
-                Assert.equal(1, _self._trackedItems.length, "Timer should fire at original 200ms interval");
-
-                // Change interval to 500ms
-                _self._trackedItems = [];
                 config.sdkStats.int = 500;
 
-                // Queue more events (new timer starts after flush re-reads interval)
+                this.clock.tick(201);
+                Assert.equal(1, _self._trackedItems.length, "First timer fires at originally scheduled 200ms");
+
+                _self._trackedItems = [];
                 listener.eventsSent([_self._makeItem("EventData")]);
 
-                // At 200ms the timer should NOT fire (new interval is 500ms)
                 this.clock.tick(201);
                 Assert.equal(0, _self._trackedItems.length, "Timer should NOT fire at old 200ms interval");
 
-                // At 500ms it should fire
                 this.clock.tick(300);
                 Assert.equal(1, _self._trackedItems.length, "Timer should fire at new 500ms interval");
             }
