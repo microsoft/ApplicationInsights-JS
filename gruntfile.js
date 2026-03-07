@@ -48,7 +48,7 @@ module.exports = function (grunt) {
             transform: _removeEs6DynamicProto
         };
     }
-    
+
     const versionPlaceholder = '"#version#"';
 
     const aiCoreDefaultNameReplacements = [
@@ -501,7 +501,7 @@ module.exports = function (grunt) {
                         options: {
                             format: "umd",
                             name: "" + key + "Tests",
-                            sourcemap: false,
+                            sourcemap: true,
                             onwarn: function(warning, handler) {
                                 if (warning.code === "THIS_IS_UNDEFINED") {
                                     return;
@@ -519,14 +519,14 @@ module.exports = function (grunt) {
 
                                 handler(warning);
                             },
-                            plugins: function() {
+                            plugins: (function(modPath) { return function() {
                                 return [
                                     removeEs6DynamicProto(),
                                     typeScriptPlugin({
                                         compilerOptions: {
-                                            sourceMap: false,
+                                            sourceMap: true,
                                             inlineSources: true,
-                                            inlineSourceMap: true,
+                                            inlineSourceMap: false,
                                             noImplicitAny: false,
                                             module: "es6",
                                             moduleResolution: "node",
@@ -543,7 +543,8 @@ module.exports = function (grunt) {
                                             "**/*.d.ts"
                                         ],
                                         include: [
-                                            "**/*.ts"
+                                            modPath.replace(/^\.\//,'') + "/src/**/*.ts",
+                                            modPath.replace(/^\.\//,'') + "/Tests/Unit/**/*.ts"
                                         ],
                                         tsconfig: false,
                                         cacheDir: testPath + "/.rollup-cache"
@@ -558,7 +559,7 @@ module.exports = function (grunt) {
                                         sourceMap: true
                                     })
                                 ];
-                            }
+                            }; })(modulePath)
                         },
                         files: {
                             [testPath + "/Unit/dist/" + (modules[key].unitTestName || key + ".tests.js")]: testEntry,
@@ -658,14 +659,14 @@ module.exports = function (grunt) {
                                             return;
                                         }
                                     }
-    
+
                                     if (warning.code === "EVAL") {
                                         return;
                                     }
     
                                     handler(warning);
                                 },
-                                plugins: function() {
+                                plugins: (function(modPath) { return function() {
                                     return [
                                         typeScriptPlugin({
                                             compilerOptions: {
@@ -685,7 +686,9 @@ module.exports = function (grunt) {
                                                 "**/*.d.ts"
                                             ],
                                             include: [
-                                                "**/*.ts"
+                                                modPath.replace(/^\.\//,'') + "/src/**/*.ts",
+                                                modPath.replace(/^\.\//,'') + "/Tests/Perf/**/*.ts",
+                                                modPath.replace(/^\.\//,'') + "/test/Perf/**/*.ts"
                                             ],
                                             tsconfig: false
                                         }),
@@ -697,7 +700,7 @@ module.exports = function (grunt) {
                                         commonJs(),
                                         removeEs6DynamicProto()
                                     ];
-                                }
+                                }; })(modulePath)
                             },
                             files: {
                                 [testPath + "/Perf/dist/" + (modules[key].unitTestName || key + ".tests.js")]: testEntry,

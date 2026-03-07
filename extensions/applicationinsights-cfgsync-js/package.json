@@ -13,6 +13,8 @@
         "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/main/extensions/applicationinsights-cfgsync-js"
     },
     "scripts": {
+        "clean": "node -e \"['dist','dist-es5','build','browser','types','temp','rush-logs'].forEach(d=>{try{require('fs').rmSync(d,{recursive:true,force:true})}catch(e){}})\"",
+        "full-clean": "git clean -xdf",
         "build": "npm run build:esm && npm run build:browser && npm run sri && npm run dtsgen",
         "build:esm": "grunt cfgsync",
         "build:browser": "rollup -c rollup.config.js --bundleConfigAsCjs",
@@ -37,8 +39,8 @@
         "grunt": "^1.5.3",
         "grunt-cli": "^1.4.3",
         "grunt-rollup": "^12.0.0",
-        "@nevware21/grunt-ts-plugin": "^0.5.1",
-        "@nevware21/grunt-eslint-ts": "^0.5.1",
+        "@nevware21/grunt-ts-plugin": "^0.5.2",
+        "@nevware21/grunt-eslint-ts": "^0.5.2",
         "globby": "^11.0.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
@@ -60,7 +62,7 @@
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@microsoft/applicationinsights-shims": "3.0.1",
         "@microsoft/otel-core-js": "0.0.1-alpha",
-        "@nevware21/ts-utils": ">= 0.12.6 < 2.x",
+        "@nevware21/ts-utils": ">= 0.13.0 < 2.x",
         "@nevware21/ts-async": ">= 0.5.5 < 2.x"
     },
     "license": "MIT"

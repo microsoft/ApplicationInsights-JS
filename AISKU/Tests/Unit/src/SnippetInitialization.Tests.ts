@@ -11,7 +11,6 @@ import {
     BreezeChannelIdentifier, ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders,
     utlRemoveSessionStorage, utlSetSessionStorage
 } from "@microsoft/otel-core-js";
-import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { IPropTelemetryContext } from "@microsoft/applicationinsights-properties-js";
 import { dumpObj, isPromiseLike, objHasOwnProperty, strSubstring } from "@nevware21/ts-utils";
 import { AppInsightsSku } from "../../../src/AISku";
@@ -1060,12 +1059,12 @@ export class SnippetInitializationTests extends AITestClass {
         });
     }
 
-    private _initializeSnippet(snippet: Snippet): IApplicationInsights {
+    private _initializeSnippet(snippet: Snippet): AppInsightsSku {
         try {
             //this.useFakeServer = false;
 
             // Call the initialization
-            ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IApplicationInsights);
+            ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as AppInsightsSku);
 
             // Setup Sinon stuff
             const appInsights: AppInsightsSku = (snippet as any).appInsights;

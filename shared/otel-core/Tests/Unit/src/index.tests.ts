@@ -36,6 +36,15 @@ import { SendPostManagerTests } from "./ai/SendPostManager.Tests";
 import { TraceUtilsTests } from "./trace/traceUtils.Tests";
 
 
+// 1ds core tests
+import { CoreTest } from './ext/CoreTest';
+import { ESPromiseTests } from './ext/ESPromiseTests';
+import { ESPromiseSchedulerTests } from './ext/ESPromiseSchedulerTests';
+import { DynamicProtoTests } from './ext/DynamicProtoTests';
+import { UtilsTest } from './ext/UtilsTest';
+import { ValueSanitizerTests } from './ext/ValueSanitizerTests';
+import { SpanUtilsTests } from './ext/SpanUtilsTests';
+
 export function runTests() {
     // OTel tests
     new OTelApiTests().registerTests();
@@ -81,4 +90,13 @@ export function runTests() {
     new ThrottleMgrTest().registerTests();
     new UtilTests().registerTests();
     new W3CTraceStateModesTests().registerTests();
+
+    // 1DS (OneCollector) extended tests
+    new CoreTest('CoreTest').registerTests();
+    new ESPromiseTests('ESPromiseTests').registerTests();
+    new ESPromiseSchedulerTests('ESPromiseSchedulerTests').registerTests();
+    new DynamicProtoTests('DynamicProtoTests').registerTests();
+    new UtilsTest('UtilsTest').registerTests();
+    new ValueSanitizerTests('ValueSanitizerTests').registerTests();
+    new SpanUtilsTests('SpanUtilsTests').registerTests();
 }
