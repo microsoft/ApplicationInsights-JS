@@ -98,6 +98,10 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
         [ZIP_PAYLOAD]: {mode: FeatureOptInMode.none},
         [SDK_STATS]: {mode: FeatureOptInMode.enable}
     },
+    sdkStats: cfgDfMerge({
+        lang: "JavaScript",
+        int: 900000
+    }),
     throttleMgrCfg: cfgDfMerge<{[key:number]: IThrottleMgrConfig}>(
         {
             [_eInternalMessageId.DefaultThrottleMsgKey]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config),

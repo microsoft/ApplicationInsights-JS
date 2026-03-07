@@ -109,6 +109,10 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
     loggingLevelConsole: eLoggingSeverity.DISABLED,
     diagnosticLogInterval: UNDEFINED_VALUE,
     traceHdrMode: eTraceHeadersMode.All,
+    sdkStats: cfgDfMerge({
+        lang: "JavaScript",
+        int: 900000
+    }),
     traceCfg: cfgDfMerge<ITraceCfg>({
         generalLimits: cfgDfMerge({
             attributeValueLengthLimit: undefined,
