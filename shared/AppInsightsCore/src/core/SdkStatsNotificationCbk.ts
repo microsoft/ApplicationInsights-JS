@@ -141,12 +141,19 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore): ISdkStatsNotifCb
         }
     }
 
-    function _createMetric(name: string, value: number, props: { [key: string]: any }): ITelemetryItem {
+    function _createMetric(name: string, value: number, telType: string, code?: string, codePropKey?: string): ITelemetryItem {
         // Re-read from core.config each flush so dynamic config changes are picked up
         var statsCfg = (core.config && core.config.sdkStats) || {};
-        props.language = statsCfg.lang || "JavaScript";
-        props.version = statsCfg.ver || "unknown";
-        props.computeType = "unknown";
+        var props: { [key: string]: any } = {
+            telemetry_type: telType,
+            language: statsCfg.lang || "JavaScript",
+            version: statsCfg.ver || "unknown",
+            computeType: "unknown"
+        };
+
+        if (code && codePropKey) {
+            props[codePropKey] = code;
+        }
 
         return {
             name: name,
@@ -183,10 +190,7 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore): ISdkStatsNotifCb
                     if (objHasOwn(bucket, telType)) {
                         var cnt = bucket[telType];
                         if (cnt > 0) {
-                            var props: { [key: string]: any } = {};
-                            props.telemetry_type = telType;
-                            props[codePropKey] = code;
-                            core.track(_createMetric(metricName, cnt, props));
+                            core.track(_createMetric(metricName, cnt, telType, code, codePropKey));
                         }
                     }
                 }
@@ -209,9 +213,7 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore): ISdkStatsNotifCb
             if (objHasOwn(_successCounts, telType)) {
                 var cnt = _successCounts[telType];
                 if (cnt > 0) {
-                    var successProps: { [key: string]: any } = {};
-                    successProps.telemetry_type = telType;
-                    core.track(_createMetric(MET_SUCCESS, cnt, successProps));
+                    core.track(_createMetric(MET_SUCCESS, cnt, telType));
                 }
             }
         }
