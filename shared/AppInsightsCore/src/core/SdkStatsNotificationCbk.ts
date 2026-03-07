@@ -120,28 +120,24 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore): ISdkStatsNotifCb
      * Common helper to increment a bucketed counter (dropped or retry) keyed by code and telemetry type.
      */
     function _incBucketed(counters: { [code: string]: { [telType: string]: number } }, items: ITelemetryItem[], code: string) {
-        if (!items || !items.length) {
-            return;
-        }
-        if (!_safeKey(code)) {
-            return;
-        }
-        var bucket = counters[code];
-        if (!bucket) {
-            bucket = counters[code] = objCreate(null);
-        }
-        var changed = false;
-        for (var i = 0; i < items.length; i++) {
-            if (!_isSdkStatsMetric(items[i])) {
-                var t = _getTelType(items[i]);
-                if (_safeKey(t)) {
-                    bucket[t] = (bucket[t] || 0) + 1;
-                    changed = true;
+        if (items && items.length && _safeKey(code)) {
+            var bucket = counters[code];
+            if (!bucket) {
+                bucket = counters[code] = objCreate(null);
+            }
+            var changed = false;
+            for (var i = 0; i < items.length; i++) {
+                if (!_isSdkStatsMetric(items[i])) {
+                    var t = _getTelType(items[i]);
+                    if (_safeKey(t)) {
+                        bucket[t] = (bucket[t] || 0) + 1;
+                        changed = true;
+                    }
                 }
             }
-        }
-        if (changed) {
-            _ensureTimer();
+            if (changed) {
+                _ensureTimer();
+            }
         }
     }
 
