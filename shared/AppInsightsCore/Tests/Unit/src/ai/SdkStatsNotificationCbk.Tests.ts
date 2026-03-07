@@ -35,6 +35,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
         this._testBaseTypeMapping();
         this._testSdkStatsMetricFiltering();
         this._testNotificationManagerIntegration();
+        this._testDynamicConfigChanges();
     }
 
     private _createListener(overrides?: Partial<ISdkStatsConfig>): ISdkStatsNotifCbk {
@@ -634,6 +635,197 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
                 listener2.unload();
                 mgr.unload();
+            }
+        });
+    }
+
+    private _testDynamicConfigChanges() {
+        this.testCase({
+            name: "SdkStatsNotifCbk: changing lang on core.config.sdkStats is picked up on next flush",
+            test: () => {
+                let _self = this;
+                let sdkStats: ISdkStatsConfig = {
+                    lang: "JavaScript",
+                    ver: "3.3.6",
+                    int: 100
+                };
+                let config = { sdkStats: sdkStats } as IConfiguration;
+                let mockCore = {
+                    track: function (item: ITelemetryItem) {
+                        _self._trackedItems.push(item);
+                    },
+                    config: config
+                } as any as IAppInsightsCore;
+
+                let listener = createSdkStatsNotifCbk(mockCore);
+                _self._listener = listener;
+
+                // First flush with original lang
+                listener.eventsSent([_self._makeItem("EventData")]);
+                listener.flush();
+
+                Assert.equal(1, _self._trackedItems.length, "Should emit 1 metric");
+                Assert.equal("JavaScript", _self._trackedItems[0].baseData.properties["language"],
+                    "Language should be JavaScript initially");
+
+                // Change lang on config
+                _self._trackedItems = [];
+                config.sdkStats.lang = "TypeScript";
+
+                listener.eventsSent([_self._makeItem("EventData")]);
+                listener.flush();
+
+                Assert.equal(1, _self._trackedItems.length, "Should emit 1 metric after lang change");
+                Assert.equal("TypeScript", _self._trackedItems[0].baseData.properties["language"],
+                    "Language should be TypeScript after config change");
+            }
+        });
+
+        this.testCase({
+            name: "SdkStatsNotifCbk: changing ver on core.config.sdkStats is picked up on next flush",
+            test: () => {
+                let _self = this;
+                let sdkStats: ISdkStatsConfig = {
+                    lang: "JavaScript",
+                    ver: "3.3.6",
+                    int: 100
+                };
+                let config = { sdkStats: sdkStats } as IConfiguration;
+                let mockCore = {
+                    track: function (item: ITelemetryItem) {
+                        _self._trackedItems.push(item);
+                    },
+                    config: config
+                } as any as IAppInsightsCore;
+
+                let listener = createSdkStatsNotifCbk(mockCore);
+                _self._listener = listener;
+
+                listener.eventsSent([_self._makeItem("EventData")]);
+                listener.flush();
+
+                Assert.equal("3.3.6", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should be 3.3.6 initially");
+
+                // Change ver on config
+                _self._trackedItems = [];
+                config.sdkStats.ver = "4.0.0";
+
+                listener.eventsSent([_self._makeItem("EventData")]);
+                listener.flush();
+
+                Assert.equal("4.0.0", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should be 4.0.0 after config change");
+            }
+        });
+
+        this.testCase({
+            name: "SdkStatsNotifCbk: changing int on core.config.sdkStats changes the timer interval",
+            useFakeTimers: true,
+            test: () => {
+                let _self = this;
+                let sdkStats: ISdkStatsConfig = {
+                    lang: "JavaScript",
+                    ver: "3.3.6",
+                    int: 200
+                };
+                let config = { sdkStats: sdkStats } as IConfiguration;
+                let mockCore = {
+                    track: function (item: ITelemetryItem) {
+                        _self._trackedItems.push(item);
+                    },
+                    config: config
+                } as any as IAppInsightsCore;
+
+                let listener = createSdkStatsNotifCbk(mockCore);
+                _self._listener = listener;
+
+                // Queue events - starts timer at 200ms interval
+                listener.eventsSent([_self._makeItem("EventData")]);
+                Assert.equal(0, _self._trackedItems.length, "Nothing emitted before timer fires");
+
+                // Timer fires at 200ms
+                this.clock.tick(201);
+                Assert.equal(1, _self._trackedItems.length, "Timer should fire at original 200ms interval");
+
+                // Change interval to 500ms
+                _self._trackedItems = [];
+                config.sdkStats.int = 500;
+
+                // Queue more events (new timer starts after flush re-reads interval)
+                listener.eventsSent([_self._makeItem("EventData")]);
+
+                // At 200ms the timer should NOT fire (new interval is 500ms)
+                this.clock.tick(201);
+                Assert.equal(0, _self._trackedItems.length, "Timer should NOT fire at old 200ms interval");
+
+                // At 500ms it should fire
+                this.clock.tick(300);
+                Assert.equal(1, _self._trackedItems.length, "Timer should fire at new 500ms interval");
+            }
+        });
+
+        this.testCase({
+            name: "SdkStatsNotifCbk: defaults are used when sdkStats config is not provided",
+            test: () => {
+                let _self = this;
+                let config = {} as IConfiguration;
+                let mockCore = {
+                    track: function (item: ITelemetryItem) {
+                        _self._trackedItems.push(item);
+                    },
+                    config: config
+                } as any as IAppInsightsCore;
+
+                let listener = createSdkStatsNotifCbk(mockCore);
+                _self._listener = listener;
+
+                listener.eventsSent([_self._makeItem("EventData")]);
+                listener.flush();
+
+                Assert.equal(1, _self._trackedItems.length, "Should emit 1 metric");
+                Assert.equal("JavaScript", _self._trackedItems[0].baseData.properties["language"],
+                    "Language should default to JavaScript");
+                Assert.equal("unknown", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should default to unknown");
+            }
+        });
+
+        this.testCase({
+            name: "SdkStatsNotifCbk: setting sdkStats after creation is picked up dynamically on flush",
+            test: () => {
+                let _self = this;
+                let config = {} as IConfiguration;
+                let mockCore = {
+                    track: function (item: ITelemetryItem) {
+                        _self._trackedItems.push(item);
+                    },
+                    config: config
+                } as any as IAppInsightsCore;
+
+                let listener = createSdkStatsNotifCbk(mockCore);
+                _self._listener = listener;
+
+                // Flush without sdkStats set
+                listener.eventsSent([_self._makeItem("EventData")]);
+                listener.flush();
+
+                Assert.equal("JavaScript", _self._trackedItems[0].baseData.properties["language"],
+                    "Language should default to JavaScript");
+                Assert.equal("unknown", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should default to unknown");
+
+                // Now set sdkStats on config
+                _self._trackedItems = [];
+                config.sdkStats = { lang: "Python", ver: "1.0.0", int: 100 };
+
+                listener.eventsSent([_self._makeItem("EventData")]);
+                listener.flush();
+
+                Assert.equal("Python", _self._trackedItems[0].baseData.properties["language"],
+                    "Language should be Python from newly set config");
+                Assert.equal("1.0.0", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should be 1.0.0 from newly set config");
             }
         });
     }
