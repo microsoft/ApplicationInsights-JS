@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { IPromise } from "@nevware21/ts-async";
+import { ISdkStatsConfig } from "../../core/SdkStatsNotificationCbk";
 import { eTraceHeadersMode } from "../../enums/ai/TraceHeadersMode";
 import { IOTelConfig } from "../otel/config/IOTelConfig";
 import { IAppInsightsCore } from "./IAppInsightsCore";
@@ -258,6 +259,12 @@ export interface IConfiguration extends IOTelConfig {
      * @defaultValue eTraceHeadersMode.All
      */
     traceHdrMode?: eTraceHeadersMode;
+
+    /**
+     * [Optional] SDK Stats configuration for periodic reporting of telemetry pipeline metrics.
+     * @since 3.3.12
+     */
+    sdkStats?: ISdkStatsConfig;
 }
 
 ///**

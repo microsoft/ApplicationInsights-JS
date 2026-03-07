@@ -11,13 +11,14 @@ import {
     IAutoExceptionTelemetry, IChannelControls, IConfig, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDependencyTelemetry,
     IDiagnosticLogger, IDistributedTraceContext, IDynamicConfigHandler, IEventTelemetry, IExceptionTelemetry, ILoadedPlugin,
     IMetricTelemetry, INotificationManager, IOTelApi, IOTelSpanOptions, IPageViewPerformanceTelemetry, IPageViewTelemetry, IPlugin,
-    IReadableSpan, IRequestHeaders, ISpanScope, ITelemetryContext as Common_ITelemetryContext, ITelemetryInitializerHandler, ITelemetryItem,
-    ITelemetryPlugin, ITelemetryUnloadState, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, ITraceApi, ITraceProvider,
-    ITraceTelemetry, IUnloadHook, OTelTimeInput, PropertiesPluginIdentifier, ThrottleMgr, UnloadHandler, WatcherFunction,
-    _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate,
-    createDynamicConfig, createOTelApi, createProcessTelemetryContext, createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity,
-    hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace,
-    onConfigChange, parseConnectionString, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener, useSpan
+    IReadableSpan, IRequestHeaders, ISdkStatsNotifCbk, ISpanScope, ITelemetryContext as Common_ITelemetryContext,
+    ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IThrottleInterval, IThrottleLimit,
+    IThrottleMgrConfig, ITraceApi, ITraceProvider, ITraceTelemetry, IUnloadHook, OTelTimeInput, PropertiesPluginIdentifier, ThrottleMgr,
+    UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge,
+    cfgDfValidate, createDynamicConfig, createOTelApi, createProcessTelemetryContext, createSdkStatsNotifCbk, createTraceProvider,
+    createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction, isNullOrUndefined,
+    isReactNative, isString, mergeEvtNamespace, onConfigChange, parseConnectionString, proxyAssign, proxyFunctions,
+    removePageHideEventListener, removePageUnloadEventListener, useSpan
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
@@ -64,6 +65,7 @@ const IKEY_USAGE = "iKeyUsage";
 const CDN_USAGE = "CdnUsage";
 const SDK_LOADER_VER = "SdkLoaderVer";
 const ZIP_PAYLOAD = "zipPayload";
+const SDK_STATS = "SdkStats";
 
 const default_limit = {
     samplingRate: 100,
@@ -93,8 +95,14 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
         [IKEY_USAGE]: {mode: FeatureOptInMode.enable}, //for versions after 3.1.2 (>= 3.2.0)
         [CDN_USAGE]: {mode: FeatureOptInMode.disable},
         [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable},
-        [ZIP_PAYLOAD]: {mode: FeatureOptInMode.none}
+        [ZIP_PAYLOAD]: {mode: FeatureOptInMode.none},
+        [SDK_STATS]: {mode: FeatureOptInMode.enable}
     },
+    sdkStats: cfgDfMerge({
+        lang: "JavaScript",
+        ver: UNDEFINED_VALUE,
+        int: 900000
+    }),
     throttleMgrCfg: cfgDfMerge<{[key:number]: IThrottleMgrConfig}>(
         {
             [_eInternalMessageId.DefaultThrottleMsgKey]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config),
@@ -196,6 +204,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
         let _cdnSentMessage: boolean;
         let _sdkVerSentMessage: boolean;
         let _otelApi: ICachedValue<IOTelApi>;
+        let _sdkStatsListener: ISdkStatsNotifCbk;
 
         dynamicProto(AppInsightsSku, this, (_self) => {
             _initDefaults();
@@ -436,6 +445,22 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                             _throttleMgr.sendMessage( _eInternalMessageId.SdkLdrUpdate, "An updated Sdk Loader is available, see aka.ms/SnippetVer");
                             _sdkVerSentMessage = true;
                         }
+
+                        // Enable/disable SDK Stats listener dynamically based on config
+                        if (isFeatureEnabled(SDK_STATS, _config, true)) {
+                            if (!_sdkStatsListener) {
+                                _sdkStatsListener = createSdkStatsNotifCbk(_core);
+                                _core.addNotificationListener(_sdkStatsListener);
+                            }
+                        } else if (_sdkStatsListener) {
+                            try {
+                                _sdkStatsListener.unload();
+                                _core.removeNotificationListener(_sdkStatsListener);
+                            } catch (e) {
+                                // Swallow any errors
+                            }
+                            _sdkStatsListener = null;
+                        }
                         
                     }));
                 });
@@ -592,9 +617,23 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                     }
                 }
 
-                _self.onunloadFlush(isAsync);
-
                 _removePageEventHandlers();
+
+                // Unload SDK Stats listener BEFORE flushing the channel.
+                // unload() calls core.track() to enqueue the accumulated metrics,
+                // then the single onunloadFlush below sends everything (regular telemetry + SDK stats).
+                if (_sdkStatsListener && _core) {
+                    try {
+                        _sdkStatsListener.unload();
+                        _core.removeNotificationListener(_sdkStatsListener);
+                    } catch (e) {
+                        // Swallow any errors to ensure core.unload() is still called
+                    }
+                    _sdkStatsListener = null;
+                }
+
+                // Single flush sends both regular telemetry AND SDK stats metrics
+                _self.onunloadFlush(isAsync);
 
                 _core.unload && _core.unload(isAsync, _unloadCallback, cbTimeout);
 
@@ -710,6 +749,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                 _iKeySentMessage = false;
                 _cdnSentMessage = false;
                 _sdkVerSentMessage = false;
+                _sdkStatsListener = null;
                 _cfgSyncPlugin = new CfgSyncPlugin();
             }
 

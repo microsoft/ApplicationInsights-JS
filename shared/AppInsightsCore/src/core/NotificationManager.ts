@@ -5,7 +5,8 @@ import { IPromise, createAllPromise, createPromise, doAwaitResponse } from "@nev
 import { ITimerHandler, arrForEach, arrIndexOf, objDefine, safe, scheduleTimeout } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../config/DynamicConfig";
 import {
-    STR_EVENTS_DISCARDED, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_OFFLINE_DROP, STR_OFFLINE_SENT, STR_OFFLINE_STORE, STR_PERF_EVENT
+    STR_EVENTS_DISCARDED, STR_EVENTS_RETRY, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_OFFLINE_DROP, STR_OFFLINE_SENT, STR_OFFLINE_STORE,
+    STR_PERF_EVENT
 } from "../constants/InternalConstants";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import { INotificationListener } from "../interfaces/ai/INotificationListener";
@@ -147,6 +148,17 @@ export class NotificationManager implements INotificationManager {
                 }
             };
 
+            /**
+             * Notification for events being retried.
+             * @param events - The array of events that are being retried.
+             * @param statusCode - The HTTP status code that triggered the retry.
+             */
+            _self.eventsRetry = (events: ITelemetryItem[], statusCode: number): void => {
+                _runListeners(_listeners, STR_EVENTS_RETRY, _asyncNotifications, (listener) => {
+                    listener.eventsRetry(events, statusCode);
+                });
+            };
+
             _self.offlineEventsStored = (events: ITelemetryItem[]): void => {
                 if (events && events.length) {
                     _runListeners(_listeners, STR_OFFLINE_STORE, _asyncNotifications, (listener) => {
@@ -251,6 +263,15 @@ export class NotificationManager implements INotificationManager {
      * @param isAsync - A flag which identifies whether the requests are being sent in an async or sync manner.
      */
     eventsSendRequest?(sendReason: number, isAsync: boolean): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Notification for events being retried.
+     * @param events - The array of events that are being retried.
+     * @param statusCode - The HTTP status code that triggered the retry.
+     */
+    eventsRetry?(events: ITelemetryItem[], statusCode: number): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
