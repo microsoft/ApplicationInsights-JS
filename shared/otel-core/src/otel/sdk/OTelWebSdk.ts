@@ -83,7 +83,7 @@ function _createNoopLogger(): IOTelLogger {
  * sdk.shutdown();
  * ```
  *
- * @since 3.4.0
+ * @since 4.0.0
  */
 export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
     // Validate required dependencies upfront
