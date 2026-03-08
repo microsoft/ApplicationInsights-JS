@@ -315,19 +315,21 @@ export class SdkStatsFeatureTests extends AITestClass {
                 this.clock.tick(1);
 
                 let onChangeCalled = 0;
+                let observedVer: string | undefined;
 
                 let handler = onConfigChange(ai.config as any, (details: any) => {
                     onChangeCalled++;
+                    if (details.cfg.sdkStats) {
+                        observedVer = details.cfg.sdkStats.ver;
+                    }
                 });
 
                 Assert.equal(1, onChangeCalled, "onConfigChange should fire once initially");
 
-                // Change version
                 ai.config.sdkStats!.ver = "4.0.0";
                 this.clock.tick(1);
                 Assert.equal(2, onChangeCalled, "onConfigChange should fire again after changing ver");
-
-                // Verify the value is reflected
+                Assert.equal("4.0.0", observedVer, "ver should be 4.0.0 in callback");
                 Assert.equal("4.0.0", ai.config.sdkStats!.ver, "ver should be updated to 4.0.0");
 
                 handler.rm();
@@ -342,14 +344,21 @@ export class SdkStatsFeatureTests extends AITestClass {
                 this.clock.tick(1);
 
                 let onChangeCalled = 0;
+                let observedLang: string | undefined;
+                let observedVer: string | undefined;
+                let observedInt: number | undefined;
 
                 let handler = onConfigChange(ai.config as any, (details: any) => {
                     onChangeCalled++;
+                    if (details.cfg.sdkStats) {
+                        observedLang = details.cfg.sdkStats.lang;
+                        observedVer = details.cfg.sdkStats.ver;
+                        observedInt = details.cfg.sdkStats.int;
+                    }
                 });
 
                 Assert.equal(1, onChangeCalled, "onConfigChange should fire once initially");
 
-                // Replace entire sdkStats block
                 ai.config.sdkStats = {
                     lang: "Python",
                     ver: "2.0.0",
@@ -358,9 +367,9 @@ export class SdkStatsFeatureTests extends AITestClass {
                 this.clock.tick(1);
                 Assert.equal(2, onChangeCalled, "onConfigChange should fire after replacing sdkStats block");
 
-                Assert.equal("Python", ai.config.sdkStats.lang, "lang should be Python");
-                Assert.equal("2.0.0", ai.config.sdkStats.ver, "ver should be 2.0.0");
-                Assert.equal(30000, ai.config.sdkStats.int, "int should be 30000");
+                Assert.equal("Python", observedLang, "lang should be Python in callback");
+                Assert.equal("2.0.0", observedVer, "ver should be 2.0.0 in callback");
+                Assert.equal(30000, observedInt, "int should be 30000 in callback");
 
                 handler.rm();
             }
