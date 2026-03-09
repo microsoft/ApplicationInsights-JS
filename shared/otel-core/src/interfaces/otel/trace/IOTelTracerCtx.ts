@@ -8,7 +8,7 @@ import { IOTelSpanOptions } from "./IOTelSpanOptions";
 import { IReadableSpan } from "./IReadableSpan";
 
 /**
- * The context for the current IOTelSdk instance and it's configuration
+ * The context for a tracer instance and its configuration
  * @since 3.4.0
  */
 export interface IOTelTracerCtx {

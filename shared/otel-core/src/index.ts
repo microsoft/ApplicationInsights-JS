@@ -171,7 +171,6 @@ export { IOTelAttributes, OTelAttributeValue, ExtendedOTelAttributeValue } from 
 export { OTelException, IOTelExceptionWithCode, IOTelExceptionWithMessage, IOTelExceptionWithName } from "./interfaces/IException";
 export { IOTelHrTime, OTelTimeInput } from "./interfaces/IOTelHrTime";
 export { createOTelApi } from "./otel/api/OTelApi";
-export { OTelSdk } from "./otel/sdk/OTelSdk";
 
 // OpenTelemetry Trace Interfaces
 export { ITraceApi } from "./interfaces/otel/trace/IOTelTraceApi";
@@ -194,8 +193,8 @@ export { IOTelErrorHandlers } from "./interfaces/otel/config/IOTelErrorHandlers"
 export { ITraceCfg } from "./interfaces/otel/config/IOTelTraceCfg";
 
 // OpenTelemetry SDK Interfaces
-export { IOTelSdk } from "./interfaces/otel/IOTelSdk";
-export { IOTelSdkCtx } from "./interfaces/otel/IOTelSdkCtx";
+export { IOTelWebSdk } from "./interfaces/otel/IOTelWebSdk";
+export { IOTelWebSdkConfig } from "./interfaces/otel/config/IOTelWebSdkConfig";
 
 // OpenTelemetry Context
 export { createContextManager } from "./otel/api/context/contextManager";
@@ -261,6 +260,9 @@ export { createLoggerProvider, DEFAULT_LOGGER_NAME } from "./otel/sdk/OTelLogger
 export { createLogger } from "./otel/sdk/OTelLogger";
 export { createMultiLogRecordProcessor } from "./otel/sdk/OTelMultiLogRecordProcessor";
 export { loadDefaultConfig, reconfigureLimits } from "./otel/sdk/config";
+
+// SDK Entry Point
+export { createOTelWebSdk } from "./otel/sdk/OTelWebSdk";
 
 // ========================================
 // Application Insights Common Exports

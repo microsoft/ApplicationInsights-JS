@@ -54,9 +54,9 @@ export function createContext(otelApi: IOTelApi, parent?: IOTelContext): IOTelCo
     }
 
     function _setValue(key: symbol, value: unknown) {
-        let newContext = createContext(theContext.api, parent);
+        let newContext = createContext(theContext.api, theContext);
         ((newContext as any)[_InternalContextKey.v])[key] = value;
-        return theContext;
+        return newContext;
     }
 
     function _deleteValue(key: symbol) {
