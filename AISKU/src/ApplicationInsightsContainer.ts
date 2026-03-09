@@ -1,11 +1,10 @@
 import { throwUnsupported } from "@nevware21/ts-utils";
 import { AppInsightsSku } from "./AISku";
-import { IApplicationInsights } from "./IApplicationInsights";
 import { Snippet } from "./Snippet";
 
 export class ApplicationInsightsContainer {
 
-    public static getAppInsights(snippet: Snippet, version: number) : IApplicationInsights {
+    public static getAppInsights(snippet: Snippet, version: number) : AppInsightsSku {
         const theSku = new AppInsightsSku(snippet);
         
         // Two target scenarios:

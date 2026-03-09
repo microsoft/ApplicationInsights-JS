@@ -1,8 +1,6 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { _eInternalMessageId } from "@microsoft/otel-core-js";
-import { _InternalLogMessage } from "../../../src/Diagnostics/DiagnosticLogger";
-import { optimizeObject, setValue } from "@microsoft/otel-core-js";
 import { isObject, isPlainObject, isString, objForEachKey, objKeys } from "@nevware21/ts-utils";
+import { optimizeObject, setValue } from "../../../../../src/utils/HelperFuncs";
 
 interface PerfMeasurements {
     duration: number;
@@ -178,7 +176,7 @@ export class CorePerfCheckTests extends AITestClass {
             timeout: 60000,
             test: () => {
                 let iterations = 90000;
-                let baseTestObject = { };
+                let baseTestObject: any = { };
                 for (let lp = 0; lp < 40; lp++) {
                     baseTestObject["test.value" + lp] = "Test Value " + lp;
                 }
@@ -450,7 +448,7 @@ export class CorePerfCheckTests extends AITestClass {
             timeout: 120000,
             test: () => {
                 let iterations = 10000;
-                let baseTestObject = { };
+                let baseTestObject: any = { };
                 for (let lp = 0; lp < 40; lp++) {
                     baseTestObject["test.value" + lp] = "Test Value " + lp;
                 }
@@ -580,7 +578,7 @@ export class CorePerfCheckTests extends AITestClass {
             test: () => {
                 let iterations = 100000;
                 let objectFields = 19;
-                let baseTestObject = { };
+                let baseTestObject: any = { };
                 for (let lp = 0; lp < objectFields; lp++) {
                     baseTestObject["value" + lp] = "Test Value " + lp;
                 }
@@ -615,7 +613,7 @@ export class CorePerfCheckTests extends AITestClass {
             test: () => {
                 let iterations = 100000;
                 let objectFields = 19;
-                let baseTestObject = { 
+                let baseTestObject: any = { 
                     a: 1
                 };
                 for (let lp = 0; lp < objectFields - 1; lp++) {
@@ -652,7 +650,7 @@ export class CorePerfCheckTests extends AITestClass {
             test: () => {
                 let iterations = 100000;
                 let objectFields = 21;
-                let baseTestObject = { };
+                let baseTestObject: any = { };
                 for (let lp = 0; lp < objectFields; lp++) {
                     baseTestObject["value" + lp] = "Test Value " + lp;
                 }

@@ -3,12 +3,10 @@ import { ApplicationInsightsContainer } from "../../../src/ApplicationInsightsCo
 import { IApplicationInsights } from "../../../src/IApplicationInsights";
 import { Snippet } from "../../../src/Snippet";
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
-import { IConfig, IConfiguration, LoggingSeverity, _eInternalMessageId, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig } from "@microsoft/otel-core-js";
-import { SinonSpy } from "sinon";
+import { IConfig, IConfiguration, _eInternalMessageId, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig } from "@microsoft/otel-core-js";
 import { createSnippetV5 } from "./testSnippetV5";
 import { FeatureOptInMode, newId } from "@microsoft/otel-core-js";
 import { createSnippetV6 } from "./testSnippetV6";
-const ApplicationInsights = AppInsightsSku;
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
 
@@ -27,7 +25,7 @@ const tconfig = {
 
 export class ThrottleSentMessage extends AITestClass {
     private _ai: IApplicationInsights;
-    private getAi: ApplicationInsights;
+    private getAi: AppInsightsSku;
     private _config: IConfiguration | IConfig;
     private _logger;
 
@@ -65,7 +63,7 @@ export class ThrottleSentMessage extends AITestClass {
             this.useFakeServer = false;
             this._config = this._getTestConfig();
 
-            const init = new ApplicationInsights({
+            const init = new AppInsightsSku({
                 config: this._config
             });
           
@@ -197,7 +195,7 @@ export class ThrottleSentMessage extends AITestClass {
                 let config = this._getTestConfig();
                 config.throttleMgrCfg= {[_eInternalMessageId.InstrumentationKeyDeprecation]:tconfig, [_eInternalMessageId.DefaultThrottleMsgKey]:tconfig};
                 config.featureOptIn = {["iKeyUsage"]: {mode: FeatureOptInMode.disable}}
-                let init = new ApplicationInsights({
+                let init = new AppInsightsSku({
                     config: config
                 });
               
@@ -257,12 +255,12 @@ export class ThrottleSentMessage extends AITestClass {
     }
 
     
-    private _initializeSnippet(snippet: Snippet): ApplicationInsights {
+    private _initializeSnippet(snippet: Snippet): AppInsightsSku {
         try {
             //this.useFakeServer = false;
 
             // Call the initialization
-            ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IApplicationInsights);
+            ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as AppInsightsSku);
 
             // Setup Sinon stuff
             const appInsights: AppInsightsSku = (snippet as any).appInsights;

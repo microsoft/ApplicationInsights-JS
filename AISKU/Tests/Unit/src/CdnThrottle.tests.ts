@@ -1,17 +1,9 @@
 import { AppInsightsSku } from "../../../src/AISku";
-import { ApplicationInsightsContainer } from "../../../src/ApplicationInsightsContainer";
-import { IApplicationInsights } from "../../../src/IApplicationInsights";
-import { Snippet } from "../../../src/Snippet";
 import { AITestClass, Assert, IFetchArgs, PollingAssert } from "@microsoft/ai-test-framework";
-import { IConfig, IConfiguration, LoggingSeverity, _eInternalMessageId, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig } from "@microsoft/otel-core-js";
-import { SinonSpy } from "sinon";
-import { createSnippetV5 } from "./testSnippetV5";
-import { CdnFeatureMode, FeatureOptInMode, getGlobal, getGlobalInst, isFunction, newId } from "@microsoft/otel-core-js";
-import { createSnippetV6 } from "./testSnippetV6";
+import { IConfig, IConfiguration, _eInternalMessageId, IThrottleMgrConfig } from "@microsoft/otel-core-js";
+import { CdnFeatureMode, FeatureOptInMode, getGlobal, getGlobalInst } from "@microsoft/otel-core-js";
 import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode } from "@microsoft/applicationinsights-cfgsync-js";
-import { createSyncPromise, doAwait } from "@nevware21/ts-async";
-import { ICfgSyncCdnConfig } from "@microsoft/applicationinsights-cfgsync-js/src/Interfaces/ICfgSyncCdnConfig";
-const ApplicationInsights = AppInsightsSku;
+import { createSyncPromise } from "@nevware21/ts-async";
 
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -87,11 +79,11 @@ const sampleConfig = {
 
 export class CdnThrottle extends AITestClass {
     private _ai: AppInsightsSku;
-    private getAi: ApplicationInsights;
+    private getAi: AppInsightsSku;
     private _config: IConfiguration | IConfig;
     private identifier: string;
     private fetchStub: any;
-    init: ApplicationInsights;
+    init: AppInsightsSku;
     private res: any;
     private _fetch: any;
     loggingSpy: any;
@@ -185,7 +177,7 @@ export class CdnThrottle extends AITestClass {
                     }, 0);
                 });
                 this.fetchStub = this.sandbox.spy((doc as any), "fetch");
-                this.init = new ApplicationInsights({
+                this.init = new AppInsightsSku({
                     config:   {
                         instrumentationKey: TestInstrumentationKey,
                         featureOptIn : {["iKeyUsage"]: {mode: FeatureOptInMode.disable}},
@@ -240,7 +232,7 @@ export class CdnThrottle extends AITestClass {
                 });
 
                 this.fetchStub = this.sandbox.spy((doc as any), "fetch");
-                this.init = new ApplicationInsights({
+                this.init = new AppInsightsSku({
                     config: this._config,
                 });
                 this.init.loadAppInsights();
@@ -283,7 +275,7 @@ export class CdnThrottle extends AITestClass {
                 };
 
                 this.fetchStub = this.sandbox.spy((doc as any), "fetch");
-                this.init = new ApplicationInsights({
+                this.init = new AppInsightsSku({
                     config: noSetconfig,
                 });
                 this.init.loadAppInsights();
@@ -341,7 +333,7 @@ export class CdnThrottle extends AITestClass {
                     }}
                 };
                 
-                this.init = new ApplicationInsights({
+                this.init = new AppInsightsSku({
                     config: config,
                 });
                 this.init.loadAppInsights();
@@ -382,7 +374,7 @@ export class CdnThrottle extends AITestClass {
                     }, 0);
                 });
                 this.fetchStub = this.sandbox.spy((doc as any), "fetch");
-                this.init = new ApplicationInsights({
+                this.init = new AppInsightsSku({
                     config:   {
                         instrumentationKey: TestInstrumentationKey,
                         extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {
@@ -426,7 +418,7 @@ export class CdnThrottle extends AITestClass {
                     }, 0);
                 });
                 this.fetchStub = this.sandbox.spy((doc as any), "fetch");
-                this.init = new ApplicationInsights({
+                this.init = new AppInsightsSku({
                     config:   {
                         instrumentationKey: TestInstrumentationKey,
                         extensionConfig : {["AppInsightsCfgSyncPlugin"] :  {

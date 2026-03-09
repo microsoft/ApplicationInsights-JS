@@ -1,4 +1,4 @@
-import { AppInsightsSku as ApplicationInsights } from "../../../src/AISku";
+import { AppInsightsSku, AppInsightsSku as ApplicationInsights } from "../../../src/AISku";
 import { IApplicationInsights } from "../../../src/IApplicationInsights";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { BreezeChannelIdentifier, utlGetSessionStorage, utlRemoveSessionStorage } from "@microsoft/otel-core-js";

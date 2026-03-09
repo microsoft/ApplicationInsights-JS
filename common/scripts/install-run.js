@@ -16,10 +16,10 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 90178
-/*!****************************************************!*\
-  !*** ./lib-esnext/utilities/executionUtilities.js ***!
-  \****************************************************/
+/***/ 953844
+/*!**************************************************************!*\
+  !*** ./lib-intermediate-esm/utilities/executionUtilities.js ***!
+  \**************************************************************/
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
@@ -49,30 +49,10 @@ function escapeArgumentIfNeeded(command, isWindows = IS_WINDOWS) {
 
 /***/ },
 
-/***/ 176760
-/*!****************************!*\
-  !*** external "node:path" ***!
-  \****************************/
-(module) {
-
-module.exports = require("node:path");
-
-/***/ },
-
-/***/ 731421
-/*!*************************************!*\
-  !*** external "node:child_process" ***!
-  \*************************************/
-(module) {
-
-module.exports = require("node:child_process");
-
-/***/ },
-
-/***/ 832286
-/*!************************************************!*\
-  !*** ./lib-esnext/utilities/npmrcUtilities.js ***!
-  \************************************************/
+/***/ 359480
+/*!**********************************************************!*\
+  !*** ./lib-intermediate-esm/utilities/npmrcUtilities.js ***!
+  \**********************************************************/
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
@@ -97,14 +77,8 @@ __webpack_require__.r(__webpack_exports__);
  * @returns
  * The text of the the .npmrc.
  */
-// create a global _combinedNpmrc for cache purpose
-const _combinedNpmrcMap = new Map();
 function _trimNpmrcFile(options) {
     const { sourceNpmrcPath, linesToPrepend, linesToAppend, supportEnvVarFallbackSyntax, filterNpmIncompatibleProperties, env = process.env } = options;
-    const combinedNpmrcFromCache = _combinedNpmrcMap.get(sourceNpmrcPath);
-    if (combinedNpmrcFromCache !== undefined) {
-        return combinedNpmrcFromCache;
-    }
     let npmrcFileLines = [];
     if (linesToPrepend) {
         npmrcFileLines.push(...linesToPrepend);
@@ -118,8 +92,6 @@ function _trimNpmrcFile(options) {
     npmrcFileLines = npmrcFileLines.map((line) => (line || '').trim());
     const resultLines = trimNpmrcFileLines(npmrcFileLines, env, supportEnvVarFallbackSyntax, filterNpmIncompatibleProperties);
     const combinedNpmrc = resultLines.join('\n');
-    //save the cache
-    _combinedNpmrcMap.set(sourceNpmrcPath, combinedNpmrc);
     return combinedNpmrc;
 }
 /**
@@ -337,13 +309,13 @@ function isVariableSetInNpmrcFile(sourceNpmrcFolder, variableKey, supportEnvVarF
 
 /***/ },
 
-/***/ 848161
-/*!**************************!*\
-  !*** external "node:os" ***!
-  \**************************/
+/***/ 731421
+/*!*************************************!*\
+  !*** external "node:child_process" ***!
+  \*************************************/
 (module) {
 
-module.exports = require("node:os");
+module.exports = require("node:child_process");
 
 /***/ },
 
@@ -354,6 +326,26 @@ module.exports = require("node:os");
 (module) {
 
 module.exports = require("node:fs");
+
+/***/ },
+
+/***/ 848161
+/*!**************************!*\
+  !*** external "node:os" ***!
+  \**************************/
+(module) {
+
+module.exports = require("node:os");
+
+/***/ },
+
+/***/ 176760
+/*!****************************!*\
+  !*** external "node:path" ***!
+  \****************************/
+(module) {
+
+module.exports = require("node:path");
 
 /***/ }
 
@@ -434,9 +426,9 @@ module.exports = require("node:fs");
 var __webpack_exports__ = {};
 // This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
 (() => {
-/*!*******************************************!*\
-  !*** ./lib-esnext/scripts/install-run.js ***!
-  \*******************************************/
+/*!*****************************************************!*\
+  !*** ./lib-intermediate-esm/scripts/install-run.js ***!
+  \*****************************************************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   RUSH_JSON_FILENAME: () => (/* binding */ RUSH_JSON_FILENAME),
@@ -453,8 +445,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var node_os__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(node_os__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! node:path */ 176760);
 /* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(node_path__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _utilities_npmrcUtilities__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utilities/npmrcUtilities */ 832286);
-/* harmony import */ var _utilities_executionUtilities__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utilities/executionUtilities */ 90178);
+/* harmony import */ var _utilities_npmrcUtilities__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utilities/npmrcUtilities */ 359480);
+/* harmony import */ var _utilities_executionUtilities__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utilities/executionUtilities */ 953844);
 // Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 // See LICENSE in the project root for license information.
 /* eslint-disable no-console */
