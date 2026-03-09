@@ -118,7 +118,8 @@ export interface IOTelWebSdk {
     shutdown(): IPromise<void>;
 
     /**
-     * Gets the current SDK configuration (read-only snapshot).
+     * Gets the current SDK configuration as a live reference.
+     * Callers should treat the returned configuration as read-only.
      *
      * @returns The current SDK configuration
      */

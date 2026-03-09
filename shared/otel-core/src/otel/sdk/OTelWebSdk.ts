@@ -89,25 +89,33 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
     // Validate required dependencies upfront
     let _handlers: IOTelErrorHandlers = config.errorHandlers;
 
-    if (!config.resource) {
-        handleError(_handlers, "createOTelWebSdk: resource must be provided");
-    }
     if (!config.errorHandlers) {
         // Use an empty handlers object as fallback so handleError/handleWarn don't fail
         _handlers = {};
         handleWarn(_handlers, "createOTelWebSdk: errorHandlers should be provided");
     }
+
+    // Validate all required dependencies and fail fast with a no-op SDK if any are missing
+    let _hasMissing = false;
+    if (!config.resource) {
+        handleError(_handlers, "createOTelWebSdk: resource must be provided");
+        _hasMissing = true;
+    }
     if (!config.contextManager) {
         handleError(_handlers, "createOTelWebSdk: contextManager must be provided");
+        _hasMissing = true;
     }
     if (!config.idGenerator) {
         handleError(_handlers, "createOTelWebSdk: idGenerator must be provided");
+        _hasMissing = true;
     }
     if (!config.sampler) {
         handleError(_handlers, "createOTelWebSdk: sampler must be provided");
+        _hasMissing = true;
     }
-    if (!config.performanceNow) {
-        handleError(_handlers, "createOTelWebSdk: performanceNow must be provided");
+
+    if (_hasMissing) {
+        return _createNoopSdk(config);
     }
 
     // Private closure state
@@ -123,8 +131,9 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
     let _sampler = _sdkConfig.sampler;
 
     // Create a minimal IOTelApi adapter that bridges the SDK config to what createSpan needs.
-    // createSpan() reads api.cfg.errorHandlers and api.cfg.traceCfg — we provide those from
-    // the SDK config. The host and trace properties are not used by createSpan.
+    // createSpan() reads api.cfg.errorHandlers (provided here) and api.cfg.traceCfg (optional,
+    // accessed with safe-navigation so undefined is fine). The host and trace properties are
+    // not used by createSpan.
     let _otelCfg: IOTelConfig = {
         errorHandlers: _handlers
     };
@@ -175,7 +184,7 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
         let key = tracerName + "@" + tracerVersion + ":" + schemaUrl;
 
         if (!_tracers[key]) {
-            _tracers[key] = _createSdkTracer(tracerName, tracerVersion);
+            _tracers[key] = _createSdkTracer(tracerName, tracerVersion, schemaUrl);
         }
 
         return _tracers[key];
@@ -276,7 +285,7 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
      * @param tracerVersion - The version of the tracer (instrumentation library)
      * @returns An IOTelTracer instance that creates functional spans
      */
-    function _createSdkTracer(tracerName: string, tracerVersion: string): IOTelTracer {
+    function _createSdkTracer(tracerName: string, tracerVersion: string, schemaUrl: string): IOTelTracer {
 
         /**
          * Starts a new span without setting it on the current context.
@@ -358,7 +367,7 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
             let spanCtx: IOTelSpanCtx = {
                 api: _apiAdapter,
                 resource: _resource,
-                instrumentationScope: { name: tracerName, version: tracerVersion },
+                instrumentationScope: { name: tracerName, version: tracerVersion, schemaUrl: schemaUrl || undefined },
                 spanContext: newCtx,
                 attributes: spanAttributes,
                 startTime: opts.startTime,
@@ -443,4 +452,45 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
     }
 
     return setProtoTypeName(_self, "OTelWebSdk");
+}
+
+/**
+ * Creates a no-op SDK instance that silently discards all operations.
+ * Returned when required dependencies are missing to prevent runtime crashes.
+ * @param config - The original config, used for getConfig()
+ * @returns A safe no-op IOTelWebSdk instance
+ */
+function _createNoopSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
+    let _resolvedPromise = createSyncPromise(function (resolve: () => void) {
+        resolve();
+    });
+
+    return setProtoTypeName({
+        getTracer: function (): IOTelTracer {
+            return setProtoTypeName({
+                startSpan: function (): IReadableSpan | null {
+                    return null;
+                },
+                startActiveSpan: function (): undefined {
+                    return undefined;
+                }
+            }, "OTelNoopTracer");
+        },
+        getLogger: function (): IOTelLogger {
+            return {
+                emit: function (): void {
+                    // noop
+                }
+            };
+        },
+        forceFlush: function (): IPromise<void> {
+            return _resolvedPromise;
+        },
+        shutdown: function (): IPromise<void> {
+            return _resolvedPromise;
+        },
+        getConfig: function (): Readonly<IOTelWebSdkConfig> {
+            return config;
+        }
+    }, "OTelNoopWebSdk");
 }
