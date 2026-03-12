@@ -41,8 +41,6 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
     private _createListener(overrides?: Partial<ISdkStatsConfig>): ISdkStatsNotifCbk {
         let _self = this;
         let sdkStats: ISdkStatsConfig = {
-            lang: "JavaScript",
-            ver: "3.3.6",
             int: 100 // short interval for testing
         };
 
@@ -118,7 +116,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 Assert.ok(customEventMetric, "Should have CUSTOM_EVENT metric");
                 Assert.equal(2, customEventMetric.baseData.average, "CUSTOM_EVENT count should be 2");
                 Assert.equal("JavaScript", customEventMetric.baseData.properties["language"], "Language should be JavaScript");
-                Assert.equal("3.3.6", customEventMetric.baseData.properties["version"], "Version should be 3.3.6");
+                Assert.equal("#version#", customEventMetric.baseData.properties["version"], "Version should be the build placeholder");
                 Assert.equal("unknown", customEventMetric.baseData.properties["computeType"], "computeType should be unknown");
 
                 let exceptionMetric = successItems.filter(function (item) {
@@ -613,8 +611,6 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                         },
                         config: {
                             sdkStats: {
-                                lang: "JavaScript",
-                                ver: "3.3.6",
                                 int: 100
                             }
                         } as IConfiguration
@@ -641,12 +637,10 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
     private _testDynamicConfigChanges() {
         this.testCase({
-            name: "SdkStatsNotifCbk: changing lang on core.config.sdkStats is picked up on next flush",
+            name: "SdkStatsNotifCbk: language is always hardcoded to JavaScript",
             test: () => {
                 let _self = this;
                 let sdkStats: ISdkStatsConfig = {
-                    lang: "JavaScript",
-                    ver: "3.3.6",
                     int: 100
                 };
                 let config = { sdkStats: sdkStats } as IConfiguration;
@@ -660,34 +654,20 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 let listener = createSdkStatsNotifCbk(mockCore);
                 _self._listener = listener;
 
-                // First flush with original lang
                 listener.eventsSent([_self._makeItem("EventData")]);
                 listener.flush();
 
                 Assert.equal(1, _self._trackedItems.length, "Should emit 1 metric");
                 Assert.equal("JavaScript", _self._trackedItems[0].baseData.properties["language"],
-                    "Language should be JavaScript initially");
-
-                // Change lang on config
-                _self._trackedItems = [];
-                config.sdkStats.lang = "TypeScript";
-
-                listener.eventsSent([_self._makeItem("EventData")]);
-                listener.flush();
-
-                Assert.equal(1, _self._trackedItems.length, "Should emit 1 metric after lang change");
-                Assert.equal("TypeScript", _self._trackedItems[0].baseData.properties["language"],
-                    "Language should be TypeScript after config change");
+                    "Language should always be JavaScript");
             }
         });
 
         this.testCase({
-            name: "SdkStatsNotifCbk: changing ver on core.config.sdkStats is picked up on next flush",
+            name: "SdkStatsNotifCbk: version is set by the build-time constant",
             test: () => {
                 let _self = this;
                 let sdkStats: ISdkStatsConfig = {
-                    lang: "JavaScript",
-                    ver: "3.3.6",
                     int: 100
                 };
                 let config = { sdkStats: sdkStats } as IConfiguration;
@@ -704,18 +684,8 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 listener.eventsSent([_self._makeItem("EventData")]);
                 listener.flush();
 
-                Assert.equal("3.3.6", _self._trackedItems[0].baseData.properties["version"],
-                    "Version should be 3.3.6 initially");
-
-                // Change ver on config
-                _self._trackedItems = [];
-                config.sdkStats.ver = "4.0.0";
-
-                listener.eventsSent([_self._makeItem("EventData")]);
-                listener.flush();
-
-                Assert.equal("4.0.0", _self._trackedItems[0].baseData.properties["version"],
-                    "Version should be 4.0.0 after config change");
+                Assert.equal("#version#", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should be the build placeholder in tests");
             }
         });
 
@@ -725,8 +695,6 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
             test: () => {
                 let _self = this;
                 let sdkStats: ISdkStatsConfig = {
-                    lang: "JavaScript",
-                    ver: "3.3.6",
                     int: 200
                 };
                 let config = { sdkStats: sdkStats } as IConfiguration;
@@ -780,8 +748,8 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 Assert.equal(1, _self._trackedItems.length, "Should emit 1 metric");
                 Assert.equal("JavaScript", _self._trackedItems[0].baseData.properties["language"],
                     "Language should default to JavaScript");
-                Assert.equal("unknown", _self._trackedItems[0].baseData.properties["version"],
-                    "Version should default to unknown");
+                Assert.equal("#version#", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should be the build placeholder");
             }
         });
 
@@ -806,20 +774,20 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
                 Assert.equal("JavaScript", _self._trackedItems[0].baseData.properties["language"],
                     "Language should default to JavaScript");
-                Assert.equal("unknown", _self._trackedItems[0].baseData.properties["version"],
-                    "Version should default to unknown");
+                Assert.equal("#version#", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should be the build placeholder");
 
-                // Now set sdkStats on config
+                // Now set sdkStats on config (only int is configurable)
                 _self._trackedItems = [];
-                config.sdkStats = { lang: "Python", ver: "1.0.0", int: 100 };
+                config.sdkStats = { int: 100 };
 
                 listener.eventsSent([_self._makeItem("EventData")]);
                 listener.flush();
 
-                Assert.equal("Python", _self._trackedItems[0].baseData.properties["language"],
-                    "Language should be Python from newly set config");
-                Assert.equal("1.0.0", _self._trackedItems[0].baseData.properties["version"],
-                    "Version should be 1.0.0 from newly set config");
+                Assert.equal("JavaScript", _self._trackedItems[0].baseData.properties["language"],
+                    "Language should still be JavaScript after setting sdkStats");
+                Assert.equal("#version#", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should still be the build placeholder after setting sdkStats");
             }
         });
     }

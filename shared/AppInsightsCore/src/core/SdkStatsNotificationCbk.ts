@@ -8,6 +8,7 @@ import { INotificationListener } from "../interfaces/ai/INotificationListener";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 import { MetricDataType } from "../telemetry/ai/DataTypes";
 
+var _version = "#version#";
 var FLUSH_INTERVAL = 900000; // 15 min default
 var MET_SUCCESS = "Item_Success_Count";
 var MET_DROPPED = "Item_Dropped_Count";
@@ -37,15 +38,6 @@ var _typeMap: { [key: string]: string } = {
  */
 export interface ISdkStatsConfig {
     /**
-     * SDK language identifier, e.g. "JavaScript".
-     * @defaultValue "JavaScript"
-     */
-    lang?: string;
-    /**
-     * SDK version string.
-     */
-    ver?: string;
-    /**
      * Flush interval in ms.
      * @defaultValue 900000 (15 minutes)
      */
@@ -69,7 +61,8 @@ export interface ISdkStatsNotifCbk extends INotificationListener {
 /**
  * Creates an INotificationListener that accumulates success/dropped/retry counts and periodically
  * flushes them as Item_Success_Count, Item_Dropped_Count, and Item_Retry_Count metrics via core.track().
- * Reads config.sdkStats (lang, ver, int) dynamically from core.config on each flush.
+ * Language is hardcoded to "JavaScript" and version is set at build time.
+ * Reads config.sdkStats.int dynamically from core.config on each flush.
  * @param core - The IAppInsightsCore instance (provides track() and config)
  * @returns An INotificationListener with flush and unload methods
  */
@@ -142,12 +135,10 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore): ISdkStatsNotifCb
     }
 
     function _createMetric(name: string, value: number, telType: string, code?: string, codePropKey?: string): ITelemetryItem {
-        // Re-read from core.config each flush so dynamic config changes are picked up
-        var statsCfg = (core.config && core.config.sdkStats) || {};
         var props: { [key: string]: any } = {
             telemetry_type: telType,
-            language: statsCfg.lang || "JavaScript",
-            version: statsCfg.ver || "unknown",
+            language: "JavaScript",
+            version: _version,
             computeType: "unknown"
         };
 
