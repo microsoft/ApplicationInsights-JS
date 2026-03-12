@@ -99,8 +99,6 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
         [SDK_STATS]: {mode: FeatureOptInMode.enable}
     },
     sdkStats: cfgDfMerge({
-        lang: "JavaScript",
-        ver: UNDEFINED_VALUE,
         int: 900000
     }),
     throttleMgrCfg: cfgDfMerge<{[key:number]: IThrottleMgrConfig}>(

@@ -219,7 +219,6 @@ export class SdkStatsFeatureTests extends AITestClass {
 
                 let config = ai.config;
                 Assert.ok(config.sdkStats, "sdkStats config should exist after initialization");
-                Assert.equal("JavaScript", config.sdkStats!.lang, "lang should default to JavaScript");
                 Assert.equal(900000, config.sdkStats!.int, "int should default to 900000 (15 minutes)");
             }
         });
@@ -230,8 +229,6 @@ export class SdkStatsFeatureTests extends AITestClass {
             test: () => {
                 let ai = this._createAi({
                     sdkStats: {
-                        lang: "CustomLang",
-                        ver: "1.0.0",
                         int: 60000
                     }
                 });
@@ -239,44 +236,12 @@ export class SdkStatsFeatureTests extends AITestClass {
 
                 let config = ai.config;
                 Assert.ok(config.sdkStats, "sdkStats config should exist");
-                Assert.equal("CustomLang", config.sdkStats!.lang, "User-provided lang should be preserved");
-                Assert.equal("1.0.0", config.sdkStats!.ver, "User-provided ver should be preserved");
                 Assert.equal(60000, config.sdkStats!.int, "User-provided int should be preserved");
             }
         });
     }
 
     private _testSdkStatsDynamicConfigChanges() {
-        this.testCase({
-            name: "SdkStatsFeature: changing sdkStats.lang dynamically triggers config change",
-            useFakeTimers: true,
-            test: () => {
-                let ai = this._createAi();
-                this.clock.tick(1);
-
-                let onChangeCalled = 0;
-                let expectedLang = "JavaScript";
-
-                let handler = onConfigChange(ai.config as any, (details: any) => {
-                    onChangeCalled++;
-                    if (details.cfg.sdkStats) {
-                        Assert.equal(expectedLang, details.cfg.sdkStats.lang,
-                            "sdkStats.lang should be " + expectedLang + " in onChange callback");
-                    }
-                });
-
-                Assert.equal(1, onChangeCalled, "onConfigChange should fire once initially");
-
-                // Change lang
-                expectedLang = "TypeScript";
-                ai.config.sdkStats!.lang = "TypeScript";
-                this.clock.tick(1);
-                Assert.equal(2, onChangeCalled, "onConfigChange should fire again after changing lang");
-
-                handler.rm();
-            }
-        });
-
         this.testCase({
             name: "SdkStatsFeature: changing sdkStats.int dynamically triggers config change",
             useFakeTimers: true,
@@ -308,35 +273,6 @@ export class SdkStatsFeatureTests extends AITestClass {
         });
 
         this.testCase({
-            name: "SdkStatsFeature: changing sdkStats.ver dynamically triggers config change",
-            useFakeTimers: true,
-            test: () => {
-                let ai = this._createAi();
-                this.clock.tick(1);
-
-                let onChangeCalled = 0;
-                let observedVer: string | undefined;
-
-                let handler = onConfigChange(ai.config as any, (details: any) => {
-                    onChangeCalled++;
-                    if (details.cfg.sdkStats) {
-                        observedVer = details.cfg.sdkStats.ver;
-                    }
-                });
-
-                Assert.equal(1, onChangeCalled, "onConfigChange should fire once initially");
-
-                ai.config.sdkStats!.ver = "4.0.0";
-                this.clock.tick(1);
-                Assert.equal(2, onChangeCalled, "onConfigChange should fire again after changing ver");
-                Assert.equal("4.0.0", observedVer, "ver should be 4.0.0 in callback");
-                Assert.equal("4.0.0", ai.config.sdkStats!.ver, "ver should be updated to 4.0.0");
-
-                handler.rm();
-            }
-        });
-
-        this.testCase({
             name: "SdkStatsFeature: replacing entire sdkStats object dynamically triggers config change",
             useFakeTimers: true,
             test: () => {
@@ -344,15 +280,11 @@ export class SdkStatsFeatureTests extends AITestClass {
                 this.clock.tick(1);
 
                 let onChangeCalled = 0;
-                let observedLang: string | undefined;
-                let observedVer: string | undefined;
                 let observedInt: number | undefined;
 
                 let handler = onConfigChange(ai.config as any, (details: any) => {
                     onChangeCalled++;
                     if (details.cfg.sdkStats) {
-                        observedLang = details.cfg.sdkStats.lang;
-                        observedVer = details.cfg.sdkStats.ver;
                         observedInt = details.cfg.sdkStats.int;
                     }
                 });
@@ -360,15 +292,11 @@ export class SdkStatsFeatureTests extends AITestClass {
                 Assert.equal(1, onChangeCalled, "onConfigChange should fire once initially");
 
                 ai.config.sdkStats = {
-                    lang: "Python",
-                    ver: "2.0.0",
                     int: 30000
                 };
                 this.clock.tick(1);
                 Assert.equal(2, onChangeCalled, "onConfigChange should fire after replacing sdkStats block");
 
-                Assert.equal("Python", observedLang, "lang should be Python in callback");
-                Assert.equal("2.0.0", observedVer, "ver should be 2.0.0 in callback");
                 Assert.equal(30000, observedInt, "int should be 30000 in callback");
 
                 handler.rm();
