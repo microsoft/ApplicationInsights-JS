@@ -232,10 +232,16 @@ export interface IConfiguration extends IOTelConfig {
     expCfg?: IExceptionConfig;
 
     /**
-     * [Optional] A flag to enable or disable the use of the field redaction for urls.
+     * [Optional] A flag to enable or disable redaction for username and password in URLs.
      * @defaultValue true
      */
     redactUrls?: boolean;
+
+    /**
+     * [Optional] A flag to enable or disable redaction for query parameters.
+     * @defaultValue true
+     */
+    redactQueryParams?: boolean;
 
     /**
      * [Optional] Additional query parameters to redact beyond the default set.
@@ -244,7 +250,16 @@ export interface IConfiguration extends IOTelConfig {
      * @defaultValue ["sig", "Signature", "AWSAccessKeyId", "X-Goog-Signature"]
      * @example ["sig", "Signature", "AWSAccessKeyId", "X-Goog-Signature","auth_token", "api_key", "private_data"]
      */
-    redactQueryParams?: string[];
+    appendRedactQueryParams?: string[];
+
+    /**
+     * [Optional] Replaces the default set with a custom set of query parameters to redact.
+     * Use this to specify custom parameters that contain sensitive information.
+     * These will replace the default parameters that are redacted.
+     * @defaultValue ["sig", "Signature", "AWSAccessKeyId", "X-Goog-Signature"]
+     * @example ["auth_token", "api_key", "private_data"]
+     */
+    replaceRedactQueryParams?: string[];
 
     ///**
     // * [Optional] Internal SDK configuration for developers

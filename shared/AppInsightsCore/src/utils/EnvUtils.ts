@@ -455,8 +455,10 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
         return url;
     }
 
-    if (config && config.redactQueryParams) {
-        sensitiveParams = DEFAULT_SENSITIVE_PARAMS.concat(config.redactQueryParams);
+    if (config && config.appendRedactQueryParams) {
+        sensitiveParams = DEFAULT_SENSITIVE_PARAMS.concat(config.appendRedactQueryParams);
+    } else if (config && config.replaceRedactQueryParams) {
+        sensitiveParams = config.replaceRedactQueryParams;
     } else {
         sensitiveParams = DEFAULT_SENSITIVE_PARAMS;
     }
@@ -544,9 +546,11 @@ export function fieldRedaction(input: string, config: IConfiguration): string {
         return input;
     }
     const isRedactionDisabled = config && config.redactUrls === false;
-    if (isRedactionDisabled) {
+    const isQueryParamRedactionDisabled = config && config.redactQueryParams === false;
+    if (isRedactionDisabled && isQueryParamRedactionDisabled) {
         return input;
     }
+
     const hasCredentials = strIndexOf(input, "@") !== -1;
     const hasQueryParams = strIndexOf(input, "?") !== -1;
     
@@ -556,10 +560,10 @@ export function fieldRedaction(input: string, config: IConfiguration): string {
     }
     try {
         let result = input;
-        if (hasCredentials) {
+        if (hasCredentials && !isRedactionDisabled) {
             result = redactUserInfo(input);
         }
-        if (hasQueryParams) {
+        if (hasQueryParams && !isQueryParamRedactionDisabled) {
             result = redactQueryParameters(result, config);
         }
         return result;
