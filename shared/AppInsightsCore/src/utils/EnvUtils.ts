@@ -545,7 +545,7 @@ export function fieldRedaction(input: string, config: IConfiguration): string {
     if (!input || !isString(input) || strIndexOf(input, " ") !== -1) {
         return input;
     }
-    const isRedactionDisabled = config && config.redactUrls === false
+    const isRedactionDisabled = config && config.redactUrls === false;
     const isQueryParamRedactionDisabled = config && config.redactQueryParams === false;
     if (isRedactionDisabled && isQueryParamRedactionDisabled) {
         return input;
