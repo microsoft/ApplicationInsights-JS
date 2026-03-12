@@ -395,10 +395,26 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 // URLs with sensitive query parameters
                 let config = {
-                    redactQueryParams: ["authorize", "api_key", "password"]
+                    appendRedactQueryParams: ["authorize", "api_key", "password"]
                 } as IConfiguration;
                 const urlWithSensitiveParams = "https://example.com/api?Signature=secret&authorize=value";
                 const expectedRedactedUrl = "https://example.com/api?Signature=REDACTED&authorize=REDACTED";
+
+                // Act & Assert
+                const result = dataSanitizeUrl(this.logger, urlWithSensitiveParams, config);
+                Assert.equal(expectedRedactedUrl, result);
+            }
+        });
+
+        this.testCase({
+            name: 'DataSanitizerTests: dataSanitizeUrl properly redacts sensitive query parameters ( only custom)',
+            test: () => {
+                // URLs with sensitive query parameters
+                let config = {
+                    replaceRedactQueryParams: ["authorize", "api_key", "password"]
+                } as IConfiguration;
+                const urlWithSensitiveParams = "https://example.com/api?Signature=secret&authorize=value";
+                const expectedRedactedUrl = "https://example.com/api?Signature=secret&authorize=REDACTED";
 
                 // Act & Assert
                 const result = dataSanitizeUrl(this.logger, urlWithSensitiveParams, config);
