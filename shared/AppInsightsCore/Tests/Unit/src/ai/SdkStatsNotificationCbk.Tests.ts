@@ -116,7 +116,8 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 Assert.ok(customEventMetric, "Should have CUSTOM_EVENT metric");
                 Assert.equal(2, customEventMetric.baseData.average, "CUSTOM_EVENT count should be 2");
                 Assert.equal("JavaScript", customEventMetric.baseData.properties["language"], "Language should be JavaScript");
-                Assert.equal("#version#", customEventMetric.baseData.properties["version"], "Version should be the build placeholder");
+                Assert.notEqual("#version#", customEventMetric.baseData.properties["version"], "Version should be replaced at build time");
+                Assert.ok(customEventMetric.baseData.properties["version"], "Version should be a non-empty string");
                 Assert.equal("unknown", customEventMetric.baseData.properties["computeType"], "computeType should be unknown");
 
                 let exceptionMetric = successItems.filter(function (item) {
@@ -684,8 +685,10 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 listener.eventsSent([_self._makeItem("EventData")]);
                 listener.flush();
 
-                Assert.equal("#version#", _self._trackedItems[0].baseData.properties["version"],
-                    "Version should be the build placeholder in tests");
+                Assert.notEqual("#version#", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should be replaced at build time");
+                Assert.ok(_self._trackedItems[0].baseData.properties["version"],
+                    "Version should be a non-empty string");
             }
         });
 
@@ -748,8 +751,10 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 Assert.equal(1, _self._trackedItems.length, "Should emit 1 metric");
                 Assert.equal("JavaScript", _self._trackedItems[0].baseData.properties["language"],
                     "Language should default to JavaScript");
-                Assert.equal("#version#", _self._trackedItems[0].baseData.properties["version"],
-                    "Version should be the build placeholder");
+                Assert.notEqual("#version#", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should be replaced at build time");
+                Assert.ok(_self._trackedItems[0].baseData.properties["version"],
+                    "Version should be a non-empty string");
             }
         });
 
@@ -774,8 +779,10 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
                 Assert.equal("JavaScript", _self._trackedItems[0].baseData.properties["language"],
                     "Language should default to JavaScript");
-                Assert.equal("#version#", _self._trackedItems[0].baseData.properties["version"],
-                    "Version should be the build placeholder");
+                Assert.notEqual("#version#", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should be replaced at build time");
+                Assert.ok(_self._trackedItems[0].baseData.properties["version"],
+                    "Version should be a non-empty string");
 
                 // Now set sdkStats on config (only int is configurable)
                 _self._trackedItems = [];
@@ -786,8 +793,10 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
                 Assert.equal("JavaScript", _self._trackedItems[0].baseData.properties["language"],
                     "Language should still be JavaScript after setting sdkStats");
-                Assert.equal("#version#", _self._trackedItems[0].baseData.properties["version"],
-                    "Version should still be the build placeholder after setting sdkStats");
+                Assert.notEqual("#version#", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should still be replaced at build time after setting sdkStats");
+                Assert.ok(_self._trackedItems[0].baseData.properties["version"],
+                    "Version should be a non-empty string after setting sdkStats");
             }
         });
     }
