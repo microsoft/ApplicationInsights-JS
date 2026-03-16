@@ -11,6 +11,7 @@ import { _InternalLogMessage, DiagnosticLogger } from "../../../../src/diagnosti
 import { ActiveStatus } from "../../../../src/enums/ai/InitActiveStatusEnum";
 import { createAsyncPromise, createAsyncRejectedPromise, createAsyncResolvedPromise, createTimeoutPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { setBypassLazyCache } from "@nevware21/ts-utils";
+import { UrlRedactionOptions } from "../../../../src/enums/ai/UrlRedactionOptions"
 
 const AIInternalMessagePrefix = "AITR_";
 const MaxInt32 = 0xFFFFFFFF;
@@ -2073,7 +2074,6 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             test: () => {
                 let config = {
                     redactUrls: false,
-                    redactQueryParams: false,
                 } as IConfiguration;
                 const url = "https://username:password@example.com:8443/path/to/resource?sig=secret&color=blue#section2";
                 const redactedLocation = fieldRedaction(url, config);
@@ -2215,7 +2215,8 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "FieldRedaction: should redact custom query parameters defined in redactQueryParams and replace custom queryParams",
             test: () => {
                 let config = {
-                    replaceRedactQueryParams: ["authorize", "api_key", "password"]
+                    redactUrls: UrlRedactionOptions.replace,
+                    redactQueryParams: ["authorize", "api_key", "password"]
                 } as IConfiguration;
                 
                 const url = "https://example.com/path?auth_token=12345&name=test&authorize=secret";
@@ -2228,7 +2229,8 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "FieldRedaction: should redact both default and custom query parameters",
             test: () => {
                 let config = {
-                    appendRedactQueryParams: ["auth_token"]
+                    redactUrls: UrlRedactionOptions.append,
+                    redactQueryParams: ["auth_token"]
                 } as IConfiguration;
                 
                 const url = "https://example.com/path?sig=abc123&auth_token=12345&name=test";
@@ -2238,16 +2240,16 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             }
         });
         this.testCase({
-            name: "FieldRedaction:should redact custom parameters when redactUrls is disabled but redactQueryParams is not false",
+            name: "FieldRedaction:should replace custom parameters redactQueryParams when user specifies the replace config",
             test: () => {
                 let config = {
-                    redactUrls: false,
-                    replaceRedactQueryParams: ["authorize", "api_key"]
+                    redactUrls: UrlRedactionOptions.replace,
+                    redactQueryParams: ["authorize", "api_key"]
                 } as IConfiguration;
                 
                 const url = "https://username:password@example.com/path?auth_token=12345&authorize=secret";
                 const redactedLocation = fieldRedaction(url, config);
-                Assert.equal(redactedLocation, "https://username:password@example.com/path?auth_token=12345&authorize=REDACTED",
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com/path?auth_token=12345&authorize=REDACTED",
                     "URL with custom sensitive parameters should be redacted when query redaction is not disabled");
             }
         });
@@ -2269,7 +2271,8 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "FieldRedaction:should handle complex URLs with both credentials and custom query parameters",
             test: () => {
                 let config = {
-                    appendRedactQueryParams: ["authorize", "session_id"]
+                    redactUrls: UrlRedactionOptions.append,
+                    redactQueryParams: ["authorize", "session_id"]
                 } as IConfiguration;
                 
                 const url = "https://user:pass@example.com/path?sig=secret&authorize=abc123&visible=true&session_id=xyz789";
@@ -2601,7 +2604,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 name: "FieldRedaction: should redact credentials while preserving query strings when redactQueryParams is false",
             test: () => {
                     let config = {
-                        redactQueryParams: false
+                        redactUrls: 5
                     } as IConfiguration;
                     const url = "https://user:password@example.com/path?sig=secret&color=blue&token=abc123";
                 const redactedLocation = fieldRedaction(url, config);
@@ -2614,7 +2617,8 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "FieldRedaction: should handle custom parameters with multiple occurrences and empty values",
             test: () => {
                 let config = {
-                    replaceRedactQueryParams: ["auth_token", "session_id"]
+                    redactUrls: UrlRedactionOptions.replace,
+                    redactQueryParams: ["auth_token", "session_id"]
                 } as IConfiguration;
                 const url = "https://example.com/path?auth_token=first&name=test&auth_token=&session_id=abc&session_id=";
                 const redactedLocation = fieldRedaction(url, config);
@@ -2638,15 +2642,15 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
-            name: "FieldRedaction: should preserve credentials while redacting query strings when redactUrls is false",
+            name: "FieldRedaction: should redact all parts of the URL (username, password, default query params) when redactUrls is set to True",
             test: () => {
                 let config = {
-                    redactUrls: false
+                    redactUrls: true
                 } as IConfiguration;
                 const url = "https://user:password@example.com/path?sig=secret&color=blue&token=abc123";
                 const redactedLocation = fieldRedaction(url, config);
-                Assert.equal(redactedLocation, "https://user:password@example.com/path?sig=REDACTED&color=blue&token=abc123",
-                    "Query string values should be redacted while credentials remain unchanged when redactUrls is false");
+                Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com/path?sig=REDACTED&color=blue&token=abc123",
+                "All parts of the URL should be redacted when redactUrls is true");
             }
         });
 
@@ -2654,8 +2658,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "FieldRedaction: should not redact credentials or query strings when redactUrls and redactQueryParams are false",
             test: () => {
                 let config = {
-                    redactUrls: false,
-                    redactQueryParams: false
+                    redactUrls: UrlRedactionOptions.false
                 } as IConfiguration;
                 const url = "https://user:password@example.com/path?sig=secret&color=blue&token=abc123";
                 const redactedLocation = fieldRedaction(url, config);
