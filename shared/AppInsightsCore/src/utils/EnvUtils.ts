@@ -548,7 +548,7 @@ export function fieldRedaction(input: string, config: IConfiguration): string {
     if (!input || !isString(input) || strIndexOf(input, " ") !== -1) {
         return input;
     }
-    const isRedactionDisabled = config && (config.redactUrls === false || config.redactUrls === UrlRedactionOptions.redactNone);
+    const isRedactionDisabled = config && (config.redactUrls === false || config.redactUrls === UrlRedactionOptions.false);
     if (isRedactionDisabled) {
         return input;
     }
