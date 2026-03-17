@@ -2658,7 +2658,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "FieldRedaction: should not redact credentials or query strings when redactUrls and redactQueryParams are false",
             test: () => {
                 let config = {
-                    redactUrls: UrlRedactionOptions.false
+                    redactUrls: UrlRedactionOptions.redactNone
                 } as IConfiguration;
                 const url = "https://user:password@example.com/path?sig=secret&color=blue&token=abc123";
                 const redactedLocation = fieldRedaction(url, config);

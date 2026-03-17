@@ -9,13 +9,13 @@ export const enum UrlRedactionOptions {
     /**
      * The default value, will redact the username and password as well as the default set of query parameters
      */
-    true = 1,
+    redactAll = 1,
 
     /**
      * Does not redact username and password or any query parameters, the URL will be left as is. Note: this is not recommended as it may lead 
      * to sensitive data being sent in clear text.
      */
-    false = 2,
+    redactNone = 2,
 
     /**
      * This will append any additional queryParams that the user has provided through redactQueryParams config to the default set i.e to
