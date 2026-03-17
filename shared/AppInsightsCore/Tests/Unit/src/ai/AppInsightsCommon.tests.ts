@@ -395,7 +395,7 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 // URLs with sensitive query parameters
                 let config = {
-                    redactUrls: UrlRedactionOptions.append,
+                    redactUrls: UrlRedactionOptions.appendToDefault,
                     redactQueryParams: ["authorize", "api_key", "password"]
                 } as IConfiguration;
                 const urlWithSensitiveParams = "https://example.com/api?Signature=secret&authorize=value";
@@ -412,7 +412,7 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 // URLs with sensitive query parameters
                 let config = {
-                    redactUrls: UrlRedactionOptions.replace,
+                    redactUrls: UrlRedactionOptions.replaceDefault,
                     redactQueryParams: ["authorize", "api_key", "password"]
                 } as IConfiguration;
                 const urlWithSensitiveParams = "https://example.com/api?Signature=secret&authorize=value";

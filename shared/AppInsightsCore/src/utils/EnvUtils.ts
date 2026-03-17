@@ -458,9 +458,9 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
 
     const option = config ? config.redactUrls : undefined;
     
-    if (option === UrlRedactionOptions.append) {
+    if (option === UrlRedactionOptions.appendToDefault) {
         sensitiveParams = DEFAULT_SENSITIVE_PARAMS.concat(config.redactQueryParams);
-    } else if (option === UrlRedactionOptions.replace) {
+    } else if (option === UrlRedactionOptions.replaceDefault) {
         sensitiveParams = config.redactQueryParams;
     } else {
         sensitiveParams = DEFAULT_SENSITIVE_PARAMS;

@@ -2215,7 +2215,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "FieldRedaction: should redact custom query parameters defined in redactQueryParams and replace custom queryParams",
             test: () => {
                 let config = {
-                    redactUrls: UrlRedactionOptions.replace,
+                    redactUrls: UrlRedactionOptions.replaceDefault,
                     redactQueryParams: ["authorize", "api_key", "password"]
                 } as IConfiguration;
                 
@@ -2229,7 +2229,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "FieldRedaction: should redact both default and custom query parameters",
             test: () => {
                 let config = {
-                    redactUrls: UrlRedactionOptions.append,
+                    redactUrls: UrlRedactionOptions.appendToDefault,
                     redactQueryParams: ["auth_token"]
                 } as IConfiguration;
                 
@@ -2243,7 +2243,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "FieldRedaction:should replace custom parameters redactQueryParams when user specifies the replace config",
             test: () => {
                 let config = {
-                    redactUrls: UrlRedactionOptions.replace,
+                    redactUrls: UrlRedactionOptions.replaceDefault,
                     redactQueryParams: ["authorize", "api_key"]
                 } as IConfiguration;
                 
@@ -2271,7 +2271,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "FieldRedaction:should handle complex URLs with both credentials and custom query parameters",
             test: () => {
                 let config = {
-                    redactUrls: UrlRedactionOptions.append,
+                    redactUrls: UrlRedactionOptions.appendToDefault,
                     redactQueryParams: ["authorize", "session_id"]
                 } as IConfiguration;
                 
@@ -2617,7 +2617,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
             name: "FieldRedaction: should handle custom parameters with multiple occurrences and empty values",
             test: () => {
                 let config = {
-                    redactUrls: UrlRedactionOptions.replace,
+                    redactUrls: UrlRedactionOptions.replaceDefault,
                     redactQueryParams: ["auth_token", "session_id"]
                 } as IConfiguration;
                 const url = "https://example.com/path?auth_token=first&name=test&auth_token=&session_id=abc&session_id=";

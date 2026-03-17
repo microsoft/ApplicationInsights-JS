@@ -3,8 +3,8 @@
 
 /**
  * Controls how the user can configure which parts of the URL should be redacted. Example, certain query parameters, username and password, etc.
- * @since <next_release_version>
- */
+*/
+
 export const enum UrlRedactionOptions {
     /**
      * The default value, will redact the username and password as well as the default set of query parameters
@@ -21,12 +21,12 @@ export const enum UrlRedactionOptions {
      * This will append any additional queryParams that the user has provided through redactQueryParams config to the default set i.e to
      * @defaultValue ["sig", "Signature", "AWSAccessKeyId", "X-Goog-Signature"].
      */
-    append = 3,
+    appendToDefault = 3,
 
     /**
      * This will replace the default set of query parameters to redact with the query parameters defined in redactQueryParams config, if provided by the user.
      */
-    replace = 4,
+    replaceDefault = 4,
 
     /**
      * This will redact username and password in the URL but will not redact any query parameters, even those in the default set.
