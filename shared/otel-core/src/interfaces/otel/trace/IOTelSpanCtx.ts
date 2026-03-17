@@ -6,6 +6,7 @@ import { OTelTimeInput } from "../../IOTelHrTime";
 import { IDistributedTraceContext } from "../../ai/IDistributedTraceContext";
 import { IOTelApi } from "../IOTelApi";
 import { IOTelAttributes } from "../IOTelAttributes";
+import { IAttributeContainer } from "../attribute/IAttributeContainer";
 import { IOTelContext } from "../context/IOTelContext";
 import { IOTelResource } from "../resources/IOTelResource";
 import { IOTelInstrumentationScope } from "./IOTelInstrumentationScope";
@@ -50,7 +51,7 @@ export interface IOTelSpanCtx {
 
     parentSpanContext?: IDistributedTraceContext;
     
-    attributes?: IOTelAttributes;
+    attributes?: IOTelAttributes | IAttributeContainer;
 
     links?: IOTelLink[]
 

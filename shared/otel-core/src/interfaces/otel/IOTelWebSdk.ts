@@ -25,8 +25,7 @@ import { IOTelTracerOptions } from "./trace/IOTelTracerOptions";
  *   errorHandlers: myHandlers,
  *   contextManager: myContextManager,
  *   idGenerator: myIdGenerator,
- *   sampler: myAlwaysOnSampler,
- *   performanceNow: () => performance.now()
+ *   sampler: myAlwaysOnSampler
  * });
  *
  * // Get a tracer and create spans
@@ -53,7 +52,8 @@ export interface IOTelWebSdk {
      * @param name - The name of the tracer or instrumentation library
      * @param version - The version of the tracer or instrumentation library
      * @param options - Additional tracer options (e.g., schemaUrl)
-     * @returns A Tracer with the given name and version
+     * @returns A Tracer with the given name and version, or null if the SDK is shutdown or
+     * required dependencies are not configured
      *
      * @example
      * ```typescript
@@ -61,7 +61,7 @@ export interface IOTelWebSdk {
      * const span = tracer.startSpan("my-operation");
      * ```
      */
-    getTracer(name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer;
+    getTracer(name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer | null;
 
     /**
      * Returns a Logger for emitting log records.
@@ -71,7 +71,7 @@ export interface IOTelWebSdk {
      * @param name - The name of the logger or instrumentation library
      * @param version - The version of the logger or instrumentation library
      * @param options - Additional logger options (e.g., schemaUrl, scopeAttributes)
-     * @returns A Logger with the given name and version
+     * @returns A Logger with the given name and version, or null if the SDK is shutdown
      *
      * @example
      * ```typescript
@@ -79,7 +79,7 @@ export interface IOTelWebSdk {
      * logger.emit({ body: "Operation completed", severityText: "INFO" });
      * ```
      */
-    getLogger(name: string, version?: string, options?: IOTelLoggerOptions): IOTelLogger;
+    getLogger(name: string, version?: string, options?: IOTelLoggerOptions): IOTelLogger | null;
 
     // TODO: Phase 5 - Uncomment when metrics are implemented
     // /**
@@ -103,8 +103,7 @@ export interface IOTelWebSdk {
     /**
      * Shuts down the SDK and releases all resources.
      * After shutdown, the SDK instance is no longer usable — all
-     * subsequent calls to `getTracer` or `getLogger` will return
-     * no-op implementations.
+     * subsequent calls to `getTracer` or `getLogger` will return null.
      *
      * @remarks
      * Shutdown performs the following:

@@ -90,101 +90,62 @@ export class OTelWebSdkTests extends AITestClass {
 
     private _registerValidationTests(): void {
         this.testCase({
-            name: "OTelWebSdk: should call error handler when resource is missing",
+            name: "OTelWebSdk: should use default errorHandlers when not provided",
             test: () => {
-                let errorCalled = false;
                 let config = this._createValidConfig();
-                config.errorHandlers = {
-                    error: function (msg) {
-                        errorCalled = true;
-                    }
-                };
+                (config as any).errorHandlers = null;
+                this._sdk = createOTelWebSdk(config);
+                Assert.ok(this._sdk, "SDK should be created with default errorHandlers");
+                let returnedConfig = this._sdk.getConfig();
+                Assert.ok(returnedConfig.errorHandlers, "Config should have default errorHandlers");
+            }
+        });
+
+        this.testCase({
+            name: "OTelWebSdk: should create SDK with missing resource and still return tracer",
+            test: () => {
+                let config = this._createValidConfig();
                 (config as any).resource = null;
                 this._sdk = createOTelWebSdk(config);
-                Assert.ok(errorCalled, "Error handler should be called for missing resource");
+                Assert.ok(this._sdk, "SDK should be created even without resource");
+                let tracer = this._sdk.getTracer("test");
+                Assert.ok(tracer, "Should still return a tracer when resource is missing (resource is metadata, not a functional dependency)");
             }
         });
 
         this.testCase({
-            name: "OTelWebSdk: should call error handler when contextManager is missing",
+            name: "OTelWebSdk: should create SDK with missing contextManager and return null tracer",
             test: () => {
-                let errorCalled = false;
                 let config = this._createValidConfig();
-                config.errorHandlers = {
-                    error: function (msg) {
-                        errorCalled = true;
-                    }
-                };
                 (config as any).contextManager = null;
                 this._sdk = createOTelWebSdk(config);
-                Assert.ok(errorCalled, "Error handler should be called for missing contextManager");
+                Assert.ok(this._sdk, "SDK should be created even without contextManager");
+                let tracer = this._sdk.getTracer("test");
+                Assert.equal(tracer, null, "Should return null when required dependencies are missing");
             }
         });
 
         this.testCase({
-            name: "OTelWebSdk: should call error handler when idGenerator is missing",
+            name: "OTelWebSdk: should create SDK with missing idGenerator and return null tracer",
             test: () => {
-                let errorCalled = false;
                 let config = this._createValidConfig();
-                config.errorHandlers = {
-                    error: function (msg) {
-                        errorCalled = true;
-                    }
-                };
                 (config as any).idGenerator = null;
                 this._sdk = createOTelWebSdk(config);
-                Assert.ok(errorCalled, "Error handler should be called for missing idGenerator");
+                Assert.ok(this._sdk, "SDK should be created even without idGenerator");
+                let tracer = this._sdk.getTracer("test");
+                Assert.equal(tracer, null, "Should return null when required dependencies are missing");
             }
         });
 
         this.testCase({
-            name: "OTelWebSdk: should call error handler when sampler is missing",
+            name: "OTelWebSdk: should create SDK with missing sampler and return null tracer",
             test: () => {
-                let errorCalled = false;
                 let config = this._createValidConfig();
-                config.errorHandlers = {
-                    error: function (msg) {
-                        errorCalled = true;
-                    }
-                };
                 (config as any).sampler = null;
                 this._sdk = createOTelWebSdk(config);
-                Assert.ok(errorCalled, "Error handler should be called for missing sampler");
-            }
-        });
-
-        this.testCase({
-            name: "OTelWebSdk: should call error handler when performanceNow is missing",
-            test: () => {
-                let errorCalled = false;
-                let config = this._createValidConfig();
-                config.errorHandlers = {
-                    error: function (msg) {
-                        errorCalled = true;
-                    }
-                };
-                (config as any).performanceNow = null;
-                this._sdk = createOTelWebSdk(config);
-                Assert.ok(errorCalled, "Error handler should be called for missing performanceNow");
-            }
-        });
-
-        this.testCase({
-            name: "OTelWebSdk: should warn when errorHandlers are missing",
-            test: () => {
-                let warnCalled = false;
-                let origWarn = console.warn;
-                console.warn = function () {
-                    warnCalled = true;
-                };
-                try {
-                    let config = this._createValidConfig();
-                    (config as any).errorHandlers = null;
-                    this._sdk = createOTelWebSdk(config);
-                    Assert.ok(warnCalled, "Should warn about missing errorHandlers");
-                } finally {
-                    console.warn = origWarn;
-                }
+                Assert.ok(this._sdk, "SDK should be created even without sampler");
+                let tracer = this._sdk.getTracer("test");
+                Assert.equal(tracer, null, "Should return null when required dependencies are missing");
             }
         });
     }
@@ -435,7 +396,7 @@ export class OTelWebSdkTests extends AITestClass {
         });
 
         this.testCase({
-            name: "OTelWebSdk: startSpan should return null after shutdown",
+            name: "OTelWebSdk: getTracer should return null after shutdown",
             test: (): IPromise<void> => {
                 let sdk = createOTelWebSdk(this._createValidConfig());
                 this._sdk = sdk;
@@ -443,8 +404,7 @@ export class OTelWebSdkTests extends AITestClass {
                     sdk.shutdown().then(function () {
                         try {
                             let tracer = sdk.getTracer("test");
-                            let span = tracer.startSpan("test-span");
-                            Assert.equal(span, null, "startSpan after shutdown should return null");
+                            Assert.equal(tracer, null, "getTracer after shutdown should return null");
                             resolve();
                         } catch (e) {
                             reject(e);
@@ -810,7 +770,7 @@ export class OTelWebSdkTests extends AITestClass {
         });
 
         this.testCase({
-            name: "OTelWebSdk: getTracer after shutdown should return no-op tracer",
+            name: "OTelWebSdk: getTracer after shutdown should return null",
             test: (): IPromise<void> => {
                 let sdk = createOTelWebSdk(this._createValidConfig());
                 this._sdk = sdk;
@@ -818,12 +778,7 @@ export class OTelWebSdkTests extends AITestClass {
                     sdk.shutdown().then(function () {
                         try {
                             let tracer = sdk.getTracer("test");
-                            Assert.ok(tracer, "Should return a tracer (no-op) after shutdown");
-                            Assert.equal(typeof tracer.startSpan, "function", "No-op tracer should have startSpan");
-                            Assert.equal(typeof tracer.startActiveSpan, "function", "No-op tracer should have startActiveSpan");
-                            // Verify the no-op tracer returns null for startSpan
-                            let span = tracer.startSpan("test-span");
-                            Assert.equal(span, null, "No-op tracer startSpan should return null");
+                            Assert.equal(tracer, null, "Should return null after shutdown");
                             resolve();
                         } catch (e) {
                             reject(e);
@@ -834,7 +789,7 @@ export class OTelWebSdkTests extends AITestClass {
         });
 
         this.testCase({
-            name: "OTelWebSdk: getLogger after shutdown should return no-op logger",
+            name: "OTelWebSdk: getLogger after shutdown should return null",
             test: (): IPromise<void> => {
                 let sdk = createOTelWebSdk(this._createValidConfig());
                 this._sdk = sdk;
@@ -842,15 +797,7 @@ export class OTelWebSdkTests extends AITestClass {
                     sdk.shutdown().then(function () {
                         try {
                             let logger = sdk.getLogger("test");
-                            Assert.ok(logger, "Should return a logger (no-op) after shutdown");
-                            // Verify the no-op logger does not throw
-                            let threw = false;
-                            try {
-                                logger.emit({ body: "after shutdown" });
-                            } catch (e) {
-                                threw = true;
-                            }
-                            Assert.ok(!threw, "No-op logger emit should not throw");
+                            Assert.equal(logger, null, "Should return null after shutdown");
                             resolve();
                         } catch (e) {
                             reject(e);
@@ -986,7 +933,6 @@ export class OTelWebSdkTests extends AITestClass {
                 Assert.equal(returnedConfig.contextManager, config.contextManager, "Config contextManager should match");
                 Assert.equal(returnedConfig.idGenerator, config.idGenerator, "Config idGenerator should match");
                 Assert.equal(returnedConfig.sampler, config.sampler, "Config sampler should match");
-                Assert.equal(returnedConfig.performanceNow, config.performanceNow, "Config performanceNow should match");
             }
         });
 
@@ -1012,7 +958,6 @@ export class OTelWebSdkTests extends AITestClass {
             contextManager: this._createMockContextManager(),
             idGenerator: this._createMockIdGenerator(),
             sampler: this._createMockSampler(),
-            performanceNow: function () { return Date.now(); },
             logProcessors: []
         };
     }

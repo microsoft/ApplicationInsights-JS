@@ -3,7 +3,6 @@
 
 import { IPromise } from "@nevware21/ts-async";
 import { IOTelErrorHandlers } from "../../interfaces/otel/config/IOTelErrorHandlers";
-import { IOTelLogRecord } from "../../interfaces/otel/logs/IOTelLogRecord";
 import { IOTelLogger } from "../../interfaces/otel/logs/IOTelLogger";
 import { IOTelLoggerOptions } from "../../interfaces/otel/logs/IOTelLoggerOptions";
 import { IOTelLoggerProvider } from "../../interfaces/otel/logs/IOTelLoggerProvider";
@@ -16,15 +15,6 @@ import { createLogger } from "./OTelLogger";
 import { loadDefaultConfig, reconfigureLimits } from "./config";
 
 export const DEFAULT_LOGGER_NAME = "unknown";
-
-// Inline noop logger for shutdown scenarios
-function _createInlineNoopLogger(): IOTelLogger {
-    return {
-        emit(_logRecord: IOTelLogRecord): void {
-            // noop - logger is shut down
-        }
-    };
-}
 
 export function createLoggerProvider(
     config: IOTelLoggerProviderConfig = {}
@@ -58,10 +48,10 @@ export function createLoggerProvider(
         name: string,
         version?: string,
         options?: IOTelLoggerOptions
-    ): IOTelLogger {
+    ): IOTelLogger | null {
         if (isShutdown) {
             handleWarn(handlers, "A shutdown LoggerProvider cannot provide a Logger");
-            return _createInlineNoopLogger();
+            return null;
         }
 
         if (!name) {

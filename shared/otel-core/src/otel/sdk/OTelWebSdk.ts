@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IPromise, createAllPromise, createSyncPromise } from "@nevware21/ts-async";
-import { isFunction, objDefine, objForEachKey } from "@nevware21/ts-utils";
+import { IPromise, createAllPromise } from "@nevware21/ts-async";
+import { isFunction, objDeepFreeze, objDefine } from "@nevware21/ts-utils";
+import { cfgDfMerge } from "../../config/ConfigDefaultHelpers";
 import { createDynamicConfig, onConfigChange } from "../../config/DynamicConfig";
 import { createDistributedTraceContext } from "../../core/TelemetryHelpers";
 import { eW3CTraceFlags } from "../../enums/W3CTraceFlags";
@@ -10,21 +11,25 @@ import { eOTelSamplingDecision } from "../../enums/otel/OTelSamplingDecision";
 import { OTelSpanKind, eOTelSpanKind } from "../../enums/otel/OTelSpanKind";
 import { IDistributedTraceContext } from "../../interfaces/ai/IDistributedTraceContext";
 import { IUnloadHook } from "../../interfaces/ai/IUnloadHook";
+import { IConfigDefaults } from "../../interfaces/config/IConfigDefaults";
 import { IOTelApi } from "../../interfaces/otel/IOTelApi";
+import { IOTelAttributes } from "../../interfaces/otel/IOTelAttributes";
 import { IOTelWebSdk } from "../../interfaces/otel/IOTelWebSdk";
+import { IAttributeContainer } from "../../interfaces/otel/attribute/IAttributeContainer";
 import { IOTelConfig } from "../../interfaces/otel/config/IOTelConfig";
 import { IOTelErrorHandlers } from "../../interfaces/otel/config/IOTelErrorHandlers";
 import { IOTelWebSdkConfig } from "../../interfaces/otel/config/IOTelWebSdkConfig";
 import { IOTelContext } from "../../interfaces/otel/context/IOTelContext";
-import { IOTelLogRecord } from "../../interfaces/otel/logs/IOTelLogRecord";
 import { IOTelLogger } from "../../interfaces/otel/logs/IOTelLogger";
 import { IOTelLoggerOptions } from "../../interfaces/otel/logs/IOTelLoggerOptions";
+import { IOTelSamplingResult } from "../../interfaces/otel/trace/IOTelSamplingResult";
 import { IOTelSpanCtx } from "../../interfaces/otel/trace/IOTelSpanCtx";
 import { IOTelSpanOptions } from "../../interfaces/otel/trace/IOTelSpanOptions";
 import { IOTelTracer } from "../../interfaces/otel/trace/IOTelTracer";
 import { IOTelTracerOptions } from "../../interfaces/otel/trace/IOTelTracerOptions";
 import { IReadableSpan } from "../../interfaces/otel/trace/IReadableSpan";
-import { handleError, handleWarn } from "../../internal/handleErrors";
+import { handleWarn } from "../../internal/handleErrors";
+import { addAttributes, createAttributeContainer } from "../../otel/attribute/attributeContainer";
 import { setProtoTypeName } from "../../utils/HelperFuncs";
 import { createContext } from "../api/context/context";
 import { createSpan } from "../api/trace/span";
@@ -32,17 +37,38 @@ import { getContextSpan, setContextSpan } from "../api/trace/utils";
 import { createLoggerProvider } from "./OTelLoggerProvider";
 
 /**
- * Creates a no-op logger that silently discards all emitted log records.
- * Used when the SDK has been shut down.
- * @returns A no-op IOTelLogger instance
+ * Default configuration for the OTelWebSdk.
+ * Ensures every config property is defined so that createDynamicConfig
+ * makes all properties dynamic.
  */
-function _createNoopLogger(): IOTelLogger {
-    return {
-        emit(_logRecord: IOTelLogRecord): void {
-            // noop - SDK is shut down
-        }
-    };
-}
+const _defaultConfig: IConfigDefaults<IOTelWebSdkConfig> = objDeepFreeze({
+    resource: {
+        isVal: function (v: any) {
+            return !!v;
+        },
+        v: null as any
+    },
+    errorHandlers: cfgDfMerge<IOTelErrorHandlers>({}),
+    contextManager: {
+        isVal: function (v: any) {
+            return !!v;
+        },
+        v: null as any
+    },
+    idGenerator: {
+        isVal: function (v: any) {
+            return !!v;
+        },
+        v: null as any
+    },
+    sampler: {
+        isVal: function (v: any) {
+            return !!v;
+        },
+        v: null as any
+    },
+    logProcessors: { ref: true, v: [] }
+});
 
 /**
  * Creates an OpenTelemetry Web SDK instance.
@@ -71,7 +97,6 @@ function _createNoopLogger(): IOTelLogger {
  *   contextManager: myContextManager,
  *   idGenerator: myIdGenerator,
  *   sampler: myAlwaysOnSampler,
- *   performanceNow: () => performance.now(),
  *   logProcessors: [myLogProcessor]
  * });
  *
@@ -86,45 +111,14 @@ function _createNoopLogger(): IOTelLogger {
  * @since 4.0.0
  */
 export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
-    // Validate required dependencies upfront
-    let _handlers: IOTelErrorHandlers = config.errorHandlers;
-
-    if (!config.errorHandlers) {
-        // Use an empty handlers object as fallback so handleError/handleWarn don't fail
-        _handlers = {};
-        handleWarn(_handlers, "createOTelWebSdk: errorHandlers should be provided");
-    }
-
-    // Validate all required dependencies and fail fast with a no-op SDK if any are missing
-    let _hasMissing = false;
-    if (!config.resource) {
-        handleError(_handlers, "createOTelWebSdk: resource must be provided");
-        _hasMissing = true;
-    }
-    if (!config.contextManager) {
-        handleError(_handlers, "createOTelWebSdk: contextManager must be provided");
-        _hasMissing = true;
-    }
-    if (!config.idGenerator) {
-        handleError(_handlers, "createOTelWebSdk: idGenerator must be provided");
-        _hasMissing = true;
-    }
-    if (!config.sampler) {
-        handleError(_handlers, "createOTelWebSdk: sampler must be provided");
-        _hasMissing = true;
-    }
-
-    if (_hasMissing) {
-        return _createNoopSdk(config);
-    }
-
     // Private closure state
     let _isShutdown = false;
     let _tracers: { [key: string]: IOTelTracer } = {};
     let _unloadHooks: IUnloadHook[] = [];
 
-    // Make the config dynamic so we can watch for changes, then cache values
-    let _sdkConfig = createDynamicConfig(config).cfg;
+    // Make the config dynamic with defaults so every property is dynamic
+    let _sdkConfig = createDynamicConfig(config, _defaultConfig).cfg;
+    let _handlers: IOTelErrorHandlers = _sdkConfig.errorHandlers;
     let _resource = _sdkConfig.resource;
     let _contextManager = _sdkConfig.contextManager;
     let _idGenerator = _sdkConfig.idGenerator;
@@ -145,7 +139,7 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
         _contextManager = _sdkConfig.contextManager;
         _idGenerator = _sdkConfig.idGenerator;
         _sampler = _sdkConfig.sampler;
-        _handlers = _sdkConfig.errorHandlers || _handlers;
+        _handlers = _sdkConfig.errorHandlers;
         _otelCfg.errorHandlers = _handlers;
     });
     _unloadHooks.push(_configUnload);
@@ -171,11 +165,15 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
     // Build the SDK instance using closure pattern
     let _self: IOTelWebSdk = {} as IOTelWebSdk;
 
-    _self.getTracer = function (name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer {
+    _self.getTracer = function (name: string, version?: string, options?: IOTelTracerOptions): IOTelTracer | null {
         if (_isShutdown) {
             handleWarn(_handlers, "A shutdown OTelWebSdk cannot provide a Tracer");
-            // Return a no-op tracer
-            return _createNoopTracer();
+            return null;
+        }
+
+        if (!_idGenerator || !_sampler || !_contextManager) {
+            handleWarn(_handlers, "OTelWebSdk: required dependencies not configured");
+            return null;
         }
 
         let tracerName = name || "unknown";
@@ -190,10 +188,10 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
         return _tracers[key];
     };
 
-    _self.getLogger = function (name: string, version?: string, options?: IOTelLoggerOptions): IOTelLogger {
+    _self.getLogger = function (name: string, version?: string, options?: IOTelLoggerOptions): IOTelLogger | null {
         if (_isShutdown) {
             handleWarn(_handlers, "A shutdown OTelWebSdk cannot provide a Logger");
-            return _createNoopLogger();
+            return null;
         }
 
         return _loggerProvider.getLogger(name, version, options);
@@ -202,8 +200,8 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
     _self.forceFlush = function (): IPromise<void> {
         if (_isShutdown) {
             handleWarn(_handlers, "Cannot force flush a shutdown OTelWebSdk");
-            return createSyncPromise(function (resolve) {
-                resolve();
+            return createAllPromise([] as IPromise<void>[]).then(function (): void {
+                // Already shut down
             });
         }
 
@@ -219,22 +217,16 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
 
         // TODO: Phase 2 - Flush span processors when available
 
-        if (operations.length > 0) {
-            return createAllPromise(operations).then(function (): void {
-                // All flushed
-            });
-        }
-
-        return createSyncPromise(function (resolve) {
-            resolve();
+        return createAllPromise(operations || []).then(function (): void {
+            // All flushed
         });
     };
 
     _self.shutdown = function (): IPromise<void> {
         if (_isShutdown) {
             handleWarn(_handlers, "shutdown may only be called once per OTelWebSdk");
-            return createSyncPromise(function (resolve) {
-                resolve();
+            return createAllPromise([] as IPromise<void>[]).then(function (): void {
+                // Already shut down
             });
         }
 
@@ -261,14 +253,8 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
         // Clear cached tracers
         _tracers = {};
 
-        if (operations.length > 0) {
-            return createAllPromise(operations).then(function (): void {
-                // All shut down
-            });
-        }
-
-        return createSyncPromise(function (resolve) {
-            resolve();
+        return createAllPromise(operations || []).then(function (): void {
+            // All shut down
         });
     };
 
@@ -331,9 +317,9 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
             // Run the sampler to decide whether to record this span
             let attributes = opts.attributes || {};
             let links = opts.links || [];
-            let samplingResult = _sampler.shouldSample(
+            let samplingResult: IOTelSamplingResult = _sampler ? _sampler.shouldSample(
                 activeCtx, newCtx.traceId, spanName, kind, attributes, links
-            );
+            ) : { decision: eOTelSamplingDecision.RECORD_AND_SAMPLED };
 
             // Determine recording and sampled flags from the sampling decision
             let isRecording = samplingResult.decision !== eOTelSamplingDecision.NOT_RECORD;
@@ -350,17 +336,13 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
             }
 
             // Merge sampler-provided attributes with user-provided attributes
-            let spanAttributes = attributes;
+            // Use AttributeContainer to avoid copying/enumerating all attributes unless needed
+            let spanAttributes: IOTelAttributes | IAttributeContainer = attributes;
             if (isRecording && samplingResult.attributes) {
-                // Merge: user attributes take precedence, sampler attributes fill gaps
-                spanAttributes = {};
-                let samplerAttrs = samplingResult.attributes;
-                objForEachKey(samplerAttrs, function (key, value) {
-                    spanAttributes[key] = value;
-                });
-                objForEachKey(attributes, function (key, value) {
-                    spanAttributes[key] = value;
-                });
+                // Sampler attributes are inherited; user attributes are added on top (take precedence)
+                let attrContainer = createAttributeContainer(_otelCfg, spanName, samplingResult.attributes);
+                addAttributes(attrContainer, attributes);
+                spanAttributes = attrContainer;
             }
 
             // Build the span context for createSpan
@@ -386,111 +368,52 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
             return createSpan(spanCtx, spanName, kind);
         }
 
-        let tracer: IOTelTracer = setProtoTypeName({
-            startSpan: function (spanName: string, options?: IOTelSpanOptions, context?: IOTelContext): IReadableSpan | null {
-                return _startSpan(spanName, options, context);
-            },
-            startActiveSpan: function <F extends (span: IReadableSpan) => unknown>(
-                spanNameArg: string,
-                optionsOrFn?: IOTelSpanOptions | F,
-                fnOrContext?: F | IOTelContext,
-                maybeFn?: F
-            ): ReturnType<F> {
-                // Resolve overloaded parameters:
-                // Overload 1: startActiveSpan(name, fn)
-                // Overload 2: startActiveSpan(name, options, fn)
-                // Overload 3: startActiveSpan(name, options, context, fn)
-                let opts: IOTelSpanOptions = null;
-                let fn: F = null;
-                let ctx: IOTelContext = null;
+        function _startActiveSpan<F extends (span: IReadableSpan) => unknown>(
+            spanNameArg: string,
+            optionsOrFn?: IOTelSpanOptions | F,
+            fnOrContext?: F | IOTelContext,
+            maybeFn?: F
+        ): ReturnType<F> {
+            // Resolve overloaded parameters:
+            // Overload 1: startActiveSpan(name, fn)
+            // Overload 2: startActiveSpan(name, options, fn)
+            // Overload 3: startActiveSpan(name, options, context, fn)
+            let opts: IOTelSpanOptions = null;
+            let fn: F = null;
+            let ctx: IOTelContext = null;
 
-                if (isFunction(optionsOrFn)) {
-                    // Overload 1: (name, fn)
-                    fn = optionsOrFn as F;
-                } else if (isFunction(fnOrContext)) {
-                    // Overload 2: (name, options, fn)
-                    opts = optionsOrFn as IOTelSpanOptions;
-                    fn = fnOrContext as F;
-                } else {
-                    // Overload 3: (name, options, context, fn)
-                    opts = optionsOrFn as IOTelSpanOptions;
-                    ctx = fnOrContext as IOTelContext;
-                    fn = maybeFn;
-                }
-
-                // Create the span using the resolved parameters
-                let span = _startSpan(spanNameArg, opts, ctx);
-
-                // Set the span as active in a new context and execute the callback
-                let activeCtx = ctx || _getActiveContext();
-                let contextWithSpan = setContextSpan(activeCtx, span);
-
-                return _contextManager.with(contextWithSpan, function () {
-                    return fn(span);
-                }) as ReturnType<F>;
+            if (isFunction(optionsOrFn)) {
+                // Overload 1: (name, fn)
+                fn = optionsOrFn as F;
+            } else if (isFunction(fnOrContext)) {
+                // Overload 2: (name, options, fn)
+                opts = optionsOrFn as IOTelSpanOptions;
+                fn = fnOrContext as F;
+            } else {
+                // Overload 3: (name, options, context, fn)
+                opts = optionsOrFn as IOTelSpanOptions;
+                ctx = fnOrContext as IOTelContext;
+                fn = maybeFn;
             }
+
+            // Create the span using the resolved parameters
+            let span = _startSpan(spanNameArg, opts, ctx);
+
+            // Set the span as active in a new context and execute the callback
+            // TODO: Refactor to use withSpan/useSpan helpers once OTelWebSdk supports ITraceHost
+            let activeCtx = ctx || _getActiveContext();
+            let contextWithSpan = setContextSpan(activeCtx, span);
+
+            return _contextManager.with(contextWithSpan, fn as (...args: any[]) => ReturnType<F>, undefined, span) as ReturnType<F>;
+        }
+
+        let tracer: IOTelTracer = setProtoTypeName({
+            startSpan: _startSpan,
+            startActiveSpan: _startActiveSpan
         }, "OTelTracer (" + tracerName + "@" + tracerVersion + ")");
 
         return tracer;
     }
 
-    /**
-     * Creates a no-op tracer that does not create any spans.
-     * Used when the SDK has been shut down.
-     *
-     * @returns A no-op IOTelTracer instance
-     */
-    function _createNoopTracer(): IOTelTracer {
-        return setProtoTypeName({
-            startSpan: function (): IReadableSpan | null {
-                return null;
-            },
-            startActiveSpan: function (): undefined {
-                return undefined;
-            }
-        }, "OTelNoopTracer");
-    }
-
     return setProtoTypeName(_self, "OTelWebSdk");
-}
-
-/**
- * Creates a no-op SDK instance that silently discards all operations.
- * Returned when required dependencies are missing to prevent runtime crashes.
- * @param config - The original config, used for getConfig()
- * @returns A safe no-op IOTelWebSdk instance
- */
-function _createNoopSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
-    let _resolvedPromise = createSyncPromise(function (resolve: () => void) {
-        resolve();
-    });
-
-    return setProtoTypeName({
-        getTracer: function (): IOTelTracer {
-            return setProtoTypeName({
-                startSpan: function (): IReadableSpan | null {
-                    return null;
-                },
-                startActiveSpan: function (): undefined {
-                    return undefined;
-                }
-            }, "OTelNoopTracer");
-        },
-        getLogger: function (): IOTelLogger {
-            return {
-                emit: function (): void {
-                    // noop
-                }
-            };
-        },
-        forceFlush: function (): IPromise<void> {
-            return _resolvedPromise;
-        },
-        shutdown: function (): IPromise<void> {
-            return _resolvedPromise;
-        },
-        getConfig: function (): Readonly<IOTelWebSdkConfig> {
-            return config;
-        }
-    }, "OTelNoopWebSdk");
 }

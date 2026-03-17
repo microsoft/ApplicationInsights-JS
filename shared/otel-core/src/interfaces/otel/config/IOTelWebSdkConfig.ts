@@ -26,8 +26,7 @@ import { IOTelErrorHandlers } from "./IOTelErrorHandlers";
  *   contextManager: myContextManager,
  *   idGenerator: myIdGenerator,
  *   sampler: myAlwaysOnSampler,
- *   logProcessors: [myLogProcessor],
- *   performanceNow: () => performance.now()
+ *   logProcessors: [myLogProcessor]
  * };
  *
  * const sdk = createOTelWebSdk(config);
@@ -85,23 +84,6 @@ export interface IOTelWebSdkConfig {
      * @see {@link IOTelSampler}
      */
     sampler: IOTelSampler;
-
-    /**
-     * Performance timing function.
-     * Injected for testability — allows tests to control time measurement.
-     *
-     * @returns The current high-resolution time in milliseconds
-     *
-     * @example
-     * ```typescript
-     * // Production usage
-     * performanceNow: () => performance.now()
-     *
-     * // Test usage with fake timers
-     * performanceNow: () => fakeTimer.now()
-     * ```
-     */
-    performanceNow: () => number;
 
     /**
      * Log record processors for the log pipeline.
