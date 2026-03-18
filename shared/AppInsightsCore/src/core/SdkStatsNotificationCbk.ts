@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ITimerHandler, objCreate, objHasOwn, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, objCreate, objDefine, objHasOwn, scheduleTimeout } from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { INotificationListener } from "../interfaces/ai/INotificationListener";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
@@ -135,10 +135,12 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore): ISdkStatsNotifCb
     function _createMetric(name: string, value: number, telType: string, code?: string, codePropKey?: string): ITelemetryItem {
         var props: { [key: string]: any } = {
             telemetry_type: telType,
-            language: "JavaScript",
-            version: _version,
             computeType: "unknown"
         };
+
+        // version and language are SDK-internal
+        objDefine(props, "language", { v: "JavaScript", w: false, c: false, e: true });
+        objDefine(props, "version", { v: _version, w: false, c: false, e: true });
 
         if (code && codePropKey) {
             props[codePropKey] = code;
