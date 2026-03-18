@@ -233,7 +233,7 @@ export interface IConfiguration extends IOTelConfig {
     expCfg?: IExceptionConfig;
 
     /**
-     * [Optional] A flag to enable or disable redaction for query parameters.
+     * [Optional] A flag to enable or disable redaction for query parameters and username/password.
      * @defaultValue true
      */
     redactUrls?: boolean | UrlRedactionOptions;

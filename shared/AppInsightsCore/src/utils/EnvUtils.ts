@@ -548,7 +548,10 @@ export function fieldRedaction(input: string, config: IConfiguration): string {
     if (!input || !isString(input) || strIndexOf(input, " ") !== -1) {
         return input;
     }
-    const isRedactionDisabled = config && (config.redactUrls === false || config.redactUrls === UrlRedactionOptions.false);
+
+    const option = config ? config.redactUrls : undefined;
+
+    const isRedactionDisabled = option === false || option === UrlRedactionOptions.false;
     if (isRedactionDisabled) {
         return input;
     }
@@ -561,11 +564,11 @@ export function fieldRedaction(input: string, config: IConfiguration): string {
         return input;
     }
 
-    if (config.redactUrls === UrlRedactionOptions.usernamePasswordOnly) {
+    if (option === UrlRedactionOptions.usernamePasswordOnly) {
         hasQueryParams = false;
     }
 
-    if (config.redactUrls === UrlRedactionOptions.queryParamsOnly) {
+    if (option === UrlRedactionOptions.queryParamsOnly) {
         hasCredentials = false;
     }
 
