@@ -1,7 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-"use strict";
-
 import { ITimerHandler, objCreate, objHasOwn, scheduleTimeout } from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { INotificationListener } from "../interfaces/ai/INotificationListener";
