@@ -22,6 +22,7 @@ export { SendRequestReason } from "./enums/ai/SendRequestReason";
 //export { StatsType, eStatsType } from "./enums/ai/StatsType";
 export { TelemetryUpdateReason } from "./enums/ai/TelemetryUpdateReason";
 export { TelemetryUnloadReason } from "./enums/ai/TelemetryUnloadReason";
+export { eUrlRedactionOptions, UrlRedactionOptions } from "./enums/ai/UrlRedactionOptions"
 export { eActiveStatus, ActiveStatus } from "./enums/ai/InitActiveStatusEnum";
 export { throwAggregationError } from "./core/AggregationError";
 export { AppInsightsCore } from "./core/AppInsightsCore";
