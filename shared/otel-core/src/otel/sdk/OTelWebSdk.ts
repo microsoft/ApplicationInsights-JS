@@ -49,6 +49,8 @@ const _defaultConfig: IConfigDefaults<IOTelWebSdkConfig> = objDeepFreeze({
         v: null as any
     },
     errorHandlers: cfgDfMerge<IOTelErrorHandlers>({}),
+    // TODO: Review defaults for contextManager, idGenerator, and sampler.
+    // The SDK instance itself should be the default contextManager (or manage an internal one).
     contextManager: {
         isVal: function (v: any) {
             return !!v;
@@ -398,6 +400,10 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
 
             // Create the span using the resolved parameters
             let span = _startSpan(spanNameArg, opts, ctx);
+
+            if (!span) {
+                return undefined as ReturnType<F>;
+            }
 
             // Set the span as active in a new context and execute the callback
             // TODO: Refactor to use withSpan/useSpan helpers once OTelWebSdk supports ITraceHost
