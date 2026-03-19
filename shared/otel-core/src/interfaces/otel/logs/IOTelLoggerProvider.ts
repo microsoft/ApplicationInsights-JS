@@ -17,5 +17,5 @@ export interface IOTelLoggerProvider {
    * @param options The options of the logger or instrumentation library.
    * @returns Logger A Logger with the given name and version
    */
-  getLogger(name: string, version?: string, options?: IOTelLoggerOptions): IOTelLogger;
+  getLogger(name: string, version?: string, options?: IOTelLoggerOptions): IOTelLogger | null;
 }

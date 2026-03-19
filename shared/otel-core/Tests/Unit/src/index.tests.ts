@@ -7,6 +7,7 @@ import { OTelMultiLogRecordProcessorTests } from "./sdk/OTelMultiLogRecordProces
 import { CommonUtilsTests } from "./sdk/commonUtils.Tests";
 import { OpenTelemetryErrorsTests } from "./ai/errors.Tests";
 import { OTelTraceApiTests } from "./trace/traceState.Tests";
+import { OTelWebSdkTests } from "./sdk/OTelWebSdk.Tests";
 
 // AppInsightsCommon tests
 import { ApplicationInsightsTests } from "./ai/AppInsightsCommon.tests";
@@ -56,6 +57,7 @@ export function runTests() {
     new CommonUtilsTests().registerTests();
     new OpenTelemetryErrorsTests().registerTests();
     new OTelTraceApiTests().registerTests();
+    new OTelWebSdkTests().registerTests();
 
     new GlobalTestHooks().registerTests();
     new DynamicTests().registerTests();

@@ -404,9 +404,6 @@ export interface IOTelWebSdkConfig {
   /** REQUIRED: Logger for SDK internal diagnostics */
   logger: IOTelLogger;
   
-  /** REQUIRED: Performance timing function (injected for testability) */
-  performanceNow: () => number;
-  
   /** REQUIRED: Span processors for trace pipeline */
   spanProcessors: IOTelSpanProcessor[];
   

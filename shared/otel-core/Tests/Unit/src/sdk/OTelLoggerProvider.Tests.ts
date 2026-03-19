@@ -39,7 +39,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         });
 
         this.testCase({
-            name: "LoggerProvider: constructor without options should use noop processor by default",
+            name: "LoggerProvider: constructor without options should use default processor",
             test: (): IPromise<void> => {
                 const provider = createLoggerProvider();
                 const sharedState = this._getSharedState(provider);
@@ -296,21 +296,14 @@ export class OTelLoggerProviderTests extends AITestClass {
         });
 
         this.testCase({
-            name: "LoggerProvider: shutdown should return noop logger for new requests",
+            name: "LoggerProvider: shutdown should return null for new requests",
             test: (): IPromise<void> => {
                 const provider = createLoggerProvider();
                 return createPromise((resolve, reject) => {
                     provider.shutdown().then(() => {
                         try {
                             const logger = provider.getLogger("default", "1.0.0");
-                            Assert.equal(typeof logger.emit, "function", "Logger should expose emit function after shutdown");
-                            let threw = false;
-                            try {
-                                logger.emit({} as IOTelLogRecord);
-                            } catch (e) {
-                                threw = true;
-                            }
-                            Assert.ok(!threw, "Logger emit should not throw after shutdown");
+                            Assert.equal(logger, null, "Logger should be null after shutdown");
                             resolve();
                         } catch (e) {
                             reject(e);
@@ -394,7 +387,7 @@ export class OTelLoggerProviderTests extends AITestClass {
 
     /**
      * Creates a mock log record processor for testing purposes.
-     * This avoids dependency on the noop package.
+     * This avoids dependency on a separate mock package.
      */
     private _createMockProcessor(): IOTelLogRecordProcessor {
         return {
