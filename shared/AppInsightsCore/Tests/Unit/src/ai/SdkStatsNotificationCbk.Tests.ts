@@ -59,7 +59,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
             config: { sdkStats: sdkStats } as IConfiguration
         } as any as IAppInsightsCore;
 
-        _self._listener = createSdkStatsNotifCbk(mockCore);
+        _self._listener = createSdkStatsNotifCbk(mockCore, "3.3.11-test");
         return _self._listener;
     }
 
@@ -116,8 +116,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 Assert.ok(customEventMetric, "Should have CUSTOM_EVENT metric");
                 Assert.equal(2, customEventMetric.baseData.average, "CUSTOM_EVENT count should be 2");
                 Assert.equal("JavaScript", customEventMetric.baseData.properties["language"], "Language should be JavaScript");
-                Assert.notEqual("#version#", customEventMetric.baseData.properties["version"], "Version should be replaced at build time");
-                Assert.ok(customEventMetric.baseData.properties["version"], "Version should be a non-empty string");
+                Assert.equal("3.3.11-test", customEventMetric.baseData.properties["version"], "Version should match the passed sdkVersion");
                 Assert.equal("unknown", customEventMetric.baseData.properties["computeType"], "computeType should be unknown");
 
                 let exceptionMetric = successItems.filter(function (item) {
@@ -615,7 +614,8 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                                 int: 100
                             }
                         } as IConfiguration
-                    } as any as IAppInsightsCore
+                    } as any as IAppInsightsCore,
+                    "3.3.11-test"
                 );
 
                 let mgr = new NotificationManager();
@@ -652,7 +652,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                     config: config
                 } as any as IAppInsightsCore;
 
-                let listener = createSdkStatsNotifCbk(mockCore);
+                let listener = createSdkStatsNotifCbk(mockCore, "3.3.11-test");
                 _self._listener = listener;
 
                 listener.eventsSent([_self._makeItem("EventData")]);
@@ -665,7 +665,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
         });
 
         this.testCase({
-            name: "SdkStatsNotifCbk: version is set by the build-time constant",
+            name: "SdkStatsNotifCbk: version is set by the caller-provided sdkVersion parameter",
             test: () => {
                 let _self = this;
                 let sdkStats: ISdkStatsConfig = {
@@ -679,16 +679,14 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                     config: config
                 } as any as IAppInsightsCore;
 
-                let listener = createSdkStatsNotifCbk(mockCore);
+                let listener = createSdkStatsNotifCbk(mockCore, "3.3.11-test");
                 _self._listener = listener;
 
                 listener.eventsSent([_self._makeItem("EventData")]);
                 listener.flush();
 
-                Assert.notEqual("#version#", _self._trackedItems[0].baseData.properties["version"],
-                    "Version should be replaced at build time");
-                Assert.ok(_self._trackedItems[0].baseData.properties["version"],
-                    "Version should be a non-empty string");
+                Assert.equal("3.3.11-test", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should match the passed sdkVersion");
             }
         });
 
@@ -708,7 +706,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                     config: config
                 } as any as IAppInsightsCore;
 
-                let listener = createSdkStatsNotifCbk(mockCore);
+                let listener = createSdkStatsNotifCbk(mockCore, "3.3.11-test");
                 _self._listener = listener;
 
                 listener.eventsSent([_self._makeItem("EventData")]);
@@ -742,7 +740,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                     config: config
                 } as any as IAppInsightsCore;
 
-                let listener = createSdkStatsNotifCbk(mockCore);
+                let listener = createSdkStatsNotifCbk(mockCore, "3.3.11-test");
                 _self._listener = listener;
 
                 listener.eventsSent([_self._makeItem("EventData")]);
@@ -751,10 +749,8 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 Assert.equal(1, _self._trackedItems.length, "Should emit 1 metric");
                 Assert.equal("JavaScript", _self._trackedItems[0].baseData.properties["language"],
                     "Language should default to JavaScript");
-                Assert.notEqual("#version#", _self._trackedItems[0].baseData.properties["version"],
-                    "Version should be replaced at build time");
-                Assert.ok(_self._trackedItems[0].baseData.properties["version"],
-                    "Version should be a non-empty string");
+                Assert.equal("3.3.11-test", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should match the passed sdkVersion");
             }
         });
 
@@ -770,7 +766,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                     config: config
                 } as any as IAppInsightsCore;
 
-                let listener = createSdkStatsNotifCbk(mockCore);
+                let listener = createSdkStatsNotifCbk(mockCore, "3.3.11-test");
                 _self._listener = listener;
 
                 // Flush without sdkStats set
@@ -779,10 +775,8 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
                 Assert.equal("JavaScript", _self._trackedItems[0].baseData.properties["language"],
                     "Language should default to JavaScript");
-                Assert.notEqual("#version#", _self._trackedItems[0].baseData.properties["version"],
-                    "Version should be replaced at build time");
-                Assert.ok(_self._trackedItems[0].baseData.properties["version"],
-                    "Version should be a non-empty string");
+                Assert.equal("3.3.11-test", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should match the passed sdkVersion");
 
                 // Now set sdkStats on config (only int is configurable)
                 _self._trackedItems = [];
@@ -793,10 +787,8 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
                 Assert.equal("JavaScript", _self._trackedItems[0].baseData.properties["language"],
                     "Language should still be JavaScript after setting sdkStats");
-                Assert.notEqual("#version#", _self._trackedItems[0].baseData.properties["version"],
-                    "Version should still be replaced at build time after setting sdkStats");
-                Assert.ok(_self._trackedItems[0].baseData.properties["version"],
-                    "Version should be a non-empty string after setting sdkStats");
+                Assert.equal("3.3.11-test", _self._trackedItems[0].baseData.properties["version"],
+                    "Version should match the passed sdkVersion after setting sdkStats");
             }
         });
     }

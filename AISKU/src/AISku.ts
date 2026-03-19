@@ -66,6 +66,7 @@ const CDN_USAGE = "CdnUsage";
 const SDK_LOADER_VER = "SdkLoaderVer";
 const ZIP_PAYLOAD = "zipPayload";
 const SDK_STATS = "SdkStats";
+var _sdkVersion = "#version#";
 
 const default_limit = {
     samplingRate: 100,
@@ -447,7 +448,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                         // Enable/disable SDK Stats listener dynamically based on config
                         if (isFeatureEnabled(SDK_STATS, _config, true)) {
                             if (!_sdkStatsListener) {
-                                _sdkStatsListener = createSdkStatsNotifCbk(_core);
+                                _sdkStatsListener = createSdkStatsNotifCbk(_core, _sdkVersion);
                                 _core.addNotificationListener(_sdkStatsListener);
                             }
                         } else if (_sdkStatsListener) {

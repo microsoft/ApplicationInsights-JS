@@ -253,7 +253,7 @@ export class NotificationManager implements INotificationManager {
      * @param reason - The reason for which the SDK discarded the events. The EventsDiscardedReason
      * constant should be used to check the different values.
      */
-    eventsDiscarded(events: ITelemetryItem[], reason: number): void {
+    eventsDiscarded(events: ITelemetryItem[], reason: number, sendType?: number): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
