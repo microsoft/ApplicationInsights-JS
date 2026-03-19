@@ -8,6 +8,7 @@ import {
     isFunction, isNullOrUndefined, isString, isUndefined, mathMax, strIndexOf, strSubstring
 } from "@nevware21/ts-utils";
 import { DEFAULT_SENSITIVE_PARAMS, STR_EMPTY, STR_REDACTED } from "../constants/InternalConstants";
+import { UrlRedactionOptions } from "../enums/ai/UrlRedactionOptions";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import { strContains } from "./HelperFuncs";
 
@@ -455,8 +456,12 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
         return url;
     }
 
-    if (config && config.redactQueryParams) {
+    const option = config ? config.redactUrls : undefined;
+    
+    if (option === UrlRedactionOptions.appendToDefault) {
         sensitiveParams = DEFAULT_SENSITIVE_PARAMS.concat(config.redactQueryParams);
+    } else if (option === UrlRedactionOptions.replaceDefault) {
+        sensitiveParams = config.redactQueryParams;
     } else {
         sensitiveParams = DEFAULT_SENSITIVE_PARAMS;
     }
@@ -543,17 +548,30 @@ export function fieldRedaction(input: string, config: IConfiguration): string {
     if (!input || !isString(input) || strIndexOf(input, " ") !== -1) {
         return input;
     }
-    const isRedactionDisabled = config && config.redactUrls === false;
+
+    const option = config ? config.redactUrls : undefined;
+
+    const isRedactionDisabled = option === false || option === UrlRedactionOptions.false;
     if (isRedactionDisabled) {
         return input;
     }
-    const hasCredentials = strIndexOf(input, "@") !== -1;
-    const hasQueryParams = strIndexOf(input, "?") !== -1;
+
+    let hasCredentials = strIndexOf(input, "@") !== -1;
+    let hasQueryParams = strIndexOf(input, "?") !== -1;
     
     // If no credentials and no query params, return original
     if (!hasCredentials && !hasQueryParams) {
         return input;
     }
+
+    if (option === UrlRedactionOptions.usernamePasswordOnly) {
+        hasQueryParams = false;
+    }
+
+    if (option === UrlRedactionOptions.queryParamsOnly) {
+        hasCredentials = false;
+    }
+
     try {
         let result = input;
         if (hasCredentials) {
