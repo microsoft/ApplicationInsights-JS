@@ -326,24 +326,23 @@ module.exports = function (grunt) {
                         replaceCmds[key] = setVersionNumber(modulePath, packageVersion);
                         replaceCmds[key + '-reverse'] = restoreVersionPlaceholder(modulePath, packageVersion);
 
-                        // For the core module, also replace #1ds-version# with the 1ds-core-js version
+                        // For the core module, also replace #1ds-version# with a version derived
+                        // from the core package version with the major version incremented by 1
                         if (key === "core") {
-                            var oneDsPkgPath = './shared/1ds-core-js/package.json';
-                            if (grunt.file.exists(oneDsPkgPath)) {
-                                var oneDsVersion = grunt.file.readJSON(oneDsPkgPath)['version'];
-                                var oneDsExpected = _createRegEx(oneDsVersionPlaceholder);
-                                replaceCmds[key].options.replacements.push({
-                                    pattern: oneDsExpected,
-                                    replacement: "'" + oneDsVersion + "'"
-                                });
-                                replaceCmds[key + '-reverse'].options.replacements.push({
-                                    pattern: _createRegEx("'" + oneDsVersion + "'"),
-                                    replacement: oneDsVersionPlaceholder
-                                },{
-                                    pattern: _createRegEx('"' + oneDsVersion + '"'),
-                                    replacement: oneDsVersionPlaceholder
-                                });
-                            }
+                            var versionParts = packageVersion.split('.');
+                            var oneDsVersion = (parseInt(versionParts[0]) + 1) + '.' + versionParts.slice(1).join('.');
+                            var oneDsExpected = _createRegEx(oneDsVersionPlaceholder);
+                            replaceCmds[key].options.replacements.push({
+                                pattern: oneDsExpected,
+                                replacement: "'" + oneDsVersion + "'"
+                            });
+                            replaceCmds[key + '-reverse'].options.replacements.push({
+                                pattern: _createRegEx("'" + oneDsVersion + "'"),
+                                replacement: oneDsVersionPlaceholder
+                            },{
+                                pattern: _createRegEx('"' + oneDsVersion + '"'),
+                                replacement: oneDsVersionPlaceholder
+                            });
                         }
                     }
                 }
