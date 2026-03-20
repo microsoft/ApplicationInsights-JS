@@ -11,6 +11,9 @@ import { setContextSpanContext } from "../../../../src/otel/api/trace/utils";
 import { createLogger } from "../../../../src/otel/sdk/OTelLogger";
 import { createResolvedPromise } from "@nevware21/ts-async";
 import { IOTelApi, IOTelConfig } from "../../../../src";
+import { IOTelResource, OTelRawResourceAttribute } from "../../../../src/interfaces/otel/resources/IOTelResource";
+import { IOTelAttributes } from "../../../../src/interfaces/otel/IOTelAttributes";
+import { IOTelLoggerProviderConfig } from "../../../../src/interfaces/otel/logs/IOTelLoggerProviderConfig";
 
 // W3C trace flags constant for sampled traces
 const eW3CTraceFlags_Sampled = 1;
@@ -38,9 +41,7 @@ export class OTelLoggerTests extends AITestClass {
 
     private setup() {
         const logProcessor = this._createMockProcessor();
-        const provider = createLoggerProvider({
-            processors: [logProcessor]
-        });
+        const provider = createLoggerProvider(this._cfg([logProcessor]));
         const logger = provider.getLogger("test name", "test version", {
             schemaUrl: "test schema url"
         }) as LoggerWithScope;
@@ -53,7 +54,7 @@ export class OTelLoggerTests extends AITestClass {
             name: "Logger: factory returns logger instance",
             test: () => {
                 const logProcessor = this._createMockProcessor();
-                const provider = createLoggerProvider({ processors: [logProcessor] });
+                const provider = createLoggerProvider(this._cfg([logProcessor]));
                 const sharedState = provider._sharedState;
                 const scope: IOTelInstrumentationScope = {
                     name: "test name",
@@ -149,6 +150,19 @@ export class OTelLoggerTests extends AITestClass {
             onEmit: () => {},
             forceFlush: () => createResolvedPromise(undefined),
             shutdown: () => createResolvedPromise(undefined)
+        };
+    }
+
+    private _cfg(processors: IOTelLogRecordProcessor[]): IOTelLoggerProviderConfig {
+        const resource: IOTelResource = {
+            attributes: {} as IOTelAttributes,
+            merge: () => resource,
+            getRawAttributes: () => [] as OTelRawResourceAttribute[]
+        };
+        return {
+            resource: resource,
+            errorHandlers: {},
+            processors: processors
         };
     }
 }
