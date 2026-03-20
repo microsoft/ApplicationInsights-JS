@@ -13,6 +13,24 @@ import { createAttributeContainer } from "../attribute/attributeContainer";
 
 type ResourceKeyValue = [key: string, value: OTelAttributeValue | undefined];
 
+/**
+ * Creates an OpenTelemetry Resource instance that provides telemetry source identification.
+ *
+ * Resources hold key-value attributes describing the entity producing telemetry
+ * (e.g., service name, version, environment). They support both synchronous and
+ * asynchronous attribute resolution.
+ *
+ * @param resourceCtx - The resource context containing config and raw attributes.
+ *  The `cfg.errorHandlers` property is used for error reporting.
+ * @returns An IOTelResource instance
+ *
+ * @remarks
+ * - Supports asynchronous resource attributes via promises
+ * - Uses error handlers from `resourceCtx.cfg.errorHandlers`
+ * - Call `shutdown()` to release internal attribute containers
+ *
+ * @since 3.4.0
+ */
 export function createResource(resourceCtx: IOTelResourceCtx): IOTelResource {
 
     let attribContainer: IAttributeContainer<OTelAttributeValue> | null = null;
@@ -141,7 +159,13 @@ export function createResource(resourceCtx: IOTelResourceCtx): IOTelResource {
         attributes: null,
         waitForAsyncAttributes: _waitForAsyncAttributes,
         merge: _merge,
-        getRawAttributes: _getRawAttributes
+        getRawAttributes: _getRawAttributes,
+        shutdown: function () {
+            attribContainer = null;
+            rawResources = null;
+            resolveAwaitingPromise = null;
+            awaitingPromise = null;
+        }
     };
 
     objDefineProps(resource, {

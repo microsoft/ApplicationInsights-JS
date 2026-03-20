@@ -7,6 +7,9 @@ import { IOTelSdkLogRecord } from "../../../../src/interfaces/otel/logs/IOTelSdk
 import { createLoggerProvider } from "../../../../src/otel/sdk/OTelLoggerProvider";
 import { createMultiLogRecordProcessor } from "../../../../src/otel/sdk/OTelMultiLogRecordProcessor";
 import { loadDefaultConfig } from "../../../../src/otel/sdk/config";
+import { IOTelLoggerProviderConfig } from "../../../../src/interfaces/otel/logs/IOTelLoggerProviderConfig";
+import { IOTelResource, OTelRawResourceAttribute } from "../../../../src/interfaces/otel/resources/IOTelResource";
+import { IOTelAttributes } from "../../../../src/interfaces/otel/IOTelAttributes";
 
 class TestProcessor implements IOTelLogRecordProcessor {
     public logRecords: IOTelSdkLogRecord[] = [];
@@ -46,6 +49,23 @@ const setup = (processors?: IOTelLogRecordProcessor[]) => {
     return { multiProcessor, forceFlushTimeoutMillis };
 };
 
+function _testResource(): IOTelResource {
+    const resource: IOTelResource = {
+        attributes: {} as IOTelAttributes,
+        merge: () => resource,
+        getRawAttributes: () => [] as OTelRawResourceAttribute[]
+    };
+    return resource;
+}
+
+function _cfg(processors: IOTelLogRecordProcessor[]): IOTelLoggerProviderConfig {
+    return {
+        resource: _testResource(),
+        errorHandlers: {},
+        processors: processors
+    };
+}
+
 export class OTelMultiLogRecordProcessorTests extends AITestClass {
     public testInitialize() {
         super.testInitialize();
@@ -70,7 +90,7 @@ export class OTelMultiLogRecordProcessorTests extends AITestClass {
             name: "MultiLogRecordProcessor: onEmit - should no-op when no processors registered",
             test: () => {
                 const { multiProcessor } = setup();
-                const provider = createLoggerProvider({ processors: [multiProcessor] });
+                const provider = createLoggerProvider(_cfg([multiProcessor]));
                 const logger = provider.getLogger("default");
                 logger.emit({ body: "message" });
                 Assert.ok(true, "Emit should not throw when no processors registered");
@@ -82,7 +102,7 @@ export class OTelMultiLogRecordProcessorTests extends AITestClass {
             test: () => {
                 const processor = new TestProcessor();
                 const { multiProcessor } = setup([processor]);
-                const provider = createLoggerProvider({ processors: [multiProcessor] });
+                const provider = createLoggerProvider(_cfg([multiProcessor]));
                 const logger = provider.getLogger("default");
                 Assert.equal(processor.logRecords.length, 0, "Processor should start with no records");
                 logger.emit({ body: "one" });
@@ -96,7 +116,7 @@ export class OTelMultiLogRecordProcessorTests extends AITestClass {
                 const processor1 = new TestProcessor();
                 const processor2 = new TestProcessor();
                 const { multiProcessor } = setup([processor1, processor2]);
-                const provider = createLoggerProvider({ processors: [multiProcessor] });
+                const provider = createLoggerProvider(_cfg([multiProcessor]));
                 const logger = provider.getLogger("default");
 
                 Assert.equal(processor1.logRecords.length, 0, "Processor1 should start empty");
@@ -208,7 +228,7 @@ export class OTelMultiLogRecordProcessorTests extends AITestClass {
                 const processor1 = new TestProcessor();
                 const processor2 = new TestProcessor();
                 const { multiProcessor } = setup([processor1, processor2]);
-                const provider = createLoggerProvider({ processors: [multiProcessor] });
+                const provider = createLoggerProvider(_cfg([multiProcessor]));
                 const logger = provider.getLogger("default");
 
                 logger.emit({ body: "one" });

@@ -47,4 +47,12 @@ export interface IOTelResource {
     merge(other: IOTelResource | null): IOTelResource;
   
     getRawAttributes(): OTelRawResourceAttribute[];
+
+    /**
+     * Releases internal resources and clears cached attribute containers.
+     * After shutdown, the resource should not be used.
+     *
+     * @since 4.0.0
+     */
+    shutdown?(): void;
   }

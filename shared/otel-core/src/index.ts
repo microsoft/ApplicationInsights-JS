@@ -135,6 +135,8 @@ export { IOTelSpanOptions } from "./interfaces/otel/trace/IOTelSpanOptions";
 export { createOTelTraceState, isOTelTraceState } from "./otel/api/trace/traceState";
 export { createSpan } from "./otel/api/trace/span";
 export { createTraceProvider } from "./otel/api/trace/traceProvider";
+export { createTracerProvider } from "./otel/api/trace/tracerProvider";
+export { ITracerProviderConfig } from "./interfaces/otel/trace/ITracerProviderConfig";
 export { isSpanContext, wrapDistributedTrace, createOTelSpanContext } from "./otel/api/trace/spanContext";
 export {
     createNonRecordingSpan, deleteContextSpan, getContextSpan, setContextSpan, setContextSpanContext, getContextActiveSpanContext, isSpanContextValid,
@@ -200,6 +202,7 @@ export { IOTelWebSdkConfig } from "./interfaces/otel/config/IOTelWebSdkConfig";
 export { createContextManager } from "./otel/api/context/contextManager";
 export { createContext } from "./otel/api/context/context";
 export { IOTelContextManager } from "./interfaces/otel/context/IOTelContextManager";
+export { IContextManagerConfig } from "./interfaces/otel/context/IContextManagerConfig";
 export { IOTelContext } from "./interfaces/otel/context/IOTelContext";
 
 // OpenTelemetry Resources
@@ -253,6 +256,7 @@ export { IOTelSdkLogRecord } from "./interfaces/otel/logs/IOTelSdkLogRecord";
 export { IOTelLoggerProvider } from "./interfaces/otel/logs/IOTelLoggerProvider";
 export { IOTelLoggerOptions } from "./interfaces/otel/logs/IOTelLoggerOptions";
 export { IOTelLoggerProviderSharedState } from "./interfaces/otel/logs/IOTelLoggerProviderSharedState";
+export { IOTelLoggerProviderConfig } from "./interfaces/otel/logs/IOTelLoggerProviderConfig";
 export { IOTelLogRecordLimits } from "./interfaces/otel/logs/IOTelLogRecordLimits";
 
 // SDK Logs

@@ -11,6 +11,8 @@ import { createMultiLogRecordProcessor } from "../../../../src/otel/sdk/OTelMult
 import { loadDefaultConfig } from "../../../../src/otel/sdk/config";
 import { IOTelResource, OTelRawResourceAttribute } from "../../../../src/interfaces/otel/resources/IOTelResource";
 import { IOTelLogRecordProcessor } from "../../../../src/interfaces/otel/logs/IOTelLogRecordProcessor";
+import { IOTelLoggerProviderConfig } from "../../../../src/interfaces/otel/logs/IOTelLoggerProviderConfig";
+import { IOTelErrorHandlers } from "../../../../src/interfaces/otel/config/IOTelErrorHandlers";
 import { createResolvedPromise } from "@nevware21/ts-async";
 
 type LoggerProviderInstance = ReturnType<typeof createLoggerProvider>;
@@ -31,7 +33,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: constructor without options should construct an instance",
             test: () => {
-                const provider = createLoggerProvider();
+                const provider = createLoggerProvider(this._cfg());
                 Assert.equal(typeof provider.getLogger, "function", "Should create a LoggerProvider instance");
                 const sharedState = provider._sharedState;
                 Assert.ok(sharedState.loggers instanceof Map, "Should expose shared state instance");
@@ -41,7 +43,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: constructor without options should use default processor",
             test: (): IPromise<void> => {
-                const provider = createLoggerProvider();
+                const provider = createLoggerProvider(this._cfg());
                 const sharedState = this._getSharedState(provider);
                 Assert.equal(sharedState.registeredLogRecordProcessors.length, 0, "Expected no processors to be registered by default");
                 const flushResult = sharedState.activeProcessor.forceFlush();
@@ -53,9 +55,9 @@ export class OTelLoggerProviderTests extends AITestClass {
             name: "LoggerProvider: constructor should register provided processors",
             test: () => {
                 const logRecordProcessor = this._createMockProcessor();
-                const provider = createLoggerProvider({
+                const provider = createLoggerProvider(this._cfg({
                     processors: [logRecordProcessor]
-                });
+                }));
                 const sharedState = this._getSharedState(provider);
                 const activeProcessor = sharedState.activeProcessor as MultiLogRecordProcessorInstance;
                 Assert.equal(activeProcessor.processors.length, 1, "Should register one processor");
@@ -66,7 +68,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: constructor should use default resource when not provided",
             test: () => {
-                const provider = createLoggerProvider();
+                const provider = createLoggerProvider(this._cfg());
                 const sharedState = this._getSharedState(provider);
                 const resource = sharedState.resource;
                 Assert.ok(!!resource, "Should have a resource available");
@@ -78,9 +80,9 @@ export class OTelLoggerProviderTests extends AITestClass {
             name: "LoggerProvider: constructor should honor provided resource",
             test: () => {
                 const passedInResource = this._createTestResource({ foo: "bar" });
-                const provider = createLoggerProvider({
+                const provider = createLoggerProvider(this._cfg({
                     resource: passedInResource
-                });
+                }));
                 const sharedState = this._getSharedState(provider);
                 Assert.equal(sharedState.resource, passedInResource, "Should use the provided resource instance");
             }
@@ -89,7 +91,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: constructor should use default forceFlushTimeoutMillis when omitted",
             test: () => {
-                const provider = createLoggerProvider();
+                const provider = createLoggerProvider(this._cfg());
                 const sharedState = this._getSharedState(provider);
                 Assert.equal(sharedState.forceFlushTimeoutMillis, loadDefaultConfig().forceFlushTimeoutMillis, "Should use default forceFlush timeout");
             }
@@ -98,7 +100,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: logRecordLimits should default values when not provided",
             test: () => {
-                const provider = createLoggerProvider();
+                const provider = createLoggerProvider(this._cfg());
                 const sharedState = this._getSharedState(provider);
                 Assert.deepEqual(sharedState.logRecordLimits, {
                     attributeCountLimit: 128,
@@ -110,11 +112,11 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: logRecordLimits should respect provided attributeCountLimit",
             test: () => {
-                const provider = createLoggerProvider({
+                const provider = createLoggerProvider(this._cfg({
                     logRecordLimits: {
                         attributeCountLimit: 100
                     }
-                });
+                }));
                 const sharedState = this._getSharedState(provider);
                 Assert.equal(sharedState.logRecordLimits.attributeCountLimit, 100, "Should use provided attributeCountLimit");
             }
@@ -123,11 +125,11 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: logRecordLimits should respect provided attributeValueLengthLimit",
             test: () => {
-                const provider = createLoggerProvider({
+                const provider = createLoggerProvider(this._cfg({
                     logRecordLimits: {
                         attributeValueLengthLimit: 10
                     }
-                });
+                }));
                 const sharedState = this._getSharedState(provider);
                 Assert.equal(sharedState.logRecordLimits.attributeValueLengthLimit, 10, "Should use provided attributeValueLengthLimit");
             }
@@ -136,11 +138,11 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: logRecordLimits should allow negative attributeValueLengthLimit",
             test: () => {
-                const provider = createLoggerProvider({
+                const provider = createLoggerProvider(this._cfg({
                     logRecordLimits: {
                         attributeValueLengthLimit: -10
                     }
-                });
+                }));
                 const sharedState = this._getSharedState(provider);
                 Assert.equal(sharedState.logRecordLimits.attributeValueLengthLimit, -10, "Should preserve provided negative attributeValueLengthLimit");
             }
@@ -149,7 +151,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: logRecordLimits should use default attributeValueLengthLimit when omitted",
             test: () => {
-                const provider = createLoggerProvider();
+                const provider = createLoggerProvider(this._cfg());
                 const sharedState = this._getSharedState(provider);
                 Assert.equal(sharedState.logRecordLimits.attributeValueLengthLimit, Infinity, "Should default attributeValueLengthLimit to Infinity");
             }
@@ -158,7 +160,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: logRecordLimits should use default attributeCountLimit when omitted",
             test: () => {
-                const provider = createLoggerProvider();
+                const provider = createLoggerProvider(this._cfg());
                 const sharedState = this._getSharedState(provider);
                 Assert.equal(sharedState.logRecordLimits.attributeCountLimit, 128, "Should default attributeCountLimit to 128");
             }
@@ -167,7 +169,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: getLogger should default name when invalid",
             test: () => {
-                const provider = createLoggerProvider();
+                const provider = createLoggerProvider(this._cfg());
                 const logger = provider.getLogger("") as LoggerWithScope;
                 Assert.equal(logger.instrumentationScope.name, DEFAULT_LOGGER_NAME, "Should use default logger name when name is invalid");
             }
@@ -176,7 +178,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: getLogger should create new logger when name not seen",
             test: () => {
-                const provider = createLoggerProvider();
+                const provider = createLoggerProvider(this._cfg());
                 const sharedState = this._getSharedState(provider);
                 Assert.equal(sharedState.loggers.size, 0, "Should start with no loggers");
                 provider.getLogger("test name");
@@ -190,7 +192,7 @@ export class OTelLoggerProviderTests extends AITestClass {
                 const testName = "test name";
                 const testVersion = "test version";
                 const testSchemaUrl = "test schema url";
-                const provider = createLoggerProvider();
+                const provider = createLoggerProvider(this._cfg());
                 const sharedState = this._getSharedState(provider);
 
                 Assert.equal(sharedState.loggers.size, 0, "Should start with no loggers");
@@ -209,7 +211,7 @@ export class OTelLoggerProviderTests extends AITestClass {
                 const testName = "test name";
                 const testVersion = "test version";
                 const testSchemaUrl = "test schema url";
-                const provider = createLoggerProvider();
+                const provider = createLoggerProvider(this._cfg());
                 const sharedState = this._getSharedState(provider);
 
                 Assert.equal(sharedState.loggers.size, 0, "Should start with no loggers");
@@ -234,7 +236,7 @@ export class OTelLoggerProviderTests extends AITestClass {
                 const processor2 = this._createMockProcessor();
                 const forceFlushStub1 = this.sandbox.stub(processor1, "forceFlush").resolves();
                 const forceFlushStub2 = this.sandbox.stub(processor2, "forceFlush").resolves();
-                const provider = createLoggerProvider({ processors: [processor1, processor2] });
+                const provider = createLoggerProvider(this._cfg({ processors: [processor1, processor2] }));
 
                 return createPromise((resolve, reject) => {
                     provider.forceFlush().then(() => {
@@ -257,7 +259,7 @@ export class OTelLoggerProviderTests extends AITestClass {
                 const processor2 = this._createMockProcessor();
                 const forceFlushStub1 = this.sandbox.stub(processor1, "forceFlush").rejects("Error");
                 const forceFlushStub2 = this.sandbox.stub(processor2, "forceFlush").rejects("Error");
-                const provider = createLoggerProvider({ processors: [processor1, processor2] });
+                const provider = createLoggerProvider(this._cfg({ processors: [processor1, processor2] }));
 
                 return createPromise((resolve, reject) => {
                     provider.forceFlush().then(() => {
@@ -280,7 +282,7 @@ export class OTelLoggerProviderTests extends AITestClass {
             test: (): IPromise<void> => {
                 const processor = this._createMockProcessor();
                 const shutdownStub = this.sandbox.stub(processor, "shutdown").resolves();
-                const provider = createLoggerProvider({ processors: [processor] });
+                const provider = createLoggerProvider(this._cfg({ processors: [processor] }));
 
                 return createPromise((resolve, reject) => {
                     provider.shutdown().then(() => {
@@ -298,7 +300,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         this.testCase({
             name: "LoggerProvider: shutdown should return null for new requests",
             test: (): IPromise<void> => {
-                const provider = createLoggerProvider();
+                const provider = createLoggerProvider(this._cfg());
                 return createPromise((resolve, reject) => {
                     provider.shutdown().then(() => {
                         try {
@@ -317,7 +319,7 @@ export class OTelLoggerProviderTests extends AITestClass {
             name: "LoggerProvider: forceFlush after shutdown should not call processors",
             test: (): IPromise<void> => {
                 const logRecordProcessor = this._createMockProcessor();
-                const provider = createLoggerProvider({ processors: [logRecordProcessor] });
+                const provider = createLoggerProvider(this._cfg({ processors: [logRecordProcessor] }));
                 const forceFlushStub = this.sandbox.stub(logRecordProcessor, "forceFlush").resolves();
                 const warnStub = this.sandbox.stub(console, "warn");
 
@@ -341,7 +343,7 @@ export class OTelLoggerProviderTests extends AITestClass {
             name: "LoggerProvider: second shutdown should not re-run processor shutdown",
             test: (): IPromise<void> => {
                 const logRecordProcessor = this._createMockProcessor();
-                const provider = createLoggerProvider({ processors: [logRecordProcessor] });
+                const provider = createLoggerProvider(this._cfg({ processors: [logRecordProcessor] }));
                 const shutdownStub = this.sandbox.stub(logRecordProcessor, "shutdown").resolves();
                 const warnStub = this.sandbox.stub(console, "warn");
 
@@ -364,6 +366,34 @@ export class OTelLoggerProviderTests extends AITestClass {
 
     private _getSharedState(provider: LoggerProviderInstance): IOTelLoggerProviderSharedState {
         return provider._sharedState;
+    }
+
+    /**
+     * Creates a valid IOTelLoggerProviderConfig with required fields plus any overrides.
+     */
+    private _cfg(overrides?: Partial<IOTelLoggerProviderConfig>): IOTelLoggerProviderConfig {
+        let cfg: IOTelLoggerProviderConfig = {
+            resource: this._createTestResource(),
+            errorHandlers: {} as IOTelErrorHandlers
+        };
+        if (overrides) {
+            if (overrides.resource !== undefined) {
+                cfg.resource = overrides.resource;
+            }
+            if (overrides.errorHandlers !== undefined) {
+                cfg.errorHandlers = overrides.errorHandlers;
+            }
+            if (overrides.processors !== undefined) {
+                cfg.processors = overrides.processors;
+            }
+            if (overrides.forceFlushTimeoutMillis !== undefined) {
+                cfg.forceFlushTimeoutMillis = overrides.forceFlushTimeoutMillis;
+            }
+            if (overrides.logRecordLimits !== undefined) {
+                cfg.logRecordLimits = overrides.logRecordLimits;
+            }
+        }
+        return cfg;
     }
 
     private _createTestResource(attributes: IOTelAttributes = {} as IOTelAttributes): IOTelResource {

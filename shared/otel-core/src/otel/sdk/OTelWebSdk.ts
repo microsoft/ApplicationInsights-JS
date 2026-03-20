@@ -152,6 +152,7 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
     // Create the logger provider using existing factory
     let _loggerProvider = createLoggerProvider({
         resource: _resource,
+        errorHandlers: _handlers,
         processors: _sdkConfig.logProcessors || []
     });
 
