@@ -16,7 +16,7 @@ import { IEventProperty, IExtendedTelemetryItem } from "../interfaces/ext/DataMo
 import { newGuid } from "../utils/CoreUtils";
 import { isReactNative } from "../utils/EnvUtils";
 
-export const Version = "#version#";
+export const Version = "#1ds-version#";
 export const FullVersionString = "1DS-Web-JS-" + Version;
 
 const ObjHasOwnProperty = Object.prototype.hasOwnProperty;

@@ -107,6 +107,9 @@ export class CfgSyncHelperTests extends AITestClass {
                     //    }
                     //},
                     traceHdrMode: 3,
+                    sdkStats: {
+                        int: 900000
+                    },
                     traceCfg: {
                         generalLimits: {
                             attributeCountLimit: 128

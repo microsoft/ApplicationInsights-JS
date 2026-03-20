@@ -1024,6 +1024,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
              */
             function _requeueEvents(batches: EventBatch[], reason?: number) {
                 let droppedEvents: IPostTransmissionTelemetryItem[] = [];
+                let requeuedEvents: IPostTransmissionTelemetryItem[] = [];
                 let maxSendAttempts = _maxEventSendAttempts;
                 if (_isPageUnloadTriggered) {
                     // If a page unlaod has been triggered reduce the number of times we try to "retry"
@@ -1045,6 +1046,7 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                                     // Reset the event timings
                                     setProcessTelemetryTimings(theEvent, _self.identifier);
                                     _addEventToQueues(theEvent, false);
+                                    requeuedEvents.push(theEvent);
                                 } else {
                                     droppedEvents.push(theEvent);
                                 }
@@ -1052,6 +1054,15 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                         });
                     }
                 });
+
+                // Notify listeners of retried events
+                if (requeuedEvents.length > 0) {
+                    // Extract HTTP status code from the EventBatchNotificationReason if in the ResponseFailure range (9000-9999)
+                    let statusCode = (reason >= EventBatchNotificationReason.ResponseFailure && reason <= EventBatchNotificationReason.ResponseFailureMax)
+                        ? reason - EventBatchNotificationReason.ResponseFailure
+                        : 0;
+                    _notifyEvents("eventsRetry", requeuedEvents, statusCode);
+                }
 
                 if (droppedEvents.length > 0) {
                     _notifyEvents(strEventsDiscarded, droppedEvents, EventsDiscardedReason.NonRetryableStatus);
