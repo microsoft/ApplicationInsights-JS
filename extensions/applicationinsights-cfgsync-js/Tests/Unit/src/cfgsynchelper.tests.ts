@@ -108,7 +108,6 @@ export class CfgSyncHelperTests extends AITestClass {
                     //},
                     traceHdrMode: 3,
                     sdkStats: {
-                        lang: "JavaScript",
                         int: 900000
                     },
                     traceCfg: {

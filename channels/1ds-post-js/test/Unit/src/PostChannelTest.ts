@@ -3381,6 +3381,9 @@ export class PostChannelTest extends AITestClass {
                             attempt++;
                         }
 
+                        // Flush any pending async notifications (e.g. eventsSendRequest dispatched via scheduleTimeout(0))
+                        this.clock.tick(1);
+
                         QUnit.assert.equal(flushCompleted, lp + 1, "The flush should have been completed asynchronously");
                         QUnit.assert.equal(sendNotifications.length, ((lp + 1) * 2), 'request should have been sent and the events requeued');
                         QUnit.assert.equal(xhrRequests.length, ((lp + 1) * 2), "Check the number of attempts and requeue events should be sent");
@@ -3624,6 +3627,9 @@ export class PostChannelTest extends AITestClass {
                             attempt++;
                         }
 
+                        // Flush any pending async notifications (e.g. eventsSendRequest dispatched via scheduleTimeout(0))
+                        this.clock.tick(1);
+
                         QUnit.assert.equal(flushCompleted, lp + 1, "The flush should have been completed asynchronously");
                         if (lp === 2) {
                             QUnit.assert.equal(sendNotifications.length, 6, lp + ":request should have been sent and the events requeued");
@@ -3757,6 +3763,9 @@ export class PostChannelTest extends AITestClass {
                             this.clock.tick(10);
                             attempt++;
                         }
+
+                        // Flush any pending async notifications (e.g. eventsSendRequest dispatched via scheduleTimeout(0))
+                        this.clock.tick(1);
 
                         QUnit.assert.equal(flushCompleted, lp + 1, "The flush should have been completed asynchronously");
                         if (lp === 1) {
