@@ -10,8 +10,8 @@ import { IOTelSpan } from "../../../interfaces/otel/trace/IOTelSpan";
 import { IOTelSpanOptions } from "../../../interfaces/otel/trace/IOTelSpanOptions";
 import { IOTelTracer } from "../../../interfaces/otel/trace/IOTelTracer";
 import { IOTelTracerProvider } from "../../../interfaces/otel/trace/IOTelTracerProvider";
-import { ITracerProviderConfig } from "../../../interfaces/otel/trace/ITracerProviderConfig";
 import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
+import { ITracerProviderConfig } from "../../../interfaces/otel/trace/ITracerProviderConfig";
 import { handleWarn } from "../../../internal/handleErrors";
 import { _createTracer } from "./tracer";
 
