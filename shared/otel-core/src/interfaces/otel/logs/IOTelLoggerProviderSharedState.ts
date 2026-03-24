@@ -22,13 +22,13 @@ export interface IOTelLoggerProviderSharedState {
     /**
      * Resource describing the entity producing telemetry.
      */
-    readonly resource: IOTelResource;
+    resource: IOTelResource;
     /**
      * Timeout applied when forcing processors to flush.
      */
-    readonly forceFlushTimeoutMillis: number;
+    forceFlushTimeoutMillis: number;
     /**
      * Limits applied to log records created by the provider.
      */
-    readonly logRecordLimits: Required<IOTelLogRecordLimits>;
+    logRecordLimits: Required<IOTelLogRecordLimits>;
 }

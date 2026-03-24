@@ -161,6 +161,11 @@ export function createResource(resourceCtx: IOTelResourceCtx): IOTelResource {
         merge: _merge,
         getRawAttributes: _getRawAttributes,
         shutdown: function () {
+            // Resolve any pending promise before clearing references
+            // so callers awaiting waitForAsyncAttributes() don't hang
+            if (resolveAwaitingPromise) {
+                resolveAwaitingPromise();
+            }
             attribContainer = null;
             rawResources = null;
             resolveAwaitingPromise = null;

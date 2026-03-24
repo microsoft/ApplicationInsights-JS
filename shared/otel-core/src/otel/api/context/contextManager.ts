@@ -47,15 +47,18 @@ export function createContextManager(config?: IContextManagerConfig): IOTelConte
     let _unloadHooks: IUnloadHook[] = [];
 
     // Local cached values — updated via onConfigChange
-    let _handlers: IOTelErrorHandlers;
+    let _handlers: IOTelErrorHandlers = {};
     let parentContext: IOTelContext;
 
     // Register for config changes — save the returned IUnloadHook
-    let _configUnload = createDynamicConfig(_cfg).watch(function () {
-        _handlers = _cfg.errorHandlers || {};
-        parentContext = _cfg.parentContext;
-    });
-    _unloadHooks.push(_configUnload);
+    // Only set up dynamic config watcher when config is provided to avoid per-instance overhead
+    if (config) {
+        let _configUnload = createDynamicConfig(_cfg).watch(function () {
+            _handlers = _cfg.errorHandlers || {};
+            parentContext = _cfg.parentContext;
+        });
+        _unloadHooks.push(_configUnload);
+    }
 
     let enabled = false;
     let activeContext: IOTelContext | null;
@@ -100,12 +103,6 @@ export function createContextManager(config?: IContextManagerConfig): IOTelConte
         disable: () => {
             activeContext = null;
             enabled = false;
-
-            // Unregister config change listeners
-            for (let i = 0; i < _unloadHooks.length; i++) {
-                _unloadHooks[i].rm();
-            }
-            _unloadHooks = [];
 
             return theContextMgr;
         }

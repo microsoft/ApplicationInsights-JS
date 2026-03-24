@@ -66,16 +66,13 @@ export function createLoggerProvider(
     let _isShutdown = false;
     let _unloadHooks: IUnloadHook[] = [];
 
-    // Register for config changes — save the returned IUnloadHook
-    let _configUnload = createDynamicConfig(config).watch(function () {
-        _handlers = config.errorHandlers || {};
-        _resource = config.resource;
-        forceFlushTimeoutMillis = config.forceFlushTimeoutMillis !== undefined
-            ? config.forceFlushTimeoutMillis
-            : defaults.forceFlushTimeoutMillis;
-        logRecordLimits = config.logRecordLimits || defaults.logRecordLimits;
-    });
-    _unloadHooks.push(_configUnload);
+    // Read initial config values
+    _handlers = config.errorHandlers || {};
+    _resource = config.resource;
+    forceFlushTimeoutMillis = config.forceFlushTimeoutMillis !== undefined
+        ? config.forceFlushTimeoutMillis
+        : defaults.forceFlushTimeoutMillis;
+    logRecordLimits = config.logRecordLimits || defaults.logRecordLimits;
 
     if (!_resource) {
         handleError(_handlers, "Resource must be provided to LoggerProvider");
@@ -87,6 +84,23 @@ export function createLoggerProvider(
         reconfigureLimits(logRecordLimits),
         config.processors || []
     );
+
+    // Register for config changes — save the returned IUnloadHook
+    // Updates both local cached values and sharedState so dynamic config changes propagate
+    let _configUnload = createDynamicConfig(config).watch(function () {
+        _handlers = config.errorHandlers || {};
+        _resource = config.resource;
+        forceFlushTimeoutMillis = config.forceFlushTimeoutMillis !== undefined
+            ? config.forceFlushTimeoutMillis
+            : defaults.forceFlushTimeoutMillis;
+        logRecordLimits = config.logRecordLimits || defaults.logRecordLimits;
+
+        // Propagate updated values to shared state
+        sharedState.resource = _resource;
+        sharedState.forceFlushTimeoutMillis = forceFlushTimeoutMillis;
+        sharedState.logRecordLimits = reconfigureLimits(logRecordLimits);
+    });
+    _unloadHooks.push(_configUnload);
 
     function getLogger(
         name: string,
@@ -115,7 +129,8 @@ export function createLoggerProvider(
             );
         }
 
-        return sharedState.loggers.get(key);
+        let logger = sharedState.loggers.get(key);
+        return logger || null;
     }
 
     function forceFlush(): IPromise<void> {

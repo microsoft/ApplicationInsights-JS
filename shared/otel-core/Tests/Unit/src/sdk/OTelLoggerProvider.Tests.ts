@@ -66,7 +66,7 @@ export class OTelLoggerProviderTests extends AITestClass {
         });
 
         this.testCase({
-            name: "LoggerProvider: constructor should use default resource when not provided",
+            name: "LoggerProvider: constructor should expose configured default resource",
             test: () => {
                 const provider = createLoggerProvider(this._cfg());
                 const sharedState = this._getSharedState(provider);

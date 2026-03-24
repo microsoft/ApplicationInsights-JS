@@ -224,7 +224,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                     }
 
                     if (localDroppedEvents > 0) {
-                        handleWarn(_errorHandlers(), "Droped " + localDroppedEvents + " events");
+                        handleWarn(_errorHandlers(), "Dropped " + localDroppedEvents + " events");
                     }
                 
                     // We don't mark as ended until after the onEnd callback to ensure that it can

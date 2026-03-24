@@ -2,14 +2,40 @@
 // Licensed under the MIT License.
 
 import { IPromise } from "@nevware21/ts-async";
+import { isFunction } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../../../config/DynamicConfig";
 import { IUnloadHook } from "../../../interfaces/ai/IUnloadHook";
 import { IOTelErrorHandlers } from "../../../interfaces/otel/config/IOTelErrorHandlers";
+import { IOTelSpan } from "../../../interfaces/otel/trace/IOTelSpan";
+import { IOTelSpanOptions } from "../../../interfaces/otel/trace/IOTelSpanOptions";
 import { IOTelTracer } from "../../../interfaces/otel/trace/IOTelTracer";
 import { IOTelTracerProvider } from "../../../interfaces/otel/trace/IOTelTracerProvider";
 import { ITracerProviderConfig } from "../../../interfaces/otel/trace/ITracerProviderConfig";
+import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
 import { handleWarn } from "../../../internal/handleErrors";
 import { _createTracer } from "./tracer";
+
+/**
+ * Non-recording tracer returned after shutdown.
+ * All operations are safe no-ops that return null spans.
+ */
+let _NOOP_TRACER: IOTelTracer = {
+    startSpan: function (_name: string, _options?: IOTelSpanOptions): IReadableSpan | null {
+        return null;
+    },
+    startActiveSpan: function <F extends (span: IOTelSpan) => ReturnType<F>>(name: string, arg2?: F | IOTelSpanOptions, arg3?: F, arg4?: F): ReturnType<F> | undefined {
+        let fn: F;
+        if (isFunction(arg2)) {
+            fn = arg2 as F;
+        } else if (isFunction(arg3)) {
+            fn = arg3 as F;
+        } else {
+            fn = arg4 as F;
+        }
+
+        return fn ? fn(null) : undefined;
+    }
+};
 
 /**
  * Creates a TracerProvider that manages Tracer instances with caching.
@@ -49,7 +75,7 @@ export function createTracerProvider(config: ITracerProviderConfig): IOTelTracer
         getTracer(name: string, version?: string): IOTelTracer {
             if (_isShutdown) {
                 handleWarn(_handlers, "A shutdown TracerProvider cannot provide a Tracer");
-                return null;
+                return _NOOP_TRACER;
             }
 
             let tracerKey = (name || "ai-web") + "@" + (version || "unknown");
