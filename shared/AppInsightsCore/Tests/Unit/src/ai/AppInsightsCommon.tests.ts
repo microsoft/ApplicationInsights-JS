@@ -3,7 +3,7 @@ import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { DiagnosticLogger } from "../../../../src/diagnostics/DiagnosticLogger";
 import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
 import { dataSanitizeInput, dataSanitizeKey, dataSanitizeMessage, DataSanitizerValues, dataSanitizeString, dataSanitizeUrl } from "../../../../src/telemetry/ai/Common/DataSanitizer";
-
+import { UrlRedactionOptions } from "../../../../src/enums/ai/UrlRedactionOptions"
 
 export class ApplicationInsightsTests extends AITestClass {
     logger = new DiagnosticLogger();
@@ -395,10 +395,28 @@ export class ApplicationInsightsTests extends AITestClass {
             test: () => {
                 // URLs with sensitive query parameters
                 let config = {
+                    redactUrls: UrlRedactionOptions.appendToDefault,
                     redactQueryParams: ["authorize", "api_key", "password"]
                 } as IConfiguration;
                 const urlWithSensitiveParams = "https://example.com/api?Signature=secret&authorize=value";
                 const expectedRedactedUrl = "https://example.com/api?Signature=REDACTED&authorize=REDACTED";
+
+                // Act & Assert
+                const result = dataSanitizeUrl(this.logger, urlWithSensitiveParams, config);
+                Assert.equal(expectedRedactedUrl, result);
+            }
+        });
+
+        this.testCase({
+            name: 'DataSanitizerTests: dataSanitizeUrl properly redacts sensitive query parameters (only custom)',
+            test: () => {
+                // URLs with sensitive query parameters
+                let config = {
+                    redactUrls: UrlRedactionOptions.replaceDefault,
+                    redactQueryParams: ["authorize", "api_key", "password"]
+                } as IConfiguration;
+                const urlWithSensitiveParams = "https://example.com/api?Signature=secret&authorize=value";
+                const expectedRedactedUrl = "https://example.com/api?Signature=secret&authorize=REDACTED";
 
                 // Act & Assert
                 const result = dataSanitizeUrl(this.logger, urlWithSensitiveParams, config);

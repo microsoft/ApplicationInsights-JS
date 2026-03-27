@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { IPromise } from "@nevware21/ts-async";
 import { eTraceHeadersMode } from "../../enums/ai/TraceHeadersMode";
+import { UrlRedactionOptions } from "../../enums/ai/UrlRedactionOptions";
 import { IOTelConfig } from "../otel/config/IOTelConfig";
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IChannelControls } from "./IChannelControls";
@@ -232,10 +233,10 @@ export interface IConfiguration extends IOTelConfig {
     expCfg?: IExceptionConfig;
 
     /**
-     * [Optional] A flag to enable or disable the use of the field redaction for urls.
+     * [Optional] A flag to enable or disable redaction for query parameters and username/password.
      * @defaultValue true
      */
-    redactUrls?: boolean;
+    redactUrls?: UrlRedactionOptions;
 
     /**
      * [Optional] Additional query parameters to redact beyond the default set.
