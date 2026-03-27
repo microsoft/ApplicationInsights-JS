@@ -2225,6 +2225,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     "URL with custom sensitive parameters should have them redacted while preserving other parameters");
             }
         });
+
         this.testCase({
             name: "FieldRedaction: should redact both default and custom query parameters",
             test: () => {
@@ -2239,6 +2240,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     "URL with both default and custom sensitive parameters should have all redacted");
             }
         });
+
         this.testCase({
             name: "FieldRedaction:should replace custom parameters redactQueryParams when user specifies the replace config",
             test: () => {
@@ -2251,6 +2253,21 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                 const redactedLocation = fieldRedaction(url, config);
                 Assert.equal(redactedLocation, "https://REDACTED:REDACTED@example.com/path?auth_token=12345&authorize=REDACTED",
                     "URL with custom sensitive parameters should be redacted when query redaction is not disabled");
+            }
+        });
+
+        this.testCase({
+            name: "FieldRedaction: should not redact any query string values when custom query parameters are empty",
+            test: () => {
+                let config = {
+                    redactUrls: UrlRedactionOptions.replaceDefault,
+                    redactQueryParams: []
+                } as IConfiguration;
+                
+                const url = "https://example.com/path?auth_token=12345&name=test&authorize=secret";
+                const redactedLocation = fieldRedaction(url, config);
+                Assert.equal(redactedLocation, "https://example.com/path?auth_token=12345&name=test&authorize=secret",
+                    "URL with custom sensitive parameters should not be redacted when custom query parameters are empty");
             }
         });
 
@@ -2419,7 +2436,6 @@ export class ApplicationInsightsCoreTests extends AITestClass {
                     "Extremely long encoded credentials should not be redacted due to length limits");
             }
         });
-
 
         this.testCase({
             name: "FieldRedaction: should handle extremely long usernames without infinite looping",

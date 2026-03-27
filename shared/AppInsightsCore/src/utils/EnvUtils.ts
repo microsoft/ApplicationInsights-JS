@@ -8,7 +8,7 @@ import {
     isFunction, isNullOrUndefined, isString, isUndefined, mathMax, strIndexOf, strSubstring
 } from "@nevware21/ts-utils";
 import { DEFAULT_SENSITIVE_PARAMS, STR_EMPTY, STR_REDACTED } from "../constants/InternalConstants";
-import { UrlRedactionOptions } from "../enums/ai/UrlRedactionOptions";
+import { eUrlRedactionOptions } from "../enums/ai/UrlRedactionOptions";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import { strContains } from "./HelperFuncs";
 
@@ -458,9 +458,9 @@ function redactQueryParameters(url: string, config?: IConfiguration): string {
 
     const option = config ? config.redactUrls : undefined;
     
-    if (option === UrlRedactionOptions.appendToDefault) {
+    if (option === eUrlRedactionOptions.appendToDefault) {
         sensitiveParams = DEFAULT_SENSITIVE_PARAMS.concat(config.redactQueryParams);
-    } else if (option === UrlRedactionOptions.replaceDefault) {
+    } else if (option === eUrlRedactionOptions.replaceDefault) {
         sensitiveParams = config.redactQueryParams;
     } else {
         sensitiveParams = DEFAULT_SENSITIVE_PARAMS;
@@ -551,7 +551,7 @@ export function fieldRedaction(input: string, config: IConfiguration): string {
 
     const option = config ? config.redactUrls : undefined;
 
-    const isRedactionDisabled = option === false || option === UrlRedactionOptions.false;
+    const isRedactionDisabled = option === false || option === eUrlRedactionOptions.false;
     if (isRedactionDisabled) {
         return input;
     }
@@ -564,11 +564,11 @@ export function fieldRedaction(input: string, config: IConfiguration): string {
         return input;
     }
 
-    if (option === UrlRedactionOptions.usernamePasswordOnly) {
+    if (option === eUrlRedactionOptions.usernamePasswordOnly) {
         hasQueryParams = false;
     }
 
-    if (option === UrlRedactionOptions.queryParamsOnly) {
+    if (option === eUrlRedactionOptions.queryParamsOnly) {
         hasCredentials = false;
     }
 
