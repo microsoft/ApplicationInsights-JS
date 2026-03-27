@@ -26,6 +26,7 @@ import { TraceSuppressionTests } from "./TraceSuppression.Tests";
 import { TraceProviderTests } from "./TraceProvider.Tests";
 import { TraceContextTests } from "./TraceContext.Tests";
 import { OTelInitTests } from "./OTelInit.Tests";
+import { SdkStatsFeatureTests } from "./SdkStatsFeature.tests";
 
 export function runTests() {
     new OTelInitTests().registerTests();
@@ -58,4 +59,5 @@ export function runTests() {
     new SpanContextPropagationTests().registerTests();
     new SpanLifeCycleTests().registerTests();
     new TelemetryItemGenerationTests().registerTests();
+    new SdkStatsFeatureTests().registerTests();
 }

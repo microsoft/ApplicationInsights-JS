@@ -1,6 +1,7 @@
 module.exports = function (grunt) {
 
     const versionPlaceholder = '"#version#"';
+    const oneDsVersionPlaceholder = '"#1ds-version#"';
 
     const aiCoreDefaultNameReplacements = [
     ];
@@ -323,7 +324,26 @@ module.exports = function (grunt) {
                         var packageVersion = pkg['version'];
 
                         replaceCmds[key] = setVersionNumber(modulePath, packageVersion);
-                        replaceCmds[key + '-reverse'] = restoreVersionPlaceholder(modulePath, packageVersion);                        
+                        replaceCmds[key + '-reverse'] = restoreVersionPlaceholder(modulePath, packageVersion);
+
+                        // For the core module, also replace #1ds-version# with a version derived
+                        // from the core package version with the major version incremented by 1
+                        if (key === "core") {
+                            var versionParts = packageVersion.split('.');
+                            var oneDsVersion = (parseInt(versionParts[0]) + 1) + '.' + versionParts.slice(1).join('.');
+                            var oneDsExpected = _createRegEx(oneDsVersionPlaceholder);
+                            replaceCmds[key].options.replacements.push({
+                                pattern: oneDsExpected,
+                                replacement: "'" + oneDsVersion + "'"
+                            });
+                            replaceCmds[key + '-reverse'].options.replacements.push({
+                                pattern: _createRegEx("'" + oneDsVersion + "'"),
+                                replacement: oneDsVersionPlaceholder
+                            },{
+                                pattern: _createRegEx('"' + oneDsVersion + '"'),
+                                replacement: oneDsVersionPlaceholder
+                            });
+                        }
                     }
                 }
 
