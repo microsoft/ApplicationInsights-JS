@@ -1,6 +1,9 @@
+const { default: replace } = require("@rollup/plugin-replace");
+
 module.exports = function (grunt) {
 
     const versionPlaceholder = '"#version#"';
+    const extVersionPlaceholder = '"#extVersion#"';
 
     const aiCoreDefaultNameReplacements = [
     ];
@@ -158,10 +161,19 @@ module.exports = function (grunt) {
         return new RegExp(str.replace(/([.+?^=!:${}()|\[\]\/\\])/g, '\\$1'), 'g');
     }
     
-    function setVersionNumber(path, packageVersion) {
-        var expectedVersion = _createRegEx(versionPlaceholder);
-        var replaceVersion = "'" + packageVersion + "'";
+    function setVersionNumber(path, packageVersion, extPackageVersion) {
         var srcPath = path + '/src';
+        var replacements = [{
+            pattern: _createRegEx(versionPlaceholder),
+            replacement: "'" + packageVersion + "'"
+        }];
+
+        if (extPackageVersion) {
+            replacements.push({
+                pattern: _createRegEx(extVersionPlaceholder),
+                replacement: "'" + extPackageVersion + "'"
+            });
+        }
 
         // This is the grunt string-replace configuration to replace version placeholder with the actual version number
         return {
@@ -172,18 +184,31 @@ module.exports = function (grunt) {
                 src: '**/*.ts'
             }],
             options: {
-                replacements: [{
-                    pattern: expectedVersion,
-                    replacement: replaceVersion
-                }]
+                replacements: replacements
             }
         };
     }
 
-    function restoreVersionPlaceholder(path, packageVersion) {
-        var expectedVersion1 = _createRegEx("'" + packageVersion + "'");
-        var expectedVersion2 = _createRegEx('"' + packageVersion + '"');
+    function restoreVersionPlaceholder(path, packageVersion, extPackageVersion) {
         var srcPath = path + '/src';
+        var replacements = [{
+            pattern: _createRegEx("'" + packageVersion + "'"),
+            replacement: versionPlaceholder
+        },{
+            pattern: _createRegEx('"' + packageVersion + '"'),
+            replacement: versionPlaceholder
+        }];
+
+        if (extPackageVersion && extPackageVersion !== packageVersion) {
+            replacements.push({
+                pattern: _createRegEx("'" + extPackageVersion + "'"),
+                replacement: extVersionPlaceholder
+            });
+            replacements.push({
+                pattern: _createRegEx('"' + extPackageVersion + '"'),
+                replacement: extVersionPlaceholder
+            });
+        }
 
         // This is the grunt string-replace configuration to replace the actual version number with the version placeholder
         return {
@@ -194,13 +219,7 @@ module.exports = function (grunt) {
                 src: '**/*.ts'
             }],
             options: {
-                replacements: [{
-                    pattern: expectedVersion1,
-                    replacement: versionPlaceholder
-                },{
-                    pattern: expectedVersion2,
-                    replacement: versionPlaceholder
-                }]
+                replacements: replacements
             }
         };
     }
@@ -321,9 +340,21 @@ module.exports = function (grunt) {
                         var replaceCmds = buildCmds['string-replace'];
                         // Read the actual module version from the package.json
                         var packageVersion = pkg['version'];
+                        var extPackageVersion = packageVersion;
 
-                        replaceCmds[key] = setVersionNumber(modulePath, packageVersion);
-                        replaceCmds[key + '-reverse'] = restoreVersionPlaceholder(modulePath, packageVersion);                        
+                        if (key !== "1dsPost" && key !== "1dsCore") {
+                            // Support for #extVersion# placeholder (old 1ds core version with major version incremented by 1)
+                            var idx = packageVersion.indexOf(".");
+                            if (idx !== -1) {
+                                var majorVersion = parseInt(packageVersion.substring(0, idx));
+                                if (!isNaN(majorVersion)) {
+                                    extPackageVersion = (majorVersion + 1) + packageVersion.substring(idx);
+                                }
+                            }
+                        }
+
+                        replaceCmds[key] = setVersionNumber(modulePath, packageVersion, extPackageVersion);
+                        replaceCmds[key + '-reverse'] = restoreVersionPlaceholder(modulePath, packageVersion, extPackageVersion);                        
                     }
                 }
 

@@ -400,7 +400,7 @@ export { ValueSanitizer } from "./ext/ValueSanitizer";
 // 1DS Utils
 export {
     isValueAssigned, isLatency, isUint8ArrayAvailable, getTenantId, sanitizeProperty,
-    Version, FullVersionString, getCommonSchemaMetaData, getCookieValue,
+    ExtVersion, Version, ExtFullVersionString, FullVersionString, getCommonSchemaMetaData, getCookieValue,
     extend, createGuid, isDocumentObjectAvailable, isWindowObjectAvailable,
     setProcessTelemetryTimings, getTime,
     isArrayValid, isValueKind, getFieldValueType,
