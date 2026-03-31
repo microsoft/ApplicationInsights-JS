@@ -458,6 +458,61 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
+            name: 'ApplicationInsightsCore: track does not set ext.sdk.ver',
+            useFakeTimers: true,
+            test: () => {
+                const channelPlugin = new ChannelPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                appInsightsCore.initialize({ instrumentationKey: "00000000-1111-2222-817F-544738CC7C41" }, [channelPlugin]);
+
+                // Act
+                const bareItem: ITelemetryItem = { name: 'test item' };
+                appInsightsCore.track(bareItem);
+                this.clock.tick(1);
+
+                // Test - AppInsightsCore should NOT set ext.sdk.ver (only AppInsightsExtCore does)
+                Assert.equal(undefined, bareItem.ext, "ext should not be set by AppInsightsCore");
+            }
+        });
+
+        this.testCase({
+            name: 'ApplicationInsightsCore: track does not set ext.sdk.ver when ext is pre-populated',
+            useFakeTimers: true,
+            test: () => {
+                const channelPlugin = new ChannelPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                appInsightsCore.initialize({ instrumentationKey: "00000000-1111-2222-817F-544738CC7C41" }, [channelPlugin]);
+
+                // Act - provide ext but no sdk.ver
+                const bareItem: ITelemetryItem = { name: 'test item', ext: { "custom": { "field": "value" } } };
+                appInsightsCore.track(bareItem);
+                this.clock.tick(1);
+
+                // Test - AppInsightsCore should NOT add sdk.ver to ext
+                Assert.ok(bareItem.ext, "ext should still exist");
+                Assert.equal(undefined, bareItem.ext["sdk"], "sdk should not be added by AppInsightsCore");
+            }
+        });
+
+        this.testCase({
+            name: 'ApplicationInsightsCore: track does not overwrite ext.sdk.ver if already set',
+            useFakeTimers: true,
+            test: () => {
+                const channelPlugin = new ChannelPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                appInsightsCore.initialize({ instrumentationKey: "00000000-1111-2222-817F-544738CC7C41" }, [channelPlugin]);
+
+                // Act - provide ext.sdk.ver explicitly
+                const bareItem: ITelemetryItem = { name: 'test item', ext: { "sdk": { "ver": "custom-version" } } };
+                appInsightsCore.track(bareItem);
+                this.clock.tick(1);
+
+                // Test - AppInsightsCore should not touch the existing ext.sdk.ver
+                Assert.equal("custom-version", bareItem.ext["sdk"]["ver"], "ext.sdk.ver should remain unchanged");
+            }
+        });
+
+        this.testCase({
             name: "DiagnosticLogger: Critical logging history is saved",
             test: () => {
                 // Setup
