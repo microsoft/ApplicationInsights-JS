@@ -44,6 +44,41 @@ const compareDates = (date1: Date, date: string | Date, expectedSame: boolean = 
     Assert.equal(isSame, expectedSame, "checking that the dates where as expected");
 }
 
+const getUtcDaysInMonth = (year: number, month: number) => {
+    return daysInMonth[month] + (month === 1 && isLeapYear(year) ? 1 : 0);
+}
+
+const createUtcDate = (year: number, month: number, day: number) => {
+    return new Date(Date.UTC(year, month, day, 12, 0, 0, 0));
+}
+
+const createUtcDateMonthsAgo = (monthsAgo: number) => {
+    let now = new Date();
+    let year = now.getUTCFullYear();
+    let month = now.getUTCMonth() - monthsAgo;
+    let day = now.getUTCDate();
+
+    while (month < 0) {
+        month += 12;
+        year -= 1;
+    }
+
+    day = Math.min(day, getUtcDaysInMonth(year, month));
+    return createUtcDate(year, month, day);
+}
+
+const createUtcDateDaysAgo = (daysAgo: number) => {
+    let now = new Date();
+    return new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() - daysAgo,
+        now.getUTCHours(),
+        now.getUTCMinutes(),
+        now.getUTCSeconds(),
+        now.getUTCMilliseconds()));
+}
+
 export class ThrottleMgrTest extends AITestClass {
     private _core: IAppInsightsCore<IConfiguration & IConfig>;
     private _msgKey: number;
@@ -758,19 +793,7 @@ export class ThrottleMgrTest extends AITestClass {
         this.testCase({
             name: "ThrottleMgrTest: should not trigger throttle when month interval requirements are not meet",
             test: () => {
-                let date = new Date();
-                let month = date.getUTCMonth();
-                let year = date.getUTCFullYear();
-                if (month == 0) {
-                    date.setUTCFullYear(year-1);
-                    date.setUTCMonth(11);
-                } else {
-                    let dayOfMonth = date.getDate();
-                    if (dayOfMonth > (daysInMonth[month - 1] + (month === 2 ? (isLeapYear(year - 1) ? 1 : 0 ) : 0 ))) {
-                        date.setDate(daysInMonth[month - 1] + (month === 2 ? (isLeapYear(year - 1) ? 1 : 0 ) : 0 ));
-                    }
-                    date.setUTCMonth(month-1);
-                }
+                let date = createUtcDateMonthsAgo(1);
                 let storageObj = {
                     date: date,
                     count: 0
@@ -807,21 +830,7 @@ export class ThrottleMgrTest extends AITestClass {
         this.testCase({
             name: "ThrottleMgrTest: should not trigger throttle when year and month interval requirements are not meet",
             test: () => {
-                let date = new Date();
-                let month = date.getUTCMonth();
-                let year = date.getUTCFullYear();
-             
-                if (month == 0) {
-                    date.setUTCFullYear(year-2);
-                    date.setUTCMonth(11);
-                } else {
-                    date.setUTCFullYear(year-1);
-                    let dayOfMonth = date.getDate();
-                    if (dayOfMonth > (daysInMonth[month - 1] + (month === 2 ? (isLeapYear(year - 1) ? 1 : 0 ) : 0 ))) {
-                        date.setDate(daysInMonth[month - 1] + (month === 2 ? (isLeapYear(year - 1) ? 1 : 0 ) : 0 ));
-                    }
-                    date.setUTCMonth(month-1);
-                }
+                let date = createUtcDateMonthsAgo(13);
                 let storageObj = {
                     date: date,
                     count: 0
@@ -859,17 +868,7 @@ export class ThrottleMgrTest extends AITestClass {
         this.testCase({
             name: "ThrottleMgrTest: should not trigger throttle when day interval requirements are not meet",
             test: () => {
-                let date = new Date();
-                let curDate = date.getUTCDate();
-                let curMonth = date.getUTCMonth();
-                if (curDate === 1) {
-                    curMonth -= 1;
-                    curDate = 28;
-                } else {
-                    curDate -= 1;
-                }
-                date.setUTCDate(curDate);
-                date.setUTCMonth(curMonth);
+                let date = createUtcDateDaysAgo(1);
                 let storageObj = {
                     date: date,
                     count: 0
