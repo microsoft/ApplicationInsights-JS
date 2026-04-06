@@ -76,7 +76,7 @@ ES3 support has been removed from the latest version (v3.x), if required [see fo
 | Version | Details
 |---------|--------------------------
 | <b>[3.x](https://github.com/microsoft/ApplicationInsights-JS/tree/main)<br/><sub>(main)</sub> </b>| Current supported release from April '2023.<br/>Supports dynamic configuration changes/updates after initialization. Supports all features of v2 except with the known <b>[Breaking changes from previous versions](https://microsoft.github.io/ApplicationInsights-JS/upgrade/v3_BreakingChanges.html)</b> and does NOT support the previous v1.x compatible API proxy layer, it also removes support for ES3 / IE8. Minimum supported Runtime is now ES5 (IE9+).
-| [2.x](https://github.com/microsoft/ApplicationInsights-JS/tree/master)<br/><sub>(master)</sub> | Feature freeze from March '2023, security fixes and critical bugs only.<br />Supports adding / removing extensions and full unloading/removal of the SDK after initialization. Last version to support ES3 (IE8+), also provides a v1.x compatible API proxy layer for upgrading from V1.x.
+| [2.x](https://github.com/microsoft/ApplicationInsights-JS/tree/master)<br/><sub>(master)</sub> | Feature freeze from March '2023. Will only receive critical bug fixes when no workaround exists — no new features or back-porting from later versions.<br />Supports adding / removing extensions and full unloading/removal of the SDK after initialization. Last version to support ES3 (IE8+), also provides a v1.x compatible API proxy layer for upgrading from V1.x.
 | [1.0.x](https://github.com/microsoft/ApplicationInsights-JS/tree/legacy-v1)<br/><sub>(legacy-v1)</sub> | No longer actively maintained -- please Upgrade. The documentation for `applicationinsights-js@1.0.x` has moved [here](https://github.com/microsoft/ApplicationInsights-JS/tree/master/legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](https://microsoft.github.io/ApplicationInsights-JS/upgrade/v2_UpgradeGuide.html). | Not actively maintained, please upgrade.
 
 
@@ -164,7 +164,7 @@ Reporting of SDK load exceptions is specifically NOT supported on IE 8 (or less)
 >
 > If you are using a previous version of the snippet, it is highly recommended that you update to the latest version so that you will receive these previously unreported issues.
 
-#### Snippet configuration options
+#### [Snippet configuration options](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html)
 
 All configuration options have now been move towards the end of the script to help avoid accidentally introducing JavaScript errors that would not just cause the SDK to fail to load, but also it would disable the reporting of the failure.
 
@@ -174,18 +174,28 @@ The available configuration options are: -
 
 | Name | Type | Description
 |------|------|----------------
-| src | string **[required]** | The full URL for where to load the SDK from. This value is used for the "src" attribute of a dynamically added &lt;script /&gt; tag. You can use the public CDN location or your own privately hosted one.
-| name | string *[optional]* | The global name for the initialized SDK, defaults to appInsights. So ```window.appInsights``` will be a reference to the initialized instance. Note: if you provide a name value or a previous instance appears to be assigned (via the global name appInsightsSDK) then this name value will also be defined in the global namespace as ```window.appInsightsSDK=<name value>```, this is required by the SDK initialization code to ensure it's initializing and updating the correct snippet skeleton and proxy methods.
-| ld | number in ms *[optional]* | Defines the load delay to wait before attempting to load the SDK. Default value is 0ms and any negative value will immediately add a script tag to the &lt;head&gt; region of the page, which will then block the page load event until to script is loaded (or fails).
-| useXhr | boolean *[optional]* | This setting is used only for reporting SDK load failures. Reporting will first attempt to use fetch() if available and then fallback to XHR, setting this value to true just bypasses the fetch check. Use of this value is only be required if your application is being used in an environment where fetch would fail to send the failure events.
-| crossOrigin | string *[optional]* | By including this setting, the script tag added to download the SDK will include the crossOrigin attribute with this string value. When not defined (the default) no crossOrigin attribute is added. Recommended values are not defined (the default); ""; or "anonymous" (For all valid values see [HTML attribute: crossorigin](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin) documentation)
-| onInit | function(aiSdk) { ... } *[optional]* | This callback function which is called after the main SDK script has been successfully loaded and initialized from the CDN (based on the src value), it is passed a reference to the sdk instance that it is being called for and it is also called _before_ the first initial page view. If the SDK has already been loaded and initialized this callback will still be called. NOTE: As this callback is called during the processing of the sdk.queue array you CANNOT add any additional items to the queue as they will be ignored and dropped. (Added as part of snippet version 5 -- the sv:"#" value within the snippet script, the current version is 7)
-| cfg | object **[required]** | The configuration passed to the Application Insights SDK during initialization.
-| sri | boolean *[optional]* | Custom optional value to specify whether to fetch the snippet from an integrity file and perform an integrity check. When this option is used, the integrity file is loaded first, affecting the load order and script execution. Hence the ld option will be ignored. Additionally, if the page navigates away before the integrity file is loaded, some events may be lost.
-| pl | boolean *[optional]* | Custom optional value to specify whether to enable the Trusted Type policy check on the snippet.
-| pn | string *[optional]* | Custom optional value to specify the name of the Trusted Type policy that would be implemented on the snippet, default is 'aiPolicy'.
-| ttp | TrustedTypePolicy *[optional]* | Custom optional value to specify the Trusted Type policy that would be applied on the snippet src.
-| nt | string *[optional]* | Custom optional value to specify the nonce attribute value that will be applied to the script tag when it is added to the page.
+| [src](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html#src) | string **[required]** | The full URL for where to load the SDK from. This value is used for the "src" attribute of a dynamically added &lt;script /&gt; tag. You can use the public CDN location or your own privately hosted one.
+| [name](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html#name) | string *[optional]* | The global name for the initialized SDK, defaults to appInsights. So ```window.appInsights``` will be a reference to the initialized instance. Note: if you provide a name value or a previous instance appears to be assigned (via the global name appInsightsSDK) then this name value will also be defined in the global namespace as ```window.appInsightsSDK=<name value>```, this is required by the SDK initialization code to ensure it's initializing and updating the correct snippet skeleton and proxy methods.
+| [ld](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html#ld) | number in ms *[optional]* | Defines the load delay to wait before attempting to load the SDK. Default value is 0ms and any negative value will immediately add a script tag to the &lt;head&gt; region of the page, which will then block the page load event until to script is loaded (or fails).
+| [useXhr](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html#useXhr) | boolean *[optional]* | This setting is used only for reporting SDK load failures. Reporting will first attempt to use fetch() if available and then fallback to XHR, setting this value to true just bypasses the fetch check. Use of this value is only be required if your application is being used in an environment where fetch would fail to send the failure events.
+| [crossOrigin](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html#crossOrigin) | string *[optional]* | By including this setting, the script tag added to download the SDK will include the crossOrigin attribute with this string value. When not defined (the default) no crossOrigin attribute is added. Recommended values are not defined (the default); ""; or "anonymous" (For all valid values see [HTML attribute: crossorigin](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin) documentation)
+| [onInit](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html#onInit) | function(aiSdk) { ... } *[optional]* | This callback function which is called after the main SDK script has been successfully loaded and initialized from the CDN (based on the src value), it is passed a reference to the sdk instance that it is being called for and it is also called _before_ the first initial page view. If the SDK has already been loaded and initialized this callback will still be called. NOTE: As this callback is called during the processing of the sdk.queue array you CANNOT add any additional items to the queue as they will be ignored and dropped. (Added as part of snippet version 5 -- the sv:"#" value within the snippet script, the current version is 7)
+| [cfg](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html#cfg) | object **[required]** | The [IConfiguration](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IConfiguration.html) passed to the Application Insights SDK during initialization.
+| [cr](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html#cr) | boolean *[optional]* | Controls CDN fallback retry behavior. By default (`true`), if the SDK fails to load from the configured `src` URL, the snippet automatically attempts to load from multiple supported CDN domains in case one or more of them is temporarily unavailable. Set to `false` to disable this fallback and only attempt the single configured `src` URL.
+| [sri](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html#sri) | boolean *[optional]* | Custom optional value to specify whether to fetch the snippet from an integrity file and perform an integrity check. When this option is used, the integrity file is loaded first, affecting the load order and script execution. Hence the ld option will be ignored. Additionally, if the page navigates away before the integrity file is loaded, some events may be lost.
+| [dle](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html#dle) | boolean *[optional]* | When set to `true`, prevents the SDK from reporting load failure telemetry.
+| [pl](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html#pl) | boolean *[optional]* | Custom optional value to specify whether to enable the Trusted Type policy check on the snippet.
+| [pn](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html#pn) | string *[optional]* | Custom optional value to specify the name of the Trusted Type policy that would be implemented on the snippet, default is 'aiPolicy'.
+| [ttp](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html#ttp) | TrustedTypePolicy *[optional]* | Custom optional value to specify the Trusted Type policy that would be applied on the snippet src.
+| [nt](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web-snippet/interfaces/ISnippetConfig.html#nt) | string *[optional]* | Custom optional value to specify the nonce attribute value that will be applied to the script tag when it is added to the page.
+
+#### Internet Explorer: Automatic Version Fallback
+
+> **Important**: When the SDK Loader (snippet) detects that the page is being loaded by Internet Explorer (via the `msie` or `trident/` user agent strings), it will **automatically** rewrite the `src` URL to load the v2.x version of the SDK instead of v3.x. For example, `ai.3.gbl.min.js` will be changed to `ai.2.gbl.min.js`.
+>
+> This means that if your application uses the SDK Loader with a v3.x CDN URL and any of your users visit the page with Internet Explorer, they will receive the 2.x version of the SDK. As a result, **any APIs or features that are only available in v3.x or later — including the new OpenTelemetry-based APIs — will not exist** on the SDK instance for those users. Your code should account for this by checking for the existence of newer APIs before calling them, or by using only APIs that are available in both v2.x and v3.x.
+>
+> This fallback does **not** apply when using the NPM package directly, as NPM installations always load the specific version you have installed.
 
 #### Example using the snippet onInit callback
 
@@ -326,11 +336,11 @@ The Application Insights JavaScript SDK includes an **OpenTelemetry-compatible t
 
 For comprehensive documentation on the OpenTelemetry tracing API, including tracer management, span utilities, helper functions, and detailed examples, see:
 
-- **[OpenTelemetry Tracing Documentation](./docs/OTel/README.md)** - Complete guide to OpenTelemetry-compatible tracing
-- **[startActiveSpan Helper](./docs/OTel/startActiveSpan.md)** - Recommended method for creating spans with automatic lifecycle management
-- **[withSpan Helper](./docs/OTel/withSpan.md)** - Execute code with existing span as active context
-- **[Trace API Reference](./docs/OTel/traceApi.md)** - Tracer management and span utilities
-- **[Examples Guide](./docs/OTel/examples.md)** - Comprehensive usage examples and patterns
+- **[OpenTelemetry Tracing Documentation](https://microsoft.github.io/ApplicationInsights-JS/OTel/)** - Complete guide to OpenTelemetry-compatible tracing
+- **[startActiveSpan Helper](https://microsoft.github.io/ApplicationInsights-JS/OTel/startActiveSpan)** - Recommended method for creating spans with automatic lifecycle management
+- **[withSpan Helper](https://microsoft.github.io/ApplicationInsights-JS/OTel/withSpan)** - Execute code with existing span as active context
+- **[Trace API Reference](https://microsoft.github.io/ApplicationInsights-JS/OTel/traceApi)** - Tracer management and span utilities
+- **[Examples Guide](https://microsoft.github.io/ApplicationInsights-JS/OTel/examples)** - Comprehensive usage examples and patterns
 
 **Note:** This is an OpenTelemetry-compatible tracing API implementation, not a full OpenTelemetry SDK. Only tracing APIs are supported (metrics and logs APIs are not included).
 
@@ -358,7 +368,7 @@ All autocollection is ON by default. The full version of the Application Insight
 
 Telemetry initializers are used to modify the contents of collected telemetry before being sent from the user's browser. They can also be used to prevent certain telemetry from being sent, by returning `false`. Multiple telemetry initializers can be added to your Application Insights instance, and they are executed in order of adding them.
 
-The input argument to `addTelemetryInitializer` is a callback that takes a [`ITelemetryItem`](./API-reference.md#addTelemetryInitializer) as an argument and returns a `boolean` or `void`. If returning `false`, the telemetry item is not sent, else it proceeds to the next telemetry initializer, if any, or is sent to the telemetry collection endpoint.
+The input argument to `addTelemetryInitializer` is a callback that takes a [`ITelemetryItem`](https://microsoft.github.io/ApplicationInsights-JS/API-reference#addTelemetryInitializer) as an argument and returns a `boolean` or `void`. If returning `false`, the telemetry item is not sent, else it proceeds to the next telemetry initializer, if any, or is sent to the telemetry collection endpoint.
 
 #### Example: [Setting Cloud Role Name](https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-map#set-cloud-role-name)
 
@@ -385,7 +395,7 @@ appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
 
 ### Dependency Listeners
 
-A [dependency listener is a callback function](./API-reference.md#addDependencyListener) that allows you to perform additional manipulation of the request details before the request is performed.
+A [dependency listener is a callback function](https://microsoft.github.io/ApplicationInsights-JS/API-reference#addDependencyListener) that allows you to perform additional manipulation of the request details before the request is performed.
 
 This includes :-
 
@@ -395,7 +405,7 @@ This includes :-
 
 ### Dependency Initializers
 
-A [Dependency Initializer is very similar](./API-reference.md#addDependencyInitializer) to a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) in that it allows you modify the contents of collected telemetry before being sent from the user's browser. And you can also returning `false` to cause the event to not be emitted.
+A [Dependency Initializer is very similar](https://microsoft.github.io/ApplicationInsights-JS/API-reference#addDependencyInitializer) to a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) in that it allows you modify the contents of collected telemetry before being sent from the user's browser. And you can also returning `false` to cause the event to not be emitted.
 
 The differences between a telemetry initializer and a dependency initializer are :-
 - A Dependency Initializer is called "before" the event is processed by the pipeline, as such it will NOT (yet) contain the automatically populated properties that are applied later;
@@ -483,7 +493,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | retryCodes | number[] | undefined | Identifies the status codes that will cause event batches to be resent, when `null` or `undefined` the SDK will use it's defaults `[401, 408, 429, 500, 502, 503, 504]`. `403` was removed in version 3.1.1. |
 | [disablePageUnloadEvents](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IConfiguration.html#disablePageUnloadEvents) | string[] | undefined | [Optional] An array of the page unload events that you would like to be ignored. [See detailed documentation](https://microsoft.github.io/ApplicationInsights-JS/PageUnloadEvents.html). Unload events include "beforeunload", "unload", "visibilitychange" (with 'hidden' state) and "pagehide". This can be used to avoid jQuery 3.7.1+ deprecation warnings by configuring as `disablePageUnloadEvents: ["unload"]`. |
 | [disablePageShowEvents](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IConfiguration.html#disablePageShowEvents) | string[] | undefined | [Optional] An array of page show events that you would like to be ignored. [See detailed documentation](https://microsoft.github.io/ApplicationInsights-JS/PageUnloadEvents.html). Page Show events include "pageshow" and "visibilitychange" (with 'visible' state). |
-| [expCfg](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IConfiguration.html#expCfg) <br/><sub>since 3.3.1</sub>| [`IExceptionConfig`](https://github.com/microsoft/ApplicationInsights-JS/blob/main/shared/AppInsightsCommon/src/Interfaces/IExceptionTelemetry.ts) | undefined | Set additional configuration for exceptions, such as more scripts to include in the exception telemetry. |
+| [expCfg](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IConfiguration.html#expCfg) <br/><sub>since 3.3.1</sub>| [`IExceptionConfig`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/IExceptionConfig.html) | undefined | Set additional configuration for exceptions, such as more scripts to include in the exception telemetry. |
 | [redactQueryParams](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IConfiguration.html#redactQueryParams) | string[] | `["sig", "Signature", "AWSAccessKeyId", "X-Goog-Signature"]` | [Optional] Extends the list of query parameter names that are automatically replaced with `"REDACTED"` when `redactUrls` is enabled. Use this to mask application-specific tokens such as `auth_token` or `api_key`. |
 | [redactUrls](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IConfiguration.html#redactUrls) | boolean | true | [Optional] Controls whether URL fields processed by the SDK have credentials and sensitive query-string values removed via the built-in field redaction helper. Set to `false` only if you explicitly want to send the original URL without masking. |
 
@@ -723,7 +733,7 @@ const appInsights = new ApplicationInsights({ config: {
 appInsights.loadAppInsights();
 ```
 
-ITelemetryPlugin has a simpler base type IPlugin that you can instantiate for initialization purposes when SDK loads.
+[ITelemetryPlugin](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ITelemetryPlugin.html) has a simpler base type [IPlugin](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/IPlugin.html) that you can instantiate for initialization purposes when SDK loads.
 
 ## Build & Test this repo
 
@@ -874,7 +884,7 @@ It is expected that most users will be using the `Public` URL, however, it is al
 --- | --- | --- | --- | --- |
 Latest ✔ | Latest ✔ | 9+ Full ✔ | Latest ✔ | Latest ✔ |
 
-> v3.x removed ES3 / IE8, if you need to retain ES3 (IE8) compatibility you will need to remain on the v2.x versions of the SDK. Which is now maintained on the old [master branch](https://github.com/Microsoft/ApplicationInsights-JS/tree/master)
+> v3.x removed ES3 / IE8, if you need to retain ES3 (IE8) compatibility you will need to remain on the v2.x versions of the SDK, which is available on the old [master branch](https://github.com/Microsoft/ApplicationInsights-JS/tree/master). The 2.x branch will only receive critical bug fixes when no workaround exists — no new features or back-porting from later versions.
 
 ### Submitting a Change to this Project
 
