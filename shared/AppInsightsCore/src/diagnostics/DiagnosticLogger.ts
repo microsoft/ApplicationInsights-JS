@@ -97,7 +97,7 @@ export class _InternalLogMessage{
 
 /*#__NO_SIDE_EFFECTS__*/
 export function safeGetLogger(core: IAppInsightsCore, config?: IConfiguration): IDiagnosticLogger {
-    return (core || {} as any).logger || new DiagnosticLogger(config);
+    return (core || {} as any).logger || new DiagnosticLogger(config || (core || {}).config);
 }
   
 export class DiagnosticLogger implements IDiagnosticLogger {

@@ -73,7 +73,7 @@ export const UrlRedactionOptions = (/* @__PURE__ */ createEnumStyle<typeof eUrlR
     /**
      * This will only redact the query parameter in the default set of query parameters to redact. It will not redact username and password.
      */
-    queryParamsOnly: eUrlRedactionOptions.queryParamsOnly,
+    queryParamsOnly: eUrlRedactionOptions.queryParamsOnly
 
 }));
 
