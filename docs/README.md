@@ -45,6 +45,7 @@ ES3 support has been removed from the latest version (v3.x), if required [see fo
 - [Performance Monitoring](./PerformanceMonitoring.md)
 - [Dependency Listeners](./Dependency.md)
 - [SDK Load Failure](./SdkLoadFailure.md)
+- [Previous API Reference](./API-reference.md) - Legacy hand-maintained API reference, we recommend using the auto-generated [typedoc documentation](https://microsoft.github.io/ApplicationInsights-JS/webSdk/) instead
 
 ### FAQ
 

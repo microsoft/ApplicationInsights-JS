@@ -6,7 +6,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BaseTelemetryPlugin, Extensions, IAppInsightsCore, IConfig, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryUnloadState, Undefined, _eInternalMessageId, _throwInternal, addPageHideEventListener,
+    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryUnloadState, _eInternalMessageId, _throwInternal, addPageHideEventListener,
     addPageUnloadEventListener, arrForEach, createProcessTelemetryContext, createUniqueNamespace, eLoggingSeverity, getSetValue,
     mergeEvtNamespace, onConfigChange, removePageHideEventListener, removePageUnloadEventListener, safeGetLogger, setValue,
     utlGetSessionStorage, utlSetSessionStorage

@@ -2,6 +2,128 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
+<!-- ## Unreleased Changes -->
+
+## 3.4.1 (April 7th, 2026)
+
+This is the first full supported release of the 3.4.x version line. While a 3.4.0-beta was previously released for early testing and validation, version 3.4.0 was not released as a standard supported version — 3.4.1 is the first production-ready release in this series. The `@microsoft/1ds-post-js` channel is numbered 4.4.1 and requires v3.4.1.
+
+### Significant Changes (since 3.3.11)
+
+> The following are the significant changes since the previous full release (3.3.11). Some of these changes were previously included in the 3.4.0-beta release.
+
+- **W3C Trace State Support**: Added full support for managing W3C Trace State and sending headers in distributed tracing, including new distributed tracing modes `AI_AND_W3C_TRACE` and `W3C_TRACE` that enable the [`tracestate`](https://www.w3.org/TR/trace-context/#tracestate-header) header to be sent with requests when trace state information is available, the existing states will continue to not send the header.
+
+- **New Distributed Tracing Modes**: Added new `eDistributedTracingModes` enum values:
+  - `AI_AND_W3C_TRACE` (17): Sends Application Insights headers + W3C `traceparent` + W3C `tracestate` headers (if state value is present)
+  - `W3C_TRACE` (18): Sends only W3C `traceparent` + W3C `tracestate` headers (if state value is present)
+
+- **Enhanced Distributed Tracing**: Refactored the distributed tracing implementation to provide better support for the W3C Trace Context specification and prepare for future OpenTelemetry Span-style API integration.
+
+- **New W3C TraceState API**: Introduced the `IW3cTraceState` interface that provides a mutable, ordered list of key/value pairs for trace state information with proper parent-child relationships.
+
+- **OpenTelemetry Integration Preparation**: Added foundational OpenTelemetry interfaces (`IOTelSpanContext`, `IOTelTraceState`) to provide OpenTelemetry API compatibility.
+
+- **Additional Configuration**: Added new configuration properties for W3C trace state support:
+  - `traceHdrMode`: Controls if the SDK should look for the `traceparent` and/or `tracestate` values from service timing headers or meta tags from the initial page load (in `IConfiguration`)
+  - Enhanced `distributedTracingMode` property to support the new W3C trace state modes (in `ICorrelationConfig`)
+
+- **Dependencies Extension**: The dependency tracking extension now includes additional logic for W3C trace state handling, which may affect custom dependency listeners or initializers. The following interfaces and functions have been enhanced with W3C trace state support:
+  - `IDependencyListenerDetails` interface now also includes a readonly `traceState` along with the previous `traceId`, `spanId`, `traceFlags` properties
+  - `addDependencyListener()` function now provides access to W3C trace state information through the enhanced details object
+  - `addDependencyInitializer()` function continues to work with existing dependency telemetry processing
+  - Custom dependency listeners can now access and modify W3C trace state information before requests are sent
+
+- **Enhanced Cookie Management**: Cookie values are now cached in memory when cookies are disabled instead of being lost, enabling support for consent banner workflows where cookies must be temporarily disabled until user approval. Automatic flushing occurs when cookies are re-enabled.
+
+- **OsPlugin Reliability Improvements**: Improved OsPlugin with proactive OS retrieval, unload handling, and session caching for more reliable OS detection.
+
+- **URL Redaction Enhancements**: Made URL redaction more dynamic for improved flexibility in field redaction scenarios.
+
+### Package Deprecation
+
+The following packages have been merged into `@microsoft/applicationinsights-core-js` and are now **deprecated**. They continue to be published as backward-compatible shims (re-exporting from Core) so existing code will not break, but they are no longer used as dependencies by the main SDK packages. You should stop importing from these packages and migrate to `@microsoft/applicationinsights-core-js` directly.
+
+- **`@microsoft/applicationinsights-common`** — All exports have been merged into `@microsoft/applicationinsights-core-js`. The package is now a compatibility shim that re-exports from Core. See the [Migration Guide](https://github.com/microsoft/ApplicationInsights-JS/blob/main/docs/upgrade/MergeCommonToCore.md) for details on updating your imports. This package will be removed in a future major release (4.0.0).
+
+- **`@microsoft/1ds-core-js`** — All exports have been merged into `@microsoft/applicationinsights-core-js`. The package is now a compatibility shim that re-exports from Core. See the [1DS Core Migration Guide](https://github.com/microsoft/ApplicationInsights-JS/blob/main/shared/1ds-core-js/README.md) for class/import name changes and migration steps. Consumers should update their imports to reference `@microsoft/applicationinsights-core-js` directly. This package will be removed in a future major release (4.0.0).
+
+### Breaking Changes
+
+The following is a list of known breaking changes for anyone attempting to implement the interfaces, for end-users / consumers of the existing interface this is considered to be only a potential breaking change as the existing functions are still provided and provide the same level of functionality. The breaking nature of these changes is for anyone attempting to provide their own implementation of these changes.
+
+#### Interface Changes
+
+- The `IDistributedTraceContext` interface has been significantly expanded to include W3C trace state management capabilities, which may affect custom telemetry processors that interact with distributed tracing context.
+  - Added additional "required" property accessors which update ONLY the current trace context instance and DO NOT update any parent context instances (`pageName`, `traceId`, `spanId` and `traceFlags`).
+    - The previous set functions continue to also update (replace) any parent context values for existing backward compatability, but have been marked as depracted and will be removed in a future release due to their side-effects of overwriting the parent values.
+
+### Potential Breaking Changes
+
+- **Class Removal**: The `TelemetryTrace` class has been removed and is no longer exported as part of the distributed tracing refactoring, with its functionality integrated into the new W3C trace state implementation.
+  - The properties `telemetryTrace` is now a complete adpater to the existing `core.getTraceCtx()` value and as such is now marked as deprecated and will be removed in a future release.
+  - The value of the `appInsights.context.telemetryTrace` is no longer an instance of this removed class.
+
+- **Trace Context Initialization**: Due to the distributed tracing refactoring, the core instance and SDK will now always have a valid `traceId` available through `core.getTraceCtx()`. The `traceId` will be either a newly generated random value or inherited from any detected parent trace context. This ensures consistent trace context availability but may affect applications that previously relied on the absence of a `traceId` to determine if distributed tracing was active.
+
+- **Dependencies Extension - ajaxRecord Class Removal**: The internal `ajaxRecord` class has been removed and is no longer exported from the dependencies extension (`@microsoft/applicationinsights-dependencies-js`). The internal implementation now implements the new [`IAjaxRecordData`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-dependencies-js/interfaces/IAjaxRecordData.html) interface. This class was previously used internally for AJAX request tracking and was referenced in the `IInstrumentationRequirements.includeCorrelationHeaders()` function signature. **Important**: The previous exporting of the `ajaxRecord` class was unintentional and was never meant to be part of the public API - it was an internal implementation detail that inadvertently became accessible to external code.
+  - **Previous Signature**: `includeCorrelationHeaders(ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any`
+  - **New Signature**: `includeCorrelationHeaders(ajaxData: IAjaxRecordData, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any`
+  - **New Interface**: The [`IAjaxRecordData`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-dependencies-js/interfaces/IAjaxRecordData.html) interface has been introduced to replace the `ajaxRecord` class in public API signatures and provides access to essential AJAX request properties:
+    - `getAbsoluteUrl(): string | null` - Gets the absolute URL for the request
+    - `getPathName(): string | null` - Gets the sanitized path name for the request URL  
+    - `traceCtx: IDistributedTraceContext` - The distributed trace context for the request
+    - `requestHeaders: { [key: string]: string }` - Object containing request headers
+    - `aborted?: number` - Indicates whether the request was aborted
+    - `context?: { [key: string]: any }` - Optional context object for dependency listeners
+  - **Impact**: This change only affects custom implementations that directly referenced the `ajaxRecord` class or implemented the `IInstrumentationRequirements` interface. Standard SDK usage and most custom dependency listeners/initializers are unaffected.
+  - **Migration**: If your code previously referenced `ajaxRecord` or implemented `IInstrumentationRequirements`, update it to use the new [`IAjaxRecordData`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-dependencies-js/interfaces/IAjaxRecordData.html) interface, which provides the same essential properties with proper TypeScript definitions and comprehensive JSDoc documentation.
+  - **Need Help?**: If you discover that your code depends on other functions or properties from the dependencies extension that are no longer exported and you believe should be part of the public API, please [raise an issue](https://github.com/microsoft/ApplicationInsights-JS/issues) with details about your use case so we can review and potentially provide a proper public API alternative.
+
+- **Flush Method Signature Change**: Renamed `flush` method parameter from `async` to `isAsync` in `IChannelControls` interface to avoid potential keyword conflicts (only affects code that relies on named parameters).
+  - Fixed return type of `flush` method to properly include `boolean` when callbacks complete synchronously
+
+### Potential behavioral changes
+
+This release enhances the cookie management behavior when cookies are disabled. Previously, when cookies were disabled, calls to `cookieMgr.set()` would return `false` and cookie values would be lost. Now, these operations are cached in memory and automatically applied when cookies are re-enabled to allow for cookie compliance banners and delayed approval.
+
+**Behavior changes:**
+- `cookieMgr.set()` now returns `true` when cookies are disabled (because values are cached), instead of `false`
+- `cookieMgr.get()` now returns cached values when cookies are disabled, instead of empty strings
+- `cookieMgr.del()` operations are now cached and applied when cookies are re-enabled
+- Applications can now recover cookie state after temporary cookie blocking scenarios
+
+**These changes improve data persistence and are considered enhancements rather than breaking changes.** If your application logic depends on the previous behavior of `set()` returning `false` when cookies are disabled, you may need to check `cookieMgr.isEnabled()` instead, or configure `disableCookieCache: true` in your `cookieCfg` to maintain the previous behavior.
+
+### Known Limitations
+
+- **SDK Loader (Snippet) automatically downgrades to v2.x on Internet Explorer**: When the SDK Loader detects that Internet Explorer is being used (via the `msie` or `trident/` user agent strings), it automatically rewrites the CDN URL to load the v2.x SDK instead of v3.x (e.g. `ai.3.gbl.min.js` becomes `ai.2.gbl.min.js`). This means any v3.x-only APIs — including the new OpenTelemetry-based APIs — will not be available for users on Internet Explorer. If your code uses these newer APIs, you should check for their existence before calling them. This fallback does not apply when using the NPM package directly.
+
+### Changelog
+
+- #2719 Improve OsPlugin reliability: proactive OS retrieval, unload handling, and session caching
+- #2718 Address issue with the AppInsightsExtCore using the wrong version number
+- #2716 Make URL Redaction more dynamic
+- #2712 [Main] Merge 1ds-core-js into applicationinsights-core-js
+- #2710 [Main] Merge Trace API Features from Beta
+- #2628 Fix flush method root cause - handle async callbacks in _doSend with proper error handling
+  - **Potential breaking change**: Renamed `flush` method parameter from `async` to `isAsync` in `IChannelControls` interface to avoid potential keyword conflicts (only affects code that relies on named parameters)
+  - Fixed return type of `flush` method to properly include `boolean` when callbacks complete synchronously
+  - Fixed root cause where `_doSend()` couldn't handle asynchronous callbacks from `preparePayload()` when compression is enabled
+  - `await applicationInsights.flush()` now works correctly with compression enabled
+  - Added proper error handling and promise rejection propagation through async callback chains
+  - Improved handling of both synchronous and asynchronous callback execution patterns
+  - No polling overhead - uses direct callback invocation for better performance
+- #2631 [Feature] Update the ICookieMgr implementation to write cookies after being enabled
+  - **Enhancement**: Cookie values are now cached in memory when cookies are disabled instead of being lost, enabling support for consent banner workflows where cookies must be temporarily disabled until user approval
+  - **Enhancement**: Automatic flushing occurs when cookies are re-enabled via `setEnabled(true)` or dynamic configuration changes  
+  - **Enhancement**: Added `disableCookieDefer` configuration option to maintain backward compatibility with previous behavior (defaults to false)
+  - **Behavior change**: `cookieMgr.set()` now returns `true` when disabled (cached) instead of `false`
+  - **Behavior change**: `cookieMgr.get()` now returns cached values when disabled instead of empty strings
+- [Beta] Add W3c Trace State support / handling and refactor distributed trace handling to prepare for OpenTelemetry Span style API / management
+
+**Full Changelog**: https://github.com/microsoft/ApplicationInsights-JS/compare/3.3.11...3.4.1
+
 ## 3.4.0-beta (February 23rd, 2026)
 
 ### Significant Changes
@@ -48,15 +170,15 @@ The following is a list of known breaking changes for anyone attempting to imple
 ### Potential Breaking Changes
 
 - **Class Removal**: The `TelemetryTrace` class has been removed and is no longer exported as part of the distributed tracing refactoring, with its functionality integrated into the new W3C trace state implementation.
-  - The properties `telemetryTrace` is now a complete adpater to the existing `core.getTraceCtx()` value and as such is now marked as deprecated and will be removed in a future release.
+  - The properties `telemetryTrace` is now a complete adapter to the existing `core.getTraceCtx()` value and as such is now marked as deprecated and will be removed in a future release.
   - The value of the `appInsights.context.telemetryTrace` is no longer an instance of this removed class.
 
 - **Trace Context Initialization**: Due to the distributed tracing refactoring, the core instance and SDK will now always have a valid `traceId` available through `core.getTraceCtx()`. The `traceId` will be either a newly generated random value or inherited from any detected parent trace context. This ensures consistent trace context availability but may affect applications that previously relied on the absence of a `traceId` to determine if distributed tracing was active.
 
-- **Dependencies Extension - ajaxRecord Class Removal**: The internal `ajaxRecord` class has been removed and is no longer exported from the dependencies extension (`@microsoft/applicationinsights-dependencies-js`). This class was previously used internally for AJAX request tracking and was referenced in the `IInstrumentationRequirements.includeCorrelationHeaders()` function signature. **Important**: The previous exporting of the `ajaxRecord` class was unintentional and was never meant to be part of the public API - it was an internal implementation detail that inadvertently became accessible to external code.
+- **Dependencies Extension - ajaxRecord Class Removal**: The internal `ajaxRecord` class has been removed and is no longer exported from the dependencies extension (`@microsoft/applicationinsights-dependencies-js`). The internal implementation now implements the new [`IAjaxRecordData`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-dependencies-js/interfaces/IAjaxRecordData.html) interface. This class was previously used internally for AJAX request tracking and was referenced in the `IInstrumentationRequirements.includeCorrelationHeaders()` function signature. **Important**: The previous exporting of the `ajaxRecord` class was unintentional and was never meant to be part of the public API - it was an internal implementation detail that inadvertently became accessible to external code.
   - **Previous Signature**: `includeCorrelationHeaders(ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any`
   - **New Signature**: `includeCorrelationHeaders(ajaxData: IAjaxRecordData, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any`
-  - **New Interface**: The `IAjaxRecordData` interface has been introduced to replace the `ajaxRecord` class in public API signatures and provides access to essential AJAX request properties:
+  - **New Interface**: The [`IAjaxRecordData`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-dependencies-js/interfaces/IAjaxRecordData.html) interface has been introduced to replace the `ajaxRecord` class in public API signatures and provides access to essential AJAX request properties:
     - `getAbsoluteUrl(): string | null` - Gets the absolute URL for the request
     - `getPathName(): string | null` - Gets the sanitized path name for the request URL  
     - `traceCtx: IDistributedTraceContext` - The distributed trace context for the request
@@ -64,64 +186,12 @@ The following is a list of known breaking changes for anyone attempting to imple
     - `aborted?: number` - Indicates whether the request was aborted
     - `context?: { [key: string]: any }` - Optional context object for dependency listeners
   - **Impact**: This change only affects custom implementations that directly referenced the `ajaxRecord` class or implemented the `IInstrumentationRequirements` interface. Standard SDK usage and most custom dependency listeners/initializers are unaffected.
-  - **Migration**: If your code previously referenced `ajaxRecord` or implemented `IInstrumentationRequirements`, update it to use the new `IAjaxRecordData` interface, which provides the same essential properties with proper TypeScript definitions and comprehensive JSDoc documentation.
+  - **Migration**: If your code previously referenced `ajaxRecord` or implemented `IInstrumentationRequirements`, update it to use the new [`IAjaxRecordData`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-dependencies-js/interfaces/IAjaxRecordData.html) interface, which provides the same essential properties with proper TypeScript definitions and comprehensive JSDoc documentation.
   - **Need Help?**: If you discover that your code depends on other functions or properties from the dependencies extension that are no longer exported and you believe should be part of the public API, please [raise an issue](https://github.com/microsoft/ApplicationInsights-JS/issues) with details about your use case so we can review and potentially provide a proper public API alternative.
 
 ### Changelog
 
-- [Beta] Add W3c Trace State support / handling and refactor distributed trace handling to prepare for OptenTelemetry Span style API / management
-
-## Unreleased Changes (from Main)
-
-### Potential breaking changes
-
-This release contains a potential breaking change to the `flush` method signature in the `IChannelControls` interface. The parameter name has been changed from `async` to `isAsync` to avoid potential conflicts with the `async` keyword.
-
-**Interface change:**
-```typescript
-// Before:
-flush(async: boolean = true, callBack?: (flushComplete?: boolean) => void): void | IPromise<boolean>;
-
-// After: 
-flush(isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void, sendReason?: SendRequestReason): boolean | void | IPromise<boolean>;
-```
-
-**This is only a breaking change if you rely on named parameters.** If you have custom channels or plugins that implement the `IChannelControls` interface directly and rely on passing named parameters, you will need to update the parameter name from `async` to `isAsync` in your implementation.
-
-### Potential behavioral changes
-
-This release enhances the cookie management behavior when cookies are disabled. Previously, when cookies were disabled, calls to `cookieMgr.set()` would return `false` and cookie values would be lost. Now, these operations are cached in memory and automatically applied when cookies are re-enabled to allow for cookie compliance banners and delayed approval.
-
-**Behavior changes:**
-- `cookieMgr.set()` now returns `true` when cookies are disabled (because values are cached), instead of `false`
-- `cookieMgr.get()` now returns cached values when cookies are disabled, instead of empty strings
-- `cookieMgr.del()` operations are now cached and applied when cookies are re-enabled
-- Applications can now recover cookie state after temporary cookie blocking scenarios
-
-**These changes improve data persistence and are considered enhancements rather than breaking changes.** If your application logic depends on the previous behavior of `set()` returning `false` when cookies are disabled, you may need to check `cookieMgr.isEnabled()` instead, or configure `disableCookieCache: true` in your `cookieCfg` to maintain the previous behavior.
-
-### Changelog
-
-- #2628 Fix flush method root cause - handle async callbacks in _doSend with proper error handling
-  - **Potential breaking change**: Renamed `flush` method parameter from `async` to `isAsync` in `IChannelControls` interface to avoid potential keyword conflicts (only affects code that relies on named parameters)
-  - Fixed return type of `flush` method to properly include `boolean` when callbacks complete synchronously
-  - Fixed root cause where `_doSend()` couldn't handle asynchronous callbacks from `preparePayload()` when compression is enabled
-  - `await applicationInsights.flush()` now works correctly with compression enabled
-  - Added proper error handling and promise rejection propagation through async callback chains
-  - Improved handling of both synchronous and asynchronous callback execution patterns
-  - No polling overhead - uses direct callback invocation for better performance
-
-- #2631 [Feature] Update the ICookieMgr implementation to write cookies after being enabled
-  - **Enhancement**: Cookie values are now cached in memory when cookies are disabled instead of being lost, enabling support for consent banner workflows where cookies must be temporarily disabled until user approval
-  - **Enhancement**: Automatic flushing occurs when cookies are re-enabled via `setEnabled(true)` or dynamic configuration changes  
-  - **Enhancement**: Added `disableCookieDefer` configuration option to maintain backward compatibility with previous behavior (defaults to false)
-  - **Behavior change**: `cookieMgr.set()` now returns `true` when disabled (cached) instead of `false`
-  - **Behavior change**: `cookieMgr.get()` now returns cached values when disabled instead of empty strings
-
-<!-- ## Unreleased Changes -->
-
-
-### Changelog
+- [Beta] Add W3c Trace State support / handling and refactor distributed trace handling to prepare for OpenTelemetry Span style API / management
 
 ## 3.3.11 (January 12th, 2026)
 

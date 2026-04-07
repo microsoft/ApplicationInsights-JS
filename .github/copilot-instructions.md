@@ -1,5 +1,11 @@
 # GitHub Copilot Instructions for Application Insights JavaScript SDK
 
+## Workflow Prompts
+
+Detailed step-by-step workflow instructions are available as prompt files in `.github/prompts/`. When asked to perform one of these tasks, **always read and follow the corresponding prompt file**:
+
+- **Release PR**: `.github/prompts/release-pr.prompt.md` — Full workflow for creating a release PR (version bump, README updates, RELEASES.md, gruntfile, lint, commit, and build validation)
+
 ## Project Overview
 This is the **Microsoft Application Insights JavaScript SDK** - a browser-based telemetry library for monitoring web applications. The SDK tracks page views, user interactions, performance metrics, exceptions, and custom events.
 
@@ -397,6 +403,59 @@ const config: IConfiguration = {
 - Minification and size optimization
 
 ### Release Process
+
+#### Version Management
+The project uses `version.json` in the root to track release versions and an automated `setVersion.js` script to update all packages consistently.
+
+**`version.json` key fields:**
+- `release`: The current base version (e.g., `"3.4.0"`)
+- `next`: The default increment type for `-next` flag (`"patch"`, `"minor"`, or `"major"`)
+- `pkgs`: Per-package version overrides (some packages like `1ds-*` or `offline-channel` have independent version numbers)
+
+**Using the setVersion script:**
+```bash
+# Common release commands:
+npm run setVersion -- -next           # Increment based on version.json "next" field (e.g., patch: 3.3.11 => 3.3.12)
+npm run setVersion -- -next -release  # Increment and remove any pre-release tag
+npm run setVersion -- -patch          # Force patch increment (x.y.z => x.y.[z+1])
+npm run setVersion -- -minor          # Force minor increment (x.y.z => x.[y+1].0)
+npm run setVersion -- -major          # Force major increment (x.y.z => [x+1].0.0)
+npm run setVersion -- 3.4.0           # Set an explicit version
+
+# Pre-release variants:
+npm run setVersion -- -next -dev      # Increment + dev pre-release tag (x.y.z-dev)
+npm run setVersion -- -next -beta     # Increment + beta pre-release tag (x.y.z-beta)
+npm run setVersion -- -next -alpha    # Increment + alpha pre-release tag (x.y.z-alpha)
+npm run setVersion -- -release        # Strip pre-release tag from current version (x.y.z-beta => x.y.z)
+
+# Dry run (logs changes without modifying files):
+npm run setVersion -- -next -test
+```
+
+**What setVersion updates:**
+1. `version.json` — updates `release` and per-package versions in `pkgs`
+2. All `package.json` files — updates `version`, `publishConfig.tag`, and all internal `@microsoft/applicationinsights-*` and `@microsoft/1ds-*` dependency references
+3. Source files (`.ts`, `.tsx`, `.html`) — replaces hardcoded version strings
+
+#### Creating a Release PR
+For the full step-by-step release PR workflow (version bump, README updates, RELEASES.md, gruntfile, lint, commit, and build validation), see the prompt file at `.github/prompts/release-pr.prompt.md`.
+
+Summary of the steps:
+1. Run `npm run setVersion -- -next -release` to bump the version
+2. Update `AISKU/README.md` CDN version table
+3. Update `RELEASES.md` with the new version entry, moving the "Unreleased Changes" content into the new version section
+4. Update `gruntfile.js` perfTestVersions array
+5. Run `npm run lint-fix`
+6. Commit all changes
+7. Run `npm run fullCleanBuild` to validate (must be run outside VS Code due to file locks)
+
+#### Publishing (post-merge)
+- `npm run npm-package` — Creates `.tgz` packages for a package group
+- `npm run npm-publish` — Publishes packages to npm
+- `npm run npm-set-latest` — Updates the npm `latest` tag
+- Package groups are defined in `tools/release-tools/package_groups.json`
+
+#### General Guidelines
 - Semantic versioning
 - Automated testing before release
 - Bundle size monitoring

@@ -1,8 +1,8 @@
 ## ES3/IE8 Compatibility
 
-> __ES3 / IE8 support has been removed from Version 3.x.__
+> __ES3 / IE8 support was removed in Version 3.x (released April 2023).__
 >
-> __If you need to retain ES3 / IE8 compatibility then you will need to use one of the 2.x versions of the SDK, which is now maintained on the old [master branch](https://github.com/Microsoft/ApplicationInsights-JS/tree/master)__
+> __If you need to retain ES3 / IE8 compatibility then you will need to use one of the 2.x versions of the SDK, which is available on the old [master branch](https://github.com/Microsoft/ApplicationInsights-JS/tree/master). The 2.x branch will only receive critical bug fixes when no workaround exists — no new features or back-porting from later versions will be provided.__
 
 The version 3.x is maintained on the default [main branch](https://github.com/Microsoft/ApplicationInsights-JS/tree/main)
 

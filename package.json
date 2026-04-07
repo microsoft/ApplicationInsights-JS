@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-web",
     "description": "Microsoft Application Insights JavaScript SDK",
-    "version": "3.3.11",
+    "version": "3.4.1",
     "keywords": [
         "browser performance monitoring",
         "script errors",
@@ -48,7 +48,7 @@
     },
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "devDependencies": {
-        "@microsoft/rush": "5.169.3",
+        "@microsoft/rush": "5.172.1",
         "@nevware21/grunt-eslint-ts": "^0.5.1",
         "@nevware21/grunt-ts-plugin": "^0.5.1",
         "@rollup/plugin-commonjs": "^24.0.0",

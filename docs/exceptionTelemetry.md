@@ -6,7 +6,7 @@ To enhance the detail and usefulness of exception telemetry in your application,
 
 | Property | Type | Default | Description |
 | --- | --- | --- | --- |
-| expCfg | [`IExceptionConfig`](https://github.com/microsoft/ApplicationInsights-JS/blob/main/shared/AppInsightsCommon/src/Interfaces/IExceptionTelemetry.ts) | `undefined` | Set additional configuration for exceptions, such as more scripts to include in the exception telemetry. |
+| expCfg | [`IExceptionConfig`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/IExceptionConfig.html) | `undefined` | Set additional configuration for exceptions, such as more scripts to include in the exception telemetry. |
 
 ### Example Usage
 ```js

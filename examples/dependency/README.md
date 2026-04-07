@@ -2,7 +2,7 @@
 
 ## Dependency Sample
 
-This Sample shows how to filter, modify, block and disable dependency data with [`addDependencyListener`](../../API-reference.md#adddependencylistener) and [`addDependencyInitializer`](../../API-reference.md#adddependencyinitializer).
+This Sample shows how to filter, modify, block and disable dependency data with [`addDependencyListener`](https://microsoft.github.io/ApplicationInsights-JS/API-reference#adddependencylistener) and [`addDependencyInitializer`](https://microsoft.github.io/ApplicationInsights-JS/API-reference#adddependencyinitializer).
 
 ## Sample Build
 
