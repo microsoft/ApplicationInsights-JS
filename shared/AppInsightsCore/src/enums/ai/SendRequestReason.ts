@@ -17,6 +17,7 @@ export const enum SendRequestReason {
     /**
      * A manual flush request was received
      */
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     ManualFlush = 1,
 
     /**
