@@ -1,5 +1,4 @@
 import nodeResolve from "@rollup/plugin-node-resolve";
-import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js";
 import replace from "@rollup/plugin-replace";
 import cleanup from "rollup-plugin-cleanup";
 import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/dist/node/removedynamic";
@@ -32,7 +31,7 @@ function doCleanup() {
   })
 }
 
-const browserRollupConfigFactory = (name, isProduction, format = "umd", extension = "") => {
+const browserRollupConfigFactory = (name, format = "umd", extension = "") => {
   const browserRollupConfig = {
     input: `dist-es5/${name}.js`,
     output: {
@@ -70,31 +69,11 @@ const browserRollupConfigFactory = (name, isProduction, format = "umd", extensio
     ]
   };
 
-  if (isProduction) {
-    browserRollupConfig.output.file = `browser/${name}${extension ? "." +extension : ""}.min.js`;
-    browserRollupConfig.plugins.push(
-      uglify({
-        ie8: false,
-        ie: true,
-        compress: {
-          ie: true,
-          passes:3,
-          unsafe: true,
-        },
-        output: {
-          ie: true,
-          preamble: banner,
-          webkit:true
-        }
-      })
-    );
-  }
-
   return browserRollupConfig;
 };
 
 updateDistEsmFiles(replaceValues, banner);
 
 export default [
-  browserRollupConfigFactory(workerName, false, "iife", "gbl")
+  browserRollupConfigFactory(workerName, "iife", "gbl")
 ];
