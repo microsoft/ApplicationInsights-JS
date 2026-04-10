@@ -40,8 +40,8 @@
         "finalhandler": "^1.1.1",
         "grunt": "^1.6.1",
         "grunt-cli": "^1.5.0",
-        "@nevware21/grunt-ts-plugin": "^0.5.1",
-        "@nevware21/grunt-eslint-ts": "^0.5.1",
+        "@nevware21/grunt-ts-plugin": "^0.5.2",
+        "@nevware21/grunt-eslint-ts": "^0.5.2",
         "globby": "^11.0.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
@@ -56,7 +56,7 @@
         "typedoc": "^0.26.6",
         "typescript": "^4.9.3",
         "tslib": "^2.0.0",
-        "puppeteer": "24.8.2"
+        "puppeteer": "^24.40.0"
     },
     "peerDependencies": {
         "tslib": ">= 1.0.0"

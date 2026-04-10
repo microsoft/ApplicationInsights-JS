@@ -8,7 +8,7 @@ import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
 import { ILegacyUnloadHook, IUnloadHook } from "../interfaces/ai/IUnloadHook";
 
 let _maxHooks: number | undefined;
-let _hookAddMonitor: (state: string, hooks: Array<ILegacyUnloadHook | IUnloadHook>) => void | undefined;
+let _hookAddMonitor: ((state: string, hooks: Array<ILegacyUnloadHook | IUnloadHook>) => void) | undefined;
 
 /**
  * Interface which identifiesAdd this hook so that it is automatically removed during unloading
@@ -29,6 +29,13 @@ export function _testHookMaxUnloadHooksCb(maxHooks?: number, addMonitor?: (state
     _maxHooks = maxHooks;
     _hookAddMonitor = addMonitor;
 }
+
+function _checkMaxHooks(name: string, hooks: Array<ILegacyUnloadHook | IUnloadHook>) {
+    if (_maxHooks && hooks.length > _maxHooks) {
+        _hookAddMonitor ? _hookAddMonitor(name, hooks) : _throwInternal(null, eLoggingSeverity.CRITICAL, _eInternalMessageId.MaxUnloadHookExceeded, "Max unload hooks exceeded. An excessive number of unload hooks has been detected.");
+    }
+}
+
 
 /**
  * Create a IUnloadHookContainer which can be used to remember unload hook functions to be executed during the component unloading
@@ -52,16 +59,16 @@ export function createUnloadHookContainer(): IUnloadHookContainer {
             }
         });
 
-        if (_maxHooks && oldHooks.length > _maxHooks) {
-            _hookAddMonitor ? _hookAddMonitor("doUnload", oldHooks) : _throwInternal(null, eLoggingSeverity.CRITICAL, _eInternalMessageId.MaxUnloadHookExceeded, "Max unload hooks exceeded. An excessive number of unload hooks has been detected.");
+        if (_maxHooks) {
+            _checkMaxHooks("doUnload", oldHooks);
         }
     }
 
     function _addHook(hooks: IUnloadHook | IUnloadHook[] | Iterator<IUnloadHook> | ILegacyUnloadHook | ILegacyUnloadHook[] | Iterator<ILegacyUnloadHook>) {
         if (hooks) {
             arrAppend(_hooks, hooks);
-            if (_maxHooks && _hooks.length > _maxHooks) {
-                _hookAddMonitor ? _hookAddMonitor("Add", _hooks) : _throwInternal(null, eLoggingSeverity.CRITICAL, _eInternalMessageId.MaxUnloadHookExceeded, "Max unload hooks exceeded. An excessive number of unload hooks has been detected.");
+            if (_maxHooks) {
+                _checkMaxHooks("Add", _hooks);
             }
         }
     }

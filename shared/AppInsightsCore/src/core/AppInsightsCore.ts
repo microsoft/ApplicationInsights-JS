@@ -358,7 +358,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
     /**
      * An array of the installed plugins that provide a version
      */
-     public readonly pluginVersionStringArr: string[];
+    public readonly pluginVersionStringArr: string[];
     
     /**
      * The formatted string of the installed plugins that contain a version number

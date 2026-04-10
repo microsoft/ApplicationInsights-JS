@@ -418,6 +418,7 @@ export declare const enum EventBatchNotificationReason {
     /**
      * A manual flush request was received
      */
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     SendingManualFlush = 1001,
 
     /**
