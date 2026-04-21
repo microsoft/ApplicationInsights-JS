@@ -167,7 +167,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                         _debugExtMsg("throw" + (severity === eLoggingSeverity.CRITICAL ? "Critical" : "Warning"), message);
                     }
                 }
-            }
+            };
 
             _self.debugToConsole = (message: string) => {
                 _logToConsole("debug", message);
