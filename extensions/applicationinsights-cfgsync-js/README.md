@@ -38,7 +38,7 @@ const cfgSyncPlugin = new CfgSyncPlugin();
 
 const appInsights = new ApplicationInsights({
     config: {
-        connectionString: "InstrumentationKey=YOUR_KEY",
+        connectionString: "YOUR_CONNECTION_STRING",
         extensions: [cfgSyncPlugin],
         extensionConfig: {
             [cfgSyncPlugin.identifier]: {
