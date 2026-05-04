@@ -12,8 +12,10 @@ Refer to [our GitHub page](https://github.com/microsoft/ApplicationInsights-JS) 
 
 ### Installation
 
+Install both the base Application Insights Web SDK and the CfgSync plugin used in the examples below:
+
 ```sh
-npm install @microsoft/applicationinsights-cfgsync-js
+npm install @microsoft/applicationinsights-web @microsoft/applicationinsights-cfgsync-js
 ```
 
 ### Basic Usage
