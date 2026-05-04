@@ -77,6 +77,30 @@ const listenerAppInsights = new ApplicationInsights({
 listenerAppInsights.loadAppInsights();
 ```
 
+#### Disabling Sync (None Mode)
+
+Use `ICfgSyncMode.None` when you want to include the plugin in a page but opt out of both broadcasting and receiving configuration changes:
+
+```typescript
+import { ApplicationInsights } from "@microsoft/applicationinsights-web";
+import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode } from "@microsoft/applicationinsights-cfgsync-js";
+
+const cfgSyncPlugin = new CfgSyncPlugin();
+
+const appInsights = new ApplicationInsights({
+    config: {
+        connectionString: "InstrumentationKey=YOUR_KEY",
+        extensions: [cfgSyncPlugin],
+        extensionConfig: {
+            [cfgSyncPlugin.identifier]: {
+                syncMode: ICfgSyncMode.None
+            } as ICfgSyncConfig
+        }
+    }
+});
+appInsights.loadAppInsights();
+```
+
 #### Fetching Configuration from a CDN Endpoint
 
 You can configure an instance to fetch its configuration from a remote URL:
