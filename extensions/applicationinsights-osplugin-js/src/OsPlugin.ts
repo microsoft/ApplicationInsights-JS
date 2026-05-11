@@ -262,8 +262,8 @@ export class OsPlugin extends BaseTelemetryPlugin {
                         let mergedOS = (_os || "") + (_osVer ? asString(_osVer) : "");
                         setValue(extOS, "osVer", mergedOS, isString);
                     } else {
-                        setValue(extOS, "osVer", _osVer);
-                        setValue(extOS, "os", _os, isString);
+                        setValue(extOS, "name", _os, isString);
+                        setValue(extOS, "ver", _osVer ? asString(_osVer) : undefined, isString);
                     }
                 }
             }
