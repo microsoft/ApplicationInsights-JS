@@ -1,24 +1,28 @@
 {
-    "name": "applicationinsights-web-config",
-    "description": "Application Insights JavaScript SDK - Web Config for CfgSync Plugin",
-    "version": "1.1.1",
-    "copyright": "(c) Microsoft and contributors. All rights reserved.",
-    "author": "Microsoft Application Insights Team",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/microsoft/ApplicationInsights-JS.git"
-    },
-    "scripts": {
-        "clean": "git clean -xdf",
-        "build": "npm run build:browser && npm run build:test",
-        "build:browser": "grunt copy-config",
-        "build:test": "grunt copy-testConfig",
-        "rebuild": "npm run build",
-        "test": ""
-    },
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/microsoft/ApplicationInsights-JS/issues"
-    },
-    "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme"
+     "name": "applicationinsights-web-config",
+     "description": "Application Insights JavaScript SDK - Web Config for CfgSync Plugin",
+     "version": "1.1.1",
+     "copyright": "(c) Microsoft and contributors. All rights reserved.",
+     "author": "Microsoft Application Insights Team",
+     "repository": {
+          "type": "git",
+          "url": "git+https://github.com/microsoft/ApplicationInsights-JS.git"
+     },
+     "scripts": {
+          "clean": "git clean -xdf",
+          "build": "npm run build:browser && npm run build:test",
+          "build:browser": "grunt copy-config",
+          "build:test": "grunt copy-testConfig",
+          "rebuild": "npm run build",
+          "test": ""
+     },
+     "license": "MIT",
+     "bugs": {
+          "url": "https://github.com/microsoft/ApplicationInsights-JS/issues"
+     },
+     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
+     "devDependencies": {
+          "grunt-contrib-copy": "^1.0.0",
+          "grunt": "^1.6.1"
+     }
 }

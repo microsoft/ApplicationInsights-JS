@@ -2,7 +2,7 @@
     "compilerOptions": {
       "module": "commonjs",
       "target": "es6",
-      "lib": ["es2015", "dom"],
+      "lib": ["es2015", "es2018.asynciterable", "es2018.asyncgenerator", "dom"],
       "outDir": "./dist",
       "strictNullChecks": true,
       "experimentalDecorators": true,
