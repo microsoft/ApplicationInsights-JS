@@ -48,7 +48,7 @@
     },
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "devDependencies": {
-        "@microsoft/rush": "5.172.1",
+        "@microsoft/rush": "5.175.1",
         "@nevware21/grunt-eslint-ts": "^0.5.2",
         "@nevware21/grunt-ts-plugin": "^0.5.2",
         "@rollup/plugin-commonjs": "^24.0.0",
@@ -60,7 +60,7 @@
         "connect": "^3.7.0",
         "eslint": "^8.56.0",
         "eslint-plugin-security": "^1.5.0",
-        "grunt": "^1.6.1",
+        "grunt": "^1.6.2",
         "grunt-cli": "^1.5.0",
         "grunt-contrib-connect": "^5.0.0",
         "grunt-contrib-copy": "^1.0.0",
@@ -81,6 +81,6 @@
         "tar": "^7.5.13",
         "glob": "^7.2.3",
         "lodash": "^4.18.1",
-        "minimatch": "^3.1.4"
+        "minimatch": "^3.1.5"
     }
 }
