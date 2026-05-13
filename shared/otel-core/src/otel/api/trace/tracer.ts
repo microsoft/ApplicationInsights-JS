@@ -12,9 +12,16 @@ import { startActiveSpan } from "./utils";
 
 /**
  * @internal
- * Create a tracer implementation.
- * @param host - The ApplicationInsights core instance
- * @returns A tracer object
+ * Creates a tracer implementation that delegates span creation to the provided trace host.
+ *
+ * This factory is used by the Application Insights / 1DS integration path
+ * where span creation is handled by the AI-core trace host.
+ *
+ * @param host - The trace host that provides span creation and context management
+ * @param name - Optional tracer name for debugging and identification
+ * @returns An IOTelTracer instance
+ *
+ * @since 3.4.0
  */
 export function _createTracer(host: ITraceHost, name?: string): IOTelTracer {
     let tracer: IOTelTracer = setProtoTypeName({

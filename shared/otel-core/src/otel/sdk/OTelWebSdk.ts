@@ -149,11 +149,9 @@ export function createOTelWebSdk(config: IOTelWebSdkConfig): IOTelWebSdk {
     // Create a root context for the SDK so that context operations always have a valid base
     let _rootContext: IOTelContext = createContext(_apiAdapter);
 
-    // Create the logger provider using existing factory
-    let _loggerProvider = createLoggerProvider({
-        resource: _resource,
-        processors: _sdkConfig.logProcessors || []
-    });
+    // Create the logger provider — pass the SDK config directly so the provider
+    // inherits error handlers and resource from the shared config.
+    let _loggerProvider = createLoggerProvider(_sdkConfig);
 
     /**
      * Returns the current active context from the context manager, falling back

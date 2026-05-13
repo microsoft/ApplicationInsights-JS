@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { IOTelContextManager } from "../context/IOTelContextManager";
+import { IOTelLogRecordLimits } from "../logs/IOTelLogRecordLimits";
 import { IOTelLogRecordProcessor } from "../logs/IOTelLogRecordProcessor";
 import { IOTelResource } from "../resources/IOTelResource";
 import { IOTelIdGenerator } from "../trace/IOTelIdGenerator";
@@ -97,6 +98,17 @@ export interface IOTelWebSdkConfig {
      * @see {@link IOTelLogRecordProcessor}
      */
     logProcessors?: IOTelLogRecordProcessor[];
+
+    /**
+     * How long the forceFlush can run before it is cancelled.
+     * The default value is 30000ms.
+     */
+    forceFlushTimeoutMillis?: number;
+
+    /**
+     * Log record limits controlling attribute counts and value lengths.
+     */
+    logRecordLimits?: IOTelLogRecordLimits;
 
     // TODO: Phase 2 - Uncomment when IOTelSpanProcessor is implemented
     // /**

@@ -24,13 +24,31 @@ import {
 import { setProtoTypeName, updateProtoTypeName } from "../../../utils/HelperFuncs";
 import { addAttributes, createAttributeContainer } from "../../attribute/attributeContainer";
 
+/**
+ * Creates a new span instance for tracking an operation.
+ *
+ * The span reads error handlers from the API config dynamically rather than
+ * caching them, ensuring it always reflects the latest configuration.
+ * Spans are typically short-lived and do not require `onConfigChange` listeners.
+ *
+ * @param spanCtx - The span creation context containing API config, resource,
+ *  instrumentation scope, span context, and optional callbacks
+ * @param orgName - The original name of the span
+ * @param kind - The kind of the span (INTERNAL, SERVER, CLIENT, PRODUCER, CONSUMER)
+ * @returns An IReadableSpan instance
+ *
+ * @since 3.4.0
+ */
 export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpanKind): IReadableSpan {
     let otelCfg = spanCtx.api.cfg;
     let perfStartTime: number = perfNow();
     let spanContext = spanCtx.spanContext;
     let attributes: ILazyValue<IAttributeContainer>;
     let isEnded = false;
-    let errorHandlers = otelCfg.errorHandlers || {};
+
+    // Error handlers are read from the SDK/core config (IOTelConfig) directly.
+    // Spans are short-lived and do not need onConfigChange; the handleErrors
+    // functions accept the config object and dereference errorHandlers internally.
     let spanStartTime: ILazyValue<IOTelHrTime> = getDeferred(() => {
         if (isNullOrUndefined(spanCtx.startTime)) {
             return hrTime(perfStartTime);
@@ -61,7 +79,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
 
     function _handleIsEnded(operation: string, extraMsg?: string): boolean {
         if (isEnded) {
-            handleSpanError(errorHandlers, "Span {traceID: " + spanContext.traceId + ", spanId: " + spanContext.spanId + "} has ended - operation [" + operation + "] unsuccessful" + (extraMsg ? (" - " + extraMsg) : STR_EMPTY) + ".", spanName);
+            handleSpanError(otelCfg, "Span {traceID: " + spanContext.traceId + ", spanId: " + spanContext.spanId + "} has ended - operation [" + operation + "] unsuccessful" + (extraMsg ? (" - " + extraMsg) : STR_EMPTY) + ".", spanName);
         }
     
         return isEnded;
@@ -84,7 +102,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                 }
 
                 if (message) {
-                    handleAttribError(errorHandlers, message, key, value);
+                    handleAttribError(otelCfg, message, key, value);
                     localDroppedAttributes++;
                 } else if (attributes){
                     attributes.v.set(key, value);
@@ -112,7 +130,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                 if (maxEvents > 0) {
                     if (maxEvents > 0 && events.length >= maxEvents) {
                         let droppedEvent = events.shift();
-                        handleWarn(errorHandlers, "maxEvents reached (" + maxEvents + ") - dropping event: " + droppedEvent.name);
+                        handleWarn(otelCfg, "maxEvents reached (" + maxEvents + ") - dropping event: " + droppedEvent.name);
                         localDroppedEvents++;
                     }
 
@@ -132,10 +150,10 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                     })
                 } else {
                     localDroppedEvents++;
-                    handleWarn(errorHandlers, "Span.addEvent: " + name + " not added - No events allowed");
+                    handleWarn(otelCfg, "Span.addEvent: " + name + " not added - No events allowed");
                 }
 
-                handleNotImplemented(errorHandlers, "Span.addEvent: " + name + " not added");
+                handleNotImplemented(otelCfg, "Span.addEvent: " + name + " not added");
             } else {
                 localDroppedEvents++;
             }
@@ -144,20 +162,20 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
         },
         addLink: (link: IOTelLink) => {
             if(!_handleIsEnded("addEvent") && isRecording) {
-                handleNotImplemented(errorHandlers, "Span.addLink: " + link + " not added");
+                handleNotImplemented(otelCfg, "Span.addLink: " + link + " not added");
             } else {
                 localDroppedLinks++;
-                handleWarn(errorHandlers, "Span.addLink: " + link + " not added - No links allowed");
+                handleWarn(otelCfg, "Span.addLink: " + link + " not added - No links allowed");
             }
 
             return theSpan;
         },
         addLinks: (links: IOTelLink[]) => {
             if (!_handleIsEnded("addLinks") && isRecording) {
-                handleNotImplemented(errorHandlers, "Span.addLinks: " + links + " not added");
+                handleNotImplemented(otelCfg, "Span.addLinks: " + links + " not added");
             } else {
                 localDroppedLinks += links.length;
-                handleWarn(errorHandlers, "Span.addLinks: " + links + " not added - No links allowed");
+                handleWarn(otelCfg, "Span.addLinks: " + links + " not added - No links allowed");
             }
 
             return theSpan;
@@ -197,13 +215,13 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                     }
 
                     if (calcDuration < 0) {
-                        handleWarn(errorHandlers, "Span.end: duration is negative - startTime > endTime. Setting duration to 0 ms");
+                        handleWarn(otelCfg, "Span.end: duration is negative - startTime > endTime. Setting duration to 0 ms");
                         spanDuration = zeroHrTime();
                         spanEndTime = spanStartTime.v;
                     }
 
                     if (localDroppedEvents > 0) {
-                        handleWarn(errorHandlers, "Droped " + localDroppedEvents + " events");
+                        handleWarn(otelCfg, "Dropped " + localDroppedEvents + " events");
                     }
                 
                     // We don't mark as ended until after the onEnd callback to ensure that it can
@@ -222,7 +240,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                 if (spanCtx.onException) {
                     spanCtx.onException(theSpan, exception, time);
                 } else {
-                    handleNotImplemented(errorHandlers, "Span.recordException: " + dumpObj(exception) + " not handled");
+                    handleNotImplemented(otelCfg, "Span.recordException: " + dumpObj(exception) + " not handled");
                 }
             }
         },
