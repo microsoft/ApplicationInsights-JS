@@ -238,7 +238,7 @@ export {
 
 // OpenTelemetry Error Handlers
 export {
-    handleAttribError, handleSpanError, handleDebug, handleWarn, handleError, handleNotImplemented
+    OTelErrorHandlerSource, handleAttribError, handleSpanError, handleDebug, handleWarn, handleError, handleNotImplemented
 } from "./internal/handleErrors";
 
 // OpenTelemetry Error Classes

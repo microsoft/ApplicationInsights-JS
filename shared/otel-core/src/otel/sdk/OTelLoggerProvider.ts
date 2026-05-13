@@ -2,15 +2,14 @@
 // Licensed under the MIT License.
 
 import { IPromise } from "@nevware21/ts-async";
-import { createDynamicConfig } from "../../config/DynamicConfig";
+import { onConfigChange } from "../../config/DynamicConfig";
 import { IUnloadHook } from "../../interfaces/ai/IUnloadHook";
-import { IOTelErrorHandlers } from "../../interfaces/otel/config/IOTelErrorHandlers";
 import { IOTelLogger } from "../../interfaces/otel/logs/IOTelLogger";
 import { IOTelLoggerOptions } from "../../interfaces/otel/logs/IOTelLoggerOptions";
 import { IOTelLoggerProvider } from "../../interfaces/otel/logs/IOTelLoggerProvider";
-import { IOTelLoggerProviderConfig } from "../../interfaces/otel/logs/IOTelLoggerProviderConfig";
 import { IOTelLoggerProviderSharedState } from "../../interfaces/otel/logs/IOTelLoggerProviderSharedState";
 import { IOTelResource } from "../../interfaces/otel/resources/IOTelResource";
+import { IOTelWebSdkConfig } from "../../interfaces/otel/config/IOTelWebSdkConfig";
 import { createLoggerProviderSharedState } from "../../internal/LoggerProviderSharedState";
 import { handleError, handleWarn } from "../../internal/handleErrors";
 import { createLogger } from "./OTelLogger";
@@ -24,24 +23,20 @@ export const DEFAULT_LOGGER_NAME = "unknown";
  * The LoggerProvider manages Logger instances and coordinates log record
  * processing through registered processors.
  *
- * @param config - The LoggerProvider configuration with required dependencies injected.
- *  Must include `resource` and `errorHandlers`.
+ * @param config - The SDK config (IOTelWebSdkConfig) with required dependencies injected.
+ *  Must include `resource` and `errorHandlers`. The provider reads `logProcessors`
+ *  from the config for processors.
  * @returns An initialized IOTelLoggerProvider instance with `forceFlush` and `shutdown` support.
  *
  * @remarks
- * - All dependencies must be injected through config — no global state
- * - Config is used directly — never copied with spread operator
+ * - All dependencies are inherited from the SDK config — no separate config interfaces
  * - Error handlers are obtained from `config.errorHandlers`
  * - Local config caching uses `onConfigChange` callbacks
  * - Complete unload support — call `shutdown()` to release all resources
  *
  * @example
  * ```typescript
- * const provider = createLoggerProvider({
- *   resource: myResource,
- *   errorHandlers: myErrorHandlers,
- *   processors: [myLogProcessor]
- * });
+ * const provider = createLoggerProvider(sdkConfig);
  *
  * const logger = provider.getLogger("my-service", "1.0.0");
  * ```
@@ -49,14 +44,12 @@ export const DEFAULT_LOGGER_NAME = "unknown";
  * @since 3.4.0
  */
 export function createLoggerProvider(
-    config: IOTelLoggerProviderConfig
+    config: IOTelWebSdkConfig
 ): IOTelLoggerProvider & {
     forceFlush(): IPromise<void>;
     shutdown(): IPromise<void>;
     readonly _sharedState: IOTelLoggerProviderSharedState;
 } {
-    // Validate required dependencies upfront
-    let _handlers: IOTelErrorHandlers;
     let _resource: IOTelResource;
 
     let defaults = loadDefaultConfig();
@@ -66,8 +59,7 @@ export function createLoggerProvider(
     let _isShutdown = false;
     let _unloadHooks: IUnloadHook[] = [];
 
-    // Read initial config values
-    _handlers = config.errorHandlers || {};
+    // Read initial config values from the SDK config
     _resource = config.resource;
     forceFlushTimeoutMillis = config.forceFlushTimeoutMillis !== undefined
         ? config.forceFlushTimeoutMillis
@@ -75,20 +67,18 @@ export function createLoggerProvider(
     logRecordLimits = config.logRecordLimits || defaults.logRecordLimits;
 
     if (!_resource) {
-        handleError(_handlers, "Resource must be provided to LoggerProvider");
+        handleError(config, "Resource must be provided to LoggerProvider");
     }
 
     let sharedState = createLoggerProviderSharedState(
         _resource,
         forceFlushTimeoutMillis,
         reconfigureLimits(logRecordLimits),
-        config.processors || []
+        config.logProcessors || []
     );
 
-    // Register for config changes — save the returned IUnloadHook
-    // Updates both local cached values and sharedState so dynamic config changes propagate
-    let _configUnload = createDynamicConfig(config).watch(function () {
-        _handlers = config.errorHandlers || {};
+    // Register for config changes using onConfigChange on the already-dynamic SDK config
+    let _configUnload = onConfigChange(config, function () {
         _resource = config.resource;
         forceFlushTimeoutMillis = config.forceFlushTimeoutMillis !== undefined
             ? config.forceFlushTimeoutMillis
@@ -108,12 +98,12 @@ export function createLoggerProvider(
         options?: IOTelLoggerOptions
     ): IOTelLogger | null {
         if (_isShutdown) {
-            handleWarn(_handlers, "A shutdown LoggerProvider cannot provide a Logger");
+            handleWarn(config, "A shutdown LoggerProvider cannot provide a Logger");
             return null;
         }
 
         if (!name) {
-            handleWarn(_handlers, "Logger requested without instrumentation scope name.");
+            handleWarn(config, "Logger requested without instrumentation scope name.");
         }
 
         let loggerName = name || DEFAULT_LOGGER_NAME;
@@ -135,7 +125,7 @@ export function createLoggerProvider(
 
     function forceFlush(): IPromise<void> {
         if (_isShutdown) {
-            handleWarn(_handlers, "invalid attempt to force flush after LoggerProvider shutdown");
+            handleWarn(config, "invalid attempt to force flush after LoggerProvider shutdown");
             return Promise.resolve();
         }
 
@@ -144,7 +134,7 @@ export function createLoggerProvider(
 
     function shutdown(): IPromise<void> {
         if (_isShutdown) {
-            handleWarn(_handlers, "shutdown may only be called once per LoggerProvider");
+            handleWarn(config, "shutdown may only be called once per LoggerProvider");
             return Promise.resolve();
         }
 

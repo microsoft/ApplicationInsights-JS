@@ -5,15 +5,43 @@ import { dumpObj, fnApply } from "@nevware21/ts-utils";
 import { IOTelErrorHandlers } from "../interfaces/otel/config/IOTelErrorHandlers";
 
 /**
+ * A source for error handlers — either the handlers directly or a config
+ * object that contains an `errorHandlers` property (e.g., IOTelConfig, IOTelWebSdkConfig).
+ * This allows handle* functions to accept the SDK/core config directly, putting
+ * the dereferencing logic in one place rather than in every component.
+ */
+export type OTelErrorHandlerSource = IOTelErrorHandlers | { errorHandlers?: IOTelErrorHandlers };
+
+/**
+ * Resolves the error handlers from a source that may be either direct handlers
+ * or a config object containing an `errorHandlers` property.
+ * @param source - The error handler source to resolve
+ * @returns The resolved IOTelErrorHandlers, never null
+ */
+function _resolveHandlers(source: OTelErrorHandlerSource): IOTelErrorHandlers {
+    if (!source) {
+        return {};
+    }
+
+    let asConfig = source as { errorHandlers?: IOTelErrorHandlers };
+    if (asConfig.errorHandlers) {
+        return asConfig.errorHandlers;
+    }
+
+    return source as IOTelErrorHandlers;
+}
+
+/**
  * Handle / report an error.
  * When not provided the default is to generally throw an {@link OTelInvalidAttributeError}
- * @param handlers - The error handlers configuration
+ * @param source - The error handlers or a config object with errorHandlers
  * @param message - The error message to report
  * @param key - The attribute key that caused the error
  * @param value - The attribute value that caused the error
  */
 /*#__NO_SIDE_EFFECTS__*/
-export function handleAttribError(handlers: IOTelErrorHandlers, message: string, key: string, value: any) {
+export function handleAttribError(source: OTelErrorHandlerSource, message: string, key: string, value: any) {
+    let handlers = _resolveHandlers(source);
     if (handlers.attribError) {
         handlers.attribError(message, key, value);
     } else {
@@ -23,12 +51,13 @@ export function handleAttribError(handlers: IOTelErrorHandlers, message: string,
 
 /**
  * There was an error with the span.
- * @param handlers - The error handlers configuration
+ * @param source - The error handlers or a config object with errorHandlers
  * @param message - The message to report
  * @param spanName - The name of the span
  */
 /*#__NO_SIDE_EFFECTS__*/
-export function handleSpanError(handlers: IOTelErrorHandlers, message: string, spanName: string) {
+export function handleSpanError(source: OTelErrorHandlerSource, message: string, spanName: string) {
+    let handlers = _resolveHandlers(source);
     if (handlers.spanError) {
         handlers.spanError(message, spanName);
     } else {
@@ -38,11 +67,12 @@ export function handleSpanError(handlers: IOTelErrorHandlers, message: string, s
 
 /**
  * Report a general debug message, should not be treated as fatal
- * @param handlers - The error handlers configuration
+ * @param source - The error handlers or a config object with errorHandlers
  * @param message - The debug message to report
  */
 /*#__NO_SIDE_EFFECTS__*/
-export function handleDebug(handlers: IOTelErrorHandlers, message: string) {
+export function handleDebug(source: OTelErrorHandlerSource, message: string) {
+    let handlers = _resolveHandlers(source);
     if (handlers.debug) {
         handlers.debug(message);
     } else {
@@ -55,11 +85,12 @@ export function handleDebug(handlers: IOTelErrorHandlers, message: string) {
 
 /**
  * Report a general warning, should not be treated as fatal
- * @param handlers - The error handlers configuration
+ * @param source - The error handlers or a config object with errorHandlers
  * @param message - The warning message to report
  */
 /*#__NO_SIDE_EFFECTS__*/
-export function handleWarn(handlers: IOTelErrorHandlers, message: string) {
+export function handleWarn(source: OTelErrorHandlerSource, message: string) {
+    let handlers = _resolveHandlers(source);
     if (handlers.warn) {
         handlers.warn(message);
     } else {
@@ -72,11 +103,12 @@ export function handleWarn(handlers: IOTelErrorHandlers, message: string) {
 
 /**
  * Report a general error, should not be treated as fatal
- * @param handlers - The error handlers configuration
+ * @param source - The error handlers or a config object with errorHandlers
  * @param message - The error message to report
  */
 /*#__NO_SIDE_EFFECTS__*/
-export function handleError(handlers: IOTelErrorHandlers, message: string) {
+export function handleError(source: OTelErrorHandlerSource, message: string) {
+    let handlers = _resolveHandlers(source);
     if (handlers.error) {
         handlers.error(message);
     } else if (handlers.warn) {
@@ -91,11 +123,12 @@ export function handleError(handlers: IOTelErrorHandlers, message: string) {
 
 /**
  * A general error handler for not implemented methods.
- * @param handlers - The error handlers configuration
+ * @param source - The error handlers or a config object with errorHandlers
  * @param message - The message to report
  */
 /*#__NO_SIDE_EFFECTS__*/
-export function handleNotImplemented(handlers: IOTelErrorHandlers, message: string) {
+export function handleNotImplemented(source: OTelErrorHandlerSource, message: string) {
+    let handlers = _resolveHandlers(source);
     if (handlers.notImplemented) {
         handlers.notImplemented(message);
     } else {

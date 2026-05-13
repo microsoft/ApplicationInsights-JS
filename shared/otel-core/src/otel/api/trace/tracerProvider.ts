@@ -2,40 +2,13 @@
 // Licensed under the MIT License.
 
 import { IPromise } from "@nevware21/ts-async";
-import { isFunction } from "@nevware21/ts-utils";
-import { createDynamicConfig } from "../../../config/DynamicConfig";
+import { onConfigChange } from "../../../config/DynamicConfig";
 import { IUnloadHook } from "../../../interfaces/ai/IUnloadHook";
-import { IOTelErrorHandlers } from "../../../interfaces/otel/config/IOTelErrorHandlers";
-import { IOTelSpan } from "../../../interfaces/otel/trace/IOTelSpan";
-import { IOTelSpanOptions } from "../../../interfaces/otel/trace/IOTelSpanOptions";
 import { IOTelTracer } from "../../../interfaces/otel/trace/IOTelTracer";
 import { IOTelTracerProvider } from "../../../interfaces/otel/trace/IOTelTracerProvider";
-import { IReadableSpan } from "../../../interfaces/otel/trace/IReadableSpan";
 import { ITracerProviderConfig } from "../../../interfaces/otel/trace/ITracerProviderConfig";
 import { handleWarn } from "../../../internal/handleErrors";
 import { _createTracer } from "./tracer";
-
-/**
- * Non-recording tracer returned after shutdown.
- * All operations are safe no-ops that return null spans.
- */
-let _NOOP_TRACER: IOTelTracer = {
-    startSpan: function (_name: string, _options?: IOTelSpanOptions): IReadableSpan | null {
-        return null;
-    },
-    startActiveSpan: function <F extends (span: IOTelSpan) => ReturnType<F>>(name: string, arg2?: F | IOTelSpanOptions, arg3?: F, arg4?: F): ReturnType<F> | undefined {
-        let fn: F;
-        if (isFunction(arg2)) {
-            fn = arg2 as F;
-        } else if (isFunction(arg3)) {
-            fn = arg3 as F;
-        } else {
-            fn = arg4 as F;
-        }
-
-        return fn ? fn(null) : undefined;
-    }
-};
 
 /**
  * Creates a TracerProvider that manages Tracer instances with caching.
@@ -49,9 +22,10 @@ let _NOOP_TRACER: IOTelTracer = {
  *
  * @remarks
  * - Delegates span creation to the configured `host.startSpan()`
- * - Error handlers are obtained from `config.errorHandlers`
+ * - Error handlers are inherited from `host.config.errorHandlers`
  * - Local config caching uses `onConfigChange` callbacks
  * - Call `shutdown()` to release cached tracers and unregister config listeners
+ * - After shutdown, `getTracer()` returns null
  *
  * @since 3.4.0
  */
@@ -60,22 +34,23 @@ export function createTracerProvider(config: ITracerProviderConfig): IOTelTracer
     let _isShutdown = false;
     let _unloadHooks: IUnloadHook[] = [];
 
-    // Local cached values — updated via onConfigChange
-    let _handlers: IOTelErrorHandlers;
+    // Get host and error handlers from host's config
     let _host = config.host;
 
-    // Register for config changes — save the returned IUnloadHook
-    let _configUnload = createDynamicConfig(config).watch(function () {
-        _handlers = config.errorHandlers || {};
-        _host = config.host;
-    });
-    _unloadHooks.push(_configUnload);
+    // Register for config changes using onConfigChange on the host's config
+    if (_host && _host.config) {
+        let _configUnload = onConfigChange(_host.config, function () {
+            // Re-read from config in case host reference changed
+            _host = config.host;
+        });
+        _unloadHooks.push(_configUnload);
+    }
 
     return {
         getTracer(name: string, version?: string): IOTelTracer {
             if (_isShutdown) {
-                handleWarn(_handlers, "A shutdown TracerProvider cannot provide a Tracer");
-                return _NOOP_TRACER;
+                handleWarn(_host && _host.config, "A shutdown TracerProvider cannot provide a Tracer");
+                return null;
             }
 
             let tracerKey = (name || "ai-web") + "@" + (version || "unknown");
@@ -92,7 +67,7 @@ export function createTracerProvider(config: ITracerProviderConfig): IOTelTracer
         },
         shutdown(): IPromise<void> | void {
             if (_isShutdown) {
-                handleWarn(_handlers, "shutdown may only be called once per TracerProvider");
+                handleWarn(_host && _host.config, "shutdown may only be called once per TracerProvider");
                 return;
             }
 

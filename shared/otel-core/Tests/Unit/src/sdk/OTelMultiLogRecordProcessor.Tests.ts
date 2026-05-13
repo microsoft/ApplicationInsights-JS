@@ -7,7 +7,7 @@ import { IOTelSdkLogRecord } from "../../../../src/interfaces/otel/logs/IOTelSdk
 import { createLoggerProvider } from "../../../../src/otel/sdk/OTelLoggerProvider";
 import { createMultiLogRecordProcessor } from "../../../../src/otel/sdk/OTelMultiLogRecordProcessor";
 import { loadDefaultConfig } from "../../../../src/otel/sdk/config";
-import { IOTelLoggerProviderConfig } from "../../../../src/interfaces/otel/logs/IOTelLoggerProviderConfig";
+import { IOTelWebSdkConfig } from "../../../../src/interfaces/otel/config/IOTelWebSdkConfig";
 import { IOTelResource, OTelRawResourceAttribute } from "../../../../src/interfaces/otel/resources/IOTelResource";
 import { IOTelAttributes } from "../../../../src/interfaces/otel/IOTelAttributes";
 
@@ -58,12 +58,12 @@ function _testResource(): IOTelResource {
     return resource;
 }
 
-function _cfg(processors: IOTelLogRecordProcessor[]): IOTelLoggerProviderConfig {
+function _cfg(processors: IOTelLogRecordProcessor[]): IOTelWebSdkConfig {
     return {
         resource: _testResource(),
         errorHandlers: {},
-        processors: processors
-    };
+        logProcessors: processors
+    } as IOTelWebSdkConfig;
 }
 
 export class OTelMultiLogRecordProcessorTests extends AITestClass {

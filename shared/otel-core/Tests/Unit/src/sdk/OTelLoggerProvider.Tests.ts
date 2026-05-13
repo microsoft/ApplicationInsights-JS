@@ -11,7 +11,7 @@ import { createMultiLogRecordProcessor } from "../../../../src/otel/sdk/OTelMult
 import { loadDefaultConfig } from "../../../../src/otel/sdk/config";
 import { IOTelResource, OTelRawResourceAttribute } from "../../../../src/interfaces/otel/resources/IOTelResource";
 import { IOTelLogRecordProcessor } from "../../../../src/interfaces/otel/logs/IOTelLogRecordProcessor";
-import { IOTelLoggerProviderConfig } from "../../../../src/interfaces/otel/logs/IOTelLoggerProviderConfig";
+import { IOTelWebSdkConfig } from "../../../../src/interfaces/otel/config/IOTelWebSdkConfig";
 import { IOTelErrorHandlers } from "../../../../src/interfaces/otel/config/IOTelErrorHandlers";
 import { createResolvedPromise } from "@nevware21/ts-async";
 
@@ -56,7 +56,7 @@ export class OTelLoggerProviderTests extends AITestClass {
             test: () => {
                 const logRecordProcessor = this._createMockProcessor();
                 const provider = createLoggerProvider(this._cfg({
-                    processors: [logRecordProcessor]
+                    logProcessors: [logRecordProcessor]
                 }));
                 const sharedState = this._getSharedState(provider);
                 const activeProcessor = sharedState.activeProcessor as MultiLogRecordProcessorInstance;
@@ -236,7 +236,7 @@ export class OTelLoggerProviderTests extends AITestClass {
                 const processor2 = this._createMockProcessor();
                 const forceFlushStub1 = this.sandbox.stub(processor1, "forceFlush").resolves();
                 const forceFlushStub2 = this.sandbox.stub(processor2, "forceFlush").resolves();
-                const provider = createLoggerProvider(this._cfg({ processors: [processor1, processor2] }));
+                const provider = createLoggerProvider(this._cfg({ logProcessors: [processor1, processor2] }));
 
                 return createPromise((resolve, reject) => {
                     provider.forceFlush().then(() => {
@@ -259,7 +259,7 @@ export class OTelLoggerProviderTests extends AITestClass {
                 const processor2 = this._createMockProcessor();
                 const forceFlushStub1 = this.sandbox.stub(processor1, "forceFlush").rejects("Error");
                 const forceFlushStub2 = this.sandbox.stub(processor2, "forceFlush").rejects("Error");
-                const provider = createLoggerProvider(this._cfg({ processors: [processor1, processor2] }));
+                const provider = createLoggerProvider(this._cfg({ logProcessors: [processor1, processor2] }));
 
                 return createPromise((resolve, reject) => {
                     provider.forceFlush().then(() => {
@@ -282,7 +282,7 @@ export class OTelLoggerProviderTests extends AITestClass {
             test: (): IPromise<void> => {
                 const processor = this._createMockProcessor();
                 const shutdownStub = this.sandbox.stub(processor, "shutdown").resolves();
-                const provider = createLoggerProvider(this._cfg({ processors: [processor] }));
+                const provider = createLoggerProvider(this._cfg({ logProcessors: [processor] }));
 
                 return createPromise((resolve, reject) => {
                     provider.shutdown().then(() => {
@@ -319,7 +319,7 @@ export class OTelLoggerProviderTests extends AITestClass {
             name: "LoggerProvider: forceFlush after shutdown should not call processors",
             test: (): IPromise<void> => {
                 const logRecordProcessor = this._createMockProcessor();
-                const provider = createLoggerProvider(this._cfg({ processors: [logRecordProcessor] }));
+                const provider = createLoggerProvider(this._cfg({ logProcessors: [logRecordProcessor] }));
                 const forceFlushStub = this.sandbox.stub(logRecordProcessor, "forceFlush").resolves();
                 const warnStub = this.sandbox.stub(console, "warn");
 
@@ -343,7 +343,7 @@ export class OTelLoggerProviderTests extends AITestClass {
             name: "LoggerProvider: second shutdown should not re-run processor shutdown",
             test: (): IPromise<void> => {
                 const logRecordProcessor = this._createMockProcessor();
-                const provider = createLoggerProvider(this._cfg({ processors: [logRecordProcessor] }));
+                const provider = createLoggerProvider(this._cfg({ logProcessors: [logRecordProcessor] }));
                 const shutdownStub = this.sandbox.stub(logRecordProcessor, "shutdown").resolves();
                 const warnStub = this.sandbox.stub(console, "warn");
 
@@ -369,13 +369,13 @@ export class OTelLoggerProviderTests extends AITestClass {
     }
 
     /**
-     * Creates a valid IOTelLoggerProviderConfig with required fields plus any overrides.
+     * Creates a valid IOTelWebSdkConfig with required fields plus any overrides.
      */
-    private _cfg(overrides?: Partial<IOTelLoggerProviderConfig>): IOTelLoggerProviderConfig {
-        let cfg: IOTelLoggerProviderConfig = {
+    private _cfg(overrides?: Partial<IOTelWebSdkConfig>): IOTelWebSdkConfig {
+        let cfg: IOTelWebSdkConfig = {
             resource: this._createTestResource(),
             errorHandlers: {} as IOTelErrorHandlers
-        };
+        } as IOTelWebSdkConfig;
         if (overrides) {
             if (overrides.resource !== undefined) {
                 cfg.resource = overrides.resource;
@@ -383,8 +383,8 @@ export class OTelLoggerProviderTests extends AITestClass {
             if (overrides.errorHandlers !== undefined) {
                 cfg.errorHandlers = overrides.errorHandlers;
             }
-            if (overrides.processors !== undefined) {
-                cfg.processors = overrides.processors;
+            if (overrides.logProcessors !== undefined) {
+                cfg.logProcessors = overrides.logProcessors;
             }
             if (overrides.forceFlushTimeoutMillis !== undefined) {
                 cfg.forceFlushTimeoutMillis = overrides.forceFlushTimeoutMillis;

@@ -46,12 +46,9 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
     let attributes: ILazyValue<IAttributeContainer>;
     let isEnded = false;
 
-    // Read errorHandlers from config dynamically — spans are short-lived and
-    // do not need onConfigChange; reading from the config reference ensures
-    // the latest handlers are used if config changes during the span lifetime.
-    function _errorHandlers() {
-        return otelCfg.errorHandlers || {};
-    }
+    // Error handlers are read from the SDK/core config (IOTelConfig) directly.
+    // Spans are short-lived and do not need onConfigChange; the handleErrors
+    // functions accept the config object and dereference errorHandlers internally.
     let spanStartTime: ILazyValue<IOTelHrTime> = getDeferred(() => {
         if (isNullOrUndefined(spanCtx.startTime)) {
             return hrTime(perfStartTime);
@@ -82,7 +79,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
 
     function _handleIsEnded(operation: string, extraMsg?: string): boolean {
         if (isEnded) {
-            handleSpanError(_errorHandlers(), "Span {traceID: " + spanContext.traceId + ", spanId: " + spanContext.spanId + "} has ended - operation [" + operation + "] unsuccessful" + (extraMsg ? (" - " + extraMsg) : STR_EMPTY) + ".", spanName);
+            handleSpanError(otelCfg, "Span {traceID: " + spanContext.traceId + ", spanId: " + spanContext.spanId + "} has ended - operation [" + operation + "] unsuccessful" + (extraMsg ? (" - " + extraMsg) : STR_EMPTY) + ".", spanName);
         }
     
         return isEnded;
@@ -105,7 +102,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                 }
 
                 if (message) {
-                    handleAttribError(_errorHandlers(), message, key, value);
+                    handleAttribError(otelCfg, message, key, value);
                     localDroppedAttributes++;
                 } else if (attributes){
                     attributes.v.set(key, value);
@@ -133,7 +130,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                 if (maxEvents > 0) {
                     if (maxEvents > 0 && events.length >= maxEvents) {
                         let droppedEvent = events.shift();
-                        handleWarn(_errorHandlers(), "maxEvents reached (" + maxEvents + ") - dropping event: " + droppedEvent.name);
+                        handleWarn(otelCfg, "maxEvents reached (" + maxEvents + ") - dropping event: " + droppedEvent.name);
                         localDroppedEvents++;
                     }
 
@@ -153,10 +150,10 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                     })
                 } else {
                     localDroppedEvents++;
-                    handleWarn(_errorHandlers(), "Span.addEvent: " + name + " not added - No events allowed");
+                    handleWarn(otelCfg, "Span.addEvent: " + name + " not added - No events allowed");
                 }
 
-                handleNotImplemented(_errorHandlers(), "Span.addEvent: " + name + " not added");
+                handleNotImplemented(otelCfg, "Span.addEvent: " + name + " not added");
             } else {
                 localDroppedEvents++;
             }
@@ -165,20 +162,20 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
         },
         addLink: (link: IOTelLink) => {
             if(!_handleIsEnded("addEvent") && isRecording) {
-                handleNotImplemented(_errorHandlers(), "Span.addLink: " + link + " not added");
+                handleNotImplemented(otelCfg, "Span.addLink: " + link + " not added");
             } else {
                 localDroppedLinks++;
-                handleWarn(_errorHandlers(), "Span.addLink: " + link + " not added - No links allowed");
+                handleWarn(otelCfg, "Span.addLink: " + link + " not added - No links allowed");
             }
 
             return theSpan;
         },
         addLinks: (links: IOTelLink[]) => {
             if (!_handleIsEnded("addLinks") && isRecording) {
-                handleNotImplemented(_errorHandlers(), "Span.addLinks: " + links + " not added");
+                handleNotImplemented(otelCfg, "Span.addLinks: " + links + " not added");
             } else {
                 localDroppedLinks += links.length;
-                handleWarn(_errorHandlers(), "Span.addLinks: " + links + " not added - No links allowed");
+                handleWarn(otelCfg, "Span.addLinks: " + links + " not added - No links allowed");
             }
 
             return theSpan;
@@ -218,13 +215,13 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                     }
 
                     if (calcDuration < 0) {
-                        handleWarn(_errorHandlers(), "Span.end: duration is negative - startTime > endTime. Setting duration to 0 ms");
+                        handleWarn(otelCfg, "Span.end: duration is negative - startTime > endTime. Setting duration to 0 ms");
                         spanDuration = zeroHrTime();
                         spanEndTime = spanStartTime.v;
                     }
 
                     if (localDroppedEvents > 0) {
-                        handleWarn(_errorHandlers(), "Dropped " + localDroppedEvents + " events");
+                        handleWarn(otelCfg, "Dropped " + localDroppedEvents + " events");
                     }
                 
                     // We don't mark as ended until after the onEnd callback to ensure that it can
@@ -243,7 +240,7 @@ export function createSpan(spanCtx: IOTelSpanCtx, orgName: string, kind: OTelSpa
                 if (spanCtx.onException) {
                     spanCtx.onException(theSpan, exception, time);
                 } else {
-                    handleNotImplemented(_errorHandlers(), "Span.recordException: " + dumpObj(exception) + " not handled");
+                    handleNotImplemented(otelCfg, "Span.recordException: " + dumpObj(exception) + " not handled");
                 }
             }
         },

@@ -13,7 +13,7 @@ import { createResolvedPromise } from "@nevware21/ts-async";
 import { IOTelApi, IOTelConfig } from "../../../../src";
 import { IOTelResource, OTelRawResourceAttribute } from "../../../../src/interfaces/otel/resources/IOTelResource";
 import { IOTelAttributes } from "../../../../src/interfaces/otel/IOTelAttributes";
-import { IOTelLoggerProviderConfig } from "../../../../src/interfaces/otel/logs/IOTelLoggerProviderConfig";
+import { IOTelWebSdkConfig } from "../../../../src/interfaces/otel/config/IOTelWebSdkConfig";
 
 // W3C trace flags constant for sampled traces
 const eW3CTraceFlags_Sampled = 1;
@@ -153,7 +153,7 @@ export class OTelLoggerTests extends AITestClass {
         };
     }
 
-    private _cfg(processors: IOTelLogRecordProcessor[]): IOTelLoggerProviderConfig {
+    private _cfg(processors: IOTelLogRecordProcessor[]): IOTelWebSdkConfig {
         const resource: IOTelResource = {
             attributes: {} as IOTelAttributes,
             merge: () => resource,
@@ -162,7 +162,7 @@ export class OTelLoggerTests extends AITestClass {
         return {
             resource: resource,
             errorHandlers: {},
-            processors: processors
-        };
+            logProcessors: processors
+        } as IOTelWebSdkConfig;
     }
 }

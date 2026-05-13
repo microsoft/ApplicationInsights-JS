@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { ITraceHost } from "../../ai/ITraceProvider";
-import { IOTelErrorHandlers } from "../config/IOTelErrorHandlers";
 
 /**
  * Configuration interface for creating a TracerProvider.
@@ -10,6 +9,7 @@ import { IOTelErrorHandlers } from "../config/IOTelErrorHandlers";
  * @remarks
  * The TracerProvider manages Tracer instances and delegates span creation
  * to the configured trace host.
+ * Error handlers are inherited from the host's config (host.config.errorHandlers).
  *
  * @since 4.0.0
  */
@@ -20,11 +20,4 @@ export interface ITracerProviderConfig {
      * @see {@link ITraceHost}
      */
     host: ITraceHost;
-
-    /**
-     * Error handlers for internal diagnostics.
-     *
-     * @see {@link IOTelErrorHandlers}
-     */
-    errorHandlers?: IOTelErrorHandlers;
 }
