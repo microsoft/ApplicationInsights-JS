@@ -539,5 +539,76 @@ export class HelperFuncTests extends AITestClass {
                 Assert.equal(rlt, undefined, "feature is not enable case 6");
             }
         });
+
+        this.testCase({
+            name: 'objExtend should not allow __proto__ pollution in shallow merge',
+            test: () => {
+                try {
+                    let malicious = JSON.parse('{"__proto__": {"polluted": "yes"}}');
+                    let result = objExtend({}, malicious);
+                    Assert.equal(({} as any)["polluted"], undefined, "Object.prototype should not be polluted");
+                    Assert.equal(result["polluted"], undefined, "Result should not inherit polluted property");
+                } finally {
+                    delete (Object.prototype as any)["polluted"];
+                }
+            }
+        });
+
+        this.testCase({
+            name: 'objExtend should not allow __proto__ pollution in deep merge',
+            test: () => {
+                try {
+                    let malicious = JSON.parse('{"__proto__": {"polluted": "yes"}}');
+                    let result = objExtend(true, {}, malicious);
+                    Assert.equal(({} as any)["polluted"], undefined, "Object.prototype should not be polluted via deep merge");
+                    Assert.equal(result["polluted"], undefined, "Result should not inherit polluted property via deep merge");
+                } finally {
+                    delete (Object.prototype as any)["polluted"];
+                }
+            }
+        });
+
+        this.testCase({
+            name: 'objExtend should not allow nested __proto__ pollution in deep merge',
+            test: () => {
+                try {
+                    let malicious = JSON.parse('{"nested": {"__proto__": {"polluted": "yes"}}}');
+                    let result = objExtend(true, {}, malicious);
+                    Assert.equal(({} as any)["polluted"], undefined, "Object.prototype should not be polluted via nested deep merge");
+                    Assert.ok(result["nested"] !== undefined, "Nested object should still exist");
+                } finally {
+                    delete (Object.prototype as any)["polluted"];
+                }
+            }
+        });
+
+        this.testCase({
+            name: 'objExtend should not allow constructor or prototype key pollution',
+            test: () => {
+                try {
+                    let malicious = JSON.parse('{"constructor": {"prototype": {"polluted": "yes"}}, "prototype": {"polluted": "yes"}}');
+                    let result = objExtend(true, {}, malicious);
+                    Assert.equal(({} as any)["polluted"], undefined, "Object.prototype should not be polluted via constructor/prototype keys");
+                    Assert.ok(!result.hasOwnProperty("constructor"), "constructor key should be skipped");
+                    Assert.ok(!result.hasOwnProperty("prototype"), "prototype key should be skipped");
+                } finally {
+                    delete (Object.prototype as any)["polluted"];
+                }
+            }
+        });
+
+        this.testCase({
+            name: 'objExtend should still merge safe properties when __proto__ is present',
+            test: () => {
+                try {
+                    let malicious = JSON.parse('{"__proto__": {"polluted": "yes"}, "safe": "value"}');
+                    let result = objExtend(true, {}, malicious);
+                    Assert.equal(result["safe"], "value", "Safe properties should still be merged");
+                    Assert.equal(({} as any)["polluted"], undefined, "Object.prototype should not be polluted");
+                } finally {
+                    delete (Object.prototype as any)["polluted"];
+                }
+            }
+        });
     }
 }
