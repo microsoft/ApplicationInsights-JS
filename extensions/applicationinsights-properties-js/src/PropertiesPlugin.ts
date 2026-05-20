@@ -7,9 +7,8 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BaseTelemetryPlugin, BreezeChannelIdentifier, IAppInsightsCore, IConfig, IConfigDefaults, IConfiguration, IPlugin,
     IProcessTelemetryContext, IProcessTelemetryUnloadContext, IPropertiesPlugin, ITelemetryItem, ITelemetryPluginChain,
-    ITelemetryUnloadState, PageViewEnvelopeType, PropertiesPluginIdentifier, _InternalLogMessage, _eInternalMessageId,
-    _logInternalMessage, createProcessTelemetryContext, eLoggingSeverity, getNavigator, getSetValue, isNullOrUndefined, onConfigChange,
-    utlSetStoragePrefix
+    ITelemetryUnloadState, PageViewEnvelopeType, PropertiesPluginIdentifier, _InternalLogMessage, _eInternalMessageId, _logInternalMessage,
+    createProcessTelemetryContext, eLoggingSeverity, getNavigator, getSetValue, isNullOrUndefined, onConfigChange, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-core-js";
 import { isString, objDeepFreeze, objDefine } from "@nevware21/ts-utils";
 import { IPropTelemetryContext } from "./Interfaces/IPropTelemetryContext";
