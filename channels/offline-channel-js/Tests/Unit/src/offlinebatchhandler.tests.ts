@@ -1022,6 +1022,84 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 }, "Wait for get batch response" + new Date().toISOString(), 15, 1000))
             }
         });
+
+        this.testCase({
+            name: "Null Provider: storeBatch rejects and does not throw when provider is null",
+            test: () => {
+                let batchHandler = new OfflineBatchHandler();
+                // Do not initialize - provider will be null
+                let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
+                let evt = TestHelper.mockEvent(endpoint, 1, false);
+
+                doAwaitResponse(batchHandler.storeBatch(evt), (res) => {
+                    this.ctx.storeBatchDone = true;
+                    Assert.ok(res.rejected, "storeBatch should reject when provider is null");
+                    Assert.ok(res.reason instanceof Error, "rejection reason should be an Error");
+                    Assert.ok(res.reason.message.indexOf("No provider") > -1, "error message should indicate no provider");
+                });
+
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    return !!this.ctx.storeBatchDone;
+                }, "Wait for storeBatch rejection" + new Date().toISOString(), 15, 1000))
+            }
+        });
+
+        this.testCase({
+            name: "Null Provider: sendNextBatch rejects and does not throw when provider is null",
+            test: () => {
+                let batchHandler = new OfflineBatchHandler();
+                // Do not initialize - provider will be null
+
+                doAwaitResponse(batchHandler.sendNextBatch(), (res) => {
+                    this.ctx.sendNextDone = true;
+                    Assert.ok(res.rejected, "sendNextBatch should reject when provider is null");
+                    Assert.ok(res.reason instanceof Error, "rejection reason should be an Error");
+                    Assert.ok(res.reason.message.indexOf("No provider") > -1, "error message should indicate no provider");
+                });
+
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    return !!this.ctx.sendNextDone;
+                }, "Wait for sendNextBatch rejection" + new Date().toISOString(), 15, 1000))
+            }
+        });
+
+        this.testCase({
+            name: "Null Provider: hasStoredBatch rejects and does not throw when provider is null",
+            test: () => {
+                let batchHandler = new OfflineBatchHandler();
+                // Do not initialize - provider will be null
+
+                doAwaitResponse(batchHandler.hasStoredBatch(), (res) => {
+                    this.ctx.hasStoredDone = true;
+                    Assert.ok(res.rejected, "hasStoredBatch should reject when provider is null");
+                    Assert.ok(res.reason instanceof Error, "rejection reason should be an Error");
+                    Assert.ok(res.reason.message.indexOf("No provider") > -1, "error message should indicate no provider");
+                });
+
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    return !!this.ctx.hasStoredDone;
+                }, "Wait for hasStoredBatch rejection" + new Date().toISOString(), 15, 1000))
+            }
+        });
+
+        this.testCase({
+            name: "Null Provider: cleanStorage rejects and does not throw when provider is null",
+            test: () => {
+                let batchHandler = new OfflineBatchHandler();
+                // Do not initialize - provider will be null
+
+                doAwaitResponse(batchHandler.cleanStorage(), (res) => {
+                    this.ctx.cleanDone = true;
+                    Assert.ok(res.rejected, "cleanStorage should reject when provider is null");
+                    Assert.ok(res.reason instanceof Error, "rejection reason should be an Error");
+                    Assert.ok(res.reason.message.indexOf("No provider") > -1, "error message should indicate no provider");
+                });
+
+                return this._asyncQueue().concat(PollingAssert.asyncTaskPollingAssert(() => {
+                    return !!this.ctx.cleanDone;
+                }, "Wait for cleanStorage rejection" + new Date().toISOString(), 15, 1000))
+            }
+        });
         
     }
 }

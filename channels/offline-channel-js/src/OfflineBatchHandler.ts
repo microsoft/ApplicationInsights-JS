@@ -68,7 +68,8 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
                 }
                 return createPromise((resolve, reject) => {
                     if (!provider) {
-                        reject(new Error(NoProviderErrMsg))
+                        reject(new Error(NoProviderErrMsg));
+                        return;
                     }
                     let evt = _getOfflineEvt(batch);
                     return doAwaitResponse(provider.addEvent(evt.id, evt, _itemCtx), (response: AwaitResponse<IStorageTelemetryItem>) => {
@@ -97,6 +98,7 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
                 return createPromise((resolve, reject) => {
                     if (!_provider && !_unloadProvider) {
                         reject(new Error(NoProviderErrMsg));
+                        return;
                     }
                     function storeResolve(result) {
                         try {
@@ -223,7 +225,8 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
             _self.hasStoredBatch = (cb?: (hasBatches: boolean) => void) => {
                 return createPromise((resolve, reject) => {
                     if (!_provider) {
-                        reject(new Error(NoProviderErrMsg))
+                        reject(new Error(NoProviderErrMsg));
+                        return;
                     }
                     return doAwaitResponse(_provider.getNextBatch(), (response: AwaitResponse<IStorageTelemetryItem[]>) => {
                         try {
@@ -244,7 +247,8 @@ export class OfflineBatchHandler implements IOfflineBatchHandler {
                 return createPromise((resolve, reject) => {
                     // note: doawaitresponse currently returns undefined
                     if (!_provider) {
-                        reject(new Error(NoProviderErrMsg))
+                        reject(new Error(NoProviderErrMsg));
+                        return;
                     }
                     return doAwaitResponse(_provider.clear(), (response: AwaitResponse<IStorageTelemetryItem[]>) => {
                         try {
