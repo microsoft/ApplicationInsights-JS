@@ -92,6 +92,7 @@ export class AISKUSizeCheck extends AITestClass {
     public registerTests() {
         this.addRawFileSizeCheck();
         this.addProdFileSizeCheck();
+        this.addRolldownPureAnnotationCheck();
     }
 
     constructor() {
@@ -104,6 +105,32 @@ export class AISKUSizeCheck extends AITestClass {
 
     private addProdFileSizeCheck(): void {
         this._checkFileSize(true);
+    }
+
+    private addRolldownPureAnnotationCheck(): void {
+        this.testCase({
+            name: "Test AISKU dist has valid PURE annotation placement for Rolldown",
+            test: () => {
+                let request = new Request(this.rawFilePath, { method: "GET" });
+                return fetch(request).then((response) => {
+                    if (!response.ok) {
+                        Assert.ok(false, `fetch AISKU dist for PURE annotation check error: ${response.statusText}`);
+                        return;
+                    }
+
+                    return response.text().then((text) => {
+                        // Rolldown only accepts PURE on call/new expressions; literals/null inside parens are invalid.
+                        let invalidPurePattern = /\(\s*\/\*\s*[#@]__PURE__\s*\*\/\s*(?:"|null\b)/g;
+                        let matches = text.match(invalidPurePattern) || [];
+                        Assert.equal(0, matches.length, `Found ${matches.length} invalid PURE annotation placements in AISKU dist`);
+                    }, (error: Error) => {
+                        Assert.ok(false, `AISKU dist PURE annotation check response error: ${error}`);
+                    });
+                }).catch((error: Error) => {
+                    Assert.ok(false, `AISKU dist PURE annotation check error: ${error}`);
+                });
+            }
+        });
     }
     
     private _checkFileSize(isProd: boolean): void {

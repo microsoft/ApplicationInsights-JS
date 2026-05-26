@@ -19,7 +19,7 @@ import { isReactNative } from "../utils/EnvUtils";
 /**
  * Identifies the version for the extended SDK
  */
-export const ExtVersion = "4.4.1";
+export const ExtVersion = "#extVersion#";
 
 /**
  * Identifies the full version for the extended SDK
@@ -61,7 +61,7 @@ const _fieldTypeEventPropMap = {
  */
 // let _uaDisallowsSameSiteNone = null;
 
-var uInt8ArraySupported: boolean | null = (/* #__PURE__*/ null);
+var uInt8ArraySupported: boolean | null = null;
 // var _areCookiesAvailable: boolean | undefined;
 
 /**
