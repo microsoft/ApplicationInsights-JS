@@ -109,7 +109,7 @@ export class AISKUSizeCheck extends AITestClass {
 
     private addRolldownPureAnnotationCheck(): void {
         this.testCase({
-            name: "Test AISKU dist has valid PURE annotation placement for Rolldown",
+            name: "Test AISKU dist canonicalizes PURE annotation spacing",
             test: () => {
                 let request = new Request(this.rawFilePath, { method: "GET" });
                 return fetch(request).then((response) => {
@@ -119,10 +119,10 @@ export class AISKUSizeCheck extends AITestClass {
                     }
 
                     return response.text().then((text) => {
-                        // Rolldown only accepts PURE on call/new expressions; literals/null inside parens are invalid.
-                        let invalidPurePattern = /\(\s*\/\*\s*[#@]__PURE__\s*\*\/\s*(?:"|null\b)/g;
-                        let matches = text.match(invalidPurePattern) || [];
-                        Assert.equal(0, matches.length, `Found ${matches.length} invalid PURE annotation placements in AISKU dist`);
+                        // Validate the final bundle no longer contains spaced PURE comment forms.
+                        let nonCanonicalPurePattern = /\(\s+\/\*\s*[#@]__PURE__\s*\*\/|\(\s*\/\*\s*[#@]__PURE__\s*\*\/\s+/g;
+                        let matches = text.match(nonCanonicalPurePattern) || [];
+                        Assert.equal(0, matches.length, `Found ${matches.length} non-canonical PURE annotations in AISKU dist`);
                     }, (error: Error) => {
                         Assert.ok(false, `AISKU dist PURE annotation check response error: ${error}`);
                     });

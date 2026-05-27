@@ -30,6 +30,26 @@ function doCleanup() {
   })
 }
 
+function fixPureAnnotations() {
+    const PURE_COMMENT_CANONICALIZE = /\(\s*\/\*\s*([#@])__PURE__\s*\*\/\s*/g;
+
+    return {
+        name: "fix-pure-annotations",
+        renderChunk(code) {
+            let normalized = code.replace(PURE_COMMENT_CANONICALIZE, "(/*$1__PURE__*/");
+
+            if (normalized === code) {
+                return null;
+            }
+
+            return {
+                code: normalized,
+                map: null
+            };
+        }
+    };
+}
+
 const getNamespace = (prefix, namespaces, baseName, rootName) => {
     var result = prefix + "var " + baseName + "=" + rootName;
     if (namespaces.length > 0) {
@@ -361,6 +381,9 @@ const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetTyp
         );
     }
 
+    // Keep this as the final pass so all generated/included PURE comments are normalized.
+    browserRollupConfig.plugins.push(fixPureAnnotations());
+
     // console.log(`Browser: ${JSON.stringify(browserRollupConfig)}`);
 
     return browserRollupConfig;
@@ -421,6 +444,9 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
             })
         );
     }
+
+    // Keep this as the final pass so all generated/included PURE comments are normalized.
+    nodeRollupConfig.plugins.push(fixPureAnnotations());
 
     return nodeRollupConfig;
 };

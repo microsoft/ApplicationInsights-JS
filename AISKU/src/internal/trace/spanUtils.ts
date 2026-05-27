@@ -48,9 +48,9 @@ const MessageBusDestination = "message_bus.destination";
 const TIME_SINCE_ENQUEUED = "timeSinceEnqueued";
 
 const PORT_REGEX: ILazyValue<RegExp> = (/*#__PURE__*/ getLazy(() => new RegExp(/(https?)(:\/\/.*)(:\d+)(\S*)/)));
-const HTTP_DOT = "http.";
+const HTTP_DOT = (/*#__PURE__*/ "http.");
 
-const _MS_PROCESSED_BY_METRICS_EXTRACTORS = "_MS.ProcessedByMetricExtractors";
+const _MS_PROCESSED_BY_METRICS_EXTRACTORS = (/* #__PURE__*/"_MS.ProcessedByMetricExtractors");
 
 /**
  * Legacy HTTP semantic convention values
