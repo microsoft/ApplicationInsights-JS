@@ -4,7 +4,7 @@ import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js"
 import replace from "@rollup/plugin-replace";
 import cleanup from "rollup-plugin-cleanup";
 import sourcemaps from 'rollup-plugin-sourcemaps';
-import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup";
+import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/dist/node/removedynamic";
 import { es5Poly, es5Check, importCheck } from "@microsoft/applicationinsights-rollup-es5";
 import { resolve } from 'path';
 import { readFileSync } from "fs";
