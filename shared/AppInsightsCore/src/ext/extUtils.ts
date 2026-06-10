@@ -61,7 +61,7 @@ const _fieldTypeEventPropMap = {
  */
 // let _uaDisallowsSameSiteNone = null;
 
-var uInt8ArraySupported: boolean | null = (/* #__PURE__*/ null);
+var uInt8ArraySupported: boolean | null = null;
 // var _areCookiesAvailable: boolean | undefined;
 
 /**
