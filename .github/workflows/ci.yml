@@ -23,6 +23,9 @@ jobs:
       PUPPETEER_SKIP_DOWNLOAD: true
 
     strategy:
+      # Do not cancel the other Node.js matrix jobs when one fails, so we can
+      # see whether a failure reproduces across all Node.js versions or only some.
+      fail-fast: false
       matrix:
         node-version: [ 18, 20, 22, 24 ]
 
