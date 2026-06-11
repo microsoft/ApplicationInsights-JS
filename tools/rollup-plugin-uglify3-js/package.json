@@ -14,7 +14,7 @@
     "scripts": {
         "clean": "git clean -xdf",
         "build": "npm run build:esm && npm run build:bundle",
-        "build:esm": "grunt rollupuglify",
+        "build:esm": "grunt -f ../../gruntfile.js rollupuglify",
         "build:bundle": "npx rollup -c rollup.config.js --bundleConfigAsCjs",
         "rebuild": "npm run build",
         "test": "",
