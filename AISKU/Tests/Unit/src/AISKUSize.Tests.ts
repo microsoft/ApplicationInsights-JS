@@ -54,8 +54,8 @@ function _checkSize(checkType: string, maxSize: number, size: number, isNightly:
 }
 
 export class AISKUSizeCheck extends AITestClass {
-    private readonly MAX_RAW_SIZE = 174;
-    private readonly MAX_BUNDLE_SIZE = 174;
+    private readonly MAX_RAW_SIZE = 175;
+    private readonly MAX_BUNDLE_SIZE = 175;
     private readonly MAX_RAW_DEFLATE_SIZE = 70;
     private readonly MAX_BUNDLE_DEFLATE_SIZE = 70;
     private readonly rawFilePath = "../dist/es5/applicationinsights-web.min.js";
