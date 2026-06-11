@@ -30,7 +30,7 @@ const nodeUmdRollupConfigFactory = () => {
   return nodeRollupConfig;
 }
 
-updateDistEsmFiles({}, banner);
+updateDistEsmFiles({}, banner, false);
 
 export default [
   nodeUmdRollupConfigFactory(),
