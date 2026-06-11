@@ -727,30 +727,25 @@ export class OfflineBatchHandlerTests extends AITestClass {
                 let endpoint = DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH;
                 let storageKey = "AIOffline_1_dc.services.visualstudio.com";
                 let storageObj = {providers:[eStorageProviders.LocalStorage], autoClean: true, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
-                let  storageConfig = createDynamicConfig(storageObj).cfg;
+                let storageConfig = createDynamicConfig(storageObj).cfg;
+                let idbStorageObj = {providers:[eStorageProviders.IndexedDb], autoClean: false, senderCfg:{retryCodes: [500]}, maxRetry: 2} as IOfflineChannelConfiguration;
+                let idbStorageConfig = createDynamicConfig(idbStorageObj).cfg;
  
                 let itemCtx = this.core.getProcessTelContext();
                 let providerCxt = {
                     itemCtx:  itemCtx,
                     storageConfig: storageConfig,
                     endpoint: endpoint
-                }
+                };
+                let idbProviderCxt = {
+                    itemCtx: itemCtx,
+                    storageConfig: idbStorageConfig,
+                    endpoint: endpoint
+                };
                 let unloadHandler = new OfflineBatchHandler();
                 unloadHandler.initialize(providerCxt);
                 let evt = TestHelper.mockEvent(endpoint, 1, false);
-                unloadHandler.storeBatch(evt); // add events to local storage
-                let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
-                Assert.ok(storageStr, "storage should have one event");
-
-
-                let batchHandler = this.batchHandler;
-                this.ctx.isInit = true;
-                this.ctx.handler = batchHandler;
-                let items = batchHandler["_getDbgPlgTargets"]();
-                let provider = items[0];
-                let isInit = items[1];
-                Assert.ok(provider, "provider is initialized");
-                Assert.ok(isInit, "initialization is successful");
+                let batchHandler = new OfflineBatchHandler();
 
                 let sender1Payload: any[] = []
                 let sender1 =  (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
@@ -766,6 +761,22 @@ export class OfflineBatchHandlerTests extends AITestClass {
 
 
                 return this._asyncQueue().add(() =>
+                    doAwaitResponse(batchHandler.initialize(idbProviderCxt) as any, (res) => {
+                        this.ctx.isInit = true;
+                        this.ctx.handler = batchHandler;
+                        let items = batchHandler["_getDbgPlgTargets"]();
+                        let provider = items[0];
+                        let isInit = items[1];
+                        Assert.ok(provider, "provider is initialized");
+                        Assert.ok(isInit, "initialization is successful");
+                    })
+                ).add(() =>
+                    doAwaitResponse(unloadHandler.storeBatch(evt) as any, (res) => {
+                        Assert.ok(!res.rejected, "storeBatch to unload provider should complete");
+                        let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
+                        Assert.ok(storageStr, "storage should have one event");
+                    })
+                ).add(() =>
                     doAwaitResponse(batchHandler.sendNextBatch(cb1, false, {sendPOST: sender1}) as any,(res) => {
                         this.ctx.sendBatch1 = true;
                         this.ctx.sendBatch1Res = res1;
@@ -774,13 +785,19 @@ export class OfflineBatchHandlerTests extends AITestClass {
                         Assert.equal(res.value.data.id, evt.id, "should have expected event");
                     })
                 ).add(() =>
-                    doAwaitResponse(provider.getAllEvents(), (res)=> {
+                    doAwaitResponse((batchHandler["_getDbgPlgTargets"]()[0]).getAllEvents(), (res)=> {
                         this.ctx.getAll = true;
                         let val = res.value;
                         Assert.equal(val && val.length, 0, "should have 0 events");
                         let storageStr = AITestClass.orgLocalStorage.getItem(storageKey) as any;
                         let evts = JSON.parse(storageStr).evts;
                         Assert.deepEqual(evts, {}, "storage should not have one event");
+                    })
+                ).add(() =>
+                    doAwaitResponse(unloadHandler.teardown() as any, () => {
+                    })
+                ).add(() =>
+                    doAwaitResponse(batchHandler.teardown() as any, () => {
                     })
                 )
             }
