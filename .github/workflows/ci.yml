@@ -19,6 +19,13 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    # Gate puppeteer's flaky postinstall browser download. Without this the
+    # `npm install` steps fail when the puppeteer cache is partial (the browser
+    # folder exists but the executable is missing). Browsers are installed
+    # explicitly below before the tests run.
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+
     strategy:
       matrix:
         node-version: [ 18, 20, 22, 24 ]
@@ -36,6 +43,14 @@ jobs:
     - run: npm install
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
+    # Install browsers explicitly (by name) so they download even though
+    # PUPPETEER_SKIP_DOWNLOAD is set. The no-arg form is a silent no-op when
+    # that env var is set, so each browser must be named.
+    - name: Install Puppeteer browsers
+      run: |
+        npx puppeteer browsers install chrome
+        npx puppeteer browsers install chrome-headless-shell
+        npx puppeteer browsers list
     - run: npm run build --verbose
       timeout-minutes: 20
     - run: npm run test --verbose
