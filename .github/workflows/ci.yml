@@ -19,9 +19,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    env:
-      PUPPETEER_SKIP_DOWNLOAD: true
-
     strategy:
       # Do not cancel the other Node.js matrix jobs when one fails, so we can
       # see whether a failure reproduces across all Node.js versions or only some.
