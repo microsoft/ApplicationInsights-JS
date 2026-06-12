@@ -19,7 +19,19 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      # Skip puppeteer's automatic browser download during npm install. The
+      # postinstall download is flaky on the runners: the runner image can carry
+      # a partial/mismatched puppeteer cache, so postinstall sees the browser
+      # folder but the executable is missing ("folder exists but executable is
+      # missing") and hard-fails the install. We install the pinned browsers
+      # explicitly (clean cache + retry) in a dedicated step below instead.
+      PUPPETEER_SKIP_DOWNLOAD: true
+
     strategy:
+      # Do not cancel the other Node.js matrix jobs when one fails, so we can
+      # see whether a failure reproduces across all Node.js versions or only some.
+      fail-fast: false
       matrix:
         node-version: [ 18, 20, 22, 24 ]
 
@@ -34,6 +46,28 @@ jobs:
     - run: npm install rollup -g
     - run: npm install grunt-cli
     - run: npm install
+    - name: Install pinned puppeteer browsers (with retry)
+      # Install ALL pinned puppeteer browsers (both chrome and
+      # chrome-headless-shell) into puppeteer's default cache. The grunt qunit
+      # task launches puppeteer with headless:'new', which resolves to
+      # chrome-headless-shell in puppeteer 24, so chrome-headless-shell must be
+      # present or the browser tests run during the build (e.g. grunt shims)
+      # fail to launch. `puppeteer browsers install` takes a single browser
+      # positional, so use the no-arg form to install all pinned browsers at the
+      # exact versions puppeteer expects. Clear the cache and retry to recover
+      # from a partial/corrupt download.
+      run: |
+        for attempt in 1 2 3; do
+          rm -rf "$HOME/.cache/puppeteer"
+          if npx puppeteer browsers install; then
+            echo "Puppeteer browsers install succeeded on attempt $attempt"
+            exit 0
+          fi
+          echo "Puppeteer browsers install attempt $attempt failed; retrying..."
+          sleep 5
+        done
+        echo "Puppeteer browsers install failed after 3 attempts"
+        exit 1
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm run build --verbose
