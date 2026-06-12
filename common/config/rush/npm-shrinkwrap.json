@@ -13,6 +13,7 @@
         "@nevware21/grunt-eslint-ts": "^0.5.2",
         "@nevware21/grunt-ts-plugin": "^0.5.2",
         "@nevware21/ts-async": ">= 0.5.5 < 2.x",
+        "@nevware21/ts-utils": ">= 0.15.0 < 2.x",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
         "@rollup/plugin-replace": "^5.0.2",
@@ -414,11 +415,11 @@
       }
     },
     "node_modules/@microsoft/dynamicproto-js": {
-      "version": "2.0.3",
-      "resolved": "https://registry.npmjs.org/@microsoft/dynamicproto-js/-/dynamicproto-js-2.0.3.tgz",
-      "integrity": "sha512-JTWTU80rMy3mdxOjjpaiDQsTLZ6YSGGqsjURsY6AUQtIj0udlF/jYmhdLZu8693ZIC0T1IwYnFa0+QeiMnziBA==",
+      "version": "2.0.5",
+      "resolved": "https://registry.npmjs.org/@microsoft/dynamicproto-js/-/dynamicproto-js-2.0.5.tgz",
+      "integrity": "sha512-V+Zr7PDKIEaItVwF/OyWQlKeugNRYg7KJJ+RhEIL2FMW6NlG8FN2l4XA9Z42hNtsjwJFlcUiF38pmM/AaXsF7g==",
       "dependencies": {
-        "@nevware21/ts-utils": ">= 0.10.4 < 2.x"
+        "@nevware21/ts-utils": ">= 0.14.0 < 2.x"
       }
     },
     "node_modules/@microsoft/tsdoc": {
@@ -483,9 +484,9 @@
       }
     },
     "node_modules/@nevware21/ts-utils": {
-      "version": "0.14.0",
-      "resolved": "https://registry.npmjs.org/@nevware21/ts-utils/-/ts-utils-0.14.0.tgz",
-      "integrity": "sha512-WoeqTIXQ8WPhl+lD2NbMHoAQ4sJl0n7EoRoDmVJui//Usg512enl9q1fdbVobuZt3omnxnmVsDrNIvPBvFgddQ==",
+      "version": "0.15.0",
+      "resolved": "https://registry.npmjs.org/@nevware21/ts-utils/-/ts-utils-0.15.0.tgz",
+      "integrity": "sha512-+bUMKIiKAgoW5uNEb5xxzBzdwdLS9SKRcOy8SxLE+KqSlIdUYV5O9nxJVq1RUYcO2DtL5DlrK1GbgcVEHv6GVA==",
       "funding": [
         {
           "type": "github",
@@ -3681,19 +3682,6 @@
       "version": "1.0.0",
       "resolved": "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz",
       "integrity": "sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw=="
-    },
-    "node_modules/fsevents": {
-      "version": "2.3.3",
-      "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
-      "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
-      "hasInstallScript": true,
-      "optional": true,
-      "os": [
-        "darwin"
-      ],
-      "engines": {
-        "node": "^8.16.0 || ^10.6.0 || >=11.0.0"
-      }
     },
     "node_modules/function-bind": {
       "version": "1.1.2",
