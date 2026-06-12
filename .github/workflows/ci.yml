@@ -19,18 +19,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    env:
-      # Skip puppeteer's automatic browser download during npm install. The
-      # combined chrome + chrome-headless-shell postinstall download is flaky on
-      # the runners (partial extraction leaves "folder exists but executable is
-      # missing"), which hard-fails the install. We install a version-matched
-      # Chrome explicitly (with retry) in a dedicated step below instead.
-      PUPPETEER_SKIP_DOWNLOAD: true
-
     strategy:
-      # Do not cancel the other Node.js matrix jobs when one fails, so we can
-      # see whether a failure reproduces across all Node.js versions or only some.
-      fail-fast: false
       matrix:
         node-version: [ 18, 20, 22, 24 ]
 
@@ -45,24 +34,6 @@ jobs:
     - run: npm install rollup -g
     - run: npm install grunt-cli
     - run: npm install
-    - name: Install puppeteer Chrome (version-matched, with retry)
-      # Install the Chrome build that matches the pinned puppeteer version into
-      # puppeteer's default cache, retrying with a clean cache on failure to
-      # recover from partial/corrupt downloads. Using puppeteer's own
-      # version-matched Chrome (rather than an arbitrary system Chrome) avoids
-      # the headless IndexedDB hang that caused offline-channel test timeouts.
-      run: |
-        for attempt in 1 2 3; do
-          rm -rf "$HOME/.cache/puppeteer"
-          if npx puppeteer browsers install chrome chrome-headless-shell; then
-            echo "Chrome install succeeded on attempt $attempt"
-            exit 0
-          fi
-          echo "Chrome install attempt $attempt failed; retrying..."
-          sleep 5
-        done
-        echo "Chrome install failed after 3 attempts"
-        exit 1
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm run build --verbose
