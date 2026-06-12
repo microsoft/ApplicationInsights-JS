@@ -47,20 +47,25 @@ jobs:
     - run: npm install grunt-cli
     - run: npm install
     - name: Install pinned puppeteer browsers (with retry)
-      # Install ALL pinned puppeteer browsers (both chrome and
+      # Install the pinned puppeteer browsers (both chrome and
       # chrome-headless-shell) into puppeteer's default cache. The grunt qunit
       # task launches puppeteer with headless:'new', which resolves to
-      # chrome-headless-shell in puppeteer 24, so chrome-headless-shell must be
-      # present or the browser tests run during the build (e.g. grunt shims)
-      # fail to launch. `puppeteer browsers install` takes a single browser
-      # positional, so use the no-arg form to install all pinned browsers at the
-      # exact versions puppeteer expects. Clear the cache and retry to recover
-      # from a partial/corrupt download.
+      # chrome-headless-shell in puppeteer 24, so both browsers must be present
+      # or the qunit browser tests fail to launch ("Could not find Chrome").
+      #
+      # IMPORTANT: the job-level PUPPETEER_SKIP_DOWNLOAD=true also applies to this
+      # step. The no-arg form `puppeteer browsers install` is a NO-OP under
+      # PUPPETEER_SKIP_DOWNLOAD (exits 0, installs nothing). The single-browser
+      # form `puppeteer browsers install <name>` DOES install regardless of that
+      # env var, so install each browser explicitly. Clear the cache and retry
+      # to recover from a partial/corrupt download ("folder exists but executable
+      # is missing").
       run: |
         for attempt in 1 2 3; do
           rm -rf "$HOME/.cache/puppeteer"
-          if npx puppeteer browsers install; then
-            echo "Puppeteer browsers install succeeded on attempt $attempt"
+          if npx puppeteer browsers install chrome && npx puppeteer browsers install chrome-headless-shell; then
+            echo "Puppeteer browsers installed on attempt $attempt"
+            npx puppeteer browsers list
             exit 0
           fi
           echo "Puppeteer browsers install attempt $attempt failed; retrying..."
