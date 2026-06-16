@@ -19,6 +19,14 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      # Skip Puppeteer's automatic browser download during the various npm/rush
+      # install steps. On the current hosted runner image the auto-download leaves
+      # a partial browser folder (download never completes), and a later install
+      # then aborts with "the browser folder exists but the executable is missing".
+      # We download the browser once, cleanly, in a dedicated step below.
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+
     strategy:
       matrix:
         node-version: [ 18, 20, 22, 24 ]
@@ -30,19 +38,21 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - name: Use a clean Puppeteer browser cache
-      # The default ~/.cache/puppeteer on the hosted runner image contains a
-      # partial/stale browser entry, which makes Puppeteer abort install with
-      # "the browser folder exists but the executable is missing". Point Puppeteer
-      # at a clean per-job cache directory so it downloads its bundled browser
-      # cleanly; the tests launch that same bundled browser.
+      # Point Puppeteer at a clean per-job cache directory (the default
+      # ~/.cache/puppeteer on the runner image is pre-seeded with a partial entry).
       run: echo "PUPPETEER_CACHE_DIR=${RUNNER_TEMP}/puppeteer" >> "$GITHUB_ENV"
     - name: Update rush shrinkwrap dependencies (for different node versions)
       run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm install rollup -g
     - run: npm install grunt-cli
     - run: npm install
-    - name: Ensure Puppeteer browser is installed
-      run: npx puppeteer browsers install chrome
+    - name: Install Puppeteer browser
+      # `browsers install` always downloads (it ignores PUPPETEER_SKIP_DOWNLOAD),
+      # so this performs a single clean download into the empty cache dir. The
+      # tests launch this bundled browser.
+      run: |
+        npx puppeteer browsers install chrome
+        npx puppeteer browsers install chrome-headless-shell
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm run build --verbose
