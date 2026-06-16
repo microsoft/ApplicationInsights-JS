@@ -19,6 +19,13 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      # The hosted runner's Puppeteer browser auto-download is currently broken
+      # (it aborts with "the browser folder exists but the executable is missing"),
+      # which fails the install steps. Skip the auto-download and instead drive the
+      # Google Chrome that is pre-installed on the runner image (see the step below).
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+
     strategy:
       matrix:
         node-version: [ 18, 20, 22, 24 ]
@@ -29,11 +36,12 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Clear stale Puppeteer browser cache
-      # The hosted runner image pre-seeds ~/.cache/puppeteer, and a partial/stale
-      # browser folder causes Puppeteer to fail install with "the browser folder
-      # exists but the executable is missing". Remove it so the browser downloads cleanly.
-      run: rm -rf ~/.cache/puppeteer
+    - name: Use pre-installed Chrome for Puppeteer
+      run: |
+        CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium-browser || command -v chromium)"
+        echo "Using Chrome at: ${CHROME_BIN}"
+        "${CHROME_BIN}" --version
+        echo "PUPPETEER_EXECUTABLE_PATH=${CHROME_BIN}" >> "$GITHUB_ENV"
     - name: Update rush shrinkwrap dependencies (for different node versions)
       run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm install rollup -g
