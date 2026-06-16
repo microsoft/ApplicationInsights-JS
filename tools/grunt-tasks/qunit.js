@@ -14,7 +14,15 @@ var path = require('path');
 var url = require('url');
 var EventEmitter = require('eventemitter2');
 // NPM libs.
-var puppeteer = require('puppeteer');
+// Puppeteer v25+ is published as an ES Module, so it can no longer be loaded with
+// require() (which throws ERR_REQUIRE_ESM). It is loaded lazily via dynamic
+// import() inside the async qunit task below. import() works for both CommonJS and
+// ESM builds, so this stays compatible with older puppeteer versions too.
+function loadPuppeteer() {
+  return import('puppeteer').then(function(mod) {
+    return (mod && mod.default) ? mod.default : mod;
+  });
+}
 
 var Promise = global.Promise;
 
@@ -404,7 +412,10 @@ module.exports = function(grunt) {
     combinedRunEnd = createRunEnd();
 
     // Instantiate headless browser
-    puppeteer.launch(puppeteerLaunchOptions)
+    loadPuppeteer()
+      .then(function(puppeteer) {
+        return puppeteer.launch(puppeteerLaunchOptions);
+      })
       .then(function(b) {
         browser = b;
         return b.newPage();
