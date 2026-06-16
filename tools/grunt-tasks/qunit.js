@@ -291,7 +291,10 @@ module.exports = function(grunt) {
     });
     var puppeteerLaunchOptions = Object.assign(
       {
-        headless: 'new',
+        // puppeteer v23+ removed the 'new' string value; `true` is now the new
+        // (full Chrome) headless mode. 'shell' would launch chrome-headless-shell
+        // (the old headless) where IndexedDB is broken, causing async test hangs.
+        headless: true,
         args: defaultChromiumArgs
       },
       options.puppeteer

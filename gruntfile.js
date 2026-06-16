@@ -417,7 +417,7 @@ module.exports = function (grunt) {
                             httpBase: ".",
                             puppeteer: {
                                 debug: true,
-                                headless: "new",
+                                headless: true,
                                 timeout: 30000,
                                 ignoreHTTPErrors: true,
                                 args: [
@@ -469,7 +469,7 @@ module.exports = function (grunt) {
                             console: true,
                             summaryOnly: false,
                             puppeteer: {
-                                headless: "new",
+                                headless: true,
                                 timeout: 30000,
                                 ignoreHTTPErrors: true,
                                 args: [
