@@ -18,7 +18,7 @@ import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 import { IPlugin } from "../interfaces/ai/ITelemetryPlugin";
 import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
 import { IExtendedConfiguration, IExtendedTelemetryItem, IPropertyStorageOverride } from "../interfaces/ext/DataModels";
-import { FullVersionString, getTime, isLatency } from "./extUtils";
+import { ExtFullVersionString, getTime, isLatency } from "./extUtils";
 
 /**
  * The default settings for the config.
@@ -81,7 +81,7 @@ export class AppInsightsExtCore<C extends IExtendedConfiguration = IExtendedConf
 
                         let itemExt = telemetryItem.ext = telemetryItem.ext || {};
                         itemExt.sdk = itemExt.sdk || {};
-                        itemExt.sdk.ver = FullVersionString;
+                        itemExt.sdk.ver = ExtFullVersionString;
                         let baseData = telemetryItem.baseData = telemetryItem.baseData || {};
                         baseData.properties = baseData.properties || {};
                         

@@ -6,7 +6,7 @@
 */
 import {
     arrForEach, getInst as getGlobalInst, getNavigator, hasDocument, hasWindow, isArray, isBoolean, isNullOrUndefined, isNumber, isObject,
-    isString, isUndefined, objForEachKey, perfNow, strIndexOf, strLeft
+    isString, isUndefined, isUnsafePropKey, objForEachKey, perfNow, strIndexOf, strLeft
 } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { EventLatency, EventLatencyValue, FieldValueSanitizerType, GuidStyle, eEventPropertyType, eValueKind } from "../enums/ext/Enums";
@@ -16,8 +16,27 @@ import { IEventProperty, IExtendedTelemetryItem } from "../interfaces/ext/DataMo
 import { newGuid } from "../utils/CoreUtils";
 import { isReactNative } from "../utils/EnvUtils";
 
-export const Version = "#1ds-version#";
-export const FullVersionString = "1DS-Web-JS-" + Version;
+/**
+ * Identifies the version for the extended SDK
+ */
+export const ExtVersion = "4.4.1";
+
+/**
+ * Identifies the full version for the extended SDK
+ */
+export const ExtFullVersionString = "1DS-Web-JS-" + ExtVersion;
+
+/**
+ * Identifies the version for the extended SDK (legacy constant)
+ * @deprecated Use {@link ExtVersion} instead
+ */
+export const Version = ExtVersion;
+
+/**
+ * Identifies the full version for the extended SDK (legacy constant)
+ * @deprecated Use {@link ExtFullVersionString} instead
+ */
+export const FullVersionString = ExtFullVersionString;
 
 const ObjHasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -264,6 +283,11 @@ export function extend(obj?: any, obj2?: any, obj3?: any, obj4?: any, obj5?: any
     for (; i < length; i++) {
         var obj = theArgs[i];
         objForEachKey(obj, (prop, value) => {
+            // Prevent prototype pollution by skipping unsafe keys
+            if (isUnsafePropKey(prop)) {
+                return;
+            }
+
             // If deep merge and property is an object, merge properties
             if (deep && value && isObject(value)) {
                 if (isArray(value)) {

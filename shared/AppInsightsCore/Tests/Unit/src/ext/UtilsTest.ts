@@ -224,5 +224,62 @@ export class UtilsTest extends AITestClass {
                 }
             }
         });
+
+        this.testCase({
+            name: 'extend should not allow __proto__ pollution in shallow merge',
+            test: () => {
+                try {
+                    let malicious = JSON.parse('{"__proto__": {"polluted": "yes"}}');
+                    let result = Utils.extend({}, malicious);
+                    QUnit.assert.equal(({} as any)["polluted"], undefined, "Object.prototype should not be polluted");
+                    QUnit.assert.equal(result["polluted"], undefined, "Result should not inherit polluted property");
+                } finally {
+                    delete (Object.prototype as any)["polluted"];
+                }
+            }
+        });
+
+        this.testCase({
+            name: 'extend should not allow __proto__ pollution in deep merge',
+            test: () => {
+                try {
+                    let malicious = JSON.parse('{"__proto__": {"polluted": "yes"}}');
+                    let result = Utils.extend(true, {}, malicious);
+                    QUnit.assert.equal(({} as any)["polluted"], undefined, "Object.prototype should not be polluted via deep merge");
+                    QUnit.assert.equal(result["polluted"], undefined, "Result should not inherit polluted property via deep merge");
+                } finally {
+                    delete (Object.prototype as any)["polluted"];
+                }
+            }
+        });
+
+        this.testCase({
+            name: 'extend should not allow constructor or prototype key pollution',
+            test: () => {
+                try {
+                    let malicious = JSON.parse('{"constructor": {"prototype": {"polluted": "yes"}}, "prototype": {"polluted": "yes"}}');
+                    let result = Utils.extend(true, {}, malicious);
+                    QUnit.assert.equal(({} as any)["polluted"], undefined, "Object.prototype should not be polluted via constructor/prototype keys");
+                    QUnit.assert.ok(!result.hasOwnProperty("constructor"), "constructor key should be skipped");
+                    QUnit.assert.ok(!result.hasOwnProperty("prototype"), "prototype key should be skipped");
+                } finally {
+                    delete (Object.prototype as any)["polluted"];
+                }
+            }
+        });
+
+        this.testCase({
+            name: 'extend should still merge safe properties correctly',
+            test: () => {
+                try {
+                    let malicious = JSON.parse('{"__proto__": {"polluted": "yes"}, "safe": "value"}');
+                    let result = Utils.extend(true, {}, malicious);
+                    QUnit.assert.equal(result["safe"], "value", "Safe properties should still be merged");
+                    QUnit.assert.equal(({} as any)["polluted"], undefined, "Object.prototype should not be polluted");
+                } finally {
+                    delete (Object.prototype as any)["polluted"];
+                }
+            }
+        });
     }
 }

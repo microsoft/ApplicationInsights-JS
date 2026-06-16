@@ -42,6 +42,7 @@ export const enum DataSanitizerValues {
      /**
       * Max length allowed for exceptions.
       */
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     MAX_EXCEPTION_LENGTH = 32768
 }
 

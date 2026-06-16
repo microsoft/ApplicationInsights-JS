@@ -26,6 +26,7 @@
                 "TelemetryUnloadReason",
                 "TelemetryUpdateReason",
                 "eTraceHeadersMode",
+                "eUrlRedactionOptions",
                 "eValueKind",
                 "EventLatencyValue",
                 "eEventPropertyType",

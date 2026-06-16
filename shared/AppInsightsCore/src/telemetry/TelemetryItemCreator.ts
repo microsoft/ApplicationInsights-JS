@@ -72,5 +72,5 @@ export class TelemetryItemCreator {
      * @returns ITelemetryItem that is sent to channel
      */
 
-     public static create = createTelemetryItem;
+    public static create = createTelemetryItem;
 }

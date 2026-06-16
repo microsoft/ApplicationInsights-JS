@@ -11,7 +11,8 @@ Placeholder for auto-generated API documentation
 
 ## Components
 
-[1DS Core](./1ds-core-js/index.html)
+[Application Insights Core](./applicationinsights-core-js/index.html) - The main core package, required and used by all SKUs, components, and extensions.
+
 
 [1DS Post Channel](./1ds-post-js/index.html)
 
@@ -19,11 +20,13 @@ Placeholder for auto-generated API documentation
 
 [Application Insights JavaScript SDK Channel](./applicationinsights-channel-js/index.html)
 
-[Application Insights Common](./applicationinsights-common/index.html)'
-
-[Application Insights Core](./applicationinsights-core-js/index.html)
-
 [Application Insights JavaScript SDK Tee Channel](./applicationinsights-teechannel-js/index.html)
+
+### Deprecated Packages
+
+[1DS Core](./1ds-core-js/index.html)
+
+[Application Insights Common](./applicationinsights-common/index.html)
 
 ## Extensions
 

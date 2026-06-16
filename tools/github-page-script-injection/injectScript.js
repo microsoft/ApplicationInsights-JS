@@ -31,10 +31,12 @@ let scriptContent = fs.readFileSync(scriptFilePath, 'utf8');
 // Replace the placeholder string with the actual connection string
 //const connectionString = 'InstrumentationKey=1ae9e7ce-18f1-4e14-8fc0-acbf0ed28895;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/';
 let iKeyForCfgSync = "1ae9e7ce-18f1-4e14-8fc0-acbf0ed28895";
-let cfgUrl = "https://js.monitor.azure.com/beta/ai.config.1.cfg.json";
+let cfgUrl = "https://js.monitor.azure.com/next/ai.config.1.cfg.json";
 // let cfgUrl = "https://js.monitor.azure.com/nightly/ai_test.config.1-nightly3.cfg.json";
 scriptContent = scriptContent.replace(`connectionString: "YOUR_CONNECTION_STRING"`, `instrumentationKey: "${iKeyForCfgSync}",\n \texpCfg: {\n\t\tinclScripts: true,\n\t\t\n\t\tmaxLogs: 100},\n \t\textensionConfig: {\n\t\t\t"AppInsightsCfgSyncPlugin": {\n\t\t\t\tcfgUrl:"${cfgUrl}"\n\t\t\t}\n\t\t}`);
 //scriptContent = scriptContent.replace('YOUR_CONNECTION_STRING', connectionString);
+// Switch to use the promoted "next" CDN endpoint for the main script file
+scriptContent = scriptContent.replaceAll("/scripts/b/", "/next/");
 scriptContent = `<script type="text/javascript">${scriptContent}</script>`;
 
 

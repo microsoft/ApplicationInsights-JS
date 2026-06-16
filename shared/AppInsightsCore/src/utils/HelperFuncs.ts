@@ -3,8 +3,9 @@
 import { ObjAssign, ObjClass, ObjProto } from "@microsoft/applicationinsights-shims";
 import {
     ICachedValue, WellKnownSymbols, arrForEach, asString as asString21, createCachedValue, getKnownSymbol, isArray, isBoolean, isError,
-    isFunction, isNullOrUndefined, isNumber, isObject, isPlainObject, isString, isUndefined, mathFloor, mathRound, newSymbol, objCreate,
-    objDeepFreeze, objDefine, objForEachKey, objGetPrototypeOf, objHasOwn, objSetPrototypeOf, safe, strIndexOf, strSplit, strTrim
+    isFunction, isNullOrUndefined, isNumber, isObject, isPlainObject, isString, isUndefined, isUnsafePropKey, mathFloor, mathRound,
+    newSymbol, objCreate, objDeepFreeze, objDefine, objForEachKey, objGetPrototypeOf, objHasOwn, objSetPrototypeOf, safe, strIndexOf,
+    strSplit, strTrim
 } from "@nevware21/ts-utils";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { FeatureOptInMode } from "../enums/ai/FeatureOptInEnums";
@@ -415,6 +416,11 @@ export function objExtend<T1, T2, T3, T4, T5, T6>(obj1?: T1 | any, obj2?: T2, ob
         let isArgArray = isArray(arg);
         let isArgObj = isObject(arg);
         for (let prop in arg) {
+            // Prevent prototype pollution by skipping unsafe keys
+            if (isUnsafePropKey(prop)) {
+                continue;
+            }
+
             let propOk = (isArgArray && (prop in arg)) || (isArgObj && objHasOwn(arg, prop));
             if (!propOk) {
                 continue;

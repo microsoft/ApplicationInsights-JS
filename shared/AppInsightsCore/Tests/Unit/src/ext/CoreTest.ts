@@ -1,5 +1,5 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore as AIInternalCore, AppInsightsExtCore, EventLatency, FullVersionString, IChannelControls, IExtendedConfiguration, IExtendedTelemetryItem, IPropertyStorageOverride, blockDynamicConversion } from '../../../../src/index';
+import { AppInsightsCore as AIInternalCore, AppInsightsExtCore, EventLatency, ExtFullVersionString, FullVersionString, IChannelControls, IExtendedConfiguration, IExtendedTelemetryItem, IPropertyStorageOverride, blockDynamicConversion } from '../../../../src/index';
 import dynamicProto from "@microsoft/dynamicproto-js";
 
 export class CoreTest extends AITestClass {
@@ -148,7 +148,8 @@ export class CoreTest extends AITestClass {
                 QUnit.assert.equal(actualEvent.name, "testEvent");
                 QUnit.assert.equal(actualEvent.latency, EventLatency.Normal);
                 QUnit.assert.ok(actualEvent.ext['sdk']['ver'].indexOf('1DS-Web-JS') > -1);
-                QUnit.assert.equal(actualEvent.ext['sdk']['ver'], FullVersionString, actualEvent.ext['sdk']['ver']);
+                QUnit.assert.equal(actualEvent.ext['sdk']['ver'], ExtFullVersionString, actualEvent.ext['sdk']['ver']);
+                QUnit.assert.equal(actualEvent.ext['sdk']['ver'], FullVersionString, "FullVersionString should match ExtFullVersionString");
                 QUnit.assert.equal(isNaN(actualEvent.timings.trackStart as number), false);
                 QUnit.assert.equal(actualEvent.baseData['properties']['version'], '', actualEvent.baseData['properties']['version']);
             }
@@ -179,7 +180,8 @@ export class CoreTest extends AITestClass {
                 var actualEvent: IExtendedTelemetryItem = coreTrackSpy.getCall(0).args[0];
                 QUnit.assert.equal(actualEvent.name, "testEvent");
                 QUnit.assert.ok(actualEvent.ext['sdk']['ver'].indexOf('1DS-Web-JS') > -1);
-                QUnit.assert.equal(actualEvent.ext['sdk']['ver'], FullVersionString, actualEvent.ext['sdk']['ver']);
+                QUnit.assert.equal(actualEvent.ext['sdk']['ver'], ExtFullVersionString, actualEvent.ext['sdk']['ver']);
+                QUnit.assert.equal(actualEvent.ext['sdk']['ver'], FullVersionString, "FullVersionString should match ExtFullVersionString");
                 QUnit.assert.equal(actualEvent.baseData['properties']['version'], 'version1', actualEvent.baseData['properties']['version']);
             }
         });
@@ -206,7 +208,8 @@ export class CoreTest extends AITestClass {
                 var actualEvent: IExtendedTelemetryItem = coreTrackSpy.getCall(0).args[0];
                 QUnit.assert.equal(actualEvent.name, "testEvent");
                 QUnit.assert.ok(actualEvent.ext['sdk']['ver'].indexOf('1DS-Web-JS') > -1);
-                QUnit.assert.equal(actualEvent.ext['sdk']['ver'], FullVersionString, actualEvent.ext['sdk']['ver']);
+                QUnit.assert.equal(actualEvent.ext['sdk']['ver'], ExtFullVersionString, actualEvent.ext['sdk']['ver']);
+                QUnit.assert.equal(actualEvent.ext['sdk']['ver'], FullVersionString, "FullVersionString should match ExtFullVersionString");
                 QUnit.assert.equal(actualEvent.baseData['properties']['version'], 'testChannel=channelVer', actualEvent.baseData['properties']['version']);
             }
         });

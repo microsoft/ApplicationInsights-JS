@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-example-cfgsync",
     "author": "Microsoft Application Insights Team",
-    "version": "3.3.11",
+    "version": "3.4.1",
     "description": "Microsoft Application Insights CfgSync Plugin Example",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "keywords": [
@@ -41,8 +41,8 @@
         "@microsoft/applicationinsights-rollup-es5": "1.0.2",
         "grunt": "^1.6.1",
         "grunt-cli": "^1.5.0",
-        "@nevware21/grunt-ts-plugin": "^0.5.1",
-        "@nevware21/grunt-eslint-ts": "^0.5.1",
+        "@nevware21/grunt-ts-plugin": "^0.5.2",
+        "@nevware21/grunt-eslint-ts": "^0.5.2",
         "globby": "^11.0.0",
         "magic-string": "^0.25.7",
         "pako": "^2.0.3",
@@ -62,10 +62,10 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims": "3.0.1",
-        "@microsoft/applicationinsights-cfgsync-js": "3.3.11",
+        "@microsoft/applicationinsights-cfgsync-js": "3.4.1",
         "@microsoft/dynamicproto-js": "^2.0.3",
-        "@microsoft/applicationinsights-web": "3.3.11",
-        "@microsoft/applicationinsights-core-js": "3.3.11",
-        "@nevware21/ts-utils": ">= 0.12.6 < 2.x"
+        "@microsoft/applicationinsights-web": "3.4.1",
+        "@microsoft/applicationinsights-core-js": "3.4.1",
+        "@nevware21/ts-utils": ">= 0.14.0 < 2.x"
     }
 }

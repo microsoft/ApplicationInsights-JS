@@ -11,6 +11,8 @@ but may not be executed as part of any automated test pass -- this may change/va
 
 [Dependency](./dependency/README.md)
 
+[CfgSync Plugin](./cfgSync/README.md)
+
 ## Contributing
 
 This project welcomes contributions and suggestions. Most contributions require you to

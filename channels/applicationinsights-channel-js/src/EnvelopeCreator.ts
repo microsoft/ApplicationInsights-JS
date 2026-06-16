@@ -11,7 +11,7 @@ import { IRequestData } from "./Interfaces/Contracts/IRequestData";
 import { STR_DURATION } from "./InternalConstants";
 import { _createData } from "./Telemetry/Common/Data";
 import { RemoteDependencyEnvelopeType, createRemoteDependencyData } from "./Telemetry/RemoteDependencyData";
-import { createRequestData } from "./Telemetry/RequestData";
+import { RequestEnvelopeType, createRequestData } from "./Telemetry/RequestData";
 
 // these two constants are used to filter out properties not needed when trying to extract custom properties and measurements from the incoming payload
 const strBaseType = "baseType";
@@ -217,7 +217,7 @@ export function RequestEnvelopeCreator(logger: IDiagnosticLogger, telemetryItem:
     const bd = telemetryItem[strBaseData] as IRequestTelemetry;
     const requestData = createRequestData(logger, bd.id, bd.name, bd.duration, bd.success, bd.responseCode, bd.source, bd.url, customProperties, customMeasurements);
     const data = _createData<IRequestData & ISerializable>(RequestDataType, requestData);
-    return _createEnvelope<IRequestData & ISerializable>(logger, RequestDataType, telemetryItem, data);
+    return _createEnvelope<IRequestData & ISerializable>(logger, RequestEnvelopeType, telemetryItem, data);
 }
 
 

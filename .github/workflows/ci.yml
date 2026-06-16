@@ -3,6 +3,9 @@
 
 name: Node.js CI
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ main, master, beta, Release2.7, release-3.0 ]
@@ -18,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [ 16, 18, 20 ]
+        node-version: [ 18, 20, 22, 24 ]
 
     steps:
     - uses: actions/checkout@v4

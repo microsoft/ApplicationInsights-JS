@@ -3,6 +3,8 @@
 import { ISnippetConfig, SdkLoaderConfig } from "./type";
 import { _ensureBoolean, _ensureNumber, _escapeUnsupportedChars, _getSourceMap } from "./common/utils";
 
+export { ISnippetConfig, SdkLoaderConfig } from "./type";
+
 const originSnippet = "##replaceOriginSnippet##";
 export const webSnippet = "##replaceIKeySnippet##";
 export const webSnippetCs = "##replaceConnStringSnippet##";
