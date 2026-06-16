@@ -32,30 +32,42 @@ jobs:
     - name: Update rush shrinkwrap dependencies (for different node versions)
       run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm install rollup -g
-    # 'npm install grunt-cli' triggers puppeteer's postinstall, which downloads
-    # 'chrome' and 'chrome-headless-shell' in parallel. A partial/interrupted
-    # download leaves the browser folder present but the executable missing, and
-    # puppeteer's DefaultProvider then refuses to re-install over the existing
-    # folder ("The browser folder exists but the executable is missing"). There
-    # is no built-in retry, so a single flaky download fails the whole job. Retry
-    # after clearing the corrupt cache so the next attempt downloads cleanly.
-    - name: Install grunt-cli (retry puppeteer download on corrupt cache)
+    # Installing grunt-cli pulls in puppeteer, whose postinstall downloads Chrome.
+    # That download is flaky and has no retry, so a single partial download fails
+    # the whole job ("The browser folder exists but the executable is missing").
+    # Gate the auto-download here (PUPPETEER_SKIP_DOWNLOAD scoped to THIS step only)
+    # so grunt-cli installs reliably, then download the browsers explicitly below
+    # with a retry. Note: a plain 'npm install' retry does NOT re-download Chrome,
+    # because once node_modules/puppeteer exists npm skips its postinstall script -
+    # so the cache stays empty and the 'grunt shims' build (qunit:shims) can't find
+    # Chrome. Downloading via 'puppeteer browsers install' actually re-fetches it.
+    - name: Install grunt-cli (defer puppeteer browser download)
+      run: npm install grunt-cli
+      env:
+        PUPPETEER_SKIP_DOWNLOAD: 'true'
+    - name: Install puppeteer browsers (retry to recover from partial downloads)
       run: |
+        install_browsers() {
+          npx puppeteer browsers install chrome \
+            && npx puppeteer browsers install chrome-headless-shell
+        }
         for attempt in 1 2 3; do
-          echo "::group::npm install grunt-cli (attempt $attempt)"
-          if npm install grunt-cli; then
-            echo "grunt-cli install succeeded on attempt $attempt"
+          echo "::group::puppeteer browsers install (attempt $attempt)"
+          if install_browsers; then
+            npx puppeteer browsers list
             echo "::endgroup::"
             break
           fi
           echo "::endgroup::"
           if [ "$attempt" = "3" ]; then
-            echo "grunt-cli install failed after $attempt attempts"
+            echo "Failed to install puppeteer browsers after $attempt attempts"
             exit 1
           fi
-          echo "Install failed (likely a partial puppeteer browser download); clearing puppeteer cache and retrying..."
+          echo "Partial/corrupt download detected; clearing puppeteer cache and retrying..."
           rm -rf ~/.cache/puppeteer
         done
+    # Browsers are now cached, so puppeteer's postinstall here is a no-op (it finds
+    # Chrome present and skips the download), avoiding another flaky fetch.
     - run: npm install
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
