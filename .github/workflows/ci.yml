@@ -32,7 +32,30 @@ jobs:
     - name: Update rush shrinkwrap dependencies (for different node versions)
       run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm install rollup -g
-    - run: npm install grunt-cli
+    # 'npm install grunt-cli' triggers puppeteer's postinstall, which downloads
+    # 'chrome' and 'chrome-headless-shell' in parallel. A partial/interrupted
+    # download leaves the browser folder present but the executable missing, and
+    # puppeteer's DefaultProvider then refuses to re-install over the existing
+    # folder ("The browser folder exists but the executable is missing"). There
+    # is no built-in retry, so a single flaky download fails the whole job. Retry
+    # after clearing the corrupt cache so the next attempt downloads cleanly.
+    - name: Install grunt-cli (retry puppeteer download on corrupt cache)
+      run: |
+        for attempt in 1 2 3; do
+          echo "::group::npm install grunt-cli (attempt $attempt)"
+          if npm install grunt-cli; then
+            echo "grunt-cli install succeeded on attempt $attempt"
+            echo "::endgroup::"
+            break
+          fi
+          echo "::endgroup::"
+          if [ "$attempt" = "3" ]; then
+            echo "grunt-cli install failed after $attempt attempts"
+            exit 1
+          fi
+          echo "Install failed (likely a partial puppeteer browser download); clearing puppeteer cache and retrying..."
+          rm -rf ~/.cache/puppeteer
+        done
     - run: npm install
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
