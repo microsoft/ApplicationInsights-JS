@@ -19,13 +19,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    env:
-      # qunit launches FULL chrome (headless:"new"); chrome-headless-shell is never
-      # used. Its parallel postinstall download fails deterministically on the runner
-      # ("folder exists but the executable is missing"), which aborts `npm install`.
-      # Skip only that unused asset - full chrome still downloads via the postinstall.
-      PUPPETEER_SKIP_CHROME_HEADLESS_SHELL_DOWNLOAD: 'true'
-
     strategy:
       matrix:
         node-version: [ 18, 20, 22, 24 ]
@@ -39,8 +32,41 @@ jobs:
     - name: Update rush shrinkwrap dependencies (for different node versions)
       run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm install rollup -g
-    - run: npm install grunt-cli
-    - run: npm install
+    # puppeteer's postinstall downloads Chrome (~184MB) in a single shot with no
+    # retry. On the runner that download/extract is unreliable: it creates the
+    # version folder, the extract fails, and puppeteer then refuses to re-download
+    # over the partial folder ("folder exists but the executable is missing"),
+    # aborting `npm install`. Skip the postinstall download here (scoped to the
+    # install steps) and install the browser in a dedicated, retrying step below.
+    - name: Install grunt-cli (defer puppeteer browser download)
+      run: npm install grunt-cli
+      env:
+        PUPPETEER_SKIP_DOWNLOAD: 'true'
+    - name: Install dependencies (defer puppeteer browser download)
+      run: npm install
+      env:
+        PUPPETEER_SKIP_DOWNLOAD: 'true'
+    # Install only Chrome (qunit launches headless:"new" => full chrome;
+    # chrome-headless-shell is never used). Clear the cache before each attempt so a
+    # partial/failed extract can't block a clean retry, and retry to ride out the
+    # flaky download. Uses the locally-installed puppeteer, so the pinned Chrome
+    # version always matches what qunit launches at build/test time.
+    - name: Install Chrome for puppeteer (retry + clean partial cache)
+      run: |
+        for attempt in 1 2 3 4 5; do
+          echo "::group::puppeteer install chrome (attempt $attempt)"
+          rm -rf ~/.cache/puppeteer
+          if npx puppeteer browsers install chrome; then
+            npx puppeteer browsers list
+            echo "::endgroup::"
+            exit 0
+          fi
+          echo "::endgroup::"
+          echo "chrome install attempt $attempt failed; retrying..."
+          sleep 5
+        done
+        echo "chrome install failed after 5 attempts"
+        exit 1
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm run build --verbose
