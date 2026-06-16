@@ -19,13 +19,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    env:
-      # The hosted runner's Puppeteer browser auto-download is currently broken
-      # (it aborts with "the browser folder exists but the executable is missing"),
-      # which fails the install steps. Skip the auto-download and instead drive the
-      # Google Chrome that is pre-installed on the runner image (see the step below).
-      PUPPETEER_SKIP_DOWNLOAD: 'true'
-
     strategy:
       matrix:
         node-version: [ 18, 20, 22, 24 ]
@@ -36,17 +29,20 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Use pre-installed Chrome for Puppeteer
-      run: |
-        CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium-browser || command -v chromium)"
-        echo "Using Chrome at: ${CHROME_BIN}"
-        "${CHROME_BIN}" --version
-        echo "PUPPETEER_EXECUTABLE_PATH=${CHROME_BIN}" >> "$GITHUB_ENV"
+    - name: Use a clean Puppeteer browser cache
+      # The default ~/.cache/puppeteer on the hosted runner image contains a
+      # partial/stale browser entry, which makes Puppeteer abort install with
+      # "the browser folder exists but the executable is missing". Point Puppeteer
+      # at a clean per-job cache directory so it downloads its bundled browser
+      # cleanly; the tests launch that same bundled browser.
+      run: echo "PUPPETEER_CACHE_DIR=${RUNNER_TEMP}/puppeteer" >> "$GITHUB_ENV"
     - name: Update rush shrinkwrap dependencies (for different node versions)
       run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm install rollup -g
     - run: npm install grunt-cli
     - run: npm install
+    - name: Ensure Puppeteer browser is installed
+      run: npx puppeteer browsers install chrome
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm run build --verbose
