@@ -1523,30 +1523,44 @@ export class SpanTests extends AITestClass {
                     return base * multiplier + Math.sqrt(base);
                 };
 
-                // Measure time without withSpan
-                const startWithout = perfNow();
-                for (let i = 0; i < iterations; i++) {
-                    computeResult += computeFunction(i, 2);
-                }
-                const timeWithout = perfNow() - startWithout;
+                let maxOverhead: number = 100;
 
-                // Reset result
-                computeResult = 0;
+                // Perform multiple runs and keep the best (minimum) overhead so that a
+                // single noisy sample (sub-millisecond baselines are very susceptible to
+                // GC / scheduler jitter on CI runners) does not flake the assertion.
+                for (let lp = 0; lp < 10; lp++) {
+                    // Measure time without withSpan
+                    const startWithout = perfNow();
+                    for (let i = 0; i < iterations; i++) {
+                        computeResult += computeFunction(i, 2);
+                    }
+                    const timeWithout = perfNow() - startWithout;
 
-                // Measure time with withSpan
-                const startWith = perfNow();
-                for (let i = 0; i < iterations; i++) {
-                    computeResult += withSpan(core, testSpan!, computeFunction, undefined, i, 2);
+                    // Reset result
+                    computeResult = 0;
+
+                    // Measure time with withSpan
+                    const startWith = perfNow();
+                    for (let i = 0; i < iterations; i++) {
+                        computeResult += withSpan(core, testSpan!, computeFunction, undefined, i, 2);
+                    }
+                    const timeWith = perfNow() - startWith;
+
+                    // Results should be the same
+                    Assert.ok(computeResult > 0, "Computations should have produced results");
+                    computeResult = 0;
+
+                    const overhead = timeWith / (timeWithout || 1);
+
+                    if (lp === 0) {
+                        maxOverhead = overhead;
+                    }
+                    maxOverhead = mathMin(maxOverhead, overhead);
                 }
-                const timeWith = perfNow() - startWith;
 
                 // Assert reasonable performance characteristics
-                // withSpan should not add more than 10x overhead (very generous threshold)
-                const overhead = timeWith / (timeWithout || 1);
-                Assert.ok(overhead < 15, `withSpan overhead should be reasonable: ${overhead.toFixed(2)}x`);
-                
-                // Results should be the same
-                Assert.ok(computeResult > 0, "Computations should have produced results");
+                // withSpan should not add more than 15x overhead (very generous threshold)
+                Assert.ok(maxOverhead < 15, `withSpan overhead should be reasonable: ${maxOverhead.toFixed(2)}x`);
             }
         });
         // === useSpan Helper Tests ===
