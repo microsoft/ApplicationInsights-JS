@@ -19,6 +19,13 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      # qunit launches FULL chrome (headless:"new"); chrome-headless-shell is never
+      # used. Its parallel postinstall download fails deterministically on the runner
+      # ("folder exists but the executable is missing"), which aborts `npm install`.
+      # Skip only that unused asset - full chrome still downloads via the postinstall.
+      PUPPETEER_SKIP_CHROME_HEADLESS_SHELL_DOWNLOAD: 'true'
+
     strategy:
       matrix:
         node-version: [ 18, 20, 22, 24 ]
