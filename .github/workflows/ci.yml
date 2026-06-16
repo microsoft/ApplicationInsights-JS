@@ -32,8 +32,40 @@ jobs:
     - name: Update rush shrinkwrap dependencies (for different node versions)
       run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm install rollup -g
-    - run: npm install grunt-cli
-    - run: npm install
+    # puppeteer's postinstall downloads 'chrome' and 'chrome-headless-shell' in
+    # PARALLEL; the chrome-headless-shell download keeps failing mid-extract on the
+    # runner, leaving a partial folder ("exists but the executable is missing") that
+    # puppeteer then refuses to re-download over - and npm gives the postinstall no
+    # retry, so the whole job dies. Gate that auto-download here (scoped to just the
+    # install steps) and download the browsers explicitly below instead.
+    - name: Install grunt-cli (defer puppeteer browser download)
+      run: npm install grunt-cli
+      env:
+        PUPPETEER_SKIP_DOWNLOAD: 'true'
+    - name: Install dependencies (defer puppeteer browser download)
+      run: npm install
+      env:
+        PUPPETEER_SKIP_DOWNLOAD: 'true'
+    # Download puppeteer's OWN pinned browser version via its own CLI (so the version
+    # always matches what qunit launches during the build) into the default
+    # ~/.cache/puppeteer. Do it SEQUENTIALLY (not parallel) to avoid the race above,
+    # and clear the cache before each attempt so a partial download can't block a
+    # clean retry.
+    - name: Install puppeteer browsers (sequential, retry, clean partial cache)
+      run: |
+        for attempt in 1 2 3; do
+          echo "::group::puppeteer browsers install (attempt $attempt)"
+          rm -rf ~/.cache/puppeteer
+          if npx puppeteer browsers install chrome && npx puppeteer browsers install chrome-headless-shell; then
+            npx puppeteer browsers list
+            echo "::endgroup::"
+            exit 0
+          fi
+          echo "::endgroup::"
+          echo "puppeteer browser install attempt $attempt failed; retrying..."
+        done
+        echo "puppeteer browser install failed after 3 attempts"
+        exit 1
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm run build --verbose
