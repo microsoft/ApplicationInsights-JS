@@ -159,6 +159,13 @@ export class AITestClass {
       */
     public assertNoHooks: boolean = true;
 
+    /**
+     * Optional per-suite default timeout (in ms) applied to async (Promise returning) test cases
+     * that do not specify their own `timeout`. When 0 (the default) the framework default of
+     * 30000ms is used. Individual test cases can still override via their own `timeout` property.
+     */
+    public testTimeout: number = 0;
+
     protected _orgCrypto: Crypto | null;
     protected _orgLocation: Location | null;
 
@@ -609,7 +616,7 @@ export class AITestClass {
 
                 if (testInfo.skipTimeout !== true) {
                     // Default timeout for tests has been set to 30 seconds
-                    let timeout = testInfo.timeout || 30000;
+                    let timeout = testInfo.timeout || this.testTimeout || 30000;
                     testTimeout = AITestClass.orgSetTimeout(() => {
                         if (!testContext.finished) {
                             QUnit.assert.ok(false, "Timeout: Aborting as the Promise returned from the test method did not resolve within " + timeout + " ms");

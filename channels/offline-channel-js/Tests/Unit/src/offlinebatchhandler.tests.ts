@@ -15,6 +15,9 @@ export class OfflineBatchHandlerTests extends AITestClass {
  
     public testInitialize() {
         super.testInitialize();
+        // IndexedDB operations under headless Chrome on CI can be slow; raise the
+        // per-test async timeout from the 30s default to absorb runner jitter.
+        this.testTimeout = 60000;
         let channel = new TestChannel();
         this.coreConfig = {
             instrumentationKey: "testIkey",
