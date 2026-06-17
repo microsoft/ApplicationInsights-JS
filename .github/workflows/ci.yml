@@ -32,8 +32,23 @@ jobs:
     - name: Update rush shrinkwrap dependencies (for different node versions)
       run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm install rollup -g
-    - run: npm install grunt-cli
-    - run: npm install
+    - name: Install grunt-cli (defer puppeteer browser download)
+      run: npm install grunt-cli
+      env:
+        PUPPETEER_SKIP_DOWNLOAD: 'true'
+    - name: Install dependencies (defer puppeteer browser download)
+      run: npm install
+      env:
+        PUPPETEER_SKIP_DOWNLOAD: 'true'
+    - name: Install puppeteer browsers (sequential, retry, clean partial cache)
+      run: |
+        for attempt in 1 2 3; do
+          rm -rf ~/.cache/puppeteer
+          if npx puppeteer browsers install chrome && npx puppeteer browsers install chrome-headless-shell; then
+            npx puppeteer browsers list; exit 0
+          fi
+        done
+        exit 1
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm run build --verbose
