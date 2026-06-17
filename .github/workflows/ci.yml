@@ -51,6 +51,17 @@ jobs:
         exit 1
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
+    - name: Verify puppeteer chrome is launchable (reinstall on miss)
+      run: |
+        npx puppeteer browsers list || true
+        node -e "const p=require('puppeteer'); p.launch({headless:'new', args:['--no-sandbox']}).then(async b=>{await b.close(); console.log('Puppeteer launch OK');}).catch(()=>process.exit(1));" || {
+          echo "Puppeteer launch failed; reinstalling browsers..."
+          rm -rf ~/.cache/puppeteer/chrome ~/.cache/puppeteer/chrome-headless-shell
+          npx puppeteer browsers install chrome
+          npx puppeteer browsers install chrome-headless-shell
+          npx puppeteer browsers list
+          node -e "const p=require('puppeteer'); p.launch({headless:'new', args:['--no-sandbox']}).then(async b=>{await b.close(); console.log('Puppeteer launch OK after reinstall');}).catch((e)=>{console.error(e); process.exit(1);});"
+        }
     - run: npm run build --verbose
       timeout-minutes: 20
     - run: npm run test --verbose
