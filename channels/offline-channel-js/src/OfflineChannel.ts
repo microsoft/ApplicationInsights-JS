@@ -28,7 +28,7 @@ import {
 import { OfflineBatchHandler } from "./OfflineBatchHandler";
 import { Sender } from "./Sender";
 
-const version = "#version#";
+const version = '0.4.1';
 const DefaultOfflineIdentifier = "OfflineChannel";
 const DefaultBatchInterval = 15000;
 const DefaultInMemoMaxTime = 15000;
