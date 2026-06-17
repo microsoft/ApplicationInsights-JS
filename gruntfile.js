@@ -423,7 +423,9 @@ module.exports = function (grunt) {
                                 args: [
                                     "--enable-precise-memory-info",
                                     "--expose-internals-for-testing",
-                                    "--no-sandbox"
+                                    "--no-sandbox",
+                                    // Avoid headless Chrome IndexedDB/storage deadlocks on CI where /dev/shm is small
+                                    "--disable-dev-shm-usage"
                                 ]
                             }
                         }
@@ -475,7 +477,9 @@ module.exports = function (grunt) {
                                 args: [
                                     '--enable-precise-memory-info',
                                     '--expose-internals-for-testing',
-                                    "--no-sandbox"
+                                    "--no-sandbox",
+                                    // Avoid headless Chrome IndexedDB/storage deadlocks on CI where /dev/shm is small
+                                    "--disable-dev-shm-usage"
                                 ]
                             }
                         }
