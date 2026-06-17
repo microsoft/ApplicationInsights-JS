@@ -47,23 +47,31 @@ jobs:
         PUPPETEER_SKIP_DOWNLOAD: 'true'
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
-    # All tests launch the full Chrome binary via headless:'new'; chrome-headless-shell
-    # is unused (and is the most corruption-prone download). Install only chrome, clean
-    # any partial/corrupt cache before each attempt, and verify by actually launching it.
-    - name: Install Chrome for puppeteer (retry with clean on corrupt extract)
+    # Puppeteer's own installer downloads intermittently corrupt/no-op on GitHub
+    # runners (main alternates pass/fail with the stock flow). Bypass it: fetch the
+    # exact pinned Chrome-for-Testing build directly with curl --retry into the cache
+    # dir puppeteer probes, then verify by actually launching it. All tests use the
+    # full chrome binary via headless:'new'; chrome-headless-shell is unused.
+    - name: Install Chrome for puppeteer (direct download, retry + verify)
       run: |
+        PV=$(node -e "process.stdout.write(require('puppeteer').PUPPETEER_REVISIONS.chrome)")
+        echo "Pinned Chrome version: $PV"
+        DEST="$HOME/.cache/puppeteer/chrome/linux-$PV"
+        URL="https://storage.googleapis.com/chrome-for-testing-public/$PV/linux64/chrome-linux64.zip"
         for attempt in 1 2 3 4 5; do
-          echo "=== Chrome install attempt $attempt ==="
-          rm -rf ~/.cache/puppeteer/chrome
-          if npx puppeteer browsers install chrome \
+          echo "=== Chrome download attempt $attempt ==="
+          rm -rf "$DEST"
+          mkdir -p "$DEST"
+          if curl --retry 5 --retry-all-errors --retry-delay 5 -fSL -o /tmp/chrome.zip "$URL" \
+            && unzip -q -o /tmp/chrome.zip -d "$DEST" \
+            && chmod +x "$DEST/chrome-linux64/chrome" \
             && node -e "require('puppeteer').launch({headless:'new',args:['--no-sandbox']}).then(function(b){return b.close();}).then(function(){process.exit(0);}).catch(function(e){console.error(e);process.exit(1);});"; then
-            echo "Chrome installed and verified"
-            npx puppeteer browsers list
+            echo "Chrome downloaded and verified at $DEST/chrome-linux64/chrome"
             exit 0
           fi
           echo "Attempt $attempt failed; cleaning and retrying"
         done
-        echo "All Chrome install attempts failed"
+        echo "All Chrome download attempts failed"
         exit 1
     - run: npm run build --verbose
       timeout-minutes: 20
