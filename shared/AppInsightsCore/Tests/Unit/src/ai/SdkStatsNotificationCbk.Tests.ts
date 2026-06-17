@@ -111,16 +111,16 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
                 // Verify props
                 let customEventMetric = successItems.filter(function (item) {
-                    return item.baseData.properties["telemetry_type"] === "CUSTOM_EVENT";
+                    return item.baseData.properties["telemetryType"] === "CUSTOM_EVENT";
                 })[0];
                 Assert.ok(customEventMetric, "Should have CUSTOM_EVENT metric");
                 Assert.equal(2, customEventMetric.baseData.average, "CUSTOM_EVENT count should be 2");
-                Assert.equal("JavaScript", customEventMetric.baseData.properties["language"], "Language should be JavaScript");
+                Assert.equal("javascript", customEventMetric.baseData.properties["language"], "Language should be javascript");
                 Assert.equal("3.3.11-test", customEventMetric.baseData.properties["version"], "Version should match the passed sdkVersion");
                 Assert.equal("unknown", customEventMetric.baseData.properties["computeType"], "computeType should be unknown");
 
                 let exceptionMetric = successItems.filter(function (item) {
-                    return item.baseData.properties["telemetry_type"] === "EXCEPTION";
+                    return item.baseData.properties["telemetryType"] === "EXCEPTION";
                 })[0];
                 Assert.ok(exceptionMetric, "Should have EXCEPTION metric");
                 Assert.equal(1, exceptionMetric.baseData.average, "EXCEPTION count should be 1");
@@ -144,7 +144,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
     private _testEventsDiscarded() {
         this.testCase({
-            name: "SdkStatsNotifCbk: eventsDiscarded with NonRetryableStatus and sendType emits correct drop.code",
+            name: "SdkStatsNotifCbk: eventsDiscarded with NonRetryableStatus and sendType emits correct dropCode",
             test: () => {
                 let listener = this._createListener();
 
@@ -164,15 +164,15 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 });
                 Assert.equal(2, allDropped.length, "All should be Item_Dropped_Count");
 
-                // Verify drop.code is the HTTP status code as string
+                // Verify dropCode is the HTTP status code as string
                 allDropped.forEach(function (item) {
-                    Assert.equal("403", item.baseData.properties["drop.code"], "drop.code should be '403'");
+                    Assert.equal("403", item.baseData.properties["dropCode"], "dropCode should be '403'");
                 });
             }
         });
 
         this.testCase({
-            name: "SdkStatsNotifCbk: eventsDiscarded with client exception reason emits CLIENT_EXCEPTION drop.code",
+            name: "SdkStatsNotifCbk: eventsDiscarded with client exception reason emits CLIENT_EXCEPTION dropCode",
             test: () => {
                 let listener = this._createListener();
 
@@ -184,8 +184,8 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
                 Assert.equal(1, this._trackedItems.length, "Should emit 1 dropped metric");
                 Assert.equal("Item_Dropped_Count", this._trackedItems[0].name, "Name should be Item_Dropped_Count");
-                Assert.equal("CLIENT_EXCEPTION", this._trackedItems[0].baseData.properties["drop.code"], "drop.code should be CLIENT_EXCEPTION");
-                Assert.equal("EXCEPTION", this._trackedItems[0].baseData.properties["telemetry_type"], "telemetry_type should be EXCEPTION");
+                Assert.equal("CLIENT_EXCEPTION", this._trackedItems[0].baseData.properties["dropCode"], "dropCode should be CLIENT_EXCEPTION");
+                Assert.equal("EXCEPTION", this._trackedItems[0].baseData.properties["telemetryType"], "telemetryType should be EXCEPTION");
             }
         });
 
@@ -198,8 +198,8 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 listener.flush();
 
                 Assert.equal(1, this._trackedItems.length, "Should emit 1 metric");
-                Assert.equal("CLIENT_EXCEPTION", this._trackedItems[0].baseData.properties["drop.code"],
-                    "drop.code should be CLIENT_EXCEPTION when sendType is not provided");
+                Assert.equal("CLIENT_EXCEPTION", this._trackedItems[0].baseData.properties["dropCode"],
+                    "dropCode should be CLIENT_EXCEPTION when sendType is not provided");
             }
         });
     }
@@ -226,7 +226,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 Assert.equal(2, allRetry.length, "All should be Item_Retry_Count");
 
                 allRetry.forEach(function (item) {
-                    Assert.equal("429", item.baseData.properties["retry.code"], "retry.code should be '429'");
+                    Assert.equal("429", item.baseData.properties["retryCode"], "retryCode should be '429'");
                 });
             }
         });
@@ -244,13 +244,13 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 Assert.equal(2, this._trackedItems.length, "Should emit 2 retry metrics (separate codes)");
 
                 let retryBy429 = this._trackedItems.filter(function (item) {
-                    return item.baseData.properties["retry.code"] === "429";
+                    return item.baseData.properties["retryCode"] === "429";
                 });
                 Assert.equal(1, retryBy429.length, "Should have one 429 metric");
                 Assert.equal(2, retryBy429[0].baseData.average, "429 count should be 2");
 
                 let retryBy503 = this._trackedItems.filter(function (item) {
-                    return item.baseData.properties["retry.code"] === "503";
+                    return item.baseData.properties["retryCode"] === "503";
                 });
                 Assert.equal(1, retryBy503.length, "Should have one 503 metric");
                 Assert.equal(1, retryBy503[0].baseData.average, "503 count should be 1");
@@ -392,7 +392,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
     private _testBaseTypeMapping() {
         this.testCase({
-            name: "SdkStatsNotifCbk: all baseType values map to correct telemetry_type",
+            name: "SdkStatsNotifCbk: all baseType values map to correct telemetryType",
             test: () => {
                 let listener = this._createListener();
 
@@ -418,11 +418,11 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
                 // PageviewData and PageviewPerformanceData both map to PAGE_VIEW, so they'll be merged
                 // MetricData maps to CUSTOM_METRIC
-                // That gives us 8 unique telemetry_type values
-                Assert.equal(8, this._trackedItems.length, "Should have 8 unique telemetry_type metrics");
+                // That gives us 8 unique telemetryType values
+                Assert.equal(8, this._trackedItems.length, "Should have 8 unique telemetryType metrics");
 
                 let types: string[] = this._trackedItems.map(function (item) {
-                    return item.baseData.properties["telemetry_type"];
+                    return item.baseData.properties["telemetryType"];
                 }).sort();
 
                 Assert.deepEqual(
@@ -433,7 +433,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
                 // PAGE_VIEW should have count 2 (PageviewData + PageviewPerformanceData)
                 let pageView = this._trackedItems.filter(function (item) {
-                    return item.baseData.properties["telemetry_type"] === "PAGE_VIEW";
+                    return item.baseData.properties["telemetryType"] === "PAGE_VIEW";
                 })[0];
                 Assert.equal(2, pageView.baseData.average, "PAGE_VIEW count should be 2");
             }
@@ -448,7 +448,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 listener.flush();
 
                 Assert.equal(1, this._trackedItems.length, "Should emit 1 metric");
-                Assert.equal("CUSTOM_EVENT", this._trackedItems[0].baseData.properties["telemetry_type"],
+                Assert.equal("CUSTOM_EVENT", this._trackedItems[0].baseData.properties["telemetryType"],
                     "Unknown baseType should default to CUSTOM_EVENT");
             }
         });
@@ -462,7 +462,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 listener.flush();
 
                 Assert.equal(1, this._trackedItems.length, "Should emit 1 metric");
-                Assert.equal("CUSTOM_EVENT", this._trackedItems[0].baseData.properties["telemetry_type"],
+                Assert.equal("CUSTOM_EVENT", this._trackedItems[0].baseData.properties["telemetryType"],
                     "Missing baseType should default to CUSTOM_EVENT");
             }
         });
@@ -522,7 +522,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 listener.flush();
 
                 Assert.equal(1, this._trackedItems.length, "Only non-SDK-stats items should be counted");
-                Assert.equal("CUSTOM_EVENT", this._trackedItems[0].baseData.properties["telemetry_type"],
+                Assert.equal("CUSTOM_EVENT", this._trackedItems[0].baseData.properties["telemetryType"],
                     "Should only count the EventData item");
             }
         });
@@ -541,7 +541,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 listener.flush();
 
                 Assert.equal(1, this._trackedItems.length, "Only non-SDK-stats items should be counted");
-                Assert.equal("TRACE", this._trackedItems[0].baseData.properties["telemetry_type"],
+                Assert.equal("TRACE", this._trackedItems[0].baseData.properties["telemetryType"],
                     "Should only count the MessageData item");
             }
         });

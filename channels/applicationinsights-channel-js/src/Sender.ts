@@ -512,7 +512,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let payloadItem = {
                         item: payload,
                         cnt: 0, // inital cnt will always be 0
-                        bT: telemetryItem.baseType // store baseType for SDK stats telemetry_type mapping
+                        bT: telemetryItem.baseType // store baseType for SDK stats telemetryType mapping
                     } as IInternalStorageItem;
 
                     // enqueue the payload

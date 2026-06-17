@@ -17,7 +17,7 @@ function _safeKey(key: string): boolean {
     return key !== "__proto__" && key !== "constructor" && key !== "prototype";
 }
 
-// Map baseType to spec telemetry_type values
+// Map baseType to spec telemetryType values
 var _typeMap: { [key: string]: string } = {
     "EventData": "CUSTOM_EVENT",
     "MetricData": "CUSTOM_METRIC",
@@ -133,9 +133,9 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
 
     function _createMetric(name: string, value: number, telType: string, code?: string, codePropKey?: string): ITelemetryItem {
         var props: { [key: string]: any } = {
-            telemetry_type: telType,
+            telemetryType: telType,
             computeType: "unknown",
-            language: "JavaScript",
+            language: "javascript",
             version: sdkVersion || "unknown"
         };
 
@@ -156,7 +156,7 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
     }
 
     function _mapDropCode(reason: number, sendType?: number): string {
-        // Maps eEventsDiscardedReason to spec drop.code values
+        // Maps eEventsDiscardedReason to spec dropCode values
         // 1 = NonRetryableStatus → actual HTTP status code when available
         if (reason === 1 && sendType) {
             return "" + sendType;
@@ -168,7 +168,7 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
      * Common helper to flush bucketed counters (dropped or retry).
      * @param counters - The bucketed counter object
      * @param metricName - The metric name to emit (e.g. MET_DROPPED or MET_RETRY)
-     * @param codePropKey - The property key for the code dimension (e.g. "drop.code" or "retry.code")
+     * @param codePropKey - The property key for the code dimension (e.g. "dropCode" or "retryCode")
      */
     function _flushBucketed(counters: { [code: string]: { [telType: string]: number } }, metricName: string, codePropKey: string) {
         for (var code in counters) {
@@ -207,8 +207,8 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
         }
 
         // Flush dropped and retry counts via common helper
-        _flushBucketed(_droppedCounts, MET_DROPPED, "drop.code");
-        _flushBucketed(_retryCounts, MET_RETRY, "retry.code");
+        _flushBucketed(_droppedCounts, MET_DROPPED, "dropCode");
+        _flushBucketed(_retryCounts, MET_RETRY, "retryCode");
 
         // Reset accumulators
         _successCounts = objCreate(null);
