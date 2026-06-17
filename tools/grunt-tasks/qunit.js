@@ -14,15 +14,7 @@ var path = require('path');
 var url = require('url');
 var EventEmitter = require('eventemitter2');
 // NPM libs.
-// Puppeteer v25+ is published as an ES Module, so it can no longer be loaded with
-// require() (which throws ERR_REQUIRE_ESM). It is loaded lazily via dynamic
-// import() inside the async qunit task below. import() works for both CommonJS and
-// ESM builds, so this stays compatible with older puppeteer versions too.
-function loadPuppeteer() {
-  return import('puppeteer').then(function(mod) {
-    return (mod && mod.default) ? mod.default : mod;
-  });
-}
+var puppeteer = require('puppeteer');
 
 var Promise = global.Promise;
 
@@ -291,10 +283,7 @@ module.exports = function(grunt) {
     });
     var puppeteerLaunchOptions = Object.assign(
       {
-        // puppeteer v23+ removed the 'new' string value; `true` is now the new
-        // (full Chrome) headless mode. 'shell' would launch chrome-headless-shell
-        // (the old headless) where IndexedDB is broken, causing async test hangs.
-        headless: true,
+        headless: 'new',
         args: defaultChromiumArgs
       },
       options.puppeteer
@@ -415,10 +404,7 @@ module.exports = function(grunt) {
     combinedRunEnd = createRunEnd();
 
     // Instantiate headless browser
-    loadPuppeteer()
-      .then(function(puppeteer) {
-        return puppeteer.launch(puppeteerLaunchOptions);
-      })
+    puppeteer.launch(puppeteerLaunchOptions)
       .then(function(b) {
         browser = b;
         return b.newPage();
