@@ -23,6 +23,80 @@ const STATS_MIN_INTERVAL_SECONDS = 60; // 1 minute
 const STATSBEAT_LANGUAGE = "JavaScript";
 const STATSBEAT_TYPE = "Browser";
 
+/**
+ * The placeholder instrumentation key used when reporting SDK statistics to the distro-owned
+ * SDK Stats ingestion endpoint. The endpoint does not require authentication, the placeholder
+ * key only satisfies the connection-string / envelope iKey requirement and is ignored
+ * server-side. This matches the convention used by the Microsoft OpenTelemetry distros.
+ */
+export const STATS_SDK_IKEY = "00000000-0000-0000-0000-000000000000";
+
+/**
+ * Distro-owned SDK statistics ingestion endpoints. SDK Stats events are routed here instead of
+ * to the customer's breeze endpoint. The EU endpoint is used when the customer's endpoint maps
+ * to an EU data-boundary region, otherwise the non-EU endpoint is used.
+ * @see https://github.com/microsoft/opentelemetry-distro-dotnet
+ */
+export const STATS_SDK_ENDPOINT_NON_EU = "https://stats.monitor.azure.com/v2/track";
+export const STATS_SDK_ENDPOINT_EU = "https://eu.stats.monitor.azure.com/v2/track";
+
+/**
+ * The transient marker key, set on the {@link ITelemetryItem.data} of a SDK Stats event, that
+ * carries the destination SDK Stats ingestion endpoint. The sending channel reads this value to
+ * redirect the event to the SDK Stats endpoint and removes it before serializing the event.
+ */
+export const STATS_SDK_ENDPOINT_KEY = "_sdkStatsEndpoint";
+
+/**
+ * The default feature name used to gate the SDK Stats manager. SDK Stats is enabled by default
+ * and can be opted-out via the featureOptIn configuration using this name.
+ */
+export const STATS_SDK_FEATURE = "sdkStats";
+
+// EU data-boundary regions, mirrors the EU region set used by the Azure Monitor OpenTelemetry exporter
+const STATS_EU_REGIONS = [
+    "francecentral", "francesouth", "germanywestcentral", "northeurope", "norwayeast", "norwaywest",
+    "swedencentral", "switzerlandnorth", "switzerlandwest", "uksouth", "ukwest", "westeurope"
+];
+
+/**
+ * Determine the distro-owned SDK Stats ingestion endpoint for the provided customer endpoint.
+ * The region is extracted from the host (the sub-domain preceding ".in.applicationinsights" or
+ * the leading label of the host) and matched against the known EU data-boundary regions. When
+ * the region maps to an EU region the EU endpoint is returned, otherwise (including unknown
+ * regions) the non-EU endpoint is returned.
+ * @param endpoint - The customer breeze endpoint that the SDK Stats are being collected for.
+ * @returns The SDK Stats ingestion endpoint URL.
+ */
+export function getStatsEndpoint(endpoint: string): string {
+    let isEU = false;
+    if (endpoint) {
+        let host = strLower(endpoint);
+        // Strip the scheme
+        let schemeIdx = strIndexOf(host, "://");
+        if (schemeIdx !== -1) {
+            host = host.substring(schemeIdx + 3);
+        }
+
+        // Extract the leading host label, e.g. "westeurope-5" from "westeurope-5.in.applicationinsights.azure.com/"
+        let label = host.split("/")[0].split(".")[0];
+        // Remove any trailing region replica suffix, e.g. "westeurope-5" => "westeurope"
+        let dashIdx = strIndexOf(label, "-");
+        if (dashIdx !== -1) {
+            label = label.substring(0, dashIdx);
+        }
+
+        arrForEach(STATS_EU_REGIONS, (region) => {
+            if (region === label) {
+                isEU = true;
+                return -1;
+            }
+        });
+    }
+
+    return isEU ? STATS_SDK_ENDPOINT_EU : STATS_SDK_ENDPOINT_NON_EU;
+}
+
 
 /**
  * An internal interface to allow the IStatsBeat instance to call back to the manager for
@@ -106,6 +180,7 @@ function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState):
     let _networkCounter: INetworkStatsbeat = _createNetworkStatsbeat(statsBeatStats.endpoint);
     let _timeoutHandle: ITimerHandler;      // Handle to the timer for sending telemetry. This way, we would not send telemetry when system sleep.
     let _isEnabled: boolean = true;         // Flag to check if statsbeat is enabled or not
+    let _statsEndpoint: string = getStatsEndpoint(statsBeatStats.endpoint); // The SDK Stats ingestion endpoint to send the events to
 
     function _setupTimer() {
         if (_isEnabled && !_timeoutHandle) {
@@ -184,12 +259,19 @@ function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState):
 
             let statsbeatEvent: ITelemetryItem = {
                 name: name,
+                iKey: STATS_SDK_IKEY,
                 baseData: {
                     name: name,
                     average: val,
                     properties: combinedProps
                 },
-                baseType: "MetricData"
+                baseType: "MetricData",
+                // Carry the SDK Stats ingestion endpoint so the sending channel can redirect the
+                // event away from the customer's breeze endpoint. This marker is removed by the
+                // channel before the event is serialized.
+                data: {
+                    [STATS_SDK_ENDPOINT_KEY]: _statsEndpoint
+                }
             };
 
             mgr.track(statsBeat, statsbeatEvent);
@@ -354,7 +436,7 @@ export function createStatsMgr(): IStatsMgr {
             return onConfigChange(core.config, (details) => {
                 // Check the feature state again to see if it has changed
                 _isMgrEnabled = false;
-                if (statsConfig && isFeatureEnabled(statsConfig.feature, details.cfg, false) === true) {
+                if (statsConfig && isFeatureEnabled(statsConfig.feature, details.cfg, true) === true) {
                     // Call the getCfg function to get the latest configuration for the statsbeat instance
                     // This should also evaluate the throttling level and other settings for the statsbeat instance
                     // to determine if it should be enabled or not.
@@ -424,3 +506,26 @@ export function createStatsMgr(): IStatsMgr {
         "enabled": { g: () => _isMgrEnabled }
     });
 }
+
+/**
+ * Create the default {@link IStatsMgrConfig} used to enable the SDK Stats collection
+ * and route the resulting events to the distro-owned SDK Stats ingestion endpoint
+ * (`stats.monitor.azure.com` / `eu.stats.monitor.azure.com`). SDK Stats are enabled by default and
+ * can be opted-out using the `featureOptIn` configuration with the {@link STATS_SDK_FEATURE} name.
+ * @returns The {@link IStatsMgrConfig} to pass to {@link IStatsMgr.init}.
+ */
+export function createSdkStatsMgrConfig<CfgType extends IConfiguration = IConfiguration>(): IStatsMgrConfig<CfgType> {
+    return {
+        feature: STATS_SDK_FEATURE,
+        getCfg: () => ({
+            endCfg: [{
+                type: eStatsType.SDK,
+                keyMap: [{
+                    key: STATS_SDK_IKEY,
+                    match: ["*"]
+                }]
+            }]
+        })
+    };
+}
+

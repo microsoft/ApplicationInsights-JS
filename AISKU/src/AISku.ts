@@ -15,7 +15,8 @@ import {
     ITelemetryPlugin, ITelemetryUnloadState, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, ITraceApi, ITraceProvider,
     ITraceTelemetry, IUnloadHook, OTelTimeInput, PropertiesPluginIdentifier, ThrottleMgr, UnloadHandler, WatcherFunction,
     _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate,
-    createDynamicConfig, createOTelApi, createProcessTelemetryContext, createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity,
+    createDynamicConfig, createOTelApi, createProcessTelemetryContext, createSdkStatsMgrConfig, createStatsMgr, createTraceProvider,
+    createUniqueNamespace, doPerf, eLoggingSeverity,
     hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace,
     onConfigChange, parseConnectionString, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener, useSpan
 } from "@microsoft/applicationinsights-core-js";
@@ -389,6 +390,18 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                 doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
                     // initialize core
                     _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin], logger, notificationManager);
+
+                    // Enable SDK Stats collection. The manager collects SDK request statistics
+                    // and routes the resulting events to the distro-owned SDK Stats ingestion endpoint
+                    // (stats.monitor.azure.com). Enabled by default; opt-out via featureOptIn "sdkStats".
+                    if (_core.setStatsMgr) {
+                        let statsMgr = createStatsMgr();
+                        _core.setStatsMgr(statsMgr);
+                        let statsHook = statsMgr.init(_core, createSdkStatsMgrConfig<IConfiguration & IConfig>());
+                        if (statsHook) {
+                            _core.addUnloadHook(statsHook);
+                        }
+                    }
 
                     // Initialize the initial OTel API
                     _otelApi = _initOTel(_self, "aisku", _onEnd, _onException);

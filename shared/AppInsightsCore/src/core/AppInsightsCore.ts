@@ -32,6 +32,8 @@ import { INotificationListener } from "../interfaces/ai/INotificationListener";
 import { INotificationManager } from "../interfaces/ai/INotificationManager";
 import { IPerfManager } from "../interfaces/ai/IPerfManager";
 import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../interfaces/ai/IProcessTelemetryContext";
+import { IStatsBeat, IStatsBeatState } from "../interfaces/ai/IStatsBeat";
+import { IStatsMgr } from "../interfaces/ai/IStatsMgr";
 import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../interfaces/ai/ITelemetryInitializers";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "../interfaces/ai/ITelemetryPlugin";
@@ -67,8 +69,6 @@ import { TelemetryInitializerPlugin } from "./TelemetryInitializerPlugin";
 import { IUnloadHandlerContainer, UnloadHandler, createUnloadHandlerContainer } from "./UnloadHandlerContainer";
 import { IUnloadHookContainer, createUnloadHookContainer } from "./UnloadHookContainer";
 
-// import { IStatsBeat, IStatsBeatConfig, IStatsBeatState } from "../interfaces/ai/IStatsBeat";
-// import { IStatsMgr } from "../interfaces/ai/IStatsMgr";
 const strValidationError = "Plugins must provide initialize method";
 const strNotificationManager = "_notificationManager";
 const strSdkUnloadingError = "SDK is still unloading...";
@@ -382,8 +382,8 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _logger: IDiagnosticLogger;
         let _eventQueue: ITelemetryItem[];
         let _notificationManager: INotificationManager | null | undefined;
-        // let _statsBeat: IStatsBeat | null;
-        // let _statsMgr: IStatsMgr | null;
+        let _statsBeat: IStatsBeat | null;
+        let _statsMgr: IStatsMgr | null;
         let _perfManager: IPerfManager | null;
         let _cfgPerfManager: IPerfManager | null;
         let _cookieManager: ICookieMgr | null;
@@ -623,47 +623,47 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _perfManager = perfMgr;
             };
 
-            // _self.getStatsBeat = (statsBeatState: IStatsBeatState) => {
-            //     // create a new statsbeat if not initialize yet or the endpoint is different
-            //     // otherwise, return the existing one, or null
+            _self.getStatsBeat = (statsBeatState: IStatsBeatState) => {
+                // create a new SDK Stats instance if not initialized yet or the endpoint is different
+                // otherwise, return the existing one, or null
 
-            //     if (statsBeatState) {
-            //         if (_statsMgr && _statsMgr.enabled) {
-            //             if (_statsBeat && _statsBeat.endpoint !== statsBeatState.endpoint) {
-            //                 // Different endpoint, so unload the existing and create a new one
-            //                 _statsBeat.enabled = false;
-            //                 _statsBeat = null;
-            //             }
+                if (statsBeatState) {
+                    if (_statsMgr && _statsMgr.enabled) {
+                        if (_statsBeat && _statsBeat.endpoint !== statsBeatState.endpoint) {
+                            // Different endpoint, so unload the existing and create a new one
+                            _statsBeat.enabled = false;
+                            _statsBeat = null;
+                        }
 
-            //             if (!_statsBeat) {
-            //                 // Create a new statsbeat instance
-            //                 _statsBeat = _statsMgr.newInst(statsBeatState);
-            //             }
-            //         } else if (_statsBeat) {
-            //             // Disable and remove any previously created statsbeat instance
-            //             _statsBeat.enabled = false;
-            //             _statsBeat = null;
-            //         }
+                        if (!_statsBeat) {
+                            // Create a new SDK Stats instance
+                            _statsBeat = _statsMgr.newInst(statsBeatState);
+                        }
+                    } else if (_statsBeat) {
+                        // Disable and remove any previously created SDK Stats instance
+                        _statsBeat.enabled = false;
+                        _statsBeat = null;
+                    }
 
-            //         // Return the current statsbeat instance or null if not created
-            //         return _statsBeat;
-            //     }
+                    // Return the current SDK Stats instance or null if not created
+                    return _statsBeat;
+                }
 
-            //     // Return null as no statsbeat state was provided
-            //     return null;
-            // };
+                // Return null as no SDK Stats state was provided
+                return null;
+            };
 
-            // _self.setStatsMgr = (statsMgr: IStatsMgr) => {
-            //     if (_statsMgr && _statsMgr !== statsMgr) {
-            //         // Disable any previously created statsbeat instance
-            //         if (_statsBeat) {
-            //             _statsBeat.enabled = false;
-            //             _statsBeat = null;
-            //         }
-            //     }
+            _self.setStatsMgr = (statsMgr: IStatsMgr) => {
+                if (_statsMgr && _statsMgr !== statsMgr) {
+                    // Disable any previously created SDK Stats instance
+                    if (_statsBeat) {
+                        _statsBeat.enabled = false;
+                        _statsBeat = null;
+                    }
+                }
 
-            //     _statsMgr = statsMgr;
-            // };
+                _statsMgr = statsMgr;
+            };
 
             _self.eventCnt = (): number => {
                 return _eventQueue.length;
@@ -908,11 +908,11 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                 let processUnloadCtx = createProcessTelemetryUnloadContext(_getPluginChain(), _self);
                 processUnloadCtx.onComplete(() => {
-                    // if (_statsBeat) {
-                    //     // Disable any statsbeat instance
-                    //     _statsBeat.enabled = false;
-                    //     _statsBeat = null;
-                    // }
+                    if (_statsBeat) {
+                        // Disable any SDK Stats instance
+                        _statsBeat.enabled = false;
+                        _statsBeat = null;
+                    }
 
                     _hookContainer.run(_self.logger);
 
@@ -1314,7 +1314,12 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 runTargetUnload(_notificationManager, false);
                 _notificationManager = null;
                 _perfManager = null;
-                // _statsBeat = null;
+                if (_statsBeat) {
+                    // Disable any SDK Stats instance
+                    _statsBeat.enabled = false;
+                }
+                _statsBeat = null;
+                _statsMgr = null;
                 _cfgPerfManager = null;
                 runTargetUnload(_cookieManager, false);
                 _cookieManager = null;
@@ -1342,11 +1347,6 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _initInMemoMaxSize = null;
                 _isStatusSet = false;
                 _initTimer = null;
-                // if (_statsBeat) {
-                //     // Unload and disable any statsbeat instance
-                //     _statsBeat.enabled = false;
-                // }
-                // _statsBeat = null;
             }
 
             function _createTelCtx(): IProcessTelemetryContext {
@@ -1733,14 +1733,14 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         return null;
     }
 
-    // public getStatsBeat(statsBeatState: IStatsBeatState): IStatsBeat {
-    //     // @ DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    //     return null;
-    // }
+    public getStatsBeat(statsBeatState: IStatsBeatState): IStatsBeat {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
 
-    // public setStatsMgr(statsMgr?: IStatsMgr): void {
-    //     // @ DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    // }
+    public setStatsMgr(statsMgr?: IStatsMgr): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
 
     public setPerfMgr(perfMgr: IPerfManager) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
