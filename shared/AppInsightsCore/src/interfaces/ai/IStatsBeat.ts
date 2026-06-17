@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { StatsType } from "../../enums/ai/StatsType";
+import { StatsEndpointType, StatsType } from "../../enums/ai/StatsType";
 import { IPayloadData } from "./IXHROverride";
 
 /**
@@ -81,6 +81,12 @@ export interface IStatsBeatKeyMap {
     key?: string;
 
     /**
+     * The SDK Stats ingestion endpoint URL that matching events should be redirected to. When
+     * omitted, matching events are sent to the customer's configured (breeze) endpoint instead.
+     */
+    url?: string;
+
+    /**
      * An array of string URLs that are supported by the endpoint,
      * the string values are used to compar against the endpoint URL
      * in a case insensitive manner. The values may also contain wildcards
@@ -117,7 +123,16 @@ export interface IStatsBeatConfig {
      * Default: 15 min
      */
     shrtInt?: number;
-    
+
+    /**
+     * Identifies which ingestion endpoint the SDK Stats events are sent to. When set to
+     * {@link eStatsEndpointType.Breeze} the events are sent to the legacy breeze endpoint, otherwise
+     * they are sent to the distro-owned SDK Stats endpoint. This is configurable via the CDN /
+     * dynamic config so the destination can be changed at runtime.
+     * Default: {@link eStatsEndpointType.SdkStats}
+     */
+    mode?: StatsEndpointType;
+
     /**
      * The Endpoint configurations for the stats beat plugin.
      * This is used to identify the endpoints that are supported by the stats beat plugin.

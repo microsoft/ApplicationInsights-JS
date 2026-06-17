@@ -8,11 +8,11 @@ import { onConfigChange } from "../config/DynamicConfig";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { _throwInternal, safeGetLogger } from "../diagnostics/DiagnosticLogger";
 import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
-import { eStatsType } from "../enums/ai/StatsType";
+import { eStatsEndpointType, eStatsType } from "../enums/ai/StatsType";
 import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import { INetworkStatsbeat } from "../interfaces/ai/INetworkStatsbeat";
-import { IStatsBeat, IStatsBeatConfig, IStatsBeatState, IStatsEndpointConfig } from "../interfaces/ai/IStatsBeat";
+import { IStatsBeat, IStatsBeatConfig, IStatsBeatKeyMap, IStatsBeatState, IStatsEndpointConfig } from "../interfaces/ai/IStatsBeat";
 import { IStatsMgr, IStatsMgrConfig } from "../interfaces/ai/IStatsMgr";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 import { IPayloadData } from "../interfaces/ai/IXHROverride";
@@ -41,6 +41,15 @@ export const STATS_SDK_ENDPOINT_NON_EU = "https://stats.monitor.azure.com/v2/tra
 export const STATS_SDK_ENDPOINT_EU = "https://eu.stats.monitor.azure.com/v2/track";
 
 /**
+ * The Microsoft-owned instrumentation keys used when reporting SDK statistics to the legacy
+ * breeze ingestion endpoints (the customer's own breeze endpoint is used as the host, only the
+ * iKey differs so the data lands in the Microsoft SDK Stats resource). The EU key is used when
+ * the customer's endpoint maps to an EU data-boundary region, otherwise the non-EU key is used.
+ */
+export const STATS_BREEZE_IKEY_NON_EU = "c4a29126-a7cb-47e5-b348-11414998b11e";
+export const STATS_BREEZE_IKEY_EU = "7dc56bab-3c0c-4e9f-9ebb-d1acadee8d0f";
+
+/**
  * The transient marker key, set on the {@link ITelemetryItem.data} of a SDK Stats event, that
  * carries the destination SDK Stats ingestion endpoint. The sending channel reads this value to
  * redirect the event to the SDK Stats endpoint and removes it before serializing the event.
@@ -60,15 +69,13 @@ const STATS_EU_REGIONS = [
 ];
 
 /**
- * Determine the distro-owned SDK Stats ingestion endpoint for the provided customer endpoint.
- * The region is extracted from the host (the sub-domain preceding ".in.applicationinsights" or
- * the leading label of the host) and matched against the known EU data-boundary regions. When
- * the region maps to an EU region the EU endpoint is returned, otherwise (including unknown
- * regions) the non-EU endpoint is returned.
+ * Determine whether the provided customer endpoint maps to an EU data-boundary region. The region
+ * is extracted from the host (the leading host label, with any region replica suffix removed) and
+ * matched against the known EU data-boundary regions.
  * @param endpoint - The customer breeze endpoint that the SDK Stats are being collected for.
- * @returns The SDK Stats ingestion endpoint URL.
+ * @returns true when the endpoint maps to an EU region, false otherwise (including unknown regions).
  */
-export function getStatsEndpoint(endpoint: string): string {
+function _isEuEndpoint(endpoint: string): boolean {
     let isEU = false;
     if (endpoint) {
         let host = strLower(endpoint);
@@ -94,7 +101,29 @@ export function getStatsEndpoint(endpoint: string): string {
         });
     }
 
-    return isEU ? STATS_SDK_ENDPOINT_EU : STATS_SDK_ENDPOINT_NON_EU;
+    return isEU;
+}
+
+/**
+ * Determine the distro-owned SDK Stats ingestion endpoint for the provided customer endpoint.
+ * When the region maps to an EU region the EU endpoint is returned, otherwise (including unknown
+ * regions) the non-EU endpoint is returned.
+ * @param endpoint - The customer breeze endpoint that the SDK Stats are being collected for.
+ * @returns The SDK Stats ingestion endpoint URL.
+ */
+export function getStatsEndpoint(endpoint: string): string {
+    return _isEuEndpoint(endpoint) ? STATS_SDK_ENDPOINT_EU : STATS_SDK_ENDPOINT_NON_EU;
+}
+
+/**
+ * Determine the Microsoft-owned instrumentation key to use when reporting SDK Stats to the legacy
+ * breeze endpoint for the provided customer endpoint. When the region maps to an EU region the EU
+ * key is returned, otherwise (including unknown regions) the non-EU key is returned.
+ * @param endpoint - The customer breeze endpoint that the SDK Stats are being collected for.
+ * @returns The breeze SDK Stats instrumentation key.
+ */
+export function getStatsBreezeIKey(endpoint: string): string {
+    return _isEuEndpoint(endpoint) ? STATS_BREEZE_IKEY_EU : STATS_BREEZE_IKEY_NON_EU;
 }
 
 
@@ -180,7 +209,6 @@ function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState):
     let _networkCounter: INetworkStatsbeat = _createNetworkStatsbeat(statsBeatStats.endpoint);
     let _timeoutHandle: ITimerHandler;      // Handle to the timer for sending telemetry. This way, we would not send telemetry when system sleep.
     let _isEnabled: boolean = true;         // Flag to check if statsbeat is enabled or not
-    let _statsEndpoint: string = getStatsEndpoint(statsBeatStats.endpoint); // The SDK Stats ingestion endpoint to send the events to
 
     function _setupTimer() {
         if (_isEnabled && !_timeoutHandle) {
@@ -259,21 +287,16 @@ function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState):
 
             let statsbeatEvent: ITelemetryItem = {
                 name: name,
-                iKey: STATS_SDK_IKEY,
                 baseData: {
                     name: name,
                     average: val,
                     properties: combinedProps
                 },
-                baseType: "MetricData",
-                // Carry the SDK Stats ingestion endpoint so the sending channel can redirect the
-                // event away from the customer's breeze endpoint. This marker is removed by the
-                // channel before the event is serialized.
-                data: {
-                    [STATS_SDK_ENDPOINT_KEY]: _statsEndpoint
-                }
+                baseType: "MetricData"
             };
 
+            // The destination iKey and (optional) SDK Stats ingestion endpoint are resolved and
+            // stamped by the manager (see _track) based on the current (dynamic) configuration.
             mgr.track(statsBeat, statsbeatEvent);
         }
     }
@@ -381,22 +404,22 @@ function _getEndpointCfg(statsBeatConfig: IStatsBeatConfig, type: eStatsType): I
 }
 
 /**
- * This function retrieves the stats instrumentation key (iKey) for the given endpoint from
- * the statsBeatConfig. It iterates through the keys in the statsBeatConfig and checks if
- * the endpoint matches any of the URLs associated with that key. If a match is found, it
- * returns the corresponding iKey.
- * @param statsBeatConfig - The configuration object for StatsBeat.
+ * This function retrieves the matching {@link IStatsBeatKeyMap} entry for the given endpoint from
+ * the provided endpoint configuration. It iterates through the key maps and checks if the endpoint
+ * matches any of the configured URL patterns. If a match is found, the corresponding key map entry
+ * (which carries the optional instrumentation key and SDK Stats ingestion endpoint URL) is returned.
+ * @param endpointCfg - The endpoint configuration to search.
  * @param endpoint - The endpoint to check against the URLs in the configuration.
- * @returns The iKey associated with the matching endpoint, or null if no match is found.
+ * @returns The matching {@link IStatsBeatKeyMap} entry, or null if no match is found.
  */
-function _getIKey(endpointCfg: IStatsEndpointConfig, endpoint: string): string | null {
-    let statsKey: string = null;
+function _getKeyMap(endpointCfg: IStatsEndpointConfig, endpoint: string): IStatsBeatKeyMap | null {
+    let matched: IStatsBeatKeyMap = null;
     if (endpointCfg.keyMap) {
         arrForEach(endpointCfg.keyMap, (keyMap) => {
             if (keyMap.match) {
                 arrForEach(keyMap.match, (url) => {
                     if (_isMatchEndpoint(url, endpoint)) {
-                        statsKey = keyMap.key || null;
+                        matched = keyMap;
 
                         // Stop the loop if we found a match
                         return -1;
@@ -404,14 +427,14 @@ function _getIKey(endpointCfg: IStatsEndpointConfig, endpoint: string): string |
                 });
             }
 
-            if (statsKey) {
+            if (matched) {
                 // Stop the loop if we found a match
                 return -1;
             }
         });
     }
 
-    return statsKey;
+    return matched;
 }
 
 export function createStatsMgr(): IStatsMgr {
@@ -456,23 +479,36 @@ export function createStatsMgr(): IStatsMgr {
     function _track(statsBeat: IStatsBeat, statsBeatEvent: ITelemetryItem) {
         if (_isMgrEnabled && _statsBeatConfig) {
             let endpoint = statsBeat.endpoint;
-            let sendEvt = !!statsBeat.type;
 
-            // Fetching the stats key for the endpoint here to support the scenario where the endpoint is changed
-            // after the statsbeat instance is created. This will ensure that the correct stats key is used for the endpoint.
-            // It also avoids the tracking of the statsbeat event if the endpoint is not in the config.
+            // Fetching the matching key map for the endpoint here to support the scenario where the
+            // endpoint is changed after the SDK Stats instance is created. This will ensure that the
+            // correct key / destination is used for the endpoint, and avoids tracking the event if the
+            // endpoint is not in the config.
             let endpointCfg = _getEndpointCfg(_statsBeatConfig, statsBeat.type);
             if (endpointCfg) {
-                // Check for key remapping
-                let statsKey = _getIKey(endpointCfg, endpoint);
-                if (statsKey) {
-                    // Using this iKey for the statsbeat event
-                    statsBeatEvent.iKey = statsKey;
-                    // We have specific config for this endpoint, so we can send the event
-                    sendEvt = true;
-                }
+                let keyMap = _getKeyMap(endpointCfg, endpoint);
+                // Only send the event if the endpoint matched a configured key map (or the event type
+                // is non-zero, preserving the legacy behaviour for explicitly typed stats events).
+                if (keyMap || statsBeat.type) {
+                    let useBreeze = _statsBeatConfig.mode === eStatsEndpointType.Breeze;
 
-                if (sendEvt) {
+                    // Resolve the iKey to use, falling back to the mode default when the matched key
+                    // map does not specify one. Breeze mode uses the Microsoft-owned breeze SDK Stats
+                    // iKey (region dependent); the SDK Stats endpoint uses the placeholder iKey.
+                    let iKey = (keyMap && keyMap.key) || (useBreeze ? getStatsBreezeIKey(endpoint) : STATS_SDK_IKEY);
+                    statsBeatEvent.iKey = iKey;
+
+                    // Resolve the destination SDK Stats ingestion endpoint. When sending to the legacy
+                    // breeze endpoint there is no redirect (the event is sent to the customer's endpoint).
+                    let url = (keyMap && keyMap.url) || (useBreeze ? null : getStatsEndpoint(endpoint));
+                    if (url) {
+                        // Carry the SDK Stats ingestion endpoint so the sending channel can redirect the
+                        // event away from the customer's breeze endpoint. This marker is removed by the
+                        // channel before the event is serialized.
+                        statsBeatEvent.data = statsBeatEvent.data || {};
+                        statsBeatEvent.data[STATS_SDK_ENDPOINT_KEY] = url;
+                    }
+
                     _core.track(statsBeatEvent);
                 }
             }
@@ -508,24 +544,37 @@ export function createStatsMgr(): IStatsMgr {
 }
 
 /**
- * Create the default {@link IStatsMgrConfig} used to enable the SDK Stats collection
- * and route the resulting events to the distro-owned SDK Stats ingestion endpoint
- * (`stats.monitor.azure.com` / `eu.stats.monitor.azure.com`). SDK Stats are enabled by default and
- * can be opted-out using the `featureOptIn` configuration with the {@link STATS_SDK_FEATURE} name.
+ * Create the default {@link IStatsMgrConfig} used to enable the SDK Stats collection. By default the
+ * resulting events are routed to the distro-owned SDK Stats ingestion endpoint
+ * (`stats.monitor.azure.com` / `eu.stats.monitor.azure.com`). The destination can be changed at
+ * runtime via the CDN / dynamic config by setting `config.stats` (an {@link IStatsBeatConfig}) - for
+ * example setting `config.stats.mode` to {@link eStatsEndpointType.Breeze} routes SDK Stats to the
+ * legacy breeze endpoint instead. SDK Stats are enabled by default and can be opted-out using the
+ * `featureOptIn` configuration with the {@link STATS_SDK_FEATURE} name.
  * @returns The {@link IStatsMgrConfig} to pass to {@link IStatsMgr.init}.
  */
 export function createSdkStatsMgrConfig<CfgType extends IConfiguration = IConfiguration>(): IStatsMgrConfig<CfgType> {
     return {
         feature: STATS_SDK_FEATURE,
-        getCfg: () => ({
-            endCfg: [{
-                type: eStatsType.SDK,
-                keyMap: [{
-                    key: STATS_SDK_IKEY,
-                    match: ["*"]
+        getCfg: (_core: IAppInsightsCore<CfgType>, cfg: CfgType): IStatsBeatConfig => {
+            // Read any CDN / dynamic config overrides. Accessing these inside the (dynamic) config
+            // change handler registers the dependency so changes are picked up at runtime.
+            let userCfg: IStatsBeatConfig = (cfg && cfg.stats) || {};
+
+            return {
+                mode: userCfg.mode || eStatsEndpointType.SdkStats,
+                shrtInt: userCfg.shrtInt,
+                // The destination iKey / endpoint are resolved per-event in _track based on the mode,
+                // so the default key map only needs to match all endpoints. A full key map (including
+                // explicit keys / urls) may be supplied via config.stats.endCfg to override this.
+                endCfg: userCfg.endCfg || [{
+                    type: eStatsType.SDK,
+                    keyMap: [{
+                        match: ["*"]
+                    }]
                 }]
-            }]
-        })
+            };
+        }
     };
 }
 

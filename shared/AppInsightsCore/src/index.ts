@@ -19,7 +19,7 @@ export { IUnloadHook, ILegacyUnloadHook } from "./interfaces/ai/IUnloadHook";
 export { eEventsDiscardedReason, EventsDiscardedReason, eBatchDiscardedReason, BatchDiscardedReason } from "./enums/ai/EventsDiscardedReason";
 export { eDependencyTypes, DependencyTypes } from "./enums/ai/DependencyTypes";
 export { SendRequestReason } from "./enums/ai/SendRequestReason";
-export { StatsType, eStatsType } from "./enums/ai/StatsType";
+export { StatsType, eStatsType, StatsEndpointType, eStatsEndpointType } from "./enums/ai/StatsType";
 export { TelemetryUpdateReason } from "./enums/ai/TelemetryUpdateReason";
 export { TelemetryUnloadReason } from "./enums/ai/TelemetryUnloadReason";
 export { eUrlRedactionOptions, UrlRedactionOptions } from "./enums/ai/UrlRedactionOptions"
@@ -44,8 +44,9 @@ export { IStatsBeat, IStatsBeatConfig, IStatsBeatKeyMap as IStatsBeatEndpoints, 
 export { IStatsEventData } from "./interfaces/ai/IStatsEventData";
 export { IStatsMgr, IStatsMgrConfig } from "./interfaces/ai/IStatsMgr";
 export {
-    createStatsMgr, createSdkStatsMgrConfig, getStatsEndpoint,
-    STATS_SDK_IKEY, STATS_SDK_ENDPOINT_NON_EU, STATS_SDK_ENDPOINT_EU, STATS_SDK_ENDPOINT_KEY, STATS_SDK_FEATURE
+    createStatsMgr, createSdkStatsMgrConfig, getStatsEndpoint, getStatsBreezeIKey,
+    STATS_SDK_IKEY, STATS_SDK_ENDPOINT_NON_EU, STATS_SDK_ENDPOINT_EU, STATS_SDK_ENDPOINT_KEY, STATS_SDK_FEATURE,
+    STATS_BREEZE_IKEY_NON_EU, STATS_BREEZE_IKEY_EU
 } from "./core/StatsBeat";
 export {
     isArray, isTypeof, isUndefined, isNullOrUndefined, isStrictUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,
