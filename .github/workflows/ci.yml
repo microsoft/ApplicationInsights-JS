@@ -32,10 +32,39 @@ jobs:
     - name: Update rush shrinkwrap dependencies (for different node versions)
       run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm install rollup -g
-    - run: npm install grunt-cli
-    - run: npm install
+    # Puppeteer's postinstall downloads Chrome+chrome-headless-shell in parallel and
+    # the extract intermittently corrupts on GitHub runners ("browser folder exists
+    # but the executable is missing"), which aborts npm install. This is flaky (main
+    # alternates pass/fail with the same stock flow), so defer the download here and
+    # do it in a dedicated retry-with-clean step below.
+    - name: Install grunt-cli (defer flaky puppeteer browser download)
+      run: npm install grunt-cli
+      env:
+        PUPPETEER_SKIP_DOWNLOAD: 'true'
+    - name: Install dependencies (defer flaky puppeteer browser download)
+      run: npm install
+      env:
+        PUPPETEER_SKIP_DOWNLOAD: 'true'
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
+    # All tests launch the full Chrome binary via headless:'new'; chrome-headless-shell
+    # is unused (and is the most corruption-prone download). Install only chrome, clean
+    # any partial/corrupt cache before each attempt, and verify by actually launching it.
+    - name: Install Chrome for puppeteer (retry with clean on corrupt extract)
+      run: |
+        for attempt in 1 2 3 4 5; do
+          echo "=== Chrome install attempt $attempt ==="
+          rm -rf ~/.cache/puppeteer/chrome
+          if npx puppeteer browsers install chrome \
+            && node -e "require('puppeteer').launch({headless:'new',args:['--no-sandbox']}).then(function(b){return b.close();}).then(function(){process.exit(0);}).catch(function(e){console.error(e);process.exit(1);});"; then
+            echo "Chrome installed and verified"
+            npx puppeteer browsers list
+            exit 0
+          fi
+          echo "Attempt $attempt failed; cleaning and retrying"
+        done
+        echo "All Chrome install attempts failed"
+        exit 1
     - run: npm run build --verbose
       timeout-minutes: 20
     - run: npm run test --verbose
