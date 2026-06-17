@@ -507,9 +507,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     // so they can be redirected away from the customer's breeze endpoint. Extract and
                     // remove the marker so it is not serialized into the outgoing envelope.
                     let statsEndpoint: string;
-                    if (telemetryItem.data && telemetryItem.data[STATS_SDK_ENDPOINT_KEY]) {
-                        statsEndpoint = telemetryItem.data[STATS_SDK_ENDPOINT_KEY];
-                        delete telemetryItem.data[STATS_SDK_ENDPOINT_KEY];
+                    let data = telemetryItem.data;
+                    if (data && data[STATS_SDK_ENDPOINT_KEY]) {
+                        statsEndpoint = data[STATS_SDK_ENDPOINT_KEY];
+                        delete data[STATS_SDK_ENDPOINT_KEY];
                     }
 
                     let aiEnvelope = _getEnvelope(telemetryItem, diagLogger);
