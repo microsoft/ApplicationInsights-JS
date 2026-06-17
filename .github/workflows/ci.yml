@@ -32,6 +32,8 @@ jobs:
     - name: Update rush shrinkwrap dependencies (for different node versions)
       run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm install rollup -g
+    - name: Configure puppeteer cache directory
+      run: echo "PUPPETEER_CACHE_DIR=$HOME/.cache/puppeteer" >> "$GITHUB_ENV"
     - name: Install grunt-cli (defer puppeteer browser download)
       run: npm install grunt-cli
       env:
@@ -43,24 +45,46 @@ jobs:
     - name: Install puppeteer browsers (sequential, retry, clean partial cache)
       run: |
         for attempt in 1 2 3; do
-          rm -rf ~/.cache/puppeteer
-          if npx puppeteer browsers install chrome && npx puppeteer browsers install chrome-headless-shell; then
+          rm -rf "$PUPPETEER_CACHE_DIR"
+          if npx puppeteer browsers install chrome --path "$PUPPETEER_CACHE_DIR" && npx puppeteer browsers install chrome-headless-shell --path "$PUPPETEER_CACHE_DIR"; then
             npx puppeteer browsers list; exit 0
           fi
         done
         exit 1
+    - name: Resolve chrome executable path
+      run: |
+        CHROME_PATH="$(npx puppeteer browsers list | awk '/^chrome@/ {print $3; exit}')"
+        if [ -z "$CHROME_PATH" ]; then
+          echo "Unable to resolve chrome executable path from puppeteer browsers list"
+          exit 1
+        fi
+        if [ ! -f "$CHROME_PATH" ]; then
+          echo "Resolved chrome path does not exist: $CHROME_PATH"
+          exit 1
+        fi
+        chmod +x "$CHROME_PATH" || true
+        echo "PUPPETEER_EXECUTABLE_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+        echo "Using Chrome executable: $CHROME_PATH"
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
     - name: Verify puppeteer chrome is launchable (reinstall on miss)
       run: |
         npx puppeteer browsers list || true
-        node -e "const p=require('puppeteer'); p.launch({headless:'new', args:['--no-sandbox']}).then(async b=>{await b.close(); console.log('Puppeteer launch OK');}).catch(()=>process.exit(1));" || {
+        node -e "const p=require('puppeteer'); const exe=process.env.PUPPETEER_EXECUTABLE_PATH; p.launch({executablePath: exe, headless:'new', args:['--no-sandbox']}).then(async b=>{await b.close(); console.log('Puppeteer launch OK');}).catch(()=>process.exit(1));" || {
           echo "Puppeteer launch failed; reinstalling browsers..."
-          rm -rf ~/.cache/puppeteer/chrome ~/.cache/puppeteer/chrome-headless-shell
-          npx puppeteer browsers install chrome
-          npx puppeteer browsers install chrome-headless-shell
+          rm -rf "$PUPPETEER_CACHE_DIR"/chrome "$PUPPETEER_CACHE_DIR"/chrome-headless-shell
+          npx puppeteer browsers install chrome --path "$PUPPETEER_CACHE_DIR"
+          npx puppeteer browsers install chrome-headless-shell --path "$PUPPETEER_CACHE_DIR"
           npx puppeteer browsers list
-          node -e "const p=require('puppeteer'); p.launch({headless:'new', args:['--no-sandbox']}).then(async b=>{await b.close(); console.log('Puppeteer launch OK after reinstall');}).catch((e)=>{console.error(e); process.exit(1);});"
+          CHROME_PATH="$(npx puppeteer browsers list | awk '/^chrome@/ {print $3; exit}')"
+          if [ -z "$CHROME_PATH" ] || [ ! -f "$CHROME_PATH" ]; then
+            echo "Unable to resolve chrome path after reinstall"
+            exit 1
+          fi
+          chmod +x "$CHROME_PATH" || true
+          echo "PUPPETEER_EXECUTABLE_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+          export PUPPETEER_EXECUTABLE_PATH="$CHROME_PATH"
+          node -e "const p=require('puppeteer'); const exe=process.env.PUPPETEER_EXECUTABLE_PATH; p.launch({executablePath: exe, headless:'new', args:['--no-sandbox']}).then(async b=>{await b.close(); console.log('Puppeteer launch OK after reinstall');}).catch((e)=>{console.error(e); process.exit(1);});"
         }
     - run: npm run build --verbose
       timeout-minutes: 20
