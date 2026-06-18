@@ -108,26 +108,34 @@ export class AISKUSizeCheck extends AITestClass {
     }
 
     private addRolldownPureAnnotationCheck(): void {
+        // The rollup-bundled dist (the package "main" entry)
+        this._checkPureAnnotations(this.rawFilePath, "AISKU dist");
+        // The per-module dist-es5 tsc output (the package "module" entry that
+        // modern bundlers such as Rolldown / Vite 8 import). See issue #2736.
+        this._checkPureAnnotations("../dist-es5/internal/trace/spanUtils.js", "AISKU dist-es5 (module)");
+    }
+
+    private _checkPureAnnotations(filePath: string, label: string): void {
         this.testCase({
-            name: "Test AISKU dist canonicalizes PURE annotation spacing",
+            name: `Test ${label} canonicalizes PURE annotation spacing`,
             test: () => {
-                let request = new Request(this.rawFilePath, { method: "GET" });
+                let request = new Request(filePath, { method: "GET" });
                 return fetch(request).then((response) => {
                     if (!response.ok) {
-                        Assert.ok(false, `fetch AISKU dist for PURE annotation check error: ${response.statusText}`);
+                        Assert.ok(false, `fetch ${label} for PURE annotation check error: ${response.statusText}`);
                         return;
                     }
 
                     return response.text().then((text) => {
-                        // Validate the final bundle no longer contains spaced PURE comment forms.
+                        // Validate the output no longer contains spaced PURE comment forms.
                         let nonCanonicalPurePattern = /\(\s+\/\*\s*[#@]__PURE__\s*\*\/|\(\s*\/\*\s*[#@]__PURE__\s*\*\/\s+/g;
                         let matches = text.match(nonCanonicalPurePattern) || [];
-                        Assert.equal(0, matches.length, `Found ${matches.length} non-canonical PURE annotations in AISKU dist`);
+                        Assert.equal(0, matches.length, `Found ${matches.length} non-canonical PURE annotations in ${label}`);
                     }, (error: Error) => {
-                        Assert.ok(false, `AISKU dist PURE annotation check response error: ${error}`);
+                        Assert.ok(false, `${label} PURE annotation check response error: ${error}`);
                     });
                 }).catch((error: Error) => {
-                    Assert.ok(false, `AISKU dist PURE annotation check error: ${error}`);
+                    Assert.ok(false, `${label} PURE annotation check error: ${error}`);
                 });
             }
         });

@@ -8,6 +8,7 @@ import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/dist/node/rem
 import { es5Poly, es5Check, importCheck } from "@microsoft/applicationinsights-rollup-es5";
 import { resolve } from 'path';
 import { readFileSync } from "fs";
+const { canonicalizePureAnnotations } = require("./tools/pureAnnotations");
 
 const rootVersion = require("./package.json").version;
 
@@ -31,12 +32,10 @@ function doCleanup() {
 }
 
 function fixPureAnnotations() {
-    const PURE_COMMENT_CANONICALIZE = /\(\s*\/\*\s*([#@])__PURE__\s*\*\/\s*/g;
-
     return {
         name: "fix-pure-annotations",
         renderChunk(code) {
-            let normalized = code.replace(PURE_COMMENT_CANONICALIZE, "(/*$1__PURE__*/");
+            let normalized = canonicalizePureAnnotations(code);
 
             if (normalized === code) {
                 return null;
