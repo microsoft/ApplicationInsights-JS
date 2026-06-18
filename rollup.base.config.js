@@ -8,7 +8,7 @@ import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/dist/node/rem
 import { es5Poly, es5Check, importCheck } from "@microsoft/applicationinsights-rollup-es5";
 import { resolve } from 'path';
 import { readFileSync } from "fs";
-const { canonicalizePureAnnotations } = require("./tools/pureAnnotations");
+import { canonicalizePureAnnotations } from "./tools/pureAnnotations.mjs";
 
 const rootVersion = require("./package.json").version;
 

@@ -1,5 +1,5 @@
 /**
- * pureAnnotations.js - Shared helpers for canonicalizing `/*#__PURE__*\/`
+ * pureAnnotations.mjs - Shared helpers for canonicalizing `/*#__PURE__*\/`
  * (and `/*#@__PURE__*\/`) tree-shaking annotations.
  *
  * TypeScript emits parenthesized PURE annotations with whitespace after the
@@ -12,14 +12,18 @@
  * tree-shaking behaviour.
  *
  * This single source of truth is shared by:
- *   - rollup.base.config.js `fixPureAnnotations()` (rollup-bundled dist/es5)
- *   - tools/grunt-tasks/fixPureAnnotations.js `fix-pure` (tsc dist-es5)
+ *   - rollup.base.config.js `fixPureAnnotations()` (rollup-bundled dist/es5),
+ *     which imports it directly (rollup inlines it when bundling the config).
+ *   - tools/grunt-tasks/fixPureAnnotations.js `fix-pure` (tsc dist-es5), which
+ *     loads it via dynamic import() from the CommonJS grunt task.
+ *
+ * It is authored as an ES module (.mjs) so the rollup config bundler (which
+ * does not run the commonjs plugin) can consume the named exports.
  */
-"use strict";
 
 // Matches an opening parenthesis followed by a (possibly whitespace padded)
 // PURE / @__PURE__ annotation, capturing the leading marker char (# or @).
-var PURE_COMMENT_CANONICALIZE = /\(\s*\/\*\s*([#@])__PURE__\s*\*\/\s*/g;
+export var PURE_COMMENT_CANONICALIZE = /\(\s*\/\*\s*([#@])__PURE__\s*\*\/\s*/g;
 
 /**
  * Rewrites any spaced PURE annotation forms in the supplied code to the
@@ -28,11 +32,6 @@ var PURE_COMMENT_CANONICALIZE = /\(\s*\/\*\s*([#@])__PURE__\s*\*\/\s*/g;
  * @param {string} code
  * @returns {string}
  */
-function canonicalizePureAnnotations(code) {
+export function canonicalizePureAnnotations(code) {
     return code.replace(PURE_COMMENT_CANONICALIZE, "(/*$1__PURE__*/");
 }
-
-module.exports = {
-    PURE_COMMENT_CANONICALIZE: PURE_COMMENT_CANONICALIZE,
-    canonicalizePureAnnotations: canonicalizePureAnnotations
-};

@@ -35,40 +35,48 @@
 module.exports = function (grunt) {
     "use strict";
 
-    var canonicalizePureAnnotations = require("../pureAnnotations").canonicalizePureAnnotations;
-
     grunt.registerMultiTask("fix-pure", "Canonicalize PURE tree-shaking annotations in dist-es5 output", function () {
         var files = this.filesSrc;
-        var filesChecked = 0;
-        var filesChanged = 0;
+        var done = this.async();
 
         if (!files || files.length === 0) {
             grunt.log.warn("No files matched for PURE annotation canonicalization.");
+            done();
             return;
         }
 
-        files.forEach(function (filepath) {
-            if (!grunt.file.exists(filepath)) {
-                return;
-            }
+        // The shared helper is an ES module, so load it via dynamic import().
+        import("../pureAnnotations.mjs").then(function (mod) {
+            var canonicalizePureAnnotations = mod.canonicalizePureAnnotations;
+            var filesChecked = 0;
+            var filesChanged = 0;
 
-            // Skip source map files - only the emitted JavaScript is rewritten.
-            if (filepath.indexOf(".map") !== -1) {
-                return;
-            }
+            files.forEach(function (filepath) {
+                if (!grunt.file.exists(filepath)) {
+                    return;
+                }
 
-            filesChecked++;
+                // Skip source map files - only the emitted JavaScript is rewritten.
+                if (filepath.indexOf(".map") !== -1) {
+                    return;
+                }
 
-            var content = grunt.file.read(filepath);
-            var normalized = canonicalizePureAnnotations(content);
+                filesChecked++;
 
-            if (normalized !== content) {
-                grunt.file.write(filepath, normalized);
-                filesChanged++;
-            }
+                var content = grunt.file.read(filepath);
+                var normalized = canonicalizePureAnnotations(content);
+
+                if (normalized !== content) {
+                    grunt.file.write(filepath, normalized);
+                    filesChanged++;
+                }
+            });
+
+            grunt.log.ok("Canonicalized PURE annotations: checked " + filesChecked + " file(s), updated " + filesChanged + " file(s).");
+            done();
+        }, function (err) {
+            grunt.log.error("Failed to load PURE annotation helper: " + err);
+            done(false);
         });
-
-        grunt.log.ok("Canonicalized PURE annotations: checked " + filesChecked + " file(s), updated " + filesChanged + " file(s).");
-        return true;
     });
 };
