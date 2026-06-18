@@ -177,6 +177,7 @@ export class StatsbeatTests extends AITestClass {
                         return cfg?.stats;
                     }
                 });
+                this._core.setStatsMgr(this._statsMgr);
                 let statsBeatState: IStatsBeatState = {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
