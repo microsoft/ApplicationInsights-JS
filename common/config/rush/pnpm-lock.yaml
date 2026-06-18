@@ -10,6 +10,10 @@ overrides:
   glob: '>=7.2.3'
   lodash: '>=4.18.1'
   postcss: '>=8.5.14'
+  ws: '>=8.21.0'
+  form-data: '>=2.5.6 <3.0.0'
+  js-yaml: '>=4.2.0'
+  markdown-it: '>=14.2.0'
 
 pnpmfileChecksum: 55gco67a3joh63apcdosyflxfe
 
@@ -29,12 +33,9 @@ importers:
       '@nevware21/grunt-ts-plugin':
         specifier: ^0.5.2
         version: 0.5.2(grunt@1.6.2)(typescript@4.9.5)
-      '@nevware21/ts-async':
-        specifier: '>= 0.5.5 < 2.x'
-        version: 0.5.5
       '@nevware21/ts-utils':
-        specifier: '>= 0.12.6 < 2.x'
-        version: 0.13.0
+        specifier: '>= 0.14.0 < 2.x'
+        version: 0.15.0
       '@rollup/plugin-commonjs':
         specifier: ^24.0.0
         version: 24.1.0(rollup@3.30.0)
@@ -189,8 +190,8 @@ importers:
         specifier: ^1.1.1
         version: 1.3.2
       form-data:
-        specifier: ^2.5.5
-        version: 2.5.5
+        specifier: '>=2.5.6 <3.0.0'
+        version: 2.5.6
       glob:
         specifier: '>=7.2.3'
         version: 13.0.6
@@ -364,8 +365,8 @@ packages:
   '@nevware21/ts-async@0.5.5':
     resolution: {integrity: sha512-vwqaL05iJPjLeh5igPi8MeeAu10i+Aq7xko1fbo9F5Si6MnVN5505qaV7AhSdk5MCBJVT/UYMk3kgInNjDb4Ig==}
 
-  '@nevware21/ts-utils@0.13.0':
-    resolution: {integrity: sha512-F3mD+DsUn9OiZmZc5tg0oKqrJCtiCstwx+wE+DNzFYh2cCRUuzTYdK9zGGP/au2BWvbOQ6Tqlbjr2+dT1P3AlQ==}
+  '@nevware21/ts-utils@0.15.0':
+    resolution: {integrity: sha512-+bUMKIiKAgoW5uNEb5xxzBzdwdLS9SKRcOy8SxLE+KqSlIdUYV5O9nxJVq1RUYcO2DtL5DlrK1GbgcVEHv6GVA==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -427,71 +428,71 @@ packages:
         optional: true
 
   '@rush-temp/1ds-core-js@file:projects/1ds-core-js.tgz':
-    resolution: {integrity: sha512-uqcqgWMKDoj9Qjm54cpvet7CAZHqTpLeMnI+I2dCiOLGKpXaH8RGZfq8VUONZE1GC2+Bkrhgbdy/qzLBA7ltUQ==, tarball: file:projects/1ds-core-js.tgz}
+    resolution: {integrity: sha512-2/FkrXchWja1GMSPd71TNIBrW6IwaVASOHkRHYLElw9XVIU101DwynrE+0Rkv4rcmAck5xvxVj242PkDrzhIXg==, tarball: file:projects/1ds-core-js.tgz}
     version: 0.0.0
 
   '@rush-temp/1ds-post-js@file:projects/1ds-post-js.tgz':
-    resolution: {integrity: sha512-wRoBOG7b90BxKDLOqQHez3pizbmXq3qilt6Fcm4DQRgQ+N7MRJN4Drm3gwjj6APmxCV0pYvGMhGbBXva3GqD/g==, tarball: file:projects/1ds-post-js.tgz}
+    resolution: {integrity: sha512-3/Tva5nvZjaDNyNPkmhkucYMVKEsTgbMao9FdS3wDjhxujNYwYTIeCrNYpT3GlxJxgZ3VxKLv2uGLJpsn6QlIg==, tarball: file:projects/1ds-post-js.tgz}
     version: 0.0.0
 
   '@rush-temp/ai-test-framework@file:projects/ai-test-framework.tgz':
-    resolution: {integrity: sha512-OubteqhQhyA78YOATJdsvHjxvJR5S51WZZZs8vi87avIdSqlLoKtGOBR99PdiqYnyIw4EpWQTj4rGG8vJXQXAg==, tarball: file:projects/ai-test-framework.tgz}
+    resolution: {integrity: sha512-JKHaj97bfGc6h6Wm6HE5hd3v+Q6NVrQVYKY3Ind3AM5HnvwABFqdOC8SPRHs3PrUNnmYi17TmHoXUXb8/eVkdA==, tarball: file:projects/ai-test-framework.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-analytics-js@file:projects/applicationinsights-analytics-js.tgz':
-    resolution: {integrity: sha512-XoaDUyJOD1BBkrf3Xmig/nawVif9+IFNyXrjahUkr5v5Up+erI76XD1V5X3kYhV1EXScP6KPhxDobKX2FX3dnQ==, tarball: file:projects/applicationinsights-analytics-js.tgz}
+    resolution: {integrity: sha512-5uL02lSIcgF9+lKElzhZv46R6AeoU1kqj1DkEDftlXQGXqfQRlIx5jEkVIMJyaHf2oJl8L1yjiEmTCX8D5FH/w==, tarball: file:projects/applicationinsights-analytics-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-cfgsync-js@file:projects/applicationinsights-cfgsync-js.tgz':
-    resolution: {integrity: sha512-ZDoI16lv0O/Hz1RkRJuGXtHJlqFevGnCxOD5E1qx5iFxyahPm/fOEaZeNzNlNslKwFr1J51ghG8W8VCRBAaR5g==, tarball: file:projects/applicationinsights-cfgsync-js.tgz}
+    resolution: {integrity: sha512-LHxlzt953as8Ab5ZJNjYYIs3gzt/GBnJ/iy0AOj/YgHBqoamMUNX3v+UGtOkE93NFo22SpVXMTCdj5KCvtlfiA==, tarball: file:projects/applicationinsights-cfgsync-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-channel-js@file:projects/applicationinsights-channel-js.tgz':
-    resolution: {integrity: sha512-/lIxdfMAZIUXjm3ssYp2kKR9QedQlEzQRIx/aGF8mqKl3qJfkBZZy0MusyMAsf/Z25ofiw64jzIqIn1UO5kxLw==, tarball: file:projects/applicationinsights-channel-js.tgz}
+    resolution: {integrity: sha512-Nqtg0omGe8PfvjRWt+Nk7j/JSjxJWWygbP8Zg7kj/CA96NQyqt2/c1MmDWWwgi1qzZhhO93Jszi1prM1qvf8pw==, tarball: file:projects/applicationinsights-channel-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-chrome-debug-extension@file:projects/applicationinsights-chrome-debug-extension.tgz':
-    resolution: {integrity: sha512-hlCGew/XxBSM+mHNHsGembfDUZOl3hRMdh/Wt8CsFsEzeoAGaY2aot/qVh2EJ+oC3wJok4pup1JEeXJDKGbI+g==, tarball: file:projects/applicationinsights-chrome-debug-extension.tgz}
+    resolution: {integrity: sha512-hjfqNjhItYfg0V+nbphIrnRWwTVnNFY36bQWM24RzIZ7eKbBkmJxDXGqH+cU1C61LR0J1PcvaGIEeuOfLEVlMg==, tarball: file:projects/applicationinsights-chrome-debug-extension.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-clickanalytics-js@file:projects/applicationinsights-clickanalytics-js.tgz':
-    resolution: {integrity: sha512-v4IyNCDDKOKJFtFh3Z0NYLu9YF3j1DFMX+5F//+Dhux4CRgj2im5dwaNaGii52h10RIpRbdc3N4u2aYBxJHdgg==, tarball: file:projects/applicationinsights-clickanalytics-js.tgz}
+    resolution: {integrity: sha512-LPU7MlWZIbssZZR8xhFZcdnOGIqLiN9Q/4dFRy8J0AtkaO3J5AV6bR1MBQKcmCOZCnxpjNpMpL1vdduYD0yZiQ==, tarball: file:projects/applicationinsights-clickanalytics-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-common@file:projects/applicationinsights-common.tgz':
-    resolution: {integrity: sha512-qOdYf+aWnJWFCHPqOL3ulcbP+9pTE8uEIxREH1jW7z3WPKan9urNNa6w32iSrQAMQsmqKQb1u3QktIfB7ZAxNg==, tarball: file:projects/applicationinsights-common.tgz}
+    resolution: {integrity: sha512-iMiU4VkDtmsg13p7KCZbWGy8gBIaM3peXGAXct8153LMhaiS/1NRTOlyC6ChLnrcNupTuEHLs6+suxlJirNVcg==, tarball: file:projects/applicationinsights-common.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-core-js@file:projects/applicationinsights-core-js.tgz':
-    resolution: {integrity: sha512-VtbI6xkOhc52kjHJ5hne+eZoQeRwl/NnvJi8w3WwyHGmJ59cAlf/zp/0dyo+yVllTdqPJ8vhG+vsR2FEW5+HWg==, tarball: file:projects/applicationinsights-core-js.tgz}
+    resolution: {integrity: sha512-oYBTLAfJ27ySWQgd+ISS3LxWjUabWJ61cyoYPikEbav93Qttadlyk/fdprpRqrRWzl0INuycvHSL6NY0WhNpVA==, tarball: file:projects/applicationinsights-core-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-debugplugin-js@file:projects/applicationinsights-debugplugin-js.tgz':
-    resolution: {integrity: sha512-4IrGjjOboNWldC/cAkxX+wzbSlJwcsnpMTeaUBIQjil1So5cClY0mehg4h3PQrta3nE/LcPpPSD5/ocF8JamZg==, tarball: file:projects/applicationinsights-debugplugin-js.tgz}
+    resolution: {integrity: sha512-KvH6vwkvUHkOpy6ucq4EKVMH78z7EZFB3m8NoYED6qLLBKvyKywl+cGH6Q7DQ+Qm3QAEhoM4gSW/zXe/jN+84w==, tarball: file:projects/applicationinsights-debugplugin-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-dependencies-js@file:projects/applicationinsights-dependencies-js.tgz':
-    resolution: {integrity: sha512-Ve++4OXCPOcOfTM11L5kk/kh3G2lN2nBILlAIUZAsdMAEs3ooqd/PQQ4VzmXJXmeG3qg4soKrrU48CMWE7iW+w==, tarball: file:projects/applicationinsights-dependencies-js.tgz}
+    resolution: {integrity: sha512-aKE18jDFhitkK32mv6ozdsoo6efNhFilg+zCmhWnUfCPVYZ5fXFJtz2vjyVYM6vSUMZcYBA0Nz3wkxpG7tDrQg==, tarball: file:projects/applicationinsights-dependencies-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-example-aisku@file:projects/applicationinsights-example-aisku.tgz':
-    resolution: {integrity: sha512-Xj/E6sNiovtWxvN4FZcu/rOXy+acUQaT96e/XF1IMX1OZTEbcI9liY9klSxL1xLeyIu/+39iTp+G6Xd3V1AiKQ==, tarball: file:projects/applicationinsights-example-aisku.tgz}
+    resolution: {integrity: sha512-M0JReqqSp9peFbH4dm7SmUtFd69z6Oj/ZvtjztWPhiQHFEOOpNMK33FaMqSJIgO96GdWLSFxcoAJuYKFuPyFIw==, tarball: file:projects/applicationinsights-example-aisku.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-example-cfgsync@file:projects/applicationinsights-example-cfgsync.tgz':
-    resolution: {integrity: sha512-HKm4NaOcLGqFIFOBg07gDJqpOVDAwWwi/Ib/eU7gkyybi9J6ZH5XuxiKgSAOJy8brnAkgFspzlNGiEhBbtJrgA==, tarball: file:projects/applicationinsights-example-cfgsync.tgz}
+    resolution: {integrity: sha512-WCzjQOw5YNjYQNYRs1LbV2nRVfvIwfb/VUevvMXe4PcXJsdX4HbkXjY1GNc9bL0EzNOEDESJigq2I9BJL9mzwA==, tarball: file:projects/applicationinsights-example-cfgsync.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-example-dependencies@file:projects/applicationinsights-example-dependencies.tgz':
-    resolution: {integrity: sha512-9NMrfSDc3NpG191ONiVzNQXkRA3lJ00okCxjA1+PPsvvG0aPCZKfbIhTnphCXVILYUr4M9O/e4pfhw6APRCL9Q==, tarball: file:projects/applicationinsights-example-dependencies.tgz}
+    resolution: {integrity: sha512-t+6o6XcrSebi3K89mSYUamcUIRLW/XdxMYIxEFoMWwgf5DqZe8HZ4DGCY4T6w54hhIICgXS5dYyaPcsDJuI2qw==, tarball: file:projects/applicationinsights-example-dependencies.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-example-shared-worker@file:projects/applicationinsights-example-shared-worker.tgz':
-    resolution: {integrity: sha512-mQBkZ0Fb6i0TZPN/esnX7iSVDqVApf2dCWuYYdBQ1uRMvCYbslWQW3CoSAXNULt+3PHPl87r5J5qbMTsGhF2ZA==, tarball: file:projects/applicationinsights-example-shared-worker.tgz}
+    resolution: {integrity: sha512-6kE3/ZNTLgqyroOslhWmzrsreitkZT8C1mPDD6x2Ajf5DqdoTci2+DlGTQxbMPFCcsCaBjeJKE3qbZvYgYZI0A==, tarball: file:projects/applicationinsights-example-shared-worker.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-example-startspan@file:projects/applicationinsights-example-startspan.tgz':
-    resolution: {integrity: sha512-0YPaSpbHhjrn5YsiU8NmJV4nCEYUS8bk6+ebpgIKbMicboUi3GBmB+HnvJ0pLFQWBqKkkdccu46SiFmxeI9ENA==, tarball: file:projects/applicationinsights-example-startspan.tgz}
+    resolution: {integrity: sha512-MS40CRt8+ZEGQnuB06/NXUQER0odmUZ31opa5X4NrekadQrUGtumge2XKyW7upwd+t0In/QUqpLM03XKLF4wBg==, tarball: file:projects/applicationinsights-example-startspan.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-js-release-tools@file:projects/applicationinsights-js-release-tools.tgz':
@@ -499,19 +500,19 @@ packages:
     version: 0.0.0
 
   '@rush-temp/applicationinsights-offlinechannel-js@file:projects/applicationinsights-offlinechannel-js.tgz':
-    resolution: {integrity: sha512-LIk3WV3XdaCptoUXck4+f/AEhJlY8T82ejzgzxwBMi797iyOtGLDRZ1WysTzbA0qZ9gVjkx7shEvlnFSWEgbvw==, tarball: file:projects/applicationinsights-offlinechannel-js.tgz}
+    resolution: {integrity: sha512-RdHAHUrLDR1kXOZxLdL1ZkTyDlJjyW5FNd4Op5KoQ8k9pAYWpCjX/xq2kj8ZYO8LwbE7eyK6UU1xIvjQyp8n4g==, tarball: file:projects/applicationinsights-offlinechannel-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-osplugin-js@file:projects/applicationinsights-osplugin-js.tgz':
-    resolution: {integrity: sha512-Cut1Lw8ps/4LqoTxSN7WzMSzU7LNNdvychPh5ZDRnXpDePIqE4XdtToZVRkQ/iRvzTjRhzSH6s8F8A6hcmKpHg==, tarball: file:projects/applicationinsights-osplugin-js.tgz}
+    resolution: {integrity: sha512-ZSKXXrdICIl/BWvp45FO/ryqiJ+sosAigd2eTeV5h1HwCfOwqbTivc8N/TeU1Qn50BGySPnCtW37g9N/9QIW9A==, tarball: file:projects/applicationinsights-osplugin-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-perfmarkmeasure-js@file:projects/applicationinsights-perfmarkmeasure-js.tgz':
-    resolution: {integrity: sha512-x2fNl46H7ztIHQ9UwCR9dWEpptOvRTP31q+mr9ZfRqmd2a/w6MDrm5N9X7DhVVwGcRMiQG0XruznIMoiRD8z+g==, tarball: file:projects/applicationinsights-perfmarkmeasure-js.tgz}
+    resolution: {integrity: sha512-SpBat5Qtas0+ZrqgnTfihzb2LFwhdmWSaTSyAUUL50rmpSw62NOaHyDAHuYh4s5csyGJXOKwEs0h4OAhiR44Kg==, tarball: file:projects/applicationinsights-perfmarkmeasure-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-properties-js@file:projects/applicationinsights-properties-js.tgz':
-    resolution: {integrity: sha512-Ljfjm8SkJUudkNXqaTwq8TuW0NwW/6DYWX4wMJLQwCL0jlGQThktHh4qLXpTU9eyCos4FT+99x/bdVlM8xhcVA==, tarball: file:projects/applicationinsights-properties-js.tgz}
+    resolution: {integrity: sha512-a6oMNnMFVdkrIrQf9vjR/zjpyQdVz9+91RXfDENZoe8f+4EnmePCJTLg5UktYpPxiN/ntEqRj0MqqApMmVQ7uA==, tarball: file:projects/applicationinsights-properties-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-rollup-es5@file:projects/applicationinsights-rollup-es5.tgz':
@@ -523,11 +524,11 @@ packages:
     version: 0.0.0
 
   '@rush-temp/applicationinsights-shims@file:projects/applicationinsights-shims.tgz':
-    resolution: {integrity: sha512-nVLhEY/nA1FqWgTpx/ZNSqbmwYpU2nH6+4U3fnRQ7ailVm0lN5CGNqlIBj9jTnW5st34KGAcVeX3lhm6w+jQXQ==, tarball: file:projects/applicationinsights-shims.tgz}
+    resolution: {integrity: sha512-Xzk2aGHEjXqwuJrD9C1wFqU05bWv+3JXho42UOWZno5xPHIL56HWXeO0WqCqZQ8xc9VGQ9I321IscvYRbzNC5g==, tarball: file:projects/applicationinsights-shims.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-teechannel-js@file:projects/applicationinsights-teechannel-js.tgz':
-    resolution: {integrity: sha512-BkhwRUIrhONAvGkXFam3WHDVtHz+gdGhnvTTf9D+zL/L07bsZyB+MYTuc2BQh8t2m/86se0cebIftg7VRd4sgg==, tarball: file:projects/applicationinsights-teechannel-js.tgz}
+    resolution: {integrity: sha512-be/MEzXl9BNjQy58ls/k7udyd0jvjSO8DBNjHR2wTlO3BaJzxUnSUj27uJakAS0DQ44a8OBLmKw44MAPHFSO8A==, tarball: file:projects/applicationinsights-teechannel-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-test-module-type-check@file:projects/applicationinsights-test-module-type-check.tgz':
@@ -535,7 +536,7 @@ packages:
     version: 0.0.0
 
   '@rush-temp/applicationinsights-web-basic@file:projects/applicationinsights-web-basic.tgz':
-    resolution: {integrity: sha512-ULf36KfdtU7TcBHz8R7hq+ygNz7dPRoYnO5NCW48ogv7jLsQzkOaD7jq6Vitg1ozoRqU8DBQkc2ZBM5Gf9lUMA==, tarball: file:projects/applicationinsights-web-basic.tgz}
+    resolution: {integrity: sha512-PT50jUSz/u1ZMo/GzF8F/Epv8x9glO778Cw2X+nPnMyusEZTI1485tn3Yxn6pV99bZ6Zr7CkaG7wadVoBcJ3Hg==, tarball: file:projects/applicationinsights-web-basic.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-web-config@file:projects/applicationinsights-web-config.tgz':
@@ -547,7 +548,7 @@ packages:
     version: 0.0.0
 
   '@rush-temp/applicationinsights-web@file:projects/applicationinsights-web.tgz':
-    resolution: {integrity: sha512-UZVnAh3522q2rtyjXgjCCWKli0WN7xY5b747foas1EF7NXGqecf4Hj581rvHufVZQPvxhkd+gN9QambUjlUZkQ==, tarball: file:projects/applicationinsights-web.tgz}
+    resolution: {integrity: sha512-jyMxNdZa3nAjD+a0bqQAaCyRXMkMKXjJ9pcfplHotUBcoLH6ZJylBYIJYTIEQvRBT2JjFqzWL/h+4/mNGlJ4cA==, tarball: file:projects/applicationinsights-web.tgz}
     version: 0.0.0
 
   '@rushstack/node-core-library@5.23.1':
@@ -1398,8 +1399,8 @@ packages:
     resolution: {integrity: sha512-0OABksIGrxKK8K4kynWkQ7y1zounQxP+CWnyclVwj81KW3vlLlGUx57DKGcP/LH216GzqnstnPocF16Nxs0Ycg==}
     engines: {node: '>=0.10.0'}
 
-  form-data@2.5.5:
-    resolution: {integrity: sha512-jqdObeR2rxZZbPSGL+3VckHMYtu+f9//KXBsVny6JSX/pa38Fy+bGjuG8eW/H6USNQWhLi8Num++cU2yOCNz4A==}
+  form-data@2.5.6:
+    resolution: {integrity: sha512-Ogz/E85h9tlfJzpI6TuFpGcHZFhLrb9Gw8wq9v40CxSCPnv7ahKr6Xgtkn0KYCDQJ8DNn5VoMO8EXr9V5PadyA==}
     engines: {node: '>= 0.12'}
 
   fresh@0.5.2:
@@ -1561,6 +1562,10 @@ packages:
 
   hasown@2.0.3:
     resolution: {integrity: sha512-ej4AhfhfL2Q2zpMmLo7U1Uv9+PyhIZpgQLGT1F9miIGmiCJIoCgSmczFdrc97mWT4kVY72KA+WnnhJ5pghSvSg==}
+    engines: {node: '>= 0.4'}
+
+  hasown@2.0.4:
+    resolution: {integrity: sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A==}
     engines: {node: '>= 0.4'}
 
   hast-util-to-html@9.0.5:
@@ -1727,12 +1732,8 @@ packages:
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
-  js-yaml@3.14.2:
-    resolution: {integrity: sha512-PMSmkqxr106Xa156c2M265Z+FTrPl+oxd/rgOQy2tijQeK5TxQ43psO1ZCwhVOSdnn+RzkzlRz/eY4BgJBYVpg==}
-    hasBin: true
-
-  js-yaml@4.1.1:
-    resolution: {integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==}
+  js-yaml@4.2.0:
+    resolution: {integrity: sha512-ePWsvanv0DWuDRsW8dnt+R4jQ31SCRCQ7hhNcPXZPsoBZiemuZNYGf7adZdqX2D86j6rvKp3RpCxVTSb8WQlOw==}
     hasBin: true
 
   json-buffer@3.0.1:
@@ -1781,8 +1782,8 @@ packages:
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
-  linkify-it@5.0.0:
-    resolution: {integrity: sha512-5aHCbzQRADcdP+ATqnDuhhJ/MRIqDkZX5pyjFHRRysS8vZ5AbqGEoFIb6pYHPZ+L/OC2Lc+xT8uHVVR5CAK/wQ==}
+  linkify-it@5.0.1:
+    resolution: {integrity: sha512-wVoTjP4Q6R0NW5hiZkVJaFZPWgtXfoGF+6LucL3/FtiNjmcHhYjEr5f1Kqjirc1nBW07J/ZuRFumqr2oqccEWg==}
 
   locate-path@6.0.0:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
@@ -1851,8 +1852,8 @@ packages:
     resolution: {integrity: sha512-8y/eV9QQZCiyn1SprXSrCmqJN0yNRATe+PO8ztwqrvrbdRLA3eYJF0yaR0YayLWkMbsQSKWS9N2gPcGEc4UsZg==}
     engines: {node: '>=0.10.0'}
 
-  markdown-it@14.1.1:
-    resolution: {integrity: sha512-BuU2qnTti9YKgK5N+IeMubp14ZUKUUw7yeJbkjtosvHiP0AZ5c8IAgEMk79D0eC8F23r4Ac/q8cAIFdm2FtyoA==}
+  markdown-it@14.2.0:
+    resolution: {integrity: sha512-1TGiQiJVRQ3NPmZH6sx5Cfnmg6GQm9jvC1ch4TK511NjSJvjzKLzn5pPfZRNZkRPZP0HqCioSndqH8v2nRaWVQ==}
     hasBin: true
 
   math-intrinsics@1.1.0:
@@ -2601,8 +2602,8 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
-  ws@8.20.1:
-    resolution: {integrity: sha512-It4dO0K5v//JtTXuPkfEOaI3uUN87iYPnqo/ZzqCoG3g8uhA66QUMs/SrM0YK7/NAu+r4LMh/9dq2A7k+rHs+w==}
+  ws@8.21.0:
+    resolution: {integrity: sha512-Vsp28b7DRcimFQvrqu2Wek3z1iYxDCWqHYB8Qsnk/S4RfaCQzPGPyBNuVjJV3cd6UiKtUtp6sNM77gWvzcCH+g==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -2683,7 +2684,7 @@ snapshots:
       globals: 13.24.0
       ignore: 5.3.2
       import-fresh: 3.3.1
-      js-yaml: 4.1.1
+      js-yaml: 4.2.0
       minimatch: 10.2.5
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
@@ -2733,7 +2734,7 @@ snapshots:
 
   '@microsoft/dynamicproto-js@2.0.3':
     dependencies:
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
 
   '@microsoft/tsdoc-config@0.18.1':
     dependencies:
@@ -2747,7 +2748,7 @@ snapshots:
   '@nevware21/grunt-eslint-ts@0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)':
     dependencies:
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@typescript-eslint/eslint-plugin': 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5)
       '@typescript-eslint/parser': 7.18.0(eslint@8.57.1)(typescript@4.9.5)
       eslint: 8.57.1
@@ -2759,15 +2760,15 @@ snapshots:
   '@nevware21/grunt-ts-plugin@0.5.2(grunt@1.6.2)(typescript@4.9.5)':
     dependencies:
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       grunt: 1.6.2
       typescript: 4.9.5
 
   '@nevware21/ts-async@0.5.5':
     dependencies:
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
 
-  '@nevware21/ts-utils@0.13.0': {}
+  '@nevware21/ts-utils@0.15.0': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -2846,7 +2847,7 @@ snapshots:
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -2887,7 +2888,7 @@ snapshots:
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -2924,7 +2925,7 @@ snapshots:
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -2954,7 +2955,7 @@ snapshots:
       '@microsoft/dynamicproto-js': 2.0.3
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -2994,7 +2995,7 @@ snapshots:
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3034,7 +3035,7 @@ snapshots:
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3072,7 +3073,7 @@ snapshots:
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3112,7 +3113,7 @@ snapshots:
       '@microsoft/dynamicproto-js': 2.0.3
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3148,7 +3149,7 @@ snapshots:
       '@microsoft/dynamicproto-js': 2.0.3
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3178,7 +3179,7 @@ snapshots:
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3217,7 +3218,7 @@ snapshots:
       '@microsoft/dynamicproto-js': 2.0.3
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3246,7 +3247,7 @@ snapshots:
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3283,7 +3284,7 @@ snapshots:
       '@microsoft/dynamicproto-js': 2.0.3
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3307,7 +3308,7 @@ snapshots:
       '@microsoft/dynamicproto-js': 2.0.3
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3336,7 +3337,7 @@ snapshots:
       '@microsoft/dynamicproto-js': 2.0.3
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3360,7 +3361,7 @@ snapshots:
       '@microsoft/dynamicproto-js': 2.0.3
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3389,7 +3390,7 @@ snapshots:
       '@microsoft/dynamicproto-js': 2.0.3
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3420,7 +3421,7 @@ snapshots:
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3459,7 +3460,7 @@ snapshots:
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3496,7 +3497,7 @@ snapshots:
       '@microsoft/dynamicproto-js': 2.0.3
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3534,7 +3535,7 @@ snapshots:
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3629,7 +3630,7 @@ snapshots:
       '@microsoft/dynamicproto-js': 2.0.3
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3664,7 +3665,7 @@ snapshots:
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3708,7 +3709,7 @@ snapshots:
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -3789,7 +3790,7 @@ snapshots:
       '@nevware21/grunt-eslint-ts': 0.5.2(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@4.9.5))(eslint-plugin-security@1.7.1)(eslint@8.57.1)(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/grunt-ts-plugin': 0.5.2(grunt@1.6.2)(typescript@4.9.5)
       '@nevware21/ts-async': 0.5.5
-      '@nevware21/ts-utils': 0.13.0
+      '@nevware21/ts-utils': 0.15.0
       '@rollup/plugin-commonjs': 24.1.0(rollup@3.30.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@3.30.0)
       '@rollup/plugin-replace': 5.0.7(rollup@3.30.0)
@@ -4354,7 +4355,7 @@ snapshots:
     dependencies:
       env-paths: 2.2.1
       import-fresh: 3.3.1
-      js-yaml: 4.1.1
+      js-yaml: 4.2.0
       parse-json: 5.2.0
     optionalDependencies:
       typescript: 4.9.5
@@ -4473,7 +4474,7 @@ snapshots:
       es-errors: 1.3.0
       get-intrinsic: 1.3.0
       has-tostringtag: 1.0.2
-      hasown: 2.0.3
+      hasown: 2.0.4
 
   escalade@3.2.0: {}
 
@@ -4538,7 +4539,7 @@ snapshots:
       imurmurhash: 0.1.4
       is-glob: 4.0.3
       is-path-inside: 3.0.3
-      js-yaml: 4.1.1
+      js-yaml: 4.2.0
       json-stable-stringify-without-jsonify: 1.0.1
       levn: 0.4.1
       lodash.merge: 4.6.2
@@ -4713,12 +4714,12 @@ snapshots:
     dependencies:
       for-in: 1.0.2
 
-  form-data@2.5.5:
+  form-data@2.5.6:
     dependencies:
       asynckit: 0.4.0
       combined-stream: 1.0.8
       es-set-tostringtag: 2.1.0
-      hasown: 2.0.3
+      hasown: 2.0.4
       mime-types: 2.1.35
       safe-buffer: 5.2.1
 
@@ -4755,7 +4756,7 @@ snapshots:
       get-proto: 1.0.1
       gopd: 1.2.0
       has-symbols: 1.1.0
-      hasown: 2.0.3
+      hasown: 2.0.4
       math-intrinsics: 1.1.0
 
   get-proto@1.0.1:
@@ -4906,7 +4907,7 @@ snapshots:
       grunt-legacy-log: 3.0.1
       grunt-legacy-util: 2.0.2
       iconv-lite: 0.6.3
-      js-yaml: 3.14.2
+      js-yaml: 4.2.0
       minimatch: 10.2.5
       nopt: 5.0.0
 
@@ -4930,6 +4931,10 @@ snapshots:
       has-symbols: 1.1.0
 
   hasown@2.0.3:
+    dependencies:
+      function-bind: 1.1.2
+
+  hasown@2.0.4:
     dependencies:
       function-bind: 1.1.2
 
@@ -5092,12 +5097,7 @@ snapshots:
 
   js-tokens@4.0.0: {}
 
-  js-yaml@3.14.2:
-    dependencies:
-      argparse: 1.0.10
-      esprima: 4.0.1
-
-  js-yaml@4.1.1:
+  js-yaml@4.2.0:
     dependencies:
       argparse: 2.0.1
 
@@ -5151,7 +5151,7 @@ snapshots:
 
   lines-and-columns@1.2.4: {}
 
-  linkify-it@5.0.0:
+  linkify-it@5.0.1:
     dependencies:
       uc.micro: 2.1.0
 
@@ -5209,11 +5209,11 @@ snapshots:
 
   map-cache@0.2.2: {}
 
-  markdown-it@14.1.1:
+  markdown-it@14.2.0:
     dependencies:
       argparse: 2.0.1
       entities: 4.5.0
-      linkify-it: 5.0.0
+      linkify-it: 5.0.1
       mdurl: 2.0.0
       punycode.js: 2.3.1
       uc.micro: 2.1.0
@@ -5499,7 +5499,7 @@ snapshots:
       devtools-protocol: 0.0.1608973
       typed-query-selector: 2.12.2
       webdriver-bidi-protocol: 0.4.1
-      ws: 8.20.1
+      ws: 8.21.0
     transitivePeerDependencies:
       - bare-abort-controller
       - bare-buffer
@@ -5916,7 +5916,7 @@ snapshots:
   typedoc@0.26.11(typescript@4.9.5):
     dependencies:
       lunr: 2.3.9
-      markdown-it: 14.1.1
+      markdown-it: 14.2.0
       minimatch: 10.2.5
       shiki: 1.29.2
       typescript: 4.9.5
@@ -6017,7 +6017,7 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  ws@8.20.1: {}
+  ws@8.21.0: {}
 
   y18n@5.0.8: {}
 
