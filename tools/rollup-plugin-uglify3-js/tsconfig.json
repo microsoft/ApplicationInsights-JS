@@ -1,23 +1,28 @@
 {
-    "compilerOptions": {
-      "sourceMap": true,
-      "inlineSources": true,
-      "noImplicitAny": false,
-      "module": "es6",
-      "moduleResolution": "node",
-      "target": "es5",
-      "forceConsistentCasingInFileNames": true,
-      "importHelpers": false,
-      "noEmitHelpers": false,
-      "alwaysStrict": true,
-      "suppressImplicitAnyIndexErrors": true,
-      "allowSyntheticDefaultImports": true,
-      "declaration": true,
-      "declarationDir": "build/types",
-      "outDir": "dist-es5",
-      "rootDir": "./src",
-      "removeComments": false
-    },
-    "files": [
-    ]
-  }
+     "compilerOptions": {
+          "sourceMap": true,
+          "inlineSources": true,
+          "noImplicitAny": false,
+          "module": "es6",
+          "moduleResolution": "node",
+          "target": "es5",
+          "forceConsistentCasingInFileNames": true,
+          "importHelpers": false,
+          "noEmitHelpers": false,
+          "alwaysStrict": true,
+          "suppressImplicitAnyIndexErrors": true,
+          "allowSyntheticDefaultImports": true,
+          "declaration": true,
+          "declarationDir": "build/types",
+          "outDir": "dist-es5",
+          "rootDir": "./src",
+          "removeComments": false,
+          "lib": [
+               "es5",
+               "dom",
+               "es2015.iterable",
+               "es2015.symbol"
+          ]
+     },
+     "files": []
+}

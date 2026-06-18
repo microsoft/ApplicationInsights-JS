@@ -4,7 +4,7 @@ import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js"
 import replace from "@rollup/plugin-replace";
 import cleanup from "rollup-plugin-cleanup";
 import sourcemaps from 'rollup-plugin-sourcemaps';
-import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup";
+import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/dist/node/removedynamic";
 import { es5Poly, es5Check, importCheck } from "@microsoft/applicationinsights-rollup-es5";
 import { resolve } from 'path';
 import { readFileSync } from "fs";
@@ -28,6 +28,26 @@ function doCleanup() {
       /[#@]__/
     ]
   })
+}
+
+function fixPureAnnotations() {
+    const PURE_COMMENT_CANONICALIZE = /\(\s*\/\*\s*([#@])__PURE__\s*\*\/\s*/g;
+
+    return {
+        name: "fix-pure-annotations",
+        renderChunk(code) {
+            let normalized = code.replace(PURE_COMMENT_CANONICALIZE, "(/*$1__PURE__*/");
+
+            if (normalized === code) {
+                return null;
+            }
+
+            return {
+                code: normalized,
+                map: null
+            };
+        }
+    };
 }
 
 const getNamespace = (prefix, namespaces, baseName, rootName) => {
@@ -361,6 +381,9 @@ const browserRollupConfigFactory = (isOneDs, banner, importCheckNames, targetTyp
         );
     }
 
+    // Keep this as the final pass so all generated/included PURE comments are normalized.
+    browserRollupConfig.plugins.push(fixPureAnnotations());
+
     // console.log(`Browser: ${JSON.stringify(browserRollupConfig)}`);
 
     return browserRollupConfig;
@@ -421,6 +444,9 @@ const nodeUmdRollupConfigFactory = (banner, importCheckNames, targetType, theNam
             })
         );
     }
+
+    // Keep this as the final pass so all generated/included PURE comments are normalized.
+    nodeRollupConfig.plugins.push(fixPureAnnotations());
 
     return nodeRollupConfig;
 };

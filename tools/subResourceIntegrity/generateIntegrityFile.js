@@ -1,5 +1,5 @@
 const fs = require("fs");
-const globby = require("globby");
+const globby = require(require.resolve("globby", { paths: [process.cwd()] }));
 const crypto = require("crypto");
 const extractFilename = /^(.*(\d{1,3}\.\d{1,3}\.\d{1,3}(-[\w]+(\.[\d]+){0,1}){0,1}|test))(\..*js)$/;
 
