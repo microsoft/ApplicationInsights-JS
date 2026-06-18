@@ -135,7 +135,7 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
         var props: { [key: string]: any } = {
             telemetryType: telType,
             computeType: "unknown",
-            language: "javascript",
+            language: "JavaScript",
             version: sdkVersion || "unknown"
         };
 

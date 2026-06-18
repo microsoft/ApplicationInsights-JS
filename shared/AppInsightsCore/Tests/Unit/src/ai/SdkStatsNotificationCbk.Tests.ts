@@ -115,7 +115,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 })[0];
                 Assert.ok(customEventMetric, "Should have CUSTOM_EVENT metric");
                 Assert.equal(2, customEventMetric.baseData.average, "CUSTOM_EVENT count should be 2");
-                Assert.equal("javascript", customEventMetric.baseData.properties["language"], "Language should be javascript");
+                Assert.equal("JavaScript", customEventMetric.baseData.properties["language"], "Language should be JavaScript");
                 Assert.equal("3.3.11-test", customEventMetric.baseData.properties["version"], "Version should match the passed sdkVersion");
                 Assert.equal("unknown", customEventMetric.baseData.properties["computeType"], "computeType should be unknown");
 
