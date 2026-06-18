@@ -261,11 +261,9 @@ module.exports = function(grunt) {
   });
 
   grunt.registerMultiTask('qunit', 'Run QUnit tests in Headless Chrome.', function() {
-    // Chrome sandbox is incompatible with Docker and most CI environments.
-    // --disable-dev-shm-usage avoids headless Chrome hangs/crashes (e.g. IndexedDB
-    // operations timing out) when the CI runner's /dev/shm is too small.
+    // Chrome sandbox is incompatible with Docker and most CI environments
     var defaultChromiumArgs = (
-      process.env.CHROMIUM_FLAGS || (process.env.CI ? '--no-sandbox --disable-dev-shm-usage' : '')
+      process.env.CHROMIUM_FLAGS || (process.env.CI ? '--no-sandbox' : '')
     ).split(' ');
 
     // Merge task-specific and/or target-specific options with these defaults.
