@@ -19,7 +19,7 @@ import { isReactNative } from "../utils/EnvUtils";
 /**
  * Identifies the version for the extended SDK
  */
-export const ExtVersion = "4.4.1";
+export const ExtVersion = "#extVersion#";
 
 /**
  * Identifies the full version for the extended SDK
