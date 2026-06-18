@@ -2,12 +2,49 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
-## Unreleased Changes
+<!-- ## Unreleased Changes -->
+
+## 3.4.2 (June 18th, 2026)
+
+This is a maintenance release for the 3.4.x version line containing security hardening, bug fixes, build tooling improvements, and CI updates. The `@microsoft/1ds-post-js` channel is numbered 4.4.2 and requires v3.4.2.
+
+### Significant Changes (since 3.4.1)
+
+- **Prototype Pollution Hardening**: The `extend()` and `objExtend()` helpers now filter unsafe keys (`__proto__`, `constructor`, `prototype`) to prevent prototype pollution when merging untrusted objects.
+
+- **Dependency Vulnerability Resolution**: Migrated the repository from npm to pnpm for dependency management and resolved all known dependency vulnerabilities. This is a build/tooling change and does not affect the published runtime packages.
+
+- **OsPlugin Field Name Correction**: The OsPlugin now emits the correct Common Schema 4.0 field names (`ext.os.name` and `ext.os.ver`). Telemetry consumers relying on the previously emitted (incorrect) field names should update to the corrected names.
+
+- **RequestEnvelopeCreator Envelope Name Fix**: Fixed `RequestEnvelopeCreator` so request telemetry is sent with the correct envelope name (`Microsoft.ApplicationInsights.{ikey}.Request`) instead of `RequestData`.
+
+- **Offline Channel Reliability**: Fixed a missing `return` after `reject()` in the offline channel that could lead to a null provider dereference.
 
 ### CI / Tooling
 
 - **Dropped Node.js 16 from CI matrix**: Node.js 16 is End-of-Life and several dependencies (e.g. `puppeteer`, `@pnpm/error`) now require Node.js 18 or later. The CI pipeline no longer runs against Node.js 16.
 - **Added Node.js 22 and 24 to CI matrix**: The CI pipeline now tests against Node.js 18, 20, 22, and 24.
+- **Migrated from npm to pnpm**: Dependency management now uses pnpm.
+
+### Changelog
+
+- #2733 fix: Migrate from npm to pnpm and resolve all dependency vulnerabilities
+- #2742 fix(ci): repair Node.js CI (Chrome install, bundle-size limits, ts-async offline-channel hang)
+- #2737 fix: remove invalid PURE literal annotations and add bundle validation tests
+- #2735 fix: prevent prototype pollution in extend() and objExtend() via unsafe key filtering
+- #2734 fix(offline-channel): Add missing return after reject() to prevent null provider dereference
+- #2732 fix(OsPlugin): use correct CS 4.0 field names ext.os.name and ext.os.ver
+- #2731 Drop Node.js 16 from CI matrix; add Node.js 22 and 24
+- #2729 Potential fix for code scanning alert no. 2273: Workflow does not contain permissions
+- #2728 Potential fix for code scanning alert no. 5940: Unused variable, import, function or class
+- #2727 Potential fix for code scanning alert no. 5402: Semicolon insertion
+- #2726 Potential fix for code scanning alert no. 5401: Unused variable, import, function or class
+- #2725 Potential fix for code scanning alert no. 4240: Semicolon insertion
+- #2724 fix: RequestEnvelopeCreator sends "RequestData" as envelope name instead of "Microsoft.ApplicationInsights.{ikey}.Request"
+- #2722 Update Components
+- #2721 Add CfgSync documentation
+
+**Full Changelog**: https://github.com/microsoft/ApplicationInsights-JS/compare/3.4.1...3.4.2
 
 ## 3.4.1 (April 7th, 2026)
 
