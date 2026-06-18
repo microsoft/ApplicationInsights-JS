@@ -44,10 +44,12 @@ jobs:
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
     - name: Install Chrome for Testing (clean, with retries)
+      env:
+        PUPPETEER_SKIP_DOWNLOAD: 'false'
       run: |
         for i in 1 2 3; do
           rm -rf ~/.cache/puppeteer
-          PUPPETEER_SKIP_DOWNLOAD=false node node_modules/puppeteer/install.mjs && break
+          node node_modules/puppeteer/install.mjs && break
           echo "Chrome install attempt $i failed; retrying..."
           sleep 5
         done
