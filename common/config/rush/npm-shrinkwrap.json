@@ -12,7 +12,7 @@
         "@microsoft/dynamicproto-js": "^2.0.3",
         "@nevware21/grunt-eslint-ts": "^0.5.2",
         "@nevware21/grunt-ts-plugin": "^0.5.2",
-        "@nevware21/ts-async": ">= 0.5.5 < 2.x",
+        "@nevware21/ts-async": ">= 0.5.5 < 0.6.0",
         "@nevware21/ts-utils": ">= 0.14.0 < 2.x",
         "@rollup/plugin-commonjs": "^24.0.0",
         "@rollup/plugin-node-resolve": "^15.0.1",
@@ -476,21 +476,11 @@
       }
     },
     "node_modules/@nevware21/ts-async": {
-      "version": "0.6.1",
-      "resolved": "https://registry.npmjs.org/@nevware21/ts-async/-/ts-async-0.6.1.tgz",
-      "integrity": "sha512-W2kFiT5oPuxTrB3NrxUId/U+1AuAhIaiDQkLC4HcxkjNc+85GfELYdPQXnsDWDG8yji24F5qk6QpBDxZX3/0+g==",
-      "funding": [
-        {
-          "type": "github",
-          "url": "https://github.com/sponsors/nevware21"
-        },
-        {
-          "type": "buymeacoffee",
-          "url": "https://www.buymeacoffee.com/nevware21"
-        }
-      ],
+      "version": "0.5.5",
+      "resolved": "https://registry.npmjs.org/@nevware21/ts-async/-/ts-async-0.5.5.tgz",
+      "integrity": "sha512-vwqaL05iJPjLeh5igPi8MeeAu10i+Aq7xko1fbo9F5Si6MnVN5505qaV7AhSdk5MCBJVT/UYMk3kgInNjDb4Ig==",
       "dependencies": {
-        "@nevware21/ts-utils": ">= 0.15.0 < 2.x"
+        "@nevware21/ts-utils": ">= 0.12.2 < 2.x"
       }
     },
     "node_modules/@nevware21/ts-utils": {
@@ -2394,9 +2384,9 @@
       ]
     },
     "node_modules/baseline-browser-mapping": {
-      "version": "2.10.37",
-      "resolved": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.10.37.tgz",
-      "integrity": "sha512-girxaJ7WZssDOFhzCGZTDKoTa1gk6A1TbflaYTpykLJ4UU9Fz9kx1aREM8JCuoVHbL8X8T/mJg7w2oYSq72Oig==",
+      "version": "2.10.38",
+      "resolved": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.10.38.tgz",
+      "integrity": "sha512-31/02mVB4yuQU6adKk5SlY6m+mxDwUq5KZkyYgnLrrKl7TEm1+3PyDtDBz2kOv/wxZz41GHsvV1A/u6RmiyBvw==",
       "bin": {
         "baseline-browser-mapping": "dist/cli.cjs"
       },
@@ -3706,19 +3696,6 @@
       "version": "1.0.0",
       "resolved": "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz",
       "integrity": "sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw=="
-    },
-    "node_modules/fsevents": {
-      "version": "2.3.3",
-      "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
-      "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
-      "hasInstallScript": true,
-      "optional": true,
-      "os": [
-        "darwin"
-      ],
-      "engines": {
-        "node": "^8.16.0 || ^10.6.0 || >=11.0.0"
-      }
     },
     "node_modules/function-bind": {
       "version": "1.1.2",

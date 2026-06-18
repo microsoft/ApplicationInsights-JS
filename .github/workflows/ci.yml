@@ -19,12 +19,12 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    # The puppeteer browser download into the shared ~/.cache/puppeteer was racing
+    # across the many npm/rush install steps and intermittently failed extraction
+    # ("browser folder exists but the executable is missing"), breaking installs.
+    # Skip the puppeteer browser download entirely and run the QUnit tests against
+    # the runner's pre-installed Chrome (see the "pre-installed Chrome" step below).
     env:
-      # Skip Puppeteer's automatic browser download during the various npm/rush
-      # install steps. On the current hosted runner image the auto-download leaves
-      # a partial browser folder (download never completes), and a later install
-      # then aborts with "the browser folder exists but the executable is missing".
-      # We download the browser once, cleanly, in a dedicated step below.
       PUPPETEER_SKIP_DOWNLOAD: 'true'
 
     strategy:
@@ -37,24 +37,23 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Use a clean Puppeteer browser cache
-      # Point Puppeteer at a clean per-job cache directory (the default
-      # ~/.cache/puppeteer on the runner image is pre-seeded with a partial entry).
-      run: echo "PUPPETEER_CACHE_DIR=${RUNNER_TEMP}/puppeteer" >> "$GITHUB_ENV"
     - name: Update rush shrinkwrap dependencies (for different node versions)
       run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm install rollup -g
     - run: npm install grunt-cli
     - run: npm install
-    - name: Install Puppeteer browser
-      # `browsers install` always downloads (it ignores PUPPETEER_SKIP_DOWNLOAD),
-      # so this performs a single clean download into the empty cache dir. The
-      # tests launch this bundled browser.
-      run: |
-        npx puppeteer browsers install chrome
-        npx puppeteer browsers install chrome-headless-shell
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
+    - name: Use the runner's pre-installed Chrome for Puppeteer
+      run: |
+        CHROME_BIN="${CHROME_BIN:-$(command -v google-chrome || command -v google-chrome-stable || command -v chromium-browser || command -v chromium)}"
+        if [ -z "$CHROME_BIN" ]; then
+          echo "No system Chrome/Chromium found on the runner" >&2
+          exit 1
+        fi
+        echo "Using Chrome at: $CHROME_BIN"
+        "$CHROME_BIN" --version || true
+        echo "PUPPETEER_EXECUTABLE_PATH=$CHROME_BIN" >> "$GITHUB_ENV"
     - run: npm run build --verbose
       timeout-minutes: 20
     - run: npm run test --verbose
