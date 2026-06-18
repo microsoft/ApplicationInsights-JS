@@ -19,6 +19,13 @@ export interface IInternalStorageItem {
      * @since 3.3.12
      */
     bT?: string;
+    /**
+     * name of the original telemetry item, preserved so SDK stats can self-filter its
+     * own emitted metrics (Item_Success_Count etc.) by name when the item is rebuilt
+     * for notification dispatch.
+     * @since 3.3.12
+     */
+    iN?: string;
 }
 
 export interface ISenderConfig {

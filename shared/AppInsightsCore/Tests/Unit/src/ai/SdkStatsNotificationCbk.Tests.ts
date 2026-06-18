@@ -388,6 +388,27 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 Assert.equal(0, this._trackedItems.length, "Should not emit any metrics when no data");
             }
         });
+
+        this.testCase({
+            name: "SdkStatsNotifCbk: notifications after unload are no-ops (re-entrancy guard)",
+            test: () => {
+                let listener = this._createListener();
+                this._listener = null;
+
+                listener.unload();
+                this._trackedItems = [];
+
+                // Late callbacks (e.g. an inline eventsSent fired by core.track during unload,
+                // or a stray notification before removeNotificationListener completes) must not
+                // re-accumulate counts or re-arm the flush timer.
+                listener.eventsSent([this._makeItem("EventData")]);
+                listener.eventsDiscarded([this._makeItem("EventData")], 1, 500);
+                listener.eventsRetry([this._makeItem("EventData")], 429);
+                listener.flush();
+
+                Assert.equal(0, this._trackedItems.length, "No metrics should be emitted after unload");
+            }
+        });
     }
 
     private _testBaseTypeMapping() {

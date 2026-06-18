@@ -512,7 +512,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     let payloadItem = {
                         item: payload,
                         cnt: 0, // inital cnt will always be 0
-                        bT: telemetryItem.baseType // store baseType for SDK stats telemetryType mapping
+                        bT: telemetryItem.baseType, // store baseType for SDK stats telemetryType mapping
+                        iN: telemetryItem.name // store name so SDK stats can self-filter its own metrics
                     } as IInternalStorageItem;
 
                     // enqueue the payload
@@ -1424,7 +1425,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     arrForEach(payload, (p) => {
                         if (p) {
                             let baseType = p.bT || "EventData";
-                            items.push({ name: baseType, baseType: baseType } as ITelemetryItem);
+                            // Preserve the original item name (fall back to baseType) so downstream
+                            // listeners (e.g. SDK stats self-filtering) see the real name, not the baseType.
+                            items.push({ name: p.iN || baseType, baseType: baseType } as ITelemetryItem);
                         }
                     });
                     return items.length ? items : null;

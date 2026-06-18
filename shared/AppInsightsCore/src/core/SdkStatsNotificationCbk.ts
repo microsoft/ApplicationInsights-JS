@@ -81,9 +81,11 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
     var _interval = (core.config.sdkStats && core.config.sdkStats.int) || FLUSH_INTERVAL;
     // Static across every metric in a flush, so compute once at creation time.
     var _version = sdkVersion || "unknown";
+    // Once unloaded, late notification callbacks must be no-ops and the timer must not re-arm.
+    var _unloaded = false;
 
     function _ensureTimer() {
-        if (!_timer) {
+        if (!_timer && !_unloaded) {
             _timer = scheduleTimeout(_flush, _interval);
         }
     }
@@ -99,7 +101,7 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
     }
 
     function _incSuccess(items: ITelemetryItem[]) {
-        if (!items || !items.length) {
+        if (_unloaded || !items || !items.length) {
             return;
         }
         var changed = false;
@@ -121,24 +123,25 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
      * Common helper to increment a bucketed counter (dropped or retry) keyed by code and telemetry type.
      */
     function _incBucketed(counters: { [code: string]: { [telType: string]: number } }, items: ITelemetryItem[], code: string) {
-        if (items && items.length && _safeKey(code)) {
-            var bucket = counters[code];
-            if (!bucket) {
-                bucket = counters[code] = objCreate(null);
-            }
-            var changed = false;
-            for (var i = 0; i < items.length; i++) {
-                if (!_isSdkStatsMetric(items[i])) {
-                    var t = _getTelType(items[i]);
-                    if (_safeKey(t)) {
-                        bucket[t] = (bucket[t] || 0) + 1;
-                        changed = true;
-                    }
+        if (_unloaded || !(items && items.length && _safeKey(code))) {
+            return;
+        }
+        var bucket = counters[code];
+        if (!bucket) {
+            bucket = counters[code] = objCreate(null);
+        }
+        var changed = false;
+        for (var i = 0; i < items.length; i++) {
+            if (!_isSdkStatsMetric(items[i])) {
+                var t = _getTelType(items[i]);
+                if (_safeKey(t)) {
+                    bucket[t] = (bucket[t] || 0) + 1;
+                    changed = true;
                 }
             }
-            if (changed) {
-                _ensureTimer();
-            }
+        }
+        if (changed) {
+            _ensureTimer();
         }
     }
 
@@ -239,7 +242,11 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
         },
         flush: _flush,
         unload: function () {
-            // Flush remaining counts before unload
+            // Mark unloaded FIRST so any synchronous notification callbacks fired by
+            // core.track() during the flush below (while this listener is still
+            // registered) become no-ops and the timer cannot re-arm. Then flush the
+            // accumulated counts one final time.
+            _unloaded = true;
             _flush();
         }
     };

@@ -1057,10 +1057,12 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
 
                 // Notify listeners of retried events
                 if (requeuedEvents && requeuedEvents.length > 0) {
-                    // Extract HTTP status code from the EventBatchNotificationReason if in the ResponseFailure range (9000-9999)
+                    // Extract HTTP status code from the EventBatchNotificationReason if in the ResponseFailure range (9000-9999).
+                    // Use -1 (not 0) when the reason is outside that range so an unmapped reason is distinguishable
+                    // from a real network-level failure, which conventionally reports HTTP status 0.
                     let statusCode = (reason >= EventBatchNotificationReason.ResponseFailure && reason <= EventBatchNotificationReason.ResponseFailureMax)
                         ? reason - EventBatchNotificationReason.ResponseFailure
-                        : 0;
+                        : -1;
                     _notifyEvents("eventsRetry", requeuedEvents, statusCode);
                 }
 
