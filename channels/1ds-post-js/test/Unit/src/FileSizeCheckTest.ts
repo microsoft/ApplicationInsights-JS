@@ -3,7 +3,7 @@ import { dumpObj, mathCeil } from '@nevware21/ts-utils';
 import { createPromise, doAwait, IPromise } from '@nevware21/ts-async';
 import * as pako from 'pako';
 
-const MAX_DEFLATE_SIZE = 27;
+const MAX_DEFLATE_SIZE = 28;
 
 const PACKAGE_JSON = "../package.json";
 

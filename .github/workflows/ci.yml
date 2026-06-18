@@ -19,19 +19,15 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    # The puppeteer browser download into the shared ~/.cache/puppeteer was racing
+    # across the many npm/rush install steps and intermittently failed extraction
+    # ("browser folder exists but the executable is missing"), breaking installs.
+    # Skip the puppeteer browser download entirely and run the QUnit tests against
+    # the runner's pre-installed Chrome (see the "pre-installed Chrome" step below).
     env:
-      # Skip puppeteer's automatic browser download during npm install. The
-      # postinstall download is flaky on the runners: the runner image can carry
-      # a partial/mismatched puppeteer cache, so postinstall sees the browser
-      # folder but the executable is missing ("folder exists but executable is
-      # missing") and hard-fails the install. We install the pinned browsers
-      # explicitly (clean cache + retry) in a dedicated step below instead.
-      PUPPETEER_SKIP_DOWNLOAD: true
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
 
     strategy:
-      # Do not cancel the other Node.js matrix jobs when one fails, so we can
-      # see whether a failure reproduces across all Node.js versions or only some.
-      fail-fast: false
       matrix:
         node-version: [ 18, 20, 22, 24 ]
 
@@ -46,35 +42,18 @@ jobs:
     - run: npm install rollup -g
     - run: npm install grunt-cli
     - run: npm install
-    - name: Install pinned puppeteer browsers (with retry)
-      # Install the pinned puppeteer browsers (both chrome and
-      # chrome-headless-shell) into puppeteer's default cache. The grunt qunit
-      # task launches puppeteer with headless:'new', which resolves to
-      # chrome-headless-shell in puppeteer 24, so both browsers must be present
-      # or the qunit browser tests fail to launch ("Could not find Chrome").
-      #
-      # IMPORTANT: the job-level PUPPETEER_SKIP_DOWNLOAD=true also applies to this
-      # step. The no-arg form `puppeteer browsers install` is a NO-OP under
-      # PUPPETEER_SKIP_DOWNLOAD (exits 0, installs nothing). The single-browser
-      # form `puppeteer browsers install <name>` DOES install regardless of that
-      # env var, so install each browser explicitly. Clear the cache and retry
-      # to recover from a partial/corrupt download ("folder exists but executable
-      # is missing").
-      run: |
-        for attempt in 1 2 3; do
-          rm -rf "$HOME/.cache/puppeteer"
-          if npx puppeteer browsers install chrome && npx puppeteer browsers install chrome-headless-shell; then
-            echo "Puppeteer browsers installed on attempt $attempt"
-            npx puppeteer browsers list
-            exit 0
-          fi
-          echo "Puppeteer browsers install attempt $attempt failed; retrying..."
-          sleep 5
-        done
-        echo "Puppeteer browsers install failed after 3 attempts"
-        exit 1
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
+    - name: Use the runner's pre-installed Chrome for Puppeteer
+      run: |
+        CHROME_BIN="${CHROME_BIN:-$(command -v google-chrome || command -v google-chrome-stable || command -v chromium-browser || command -v chromium)}"
+        if [ -z "$CHROME_BIN" ]; then
+          echo "No system Chrome/Chromium found on the runner" >&2
+          exit 1
+        fi
+        echo "Using Chrome at: $CHROME_BIN"
+        "$CHROME_BIN" --version || true
+        echo "PUPPETEER_EXECUTABLE_PATH=$CHROME_BIN" >> "$GITHUB_ENV"
     - run: npm run build --verbose
       timeout-minutes: 20
     - run: npm run test --verbose
