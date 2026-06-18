@@ -36,21 +36,19 @@ export class StatsBeatTests extends AITestClass {
                     mode: FeatureOptInMode.enable
                 }
             },
-            _sdk: {
-                stats: {
-                    shrtInt: STATS_COLLECTION_SHORT_INTERVAL,
-                    endCfg: [
-                        { 
-                            type: 0,
-                            keyMap: [
-                                {
-                                    key: "stats-key1",
-                                    match: [ "https://example.endpoint.com" ]
-                                }
-                            ]
-                        }
-                    ]
-                }
+            stats: {
+                shrtInt: STATS_COLLECTION_SHORT_INTERVAL,
+                endCfg: [
+                    { 
+                        type: 0,
+                        keyMap: [
+                            {
+                                key: "stats-key1",
+                                match: [ "https://example.endpoint.com" ]
+                            }
+                        ]
+                    }
+                ]
             }
         };
         
@@ -91,7 +89,7 @@ export class StatsBeatTests extends AITestClass {
                 this._statsMgr.init(this._core, {
                     feature: "StatsBeat",
                     getCfg: (core, cfg) => {
-                        return cfg?._sdk?.stats;
+                        return cfg?.stats;
                     }
                 });
                 Assert.equal(true, this._statsMgr.enabled, "SDK Stats manager should be initialized after initialization");
@@ -112,7 +110,7 @@ export class StatsBeatTests extends AITestClass {
                 this._statsMgr.init(this._core, {
                     feature: "StatsBeat",
                     getCfg: (core, cfg) => {
-                        return cfg?._sdk?.stats;
+                        return cfg?.stats;
                     }
                 });
                 
@@ -164,7 +162,7 @@ export class StatsBeatTests extends AITestClass {
                 this._statsMgr.init(this._core, {
                     feature: "StatsBeat",
                     getCfg: (core, cfg) => {
-                        return cfg?._sdk?.stats;
+                        return cfg?.stats;
                     }
                 });                
 
@@ -210,7 +208,7 @@ export class StatsBeatTests extends AITestClass {
                 this._statsMgr.init(this._core, {
                     feature: "StatsBeat",
                     getCfg: (core, cfg) => {
-                        return cfg?._sdk?.stats;
+                        return cfg?.stats;
                     }
                 });
                 
@@ -261,7 +259,7 @@ export class StatsBeatTests extends AITestClass {
                 this._statsMgr.init(this._core, {
                     feature: "StatsBeat",
                     getCfg: (core, cfg) => {
-                        return cfg?._sdk?.stats;
+                        return cfg?.stats;
                     }
                 });
                 this._core.setStatsMgr(this._statsMgr);                

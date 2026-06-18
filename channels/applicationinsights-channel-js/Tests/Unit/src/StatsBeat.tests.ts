@@ -53,22 +53,20 @@ export class StatsbeatTests extends AITestClass {
         const core = new AppInsightsCore();
         const coreConfig = {
             instrumentationKey,
-            _sdk: { 
-                stats: {
-                    shrtInt: 900,
-                    endCfg: [
-                        { 
-                            type: 0,
-                            keyMap: [
-                                {
-                                    key: "stats-key1",
-                                    // Match the Sender's endpoint so SDK Stats are tracked for it
-                                    match: [ config.endpointUrl ]
-                                }
-                            ]
-                        }
-                    ]
-                }
+            stats: {
+                shrtInt: 900,
+                endCfg: [
+                    { 
+                        type: 0,
+                        keyMap: [
+                            {
+                                key: "stats-key1",
+                                // Match the Sender's endpoint so SDK Stats are tracked for it
+                                match: [ config.endpointUrl ]
+                            }
+                        ]
+                    }
+                ]
             },
             extensionConfig: { [sender.identifier]: config }
         };
@@ -80,7 +78,7 @@ export class StatsbeatTests extends AITestClass {
         let unloadHook = statsMgr.init(core, {
             feature: "StatsBeat",
             getCfg: (core, cfg) => {
-                return cfg?._sdk?.stats;
+                return cfg?.stats;
             }
         });
         core.setStatsMgr(statsMgr);
@@ -156,21 +154,19 @@ export class StatsbeatTests extends AITestClass {
                             mode: FeatureOptInMode.enable
                         }
                     },
-                    _sdk: { 
-                        stats: {
-                            shrtInt: 900,
-                            endCfg: [
-                                { 
-                                    type: 0,
-                                    keyMap: [
-                                        {
-                                            key: "stats-key1",
-                                            match: [ "https://example.endpoint.com" ]
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
+                    stats: { 
+                        shrtInt: 900,
+                        endCfg: [
+                            { 
+                                type: 0,
+                                keyMap: [
+                                    {
+                                        key: "stats-key1",
+                                        match: [ "https://example.endpoint.com" ]
+                                    }
+                                ]
+                            }
+                        ]
                     },
                 };
 
@@ -178,7 +174,7 @@ export class StatsbeatTests extends AITestClass {
                 this._statsMgrUnloadHook = this._statsMgr.init(this._core, {
                     feature: "StatsBeat",
                     getCfg: (core, cfg) => {
-                        return cfg?._sdk?.stats;
+                        return cfg?.stats;
                     }
                 });
                 let statsBeatState: IStatsBeatState = {
