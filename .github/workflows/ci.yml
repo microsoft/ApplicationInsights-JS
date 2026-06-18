@@ -47,7 +47,7 @@ jobs:
       run: |
         for i in 1 2 3; do
           rm -rf ~/.cache/puppeteer
-          PUPPETEER_SKIP_DOWNLOAD= npx puppeteer browsers install chrome && break
+          PUPPETEER_SKIP_DOWNLOAD=false node node_modules/puppeteer/install.mjs && break
           echo "Chrome install attempt $i failed; retrying..."
           sleep 5
         done
