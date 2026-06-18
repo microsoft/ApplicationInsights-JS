@@ -1,29 +1,34 @@
 {
-    "compilerOptions": {
-      "sourceMap": true,
-      "inlineSources": true,
-      "noImplicitAny": true,
-      "module": "es6",
-      "moduleResolution": "node",
-      "target": "es5",
-      "forceConsistentCasingInFileNames": true,
-      "importHelpers": true,
-      "noEmitHelpers": false,
-      "skipLibCheck": true,
-      "alwaysStrict": true,
-      "declaration": true,
-      "declarationDir": "./types",
-      "outDir": "dist-es5",
-      "rootDir": "./src",
-      "suppressImplicitAnyIndexErrors": true,
-      "allowSyntheticDefaultImports": true,
-      "removeComments": false
-    },
-    "include": [
-      "./src/**/*.ts"
-    ],
-    "exclude": [
-      "node_modules/"
-    ]
-  }
-  
+     "compilerOptions": {
+          "sourceMap": true,
+          "inlineSources": true,
+          "noImplicitAny": true,
+          "module": "es6",
+          "moduleResolution": "node",
+          "target": "es5",
+          "forceConsistentCasingInFileNames": true,
+          "importHelpers": true,
+          "noEmitHelpers": false,
+          "skipLibCheck": true,
+          "alwaysStrict": true,
+          "declaration": true,
+          "declarationDir": "./types",
+          "outDir": "dist-es5",
+          "rootDir": "./src",
+          "suppressImplicitAnyIndexErrors": true,
+          "allowSyntheticDefaultImports": true,
+          "removeComments": false,
+          "lib": [
+               "es5",
+               "dom",
+               "es2015.iterable",
+               "es2015.symbol"
+          ]
+     },
+     "include": [
+          "./src/**/*.ts"
+     ],
+     "exclude": [
+          "node_modules/"
+     ]
+}

@@ -670,9 +670,12 @@ module.exports = function (grunt) {
         }));
     
         function tsBuildActions(name, addTests, replaceName) {
-            var actions = [
-                "eslint-ts:" + name + "-lint-fix"
-            ];
+            var actions = [];
+            // ESLint 8 glob resolution is broken on Node.js 24+; skip lint on unsupported versions
+            var nodeMajor = parseInt(process.version.substring(1));
+            if (nodeMajor < 24) {
+                actions.push("eslint-ts:" + name + "-lint-fix");
+            }
             var aiMinifyConfig = theBuildConfig["ai-minify"] || {};
             var gruntTsConfig = theBuildConfig["ts"];
             var replaceConfig = theBuildConfig["string-replace"] || {};
@@ -716,7 +719,15 @@ module.exports = function (grunt) {
                 }
             }
     
-            actions.push("eslint-ts:" + name + "-lint");
+            if (nodeMajor < 24) {
+                actions.push("eslint-ts:" + name + "-lint");
+            }
+
+            // Validate ES5 compatibility of browser bundles
+            var es5Config = grunt.config.get("validate-es5") || {};
+            if (es5Config[name]) {
+                actions.push("validate-es5:" + name);
+            }
     
             return actions;
         }
@@ -845,11 +856,52 @@ module.exports = function (grunt) {
                         { src: "./tools/config/test-config.json", dest: `./tools/config/browser/es5/ai_test.config${configMajorVer}.cfg.json` }
                     ]
                 }
-            }
+            },
+            "validate-es5": validateEs5Config()
         }));
+
+        function validateEs5Config() {
+            var cfg = {};
+            var packages = {
+                "core":             "./shared/AppInsightsCore",
+                "common":           "./shared/AppInsightsCommon",
+                "1dsCore":          "./shared/1ds-core-js",
+                "aisku":            "./AISKU",
+                "aiskulite":        "./AISKULight",
+                "appinsights":      "./extensions/applicationinsights-analytics-js",
+                "deps":             "./extensions/applicationinsights-dependencies-js",
+                "properties":       "./extensions/applicationinsights-properties-js",
+                "aichannel":        "./channels/applicationinsights-channel-js",
+                "offlinechannel":   "./channels/offline-channel-js",
+                "teechannel":       "./channels/tee-channel-js",
+                "1dsPost":          "./channels/1ds-post-js",
+                "clickanalytics":   "./extensions/applicationinsights-clickanalytics-js",
+                "cfgsync":          "./extensions/applicationinsights-cfgsync-js",
+                "osplugin":         "./extensions/applicationinsights-osplugin-js",
+                "perfmarkmeasure":  "./extensions/applicationinsights-perfmarkmeasure-js",
+                "shims":            "./tools/shims"
+            };
+
+            Object.keys(packages).forEach(function(name) {
+                cfg[name] = {
+                    src: [
+                        packages[name] + "/browser/es5/**/*.js",
+                        packages[name] + "/browser/*.js",
+                        packages[name] + "/dist/es5/**/*.js"
+                    ]
+                };
+            });
+
+            return cfg;
+        }
 
         // Additional setup for lint-fix task
         function getLintFixTasks() {
+            var nodeMajorVer = parseInt(process.version.substring(1));
+            if (nodeMajorVer >= 24) {
+                grunt.log.writeln("Skipping ESLint on Node.js " + process.version + " (glob resolution bug in ESLint 8)");
+                return [];
+            }
             let packages = [
                 "core", "common", "appinsights", "aisku", "aiskulite", "perfmarkmeasure", "properties",
                 "cfgsync", "deps", "debugplugin", "aichannel", "offlinechannel", "teechannel", 

@@ -12,7 +12,7 @@
 var fs = require('fs');
 var path = require('path');
 var url = require('url');
-var EventEmitter = require('eventemitter2');
+var EventEmitter = require('eventemitter2').EventEmitter2 || require('eventemitter2');
 // NPM libs.
 var puppeteer = require('puppeteer');
 

@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const archiver = require("archiver");
+const archiver = require(require.resolve("archiver", { paths: [process.cwd()] }));
 
 let packageRoot = process.cwd();
 let packageJson = packageRoot + "/package.json";
