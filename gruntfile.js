@@ -516,8 +516,6 @@ module.exports = function (grunt) {
                             console: true,
                             summaryOnly: false,
                             puppeteer: perfPuppeteerOptions
-                                ]
-                            }
                         }
                     };
                 }
