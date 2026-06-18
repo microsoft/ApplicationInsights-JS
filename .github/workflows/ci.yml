@@ -8,7 +8,7 @@ permissions:
 
 on:
   push:
-    branches: [ main, master, beta, Release2.7, release-3.0, fix/migrate-pnpm-resolve-dependency-vulnerabilities ]
+    branches: [ main, master, beta, Release2.7, release-3.0 ]
   pull_request:
     branches: [ main, master, beta, Release2.7, release-3.0 ]
   merge_group:
