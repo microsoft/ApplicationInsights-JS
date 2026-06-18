@@ -31,6 +31,11 @@ export class StatsBeatTests extends AITestClass {
         _self._config = {
             instrumentationKey: "Test-iKey",
             disableInstrumentationKeyValidation: true,
+            featureOptIn: {
+                "StatsBeat": {
+                    mode: FeatureOptInMode.enable
+                }
+            },
             _sdk: {
                 stats: {
                     shrtInt: STATS_COLLECTION_SHORT_INTERVAL,
@@ -51,13 +56,11 @@ export class StatsBeatTests extends AITestClass {
         
         _self._statsMgr = createStatsMgr();
         _self._core = new AppInsightsCore();
-        // _self._statsMgr.init(_self._core, {
-        //     feature: "StatsBeat",
-        //     getCfg: (core, cfg) => {
-        //         return cfg?._sdk?.stats;
-        //     }
-        // });
-        
+        // Initialize the core once here (with a minimal channel plugin) so the stats manager
+        // can be enabled when init() is called - createStatsMgr().init() only hooks config
+        // changes and enables the manager when the core is already initialized.
+        _self._core.initialize(_self._config, [new ChannelPlugin()]);
+
         // Create spy for tracking telemetry
         _self._trackSpy = this.sandbox.spy(_self._core, "track");
     }
@@ -249,8 +252,11 @@ export class StatsBeatTests extends AITestClass {
             name: "SDK Stats: test dynamic configuration changes",
             useFakeTimers: true,
             test: () => {
-                // Setup core with statsbeat enabled
-                this._core.initialize(this._config, [new ChannelPlugin()]);
+                // Setup core with statsbeat enabled (guard against re-initialization since the
+                // core is now initialized in testInitialize())
+                if (!this._core.isInitialized()) {
+                    this._core.initialize(this._config, [new ChannelPlugin()]);
+                }
                 // Initialize SDK Stats manager for a specific endpoint
                 this._statsMgr.init(this._core, {
                     feature: "StatsBeat",

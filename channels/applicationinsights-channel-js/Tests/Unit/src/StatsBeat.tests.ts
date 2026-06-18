@@ -62,7 +62,8 @@ export class StatsbeatTests extends AITestClass {
                             keyMap: [
                                 {
                                     key: "stats-key1",
-                                    match: [ "https://example.endpoint.com" ]
+                                    // Match the Sender's endpoint so SDK Stats are tracked for it
+                                    match: [ config.endpointUrl ]
                                 }
                             ]
                         }
@@ -73,18 +74,26 @@ export class StatsbeatTests extends AITestClass {
         };
 
         let statsMgr = createStatsMgr();
-        // Initialize
-        let unloadHook = statsMgr.init(this._core, {
+        // Initialize the core first, then init the manager against that same (now initialized)
+        // core so it can enable itself (createStatsMgr().init() only enables once the core is initialized).
+        core.initialize(coreConfig, [sender]);
+        let unloadHook = statsMgr.init(core, {
             feature: "StatsBeat",
             getCfg: (core, cfg) => {
                 return cfg?._sdk?.stats;
             }
         });
-        
-        core.initialize(coreConfig, [sender]);
         core.setStatsMgr(statsMgr);
+        this._statsMgrUnloadHook = unloadHook;
 
-        this.statsbeatCountSpy = this.sandbox.spy(core.getStatsBeat(), "count");
+        let statsBeatState: IStatsBeatState = {
+            cKey: instrumentationKey,
+            endpoint: config.endpointUrl,
+            sdkVer: "1.0.0",
+            type: eStatsType.SDK
+        };
+
+        this.statsbeatCountSpy = this.sandbox.spy(core.getStatsBeat(statsBeatState), "count");
         this.trackSpy = this.sandbox.spy(core, "track");
 
         this.onDone(() => {
@@ -293,7 +302,8 @@ export class StatsbeatTests extends AITestClass {
             () => {
                 let window = getWindow();
                 let fakeXMLHttpRequest = (window as any).XMLHttpRequest; // why we do this?
-                let config = this.createSenderConfig(TransportType.Xhr) && {disableSendBeaconSplit: true};
+                let config: any = this.createSenderConfig(TransportType.Xhr);
+                config.disableSendBeaconSplit = true;
                 const { sender } = this.initializeCoreAndSender(config, "000e0000-e000-0000-a000-000000000000");
                 console.log("xhr sender called", this._getXhrRequests().length);
 
