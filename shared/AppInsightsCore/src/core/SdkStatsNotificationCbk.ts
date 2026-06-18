@@ -17,6 +17,15 @@ function _safeKey(key: string): boolean {
     return key !== "__proto__" && key !== "constructor" && key !== "prototype";
 }
 
+// Removes all own keys from an object in place (used to reset accumulators without re-allocating).
+function _clearObj(obj: { [key: string]: any }): void {
+    for (var key in obj) {
+        if (objHasOwn(obj, key)) {
+            delete obj[key];
+        }
+    }
+}
+
 // Map baseType to spec telemetryType values
 var _typeMap: { [key: string]: string } = {
     "EventData": "CUSTOM_EVENT",
@@ -70,6 +79,8 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
     var _retryCounts: { [code: string]: { [telType: string]: number } } = objCreate(null);
     var _timer: ITimerHandler;
     var _interval = (core.config.sdkStats && core.config.sdkStats.int) || FLUSH_INTERVAL;
+    // Static across every metric in a flush, so compute once at creation time.
+    var _version = sdkVersion || "unknown";
 
     function _ensureTimer() {
         if (!_timer) {
@@ -136,7 +147,7 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
             telemetryType: telType,
             computeType: "unknown",
             language: "JavaScript",
-            version: sdkVersion || "unknown"
+            version: _version
         };
 
         if (code && codePropKey) {
@@ -210,10 +221,10 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
         _flushBucketed(_droppedCounts, MET_DROPPED, "dropCode");
         _flushBucketed(_retryCounts, MET_RETRY, "retryCode");
 
-        // Reset accumulators
-        _successCounts = objCreate(null);
-        _droppedCounts = objCreate(null);
-        _retryCounts = objCreate(null);
+        // Reset accumulators in place to avoid allocating new null-prototype objects each flush
+        _clearObj(_successCounts);
+        _clearObj(_droppedCounts);
+        _clearObj(_retryCounts);
     }
 
     return {

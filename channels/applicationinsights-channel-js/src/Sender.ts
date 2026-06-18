@@ -809,9 +809,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         
                 _self._buffer && _self._buffer.clearSent(payload);
 
-                // Notify listeners of discarded events
+                // Notify listeners of discarded events (skip extraction entirely when no listeners are registered)
                 let mgr = _getNotifyMgr();
-                if (mgr) {
+                if (mgr && mgr.listeners && mgr.listeners.length) {
                     let items = _extractTelemetryItems(payload);
                     if (items) {
                         mgr.eventsDiscarded(items, 1 /* NonRetryableStatus */, statusCode);
@@ -863,9 +863,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             function _onSuccess(payload: IInternalStorageItem[], countOfItemsInPayload: number) {
                 _self._buffer && _self._buffer.clearSent(payload);
 
-                // Notify listeners of successful send
+                // Notify listeners of successful send (skip extraction entirely when no listeners are registered)
                 let mgr = _getNotifyMgr();
-                if (mgr) {
+                if (mgr && mgr.listeners && mgr.listeners.length) {
                     let items = _extractTelemetryItems(payload);
                     if (items) {
                         mgr.eventsSent(items);
@@ -1437,7 +1437,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              */
             function _notifyRetry(payload: IInternalStorageItem[], statusCode: number) {
                 let mgr = _getNotifyMgr();
-                if (mgr && mgr.eventsRetry) {
+                if (mgr && mgr.eventsRetry && mgr.listeners && mgr.listeners.length) {
                     let items = _extractTelemetryItems(payload);
                     if (items) {
                         mgr.eventsRetry(items, statusCode);
