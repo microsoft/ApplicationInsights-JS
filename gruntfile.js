@@ -423,7 +423,9 @@ module.exports = function (grunt) {
                                 args: [
                                     "--enable-precise-memory-info",
                                     "--expose-internals-for-testing",
-                                    "--no-sandbox"
+                                    "--no-sandbox",
+                                    "--disable-dev-shm-usage",
+                                    "--disable-gpu"
                                 ]
                             }
                         }
@@ -475,7 +477,9 @@ module.exports = function (grunt) {
                                 args: [
                                     '--enable-precise-memory-info',
                                     '--expose-internals-for-testing',
-                                    "--no-sandbox"
+                                    "--no-sandbox",
+                                    "--disable-dev-shm-usage",
+                                    "--disable-gpu"
                                 ]
                             }
                         }
