@@ -58,7 +58,7 @@
           "grunt-contrib-connect": "^5.0.0",
           "eventemitter2": "6.4.9",
           "puppeteer": "^24.40.0",
-          "@nevware21/ts-async": ">= 0.5.5 < 2.x"
+          "@nevware21/ts-async": ">= 0.5.5 < 0.6.0"
      },
      "peerDependencies": {
           "tslib": ">= 1.0.0"
