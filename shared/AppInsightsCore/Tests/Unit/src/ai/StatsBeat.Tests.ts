@@ -144,7 +144,7 @@ export class StatsBeatTests extends AITestClass {
                 statsBeat.count(429, payloadData, "https://example.endpoint.com");
                 
                 // Verify that trackStatsbeats is called when the timer fires
-                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL + 1);
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
                 
                 // Verify that track was called
                 Assert.ok(this._trackSpy.called, "track should be called when SDK Stats timer fires");
@@ -178,7 +178,7 @@ export class StatsBeatTests extends AITestClass {
                 statsBeat.countException("https://example.endpoint.com", "NetworkError");
                 
                 // Verify that trackStatsbeats is called when the timer fires
-                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL + 1);
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
                 
                 // Verify that track was called
                 Assert.ok(this._trackSpy.called, "track should be called when SDK Stats timer fires");
@@ -239,7 +239,7 @@ export class StatsBeatTests extends AITestClass {
                 statsBeat.count(200, payloadData, "https://different.endpoint.com");
 
                 // Verify that trackStatsbeats is called when the timer fires
-                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL + 1);
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
                 // The count method was called, but it should return early
                 Assert.equal(1, countSpy.callCount, "count method should be called");
                 Assert.equal(0, this._trackSpy.callCount, "track should not be called for different endpoint");
@@ -291,26 +291,24 @@ export class StatsBeatTests extends AITestClass {
                 const reenabledStatsbeat = this._core.getStatsBeat(statsBeatState);
                 Assert.ok(reenabledStatsbeat, "SDK Stats should be recreated when re-enabled");
 
-                // Test that SDK Stats is not created when disabled with undefined
+                // FeatureOptInMode.none falls back to the SDK default state (enabled), so SDK Stats stays enabled
                 this._core.config.featureOptIn["StatsBeat"].mode = FeatureOptInMode.none;
                 this.clock.tick(1); // Allow time for config changes to propagate
                 
-                // Verify that SDK Stats is removed
+                // Verify that SDK Stats remains enabled (none defaults to enabled)
+                Assert.ok(!!this._core.getStatsBeat(statsBeatState), "SDK Stats should remain enabled when mode is none (defaults to enabled)");
+
+                // Explicitly disable again before testing the null case
+                this._core.config.featureOptIn["StatsBeat"].mode = FeatureOptInMode.disable;
+                this.clock.tick(1); // Allow time for config changes to propagate
                 Assert.ok(!this._core.getStatsBeat(statsBeatState), "SDK Stats should be removed when disabled");
 
-                // Re-enable SDK Stats
-                this._core.config.featureOptIn["StatsBeat"].mode = FeatureOptInMode.enable;
-                this.clock.tick(1); // Allow time for config changes to propagate
-                
-                // Verify that SDK Stats is created again
-                Assert.ok(!!this._core.getStatsBeat(statsBeatState), "SDK Stats should be recreated when re-enabled");
-
-                // Test that SDK Stats is not created when disabled with null value
+                // A null mode also falls back to the SDK default state (enabled)
                 this._core.config.featureOptIn["StatsBeat"].mode = null;
                 this.clock.tick(1); // Allow time for config changes to propagate
                 
-                // Verify that SDK Stats is removed
-                Assert.ok(!this._core.getStatsBeat(statsBeatState), "SDK Stats should be removed when disabled");
+                // Verify that SDK Stats is recreated (null defaults to enabled)
+                Assert.ok(!!this._core.getStatsBeat(statsBeatState), "SDK Stats should remain enabled when mode is null (defaults to enabled)");
             }
         });
     }
