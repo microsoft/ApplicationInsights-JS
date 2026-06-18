@@ -19,6 +19,13 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    # Prevent the many npm/rush install steps below from each racing to download
+    # Chrome into the shared ~/.cache/puppeteer, which left partial extractions
+    # ("browser folder exists but the executable is missing") and broke installs.
+    # Chrome is installed once, cleanly, in a dedicated step before build/test.
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+
     strategy:
       matrix:
         node-version: [ 18, 20, 22, 24 ]
@@ -36,6 +43,14 @@ jobs:
     - run: npm install
     - run: node common/scripts/install-run-rush.js check
     - run: node common/scripts/install-run-rush.js update --full --recheck
+    - name: Install Chrome for Testing (clean, with retries)
+      run: |
+        for i in 1 2 3; do
+          rm -rf ~/.cache/puppeteer
+          PUPPETEER_SKIP_DOWNLOAD= npx puppeteer browsers install chrome && break
+          echo "Chrome install attempt $i failed; retrying..."
+          sleep 5
+        done
     - run: npm run build --verbose
       timeout-minutes: 20
     - run: npm run test --verbose
