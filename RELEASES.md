@@ -20,6 +20,8 @@ This is a maintenance release for the 3.4.x version line containing security har
 
 - **Offline Channel Reliability**: Fixed a missing `return` after `reject()` in the offline channel that could lead to a null provider dereference.
 
+- **Fixed `[INVALID_ANNOTATION]` warnings in Rolldown / Vite 8 consumers** ([#2736](https://github.com/microsoft/ApplicationInsights-JS/issues/2736)): The per-module `dist-es5` output (the package `module` entry that modern bundlers import) emitted parenthesized PURE tree-shaking annotations with whitespace after the opening parenthesis (e.g. `( /*#__PURE__*/"http.")`), which stricter bundlers such as Rolldown (Vite 8) rejected. The build now canonicalizes these annotations to the flush form (`(/*#__PURE__*/"http.")`) in the `dist-es5` output, accepted by all bundlers while preserving the wrapping parentheses required for older Rollup / Webpack / Terser to tree-shake the constants. This complements #2737, which only normalized the rollup-bundled `dist/es5` (`main`) output.
+
 ### CI / Tooling
 
 - **Dropped Node.js 16 from CI matrix**: Node.js 16 is End-of-Life and several dependencies (e.g. `puppeteer`, `@pnpm/error`) now require Node.js 18 or later. The CI pipeline no longer runs against Node.js 16.
@@ -31,6 +33,7 @@ This is a maintenance release for the 3.4.x version line containing security har
 - #2733 fix: Migrate from npm to pnpm and resolve all dependency vulnerabilities
 - #2742 fix(ci): repair Node.js CI (Chrome install, bundle-size limits, ts-async offline-channel hang)
 - #2737 fix: remove invalid PURE literal annotations and add bundle validation tests
+- #2736 fix: canonicalize PURE annotations in dist-es5 (module) output to fix Rolldown/Vite 8 [INVALID_ANNOTATION] warnings
 - #2735 fix: prevent prototype pollution in extend() and objExtend() via unsafe key filtering
 - #2734 fix(offline-channel): Add missing return after reject() to prevent null provider dereference
 - #2732 fix(OsPlugin): use correct CS 4.0 field names ext.os.name and ext.os.ver

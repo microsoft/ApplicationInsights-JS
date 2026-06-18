@@ -723,6 +723,12 @@ module.exports = function (grunt) {
                 actions.push("eslint-ts:" + name + "-lint");
             }
 
+            // Canonicalize PURE annotations in the dist-es5 (module) output
+            var fixPureConfig = grunt.config.get("fix-pure") || {};
+            if (fixPureConfig[name]) {
+                actions.push("fix-pure:" + name);
+            }
+
             // Validate ES5 compatibility of browser bundles
             var es5Config = grunt.config.get("validate-es5") || {};
             if (es5Config[name]) {
@@ -857,12 +863,15 @@ module.exports = function (grunt) {
                     ]
                 }
             },
-            "validate-es5": validateEs5Config()
+            "validate-es5": validateEs5Config(),
+            "fix-pure": fixPureConfig()
         }));
 
-        function validateEs5Config() {
-            var cfg = {};
-            var packages = {
+        // Shared package root map used by the dist validation / post-processing
+        // tasks (validate-es5, fix-pure). Keyed by the same module name passed
+        // to tsBuildActions().
+        function getDistPackageRoots() {
+            return {
                 "core":             "./shared/AppInsightsCore",
                 "common":           "./shared/AppInsightsCommon",
                 "1dsCore":          "./shared/1ds-core-js",
@@ -881,6 +890,11 @@ module.exports = function (grunt) {
                 "perfmarkmeasure":  "./extensions/applicationinsights-perfmarkmeasure-js",
                 "shims":            "./tools/shims"
             };
+        }
+
+        function validateEs5Config() {
+            var cfg = {};
+            var packages = getDistPackageRoots();
 
             Object.keys(packages).forEach(function(name) {
                 cfg[name] = {
@@ -888,6 +902,26 @@ module.exports = function (grunt) {
                         packages[name] + "/browser/es5/**/*.js",
                         packages[name] + "/browser/*.js",
                         packages[name] + "/dist/es5/**/*.js"
+                    ]
+                };
+            });
+
+            return cfg;
+        }
+
+        // Builds the "fix-pure" task config. Canonicalizes PURE tree-shaking
+        // annotations in the per-module dist-es5 tsc output (the package
+        // "module" entry that npm consumers import). The rollup pass already
+        // covers the bundled dist/es5 (the "main" entry); this closes the gap
+        // for the un-bundled ESM output. See issue #2736.
+        function fixPureConfig() {
+            var cfg = {};
+            var packages = getDistPackageRoots();
+
+            Object.keys(packages).forEach(function(name) {
+                cfg[name] = {
+                    src: [
+                        packages[name] + "/dist-es5/**/*.js"
                     ]
                 };
             });
