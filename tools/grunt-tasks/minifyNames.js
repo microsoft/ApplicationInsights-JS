@@ -1183,15 +1183,6 @@ function minifyNamesFn(grunt) {
         }
     }
 
-    function sleepForRetry() {
-      if (typeof Atomics !== "undefined" && typeof SharedArrayBuffer !== "undefined") {
-        var waitArray = new Int32Array(new SharedArrayBuffer(4));
-        Atomics.wait(waitArray, 0, 0, 1000);
-      } else {
-        child_process.execSync(process.platform === "win32" ? "ping -n 2 127.0.0.1 >nul" : "sleep 1", { shell: true, stdio: "ignore" });
-      }
-    }
-
     function loadPersistentValues(theOptions) {
         var pkg = grunt.file.readJSON(resolvePath(theOptions, "./package.json"));
         var packageName = pkg["name"];

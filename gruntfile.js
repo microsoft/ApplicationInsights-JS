@@ -1,8 +1,6 @@
 
 module.exports = function (grunt) {
 
-    var fs = require("fs");
-
     const versionPlaceholder = '"#version#"';
     const extVersionPlaceholder = '"#extVersion#"';
 
@@ -18,30 +16,6 @@ module.exports = function (grunt) {
 
     const configVer = getConfigVersion(false);
     const configMajorVer = getConfigVersion(true);
-
-    function _getPuppeteerExecutablePath() {
-        var executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
-        if (executablePath && fs.existsSync(executablePath)) {
-            return executablePath;
-        }
-
-        if (process.platform === "linux") {
-            var linuxChromePaths = [
-                "/usr/bin/google-chrome",
-                "/usr/bin/google-chrome-stable",
-                "/usr/bin/chromium-browser",
-                "/usr/bin/chromium"
-            ];
-
-            for (var lp = 0; lp < linuxChromePaths.length; lp++) {
-                if (fs.existsSync(linuxChromePaths[lp])) {
-                    return linuxChromePaths[lp];
-                }
-            }
-        }
-
-        return null;
-    }
 
     function _encodeStr(str) {
         return str.replace(/\\/g, '\\\\').
@@ -434,22 +408,6 @@ module.exports = function (grunt) {
                     // Remove any "/./" values from the path
                     testUrl = testUrl.replace(/\/\.\//g, "/");
 
-                    var unitPuppeteerOptions = {
-                        debug: true,
-                        headless: "new",
-                        timeout: 30000,
-                        ignoreHTTPErrors: true,
-                        args: [
-                            "--enable-precise-memory-info",
-                            "--expose-internals-for-testing",
-                            "--no-sandbox"
-                        ]
-                    };
-                    var puppeteerExecutablePath = _getPuppeteerExecutablePath();
-                    if (puppeteerExecutablePath) {
-                        unitPuppeteerOptions.executablePath = puppeteerExecutablePath;
-                    }
-
                     buildCmds.qunit[key] = {
                         options: {
                             urls: [testUrl],
@@ -457,7 +415,17 @@ module.exports = function (grunt) {
                             console: true,
                             summaryOnly: false,
                             httpBase: ".",
-                            puppeteer: unitPuppeteerOptions
+                            puppeteer: {
+                                debug: true,
+                                headless: "new",
+                                timeout: 30000,
+                                ignoreHTTPErrors: true,
+                                args: [
+                                    "--enable-precise-memory-info",
+                                    "--expose-internals-for-testing",
+                                    "--no-sandbox"
+                                ]
+                            }
                         }
                     };
                 }
@@ -494,28 +462,22 @@ module.exports = function (grunt) {
                         });
                     }
 
-                    var perfPuppeteerOptions = {
-                        headless: "new",
-                        timeout: 30000,
-                        ignoreHTTPErrors: true,
-                        args: [
-                            '--enable-precise-memory-info',
-                            '--expose-internals-for-testing',
-                            "--no-sandbox"
-                        ]
-                    };
-                    var perfPuppeteerExecutablePath = _getPuppeteerExecutablePath();
-                    if (perfPuppeteerExecutablePath) {
-                        perfPuppeteerOptions.executablePath = perfPuppeteerExecutablePath;
-                    }
-
                     buildCmds.qunit[key + "-perf"] = {
                         options: {
                             urls: testUrls,
                             timeout: 300 * 1000, // 5 min
                             console: true,
                             summaryOnly: false,
-                            puppeteer: perfPuppeteerOptions
+                            puppeteer: {
+                                headless: "new",
+                                timeout: 30000,
+                                ignoreHTTPErrors: true,
+                                args: [
+                                    '--enable-precise-memory-info',
+                                    '--expose-internals-for-testing',
+                                    "--no-sandbox"
+                                ]
+                            }
                         }
                     };
                 }
