@@ -36,7 +36,10 @@ var _typeMap: { [key: string]: string } = {
     "PageviewPerformanceData": "PAGE_VIEW",
     "MessageData": "TRACE",
     "RequestData": "REQUEST",
-    "AvailabilityData": "AVAILABILITY"
+    "AvailabilityData": "AVAILABILITY",
+    "PageActionData": "CUSTOM_EVENT",
+    "ContentUpdateData": "CUSTOM_EVENT",
+    "PageUnloadData": "CUSTOM_EVENT"
 };
 
 /**

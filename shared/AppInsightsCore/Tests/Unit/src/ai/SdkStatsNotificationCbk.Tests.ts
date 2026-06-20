@@ -426,7 +426,11 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                     "PageviewPerformanceData": "PAGE_VIEW",
                     "MessageData": "TRACE",
                     "RequestData": "REQUEST",
-                    "AvailabilityData": "AVAILABILITY"
+                    "AvailabilityData": "AVAILABILITY",
+                    // 1DS web analytics events all report as CUSTOM_EVENT
+                    "PageActionData": "CUSTOM_EVENT",
+                    "ContentUpdateData": "CUSTOM_EVENT",
+                    "PageUnloadData": "CUSTOM_EVENT"
                 };
 
                 for (var baseType in mappings) {
@@ -437,9 +441,9 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
                 listener.flush();
 
-                // PageviewData and PageviewPerformanceData both map to PAGE_VIEW, so they'll be merged
-                // MetricData maps to CUSTOM_METRIC
-                // That gives us 8 unique telemetryType values
+                // PageviewData and PageviewPerformanceData both map to PAGE_VIEW, so they'll be merged.
+                // EventData plus the three 1DS web analytics types all map to CUSTOM_EVENT, so they merge too.
+                // That still gives us 8 unique telemetryType values.
                 Assert.equal(8, this._trackedItems.length, "Should have 8 unique telemetryType metrics");
 
                 let types: string[] = this._trackedItems.map(function (item) {
@@ -457,6 +461,12 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                     return item.baseData.properties["telemetryType"] === "PAGE_VIEW";
                 })[0];
                 Assert.equal(2, pageView.baseData.average, "PAGE_VIEW count should be 2");
+
+                // CUSTOM_EVENT should have count 4 (EventData + PageActionData + ContentUpdateData + PageUnloadData)
+                let customEvent = this._trackedItems.filter(function (item) {
+                    return item.baseData.properties["telemetryType"] === "CUSTOM_EVENT";
+                })[0];
+                Assert.equal(4, customEvent.baseData.average, "CUSTOM_EVENT count should be 4");
             }
         });
 
