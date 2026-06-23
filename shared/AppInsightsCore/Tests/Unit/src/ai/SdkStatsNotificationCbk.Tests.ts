@@ -106,9 +106,12 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 Assert.equal(2, this._trackedItems.length, "Should emit 2 metrics");
 
                 let successItems = this._trackedItems.filter(function (item) {
-                    return item.name === "Item_Success_Count";
+                    return item.baseData.name === "Item_Success_Count";
                 });
                 Assert.equal(2, successItems.length, "All metrics should be Item_Success_Count");
+                this._trackedItems.forEach(function (item) {
+                    Assert.equal("Ms.AI.SdkStat", item.name, "Top-level name should be the AI stats event");
+                });
 
                 // Verify props
                 let customEventMetric = successItems.filter(function (item) {
@@ -161,7 +164,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 Assert.equal(2, this._trackedItems.length, "Should emit 2 dropped metrics");
 
                 let allDropped = this._trackedItems.filter(function (item) {
-                    return item.name === "Item_Dropped_Count";
+                    return item.baseData.name === "Item_Dropped_Count";
                 });
                 Assert.equal(2, allDropped.length, "All should be Item_Dropped_Count");
 
@@ -184,7 +187,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 listener.flush();
 
                 Assert.equal(1, this._trackedItems.length, "Should emit 1 dropped metric");
-                Assert.equal("Item_Dropped_Count", this._trackedItems[0].name, "Name should be Item_Dropped_Count");
+                Assert.equal("Item_Dropped_Count", this._trackedItems[0].baseData.name, "Name should be Item_Dropped_Count");
                 Assert.equal("CLIENT_EXCEPTION", this._trackedItems[0].baseData.properties["dropCode"], "dropCode should be CLIENT_EXCEPTION");
                 Assert.equal("EXCEPTION", this._trackedItems[0].baseData.properties["telemetryType"], "telemetryType should be EXCEPTION");
             }
@@ -222,7 +225,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 Assert.equal(2, this._trackedItems.length, "Should emit 2 retry metrics");
 
                 let allRetry = this._trackedItems.filter(function (item) {
-                    return item.name === "Item_Retry_Count";
+                    return item.baseData.name === "Item_Retry_Count";
                 });
                 Assert.equal(2, allRetry.length, "All should be Item_Retry_Count");
 
@@ -290,7 +293,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
                 Assert.equal(3, this._trackedItems.length, "Should emit 3 metrics");
 
-                let names = this._trackedItems.map(function (item) { return item.name; }).sort();
+                let names = this._trackedItems.map(function (item) { return item.baseData.name; }).sort();
                 Assert.deepEqual(["Item_Dropped_Count", "Item_Retry_Count", "Item_Success_Count"], names,
                     "Should have all three metric types");
             }
@@ -332,7 +335,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 // The timer should have fired and flushed the accumulated counts
                 Assert.equal(2, this._trackedItems.length, "Metrics should be emitted after timer fires");
 
-                let names = this._trackedItems.map(function (item) { return item.name; });
+                let names = this._trackedItems.map(function (item) { return item.baseData.name; });
                 Assert.ok(names.indexOf("Item_Success_Count") >= 0, "Should contain Item_Success_Count");
             }
         });
@@ -502,15 +505,15 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
     private _testSdkStatsMetricFiltering() {
         this.testCase({
-            name: "SdkStatsNotifCbk: SDK stats metrics (Item_Success_Count etc) are not counted",
+            name: "SdkStatsNotifCbk: SDK stats metrics (own emitted events) are not counted",
             test: () => {
                 let listener = this._createListener();
 
-                // These should be filtered out - they are SDK stats metrics themselves
+                // These should be filtered out - they are our own emitted stats events
                 let sdkStatsItems: ITelemetryItem[] = [
-                    this._makeItem("MetricData", "Item_Success_Count"),
-                    this._makeItem("MetricData", "Item_Dropped_Count"),
-                    this._makeItem("MetricData", "Item_Retry_Count")
+                    this._makeItem("MetricData", "Ms.AI.SdkStat"),
+                    this._makeItem("MetricData", "Ms.AI.SdkStat"),
+                    this._makeItem("MetricData", "Ms.AI.SdkStat")
                 ];
 
                 listener.eventsSent(sdkStatsItems);
@@ -527,9 +530,9 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 let listener = this._createListener();
 
                 let items: ITelemetryItem[] = [
-                    this._makeItem("MetricData", "Item_Success_Count"), // filtered
+                    this._makeItem("MetricData", "Ms.AI.SdkStat"),     // filtered
                     this._makeItem("EventData", "myCustomEvent"),       // counted
-                    this._makeItem("MetricData", "Item_Retry_Count"),  // filtered
+                    this._makeItem("MetricData", "Ms.AI.SdkStat"),     // filtered
                     this._makeItem("ExceptionData", "error")           // counted
                 ];
 
@@ -546,7 +549,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 let listener = this._createListener();
 
                 let items: ITelemetryItem[] = [
-                    this._makeItem("MetricData", "Item_Success_Count"),
+                    this._makeItem("MetricData", "Ms.AI.SdkStat"),
                     this._makeItem("EventData", "myEvent")
                 ];
 
@@ -565,7 +568,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 let listener = this._createListener();
 
                 let items: ITelemetryItem[] = [
-                    this._makeItem("MetricData", "Item_Dropped_Count"),
+                    this._makeItem("MetricData", "Ms.AI.SdkStat"),
                     this._makeItem("MessageData", "trace")
                 ];
 
@@ -847,7 +850,8 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 Assert.equal(2, _self._trackedItems.length, "Should emit success and retry metrics");
                 _self._trackedItems.forEach(function (item) {
                     Assert.equal("Ms.Web.SdkStat", item.name, "Event name should use the configured 1DS name");
-                    Assert.equal("Ms.Web.SdkStat", item.baseData.name, "baseData name should use the configured 1DS name");
+                    Assert.equal(item.baseData.properties["metricName"], item.baseData.name,
+                        "baseData name should be the counter name (matches metricName)");
                 });
 
                 // The original counter name is preserved as a property so success/retry remain distinguishable

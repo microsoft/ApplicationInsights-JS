@@ -11,6 +11,9 @@ var MET_SUCCESS = "Item_Success_Count";
 var MET_DROPPED = "Item_Dropped_Count";
 var MET_RETRY = "Item_Retry_Count";
 var DROP_CLIENT_EXCEPTION = "CLIENT_EXCEPTION";
+// Dedicated top-level event name for AI stats. Keeps counter names out of the top-level name so
+// the backend doesn't route stats into the customer's custom events / metrics tables.
+var AI_STATS_EVENT = "Ms.AI.SdkStat";
 
 // Removes all own keys from an object in place (used to reset accumulators without re-allocating).
 function _clearObj(obj: { [key: string]: any }): void {
@@ -68,10 +71,9 @@ export interface ISdkStatsNotifCbk extends INotificationListener {
  * Reads config.sdkStats.int dynamically from core.config on each flush.
  * @param core - The IAppInsightsCore instance (provides track() and config)
  * @param sdkVersion - The SDK version string to include in reported metrics
- * @param eventName - Optional event name to emit the stats under (e.g. "Ms.Web.SdkStat" for 1DS). When
- * supplied, every emitted metric uses this single event name and the specific counter (Item_Success_Count
- * etc.) is preserved in the `metricName` property. When omitted (AI default), each counter is emitted under
- * its own metric name.
+ * @param eventName - Optional top-level event name (e.g. "Ms.Web.SdkStat" for 1DS). Defaults to a
+ * dedicated AI stats name. The counter name (Item_Success_Count etc.) is kept in baseData.name and
+ * the metricName property, never the top-level name.
  * @returns An INotificationListener with flush and unload methods
  */
 /*#__NO_SIDE_EFFECTS__*/
@@ -83,8 +85,8 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
     var _interval = (core.config.sdkStats && core.config.sdkStats.int) || FLUSH_INTERVAL;
     // Static across every metric in a flush, so compute once at creation time.
     var _version = sdkVersion || "unknown";
-    // When set (e.g. 1DS), all stats are emitted under this single event name instead of the per-counter names.
-    var _statsEventName = eventName;
+    // Top-level event name for every stat. 1DS passes "Ms.Web.SdkStat"; AI uses the default.
+    var _statsEventName = eventName || AI_STATS_EVENT;
     // Once unloaded, late notification callbacks must be no-ops and the timer must not re-arm.
     var _unloaded = false;
 
@@ -100,12 +102,8 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
     }
 
     function _isSdkStatsMetric(item: ITelemetryItem): boolean {
-        var n = item.name;
-        // When emitting under a single configured event name (1DS), self-filter by that name.
-        if (_statsEventName) {
-            return n === _statsEventName;
-        }
-        return n === MET_SUCCESS || n === MET_DROPPED || n === MET_RETRY;
+        // Self-filter our own emitted stats by their event name.
+        return item.name === _statsEventName;
     }
 
     function _incSuccess(items: ITelemetryItem[]) {
@@ -158,25 +156,21 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
             telemetryType: telType,
             computeType: "unknown",
             language: "JavaScript",
-            version: _version
+            version: _version,
+            // Counter name as a property so the success/dropped/retry distinction survives.
+            metricName: name
         };
 
         if (code && codePropKey) {
             props[codePropKey] = code;
         }
 
-        // For 1DS, all counters share a single event name, so keep the counter name as a property
-        // to retain the success/dropped/retry distinction.
-        var evtName = _statsEventName || name;
-        if (_statsEventName) {
-            props.metricName = name;
-        }
-
+        // Top-level name is always the dedicated stats event; counter name stays in baseData.name.
         return {
-            name: evtName,
+            name: _statsEventName,
             baseType: MetricDataType,
             baseData: {
-                name: evtName,
+                name: name,
                 average: value,
                 sampleCount: 1,
                 properties: props
