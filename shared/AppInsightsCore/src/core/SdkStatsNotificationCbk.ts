@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ITimerHandler, objCreate, objHasOwn, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, isUnsafePropKey, objCreate, objHasOwn, scheduleTimeout } from "@nevware21/ts-utils";
 import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { INotificationListener } from "../interfaces/ai/INotificationListener";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
@@ -11,11 +11,6 @@ var MET_SUCCESS = "Item_Success_Count";
 var MET_DROPPED = "Item_Dropped_Count";
 var MET_RETRY = "Item_Retry_Count";
 var DROP_CLIENT_EXCEPTION = "CLIENT_EXCEPTION";
-
-// Guard against prototype-polluting keys
-function _safeKey(key: string): boolean {
-    return key !== "__proto__" && key !== "constructor" && key !== "prototype";
-}
 
 // Removes all own keys from an object in place (used to reset accumulators without re-allocating).
 function _clearObj(obj: { [key: string]: any }): void {
@@ -73,10 +68,14 @@ export interface ISdkStatsNotifCbk extends INotificationListener {
  * Reads config.sdkStats.int dynamically from core.config on each flush.
  * @param core - The IAppInsightsCore instance (provides track() and config)
  * @param sdkVersion - The SDK version string to include in reported metrics
+ * @param eventName - Optional event name to emit the stats under (e.g. "Ms.Web.SdkStat" for 1DS). When
+ * supplied, every emitted metric uses this single event name and the specific counter (Item_Success_Count
+ * etc.) is preserved in the `metricName` property. When omitted (AI default), each counter is emitted under
+ * its own metric name.
  * @returns An INotificationListener with flush and unload methods
  */
 /*#__NO_SIDE_EFFECTS__*/
-export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: string): ISdkStatsNotifCbk {
+export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: string, eventName?: string): ISdkStatsNotifCbk {
     var _successCounts: { [telType: string]: number } = objCreate(null);
     var _droppedCounts: { [code: string]: { [telType: string]: number } } = objCreate(null);
     var _retryCounts: { [code: string]: { [telType: string]: number } } = objCreate(null);
@@ -84,6 +83,8 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
     var _interval = (core.config.sdkStats && core.config.sdkStats.int) || FLUSH_INTERVAL;
     // Static across every metric in a flush, so compute once at creation time.
     var _version = sdkVersion || "unknown";
+    // When set (e.g. 1DS), all stats are emitted under this single event name instead of the per-counter names.
+    var _statsEventName = eventName;
     // Once unloaded, late notification callbacks must be no-ops and the timer must not re-arm.
     var _unloaded = false;
 
@@ -100,6 +101,10 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
 
     function _isSdkStatsMetric(item: ITelemetryItem): boolean {
         var n = item.name;
+        // When emitting under a single configured event name (1DS), self-filter by that name.
+        if (_statsEventName) {
+            return n === _statsEventName;
+        }
         return n === MET_SUCCESS || n === MET_DROPPED || n === MET_RETRY;
     }
 
@@ -111,7 +116,7 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
         for (var i = 0; i < items.length; i++) {
             if (!_isSdkStatsMetric(items[i])) {
                 var t = _getTelType(items[i]);
-                if (_safeKey(t)) {
+                if (!isUnsafePropKey(t)) {
                     _successCounts[t] = (_successCounts[t] || 0) + 1;
                     changed = true;
                 }
@@ -126,7 +131,7 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
      * Common helper to increment a bucketed counter (dropped or retry) keyed by code and telemetry type.
      */
     function _incBucketed(counters: { [code: string]: { [telType: string]: number } }, items: ITelemetryItem[], code: string) {
-        if (_unloaded || !(items && items.length && _safeKey(code))) {
+        if (_unloaded || !(items && items.length && !isUnsafePropKey(code))) {
             return;
         }
         var bucket = counters[code];
@@ -137,7 +142,7 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
         for (var i = 0; i < items.length; i++) {
             if (!_isSdkStatsMetric(items[i])) {
                 var t = _getTelType(items[i]);
-                if (_safeKey(t)) {
+                if (!isUnsafePropKey(t)) {
                     bucket[t] = (bucket[t] || 0) + 1;
                     changed = true;
                 }
@@ -160,11 +165,18 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
             props[codePropKey] = code;
         }
 
+        // For 1DS, all counters share a single event name, so keep the counter name as a property
+        // to retain the success/dropped/retry distinction.
+        var evtName = _statsEventName || name;
+        if (_statsEventName) {
+            props.metricName = name;
+        }
+
         return {
-            name: name,
+            name: evtName,
             baseType: MetricDataType,
             baseData: {
-                name: name,
+                name: evtName,
                 average: value,
                 sampleCount: 1,
                 properties: props

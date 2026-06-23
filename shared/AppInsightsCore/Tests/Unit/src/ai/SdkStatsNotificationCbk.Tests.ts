@@ -36,6 +36,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
         this._testSdkStatsMetricFiltering();
         this._testNotificationManagerIntegration();
         this._testDynamicConfigChanges();
+        this._testEventNameOverride();
     }
 
     private _createListener(overrides?: Partial<ISdkStatsConfig>): ISdkStatsNotifCbk {
@@ -820,6 +821,70 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                     "Language should still be JavaScript after setting sdkStats");
                 Assert.equal("3.3.11-test", _self._trackedItems[0].baseData.properties["version"],
                     "Version should match the passed sdkVersion after setting sdkStats");
+            }
+        });
+    }
+
+    private _testEventNameOverride() {
+        this.testCase({
+            name: "SdkStatsNotifCbk: eventName parameter emits all stats under a single event name (1DS)",
+            test: () => {
+                let _self = this;
+                let mockCore = {
+                    track: function (item: ITelemetryItem) {
+                        _self._trackedItems.push(item);
+                    },
+                    config: { sdkStats: { int: 100 } } as IConfiguration
+                } as any as IAppInsightsCore;
+
+                let listener = createSdkStatsNotifCbk(mockCore, "3.3.11-test", "Ms.Web.SdkStat");
+                _self._listener = listener;
+
+                listener.eventsSent([_self._makeItem("EventData")]);
+                listener.eventsRetry([_self._makeItem("EventData")], 500);
+                listener.flush();
+
+                Assert.equal(2, _self._trackedItems.length, "Should emit success and retry metrics");
+                _self._trackedItems.forEach(function (item) {
+                    Assert.equal("Ms.Web.SdkStat", item.name, "Event name should use the configured 1DS name");
+                    Assert.equal("Ms.Web.SdkStat", item.baseData.name, "baseData name should use the configured 1DS name");
+                });
+
+                // The original counter name is preserved as a property so success/retry remain distinguishable
+                let successMetric = _self._trackedItems.filter(function (item) {
+                    return item.baseData.properties["metricName"] === "Item_Success_Count";
+                })[0];
+                Assert.ok(successMetric, "Success counter name preserved in metricName property");
+                let retryMetric = _self._trackedItems.filter(function (item) {
+                    return item.baseData.properties["metricName"] === "Item_Retry_Count";
+                })[0];
+                Assert.ok(retryMetric, "Retry counter name preserved in metricName property");
+            }
+        });
+
+        this.testCase({
+            name: "SdkStatsNotifCbk: eventName self-filter prevents counting its own emitted stats (1DS)",
+            test: () => {
+                let _self = this;
+                let mockCore = {
+                    track: function (item: ITelemetryItem) {
+                        _self._trackedItems.push(item);
+                    },
+                    config: { sdkStats: { int: 100 } } as IConfiguration
+                } as any as IAppInsightsCore;
+
+                let listener = createSdkStatsNotifCbk(mockCore, "3.3.11-test", "Ms.Web.SdkStat");
+                _self._listener = listener;
+
+                // An item named like the configured stats event must be filtered out
+                listener.eventsSent([
+                    _self._makeItem("MetricData", "Ms.Web.SdkStat"),
+                    _self._makeItem("EventData", "myEvent")
+                ]);
+                listener.flush();
+
+                Assert.equal(1, _self._trackedItems.length,
+                    "Only the non-stats item should be counted when an eventName is configured");
             }
         });
     }
