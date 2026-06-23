@@ -263,7 +263,7 @@ export interface IConfiguration extends IOTelConfig {
 
     /**
      * [Optional] SDK Stats configuration for periodic reporting of telemetry pipeline metrics.
-     * @since 3.4.1
+     * @since 3.4.3
      */
     sdkStats?: ISdkStatsConfig;
 }

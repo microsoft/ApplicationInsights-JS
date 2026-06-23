@@ -16,14 +16,14 @@ export interface IInternalStorageItem {
     cnt?: number;
     /**
      * baseType of the original telemetry item, used for SDK stats telemetryType mapping.
-     * @since 3.4.1
+     * @since 3.4.3
      */
     bT?: string;
     /**
      * name of the original telemetry item, preserved so SDK stats can self-filter its
      * own emitted metrics (Item_Success_Count etc.) by name when the item is rebuilt
      * for notification dispatch.
-     * @since 3.4.1
+     * @since 3.4.3
      */
     iN?: string;
 }
