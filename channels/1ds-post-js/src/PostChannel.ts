@@ -1023,7 +1023,8 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
              * @ignore
              */
             function _requeueEvents(batches: EventBatch[], reason?: number) {
-                let droppedEvents: IPostTransmissionTelemetryItem[] = [];
+                let droppedEvents: IPostTransmissionTelemetryItem[];
+                let requeuedEvents: IPostTransmissionTelemetryItem[];
                 let maxSendAttempts = _maxEventSendAttempts;
                 if (_isPageUnloadTriggered) {
                     // If a page unlaod has been triggered reduce the number of times we try to "retry"
@@ -1045,15 +1046,27 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                                     // Reset the event timings
                                     setProcessTelemetryTimings(theEvent, _self.identifier);
                                     _addEventToQueues(theEvent, false);
+                                    (requeuedEvents || (requeuedEvents = [])).push(theEvent);
                                 } else {
-                                    droppedEvents.push(theEvent);
+                                    (droppedEvents || (droppedEvents = [])).push(theEvent);
                                 }
                             }
                         });
                     }
                 });
 
-                if (droppedEvents.length > 0) {
+                // Notify listeners of retried events
+                if (requeuedEvents && requeuedEvents.length > 0) {
+                    // Extract HTTP status code from the EventBatchNotificationReason if in the ResponseFailure range (9000-9999).
+                    // Use -1 (not 0) when the reason is outside that range so an unmapped reason is distinguishable
+                    // from a real network-level failure, which conventionally reports HTTP status 0.
+                    let statusCode = (reason >= EventBatchNotificationReason.ResponseFailure && reason <= EventBatchNotificationReason.ResponseFailureMax)
+                        ? reason - EventBatchNotificationReason.ResponseFailure
+                        : -1;
+                    _notifyEvents("eventsRetry", requeuedEvents, statusCode);
+                }
+
+                if (droppedEvents && droppedEvents.length > 0) {
                     _notifyEvents(strEventsDiscarded, droppedEvents, EventsDiscardedReason.NonRetryableStatus);
                 }
 
