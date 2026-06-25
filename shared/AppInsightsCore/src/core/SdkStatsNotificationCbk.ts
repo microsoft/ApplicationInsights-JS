@@ -11,9 +11,10 @@ var MET_SUCCESS = "Item_Success_Count";
 var MET_DROPPED = "Item_Dropped_Count";
 var MET_RETRY = "Item_Retry_Count";
 var DROP_CLIENT_EXCEPTION = "CLIENT_EXCEPTION";
-// Dedicated top-level event name for AI stats. Keeps counter names out of the top-level name so
-// the backend doesn't route stats into the customer's custom events / metrics tables.
-var AI_STATS_EVENT = "Ms.AI.SdkStat";
+// Top-level event name for AI stats. Matches the standard AI event naming
+// (Microsoft.ApplicationInsights.<iKey>.<Type>).
+var AI_STATS_PREFIX = "Microsoft.ApplicationInsights.";
+var AI_STATS_SUFFIX = "SdkStats";
 
 // Removes all own keys from an object in place (used to reset accumulators without re-allocating).
 function _clearObj(obj: { [key: string]: any }): void {
@@ -71,9 +72,10 @@ export interface ISdkStatsNotifCbk extends INotificationListener {
  * Reads config.sdkStats.int dynamically from core.config on each flush.
  * @param core - The IAppInsightsCore instance (provides track() and config)
  * @param sdkVersion - The SDK version string to include in reported metrics
- * @param eventName - Optional top-level event name (e.g. "Ms.Web.SdkStat" for 1DS). Defaults to a
- * dedicated AI stats name. The counter name (Item_Success_Count etc.) is kept in baseData.name and
- * the metricName property, never the top-level name.
+ * @param eventName - Optional top-level event name (e.g. "Ms.Web.SdkStat" for 1DS). Defaults to the
+ * standard AI event name "Microsoft.ApplicationInsights.[iKey].SdkStats". The counter name
+ * (Item_Success_Count etc.) is kept in baseData.name and the metricName property, never the
+ * top-level name.
  * @returns An INotificationListener with flush and unload methods
  */
 /*#__NO_SIDE_EFFECTS__*/
@@ -85,10 +87,19 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
     var _interval = (core.config.sdkStats && core.config.sdkStats.int) || FLUSH_INTERVAL;
     // Static across every metric in a flush, so compute once at creation time.
     var _version = sdkVersion || "unknown";
-    // Top-level event name for every stat. 1DS passes "Ms.Web.SdkStat"; AI uses the default.
-    var _statsEventName = eventName || AI_STATS_EVENT;
+    // Top-level event name for every stat. 1DS passes its own name (e.g. "Ms.Web.SdkStat"); AI builds
+    // a "Microsoft.ApplicationInsights.<iKey>.SdkStats" name to match standard AI events.
+    var _statsEventName = eventName || _buildAiStatsEventName();
     // Once unloaded, late notification callbacks must be no-ops and the timer must not re-arm.
     var _unloaded = false;
+
+    // Builds the default AI stats event name, including the instrumentation key (dashes stripped)
+    // when available so it matches the Microsoft.ApplicationInsights.<iKey>.<Type> convention.
+    function _buildAiStatsEventName() {
+        var iKey = core.config && core.config.instrumentationKey;
+        var iKeySeg = (typeof iKey === "string" && iKey) ? iKey.replace(/-/g, "") + "." : "";
+        return AI_STATS_PREFIX + iKeySeg + AI_STATS_SUFFIX;
+    }
 
     function _ensureTimer() {
         if (!_timer && !_unloaded) {

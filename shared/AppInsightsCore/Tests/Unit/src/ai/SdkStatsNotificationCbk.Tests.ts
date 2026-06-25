@@ -5,6 +5,10 @@ import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
 import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
 import { NotificationManager } from "../../../../src/core/NotificationManager";
 
+// iKey used by the mock cores; the default AI stats event name embeds it (dashes stripped).
+const TEST_IKEY = "abc-123-def";
+const AI_STATS_EVENT_NAME = "Microsoft.ApplicationInsights.abc123def.SdkStats";
+
 export class SdkStatsNotificationCbkTests extends AITestClass {
     private _trackedItems: ITelemetryItem[];
     private _listener: ISdkStatsNotifCbk;
@@ -57,7 +61,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
             track: function (item: ITelemetryItem) {
                 _self._trackedItems.push(item);
             },
-            config: { sdkStats: sdkStats } as IConfiguration
+            config: { instrumentationKey: TEST_IKEY, sdkStats: sdkStats } as IConfiguration
         } as any as IAppInsightsCore;
 
         _self._listener = createSdkStatsNotifCbk(mockCore, "3.3.11-test");
@@ -110,7 +114,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 });
                 Assert.equal(2, successItems.length, "All metrics should be Item_Success_Count");
                 this._trackedItems.forEach(function (item) {
-                    Assert.equal("Ms.AI.SdkStat", item.name, "Top-level name should be the AI stats event");
+                    Assert.equal(AI_STATS_EVENT_NAME, item.name, "Top-level name should be the AI stats event");
                 });
 
                 // Verify props
@@ -511,9 +515,9 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
 
                 // These should be filtered out - they are our own emitted stats events
                 let sdkStatsItems: ITelemetryItem[] = [
-                    this._makeItem("MetricData", "Ms.AI.SdkStat"),
-                    this._makeItem("MetricData", "Ms.AI.SdkStat"),
-                    this._makeItem("MetricData", "Ms.AI.SdkStat")
+                    this._makeItem("MetricData", AI_STATS_EVENT_NAME),
+                    this._makeItem("MetricData", AI_STATS_EVENT_NAME),
+                    this._makeItem("MetricData", AI_STATS_EVENT_NAME)
                 ];
 
                 listener.eventsSent(sdkStatsItems);
@@ -530,9 +534,9 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 let listener = this._createListener();
 
                 let items: ITelemetryItem[] = [
-                    this._makeItem("MetricData", "Ms.AI.SdkStat"),     // filtered
+                    this._makeItem("MetricData", AI_STATS_EVENT_NAME),  // filtered
                     this._makeItem("EventData", "myCustomEvent"),       // counted
-                    this._makeItem("MetricData", "Ms.AI.SdkStat"),     // filtered
+                    this._makeItem("MetricData", AI_STATS_EVENT_NAME),  // filtered
                     this._makeItem("ExceptionData", "error")           // counted
                 ];
 
@@ -549,7 +553,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 let listener = this._createListener();
 
                 let items: ITelemetryItem[] = [
-                    this._makeItem("MetricData", "Ms.AI.SdkStat"),
+                    this._makeItem("MetricData", AI_STATS_EVENT_NAME),
                     this._makeItem("EventData", "myEvent")
                 ];
 
@@ -568,7 +572,7 @@ export class SdkStatsNotificationCbkTests extends AITestClass {
                 let listener = this._createListener();
 
                 let items: ITelemetryItem[] = [
-                    this._makeItem("MetricData", "Ms.AI.SdkStat"),
+                    this._makeItem("MetricData", AI_STATS_EVENT_NAME),
                     this._makeItem("MessageData", "trace")
                 ];
 
