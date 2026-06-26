@@ -48,6 +48,7 @@ export {
     STATS_SDK_IKEY, STATS_SDK_ENDPOINT_NON_EU, STATS_SDK_ENDPOINT_EU, STATS_SDK_ENDPOINT_KEY, STATS_SDK_FEATURE,
     STATS_BREEZE_IKEY_NON_EU, STATS_BREEZE_IKEY_EU
 } from "./core/StatsBeat";
+export { createSdkStatsNotifCbk, ISdkStatsConfig, ISdkStatsNotifCbk } from "./core/SdkStatsNotificationCbk";
 export {
     isArray, isTypeof, isUndefined, isNullOrUndefined, isStrictUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,
     strEndsWith, strStartsWith, isDate, isError, isString, isNumber, isBoolean, arrForEach, arrIndexOf,

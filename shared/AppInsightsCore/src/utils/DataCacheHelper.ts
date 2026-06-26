@@ -6,7 +6,7 @@ import { STR_EMPTY } from "../constants/InternalConstants";
 import { normalizeJsName } from "./HelperFuncs";
 import { newId } from "./RandomHelper";
 
-const version = "3.4.1";
+const version = "3.4.2";
 let instanceName = "." + newId(6);
 let _dataUid = 0;
 
