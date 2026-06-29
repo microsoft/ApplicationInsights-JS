@@ -77,8 +77,8 @@ export class StatsbeatTests extends AITestClass {
         core.initialize(coreConfig, [sender]);
         let unloadHook = statsMgr.init(core, {
             feature: "StatsBeat",
-            getCfg: (core, cfg) => {
-                return cfg?.stats;
+            getCfg: (core, details) => {
+                return details.cfg?.stats;
             }
         });
         core.setStatsMgr(statsMgr);
@@ -173,8 +173,8 @@ export class StatsbeatTests extends AITestClass {
                 this._core.initialize(config, [this._sender]);
                 this._statsMgrUnloadHook = this._statsMgr.init(this._core, {
                     feature: "StatsBeat",
-                    getCfg: (core, cfg) => {
-                        return cfg?.stats;
+                    getCfg: (core, details) => {
+                        return details.cfg?.stats;
                     }
                 });
                 this._core.setStatsMgr(this._statsMgr);

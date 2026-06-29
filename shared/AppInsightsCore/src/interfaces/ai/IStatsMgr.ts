@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IWatchDetails } from "../config/IDynamicWatcher";
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IConfiguration } from "./IConfiguration";
 import { IStatsBeat, IStatsBeatConfig, IStatsBeatState } from "./IStatsBeat";
@@ -25,12 +26,17 @@ export interface IStatsMgrConfig<CfgType extends IConfiguration = IConfiguration
      * tis function will be called again to obtain the latest configuration values.
      * This should also evaluate any throttling level and other settings for the statsbeat instance
      * to determine if it should be enabled or not and return the appropriate configuration object.
-     * @param cfg - The current configuration object for the StatsBeat instance.
+     * @param core - The core instance associated with the StatsBeat manager.
+     * @param details - The dynamic config watcher details for the single global config. Use
+     * {@link IWatchDetails.setDf} to seed any defaults into the global config (so they remain dynamic
+     * and can be overridden by the CDN / SKU) and {@link IWatchDetails.ref} to obtain a live reference
+     * to the nested config so runtime changes are tracked. Read the required values from
+     * {@link IWatchDetails.cfg}.
      * @returns The configuration object that should be used to initialize / reinitialize the StatsBeat instance.
      * It may return null if the StatsBeat instance should not be initialized or reinitialized, if the manager
      * is already initialized and null is returned, the StatsBeat instance will be disabled.
      */
-    getCfg: (core: IAppInsightsCore<CfgType>, cfg: CfgType) => IStatsBeatConfig | undefined | null;
+    getCfg: (core: IAppInsightsCore<CfgType>, details: IWatchDetails<CfgType>) => IStatsBeatConfig | undefined | null;
 }
 
 /**

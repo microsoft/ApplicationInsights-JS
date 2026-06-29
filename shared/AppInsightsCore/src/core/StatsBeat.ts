@@ -4,6 +4,7 @@
 import {
     ITimerHandler, arrForEach, isNumber, makeGlobRegex, objDefineProps, scheduleTimeout, strIndexOf, strLower, utcNow
 } from "@nevware21/ts-utils";
+import { cfgDfMerge } from "../config/ConfigDefaultHelpers";
 import { onConfigChange } from "../config/DynamicConfig";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { _throwInternal, safeGetLogger } from "../diagnostics/DiagnosticLogger";
@@ -16,6 +17,8 @@ import { IStatsBeat, IStatsBeatConfig, IStatsBeatKeyMap, IStatsBeatState, IStats
 import { IStatsMgr, IStatsMgrConfig } from "../interfaces/ai/IStatsMgr";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 import { IPayloadData } from "../interfaces/ai/IXHROverride";
+import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
+import { IWatchDetails } from "../interfaces/config/IDynamicWatcher";
 import { isFeatureEnabled } from "../utils/HelperFuncs";
 
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
@@ -463,7 +466,7 @@ export function createStatsMgr(): IStatsMgr {
                     // Call the getCfg function to get the latest configuration for the statsbeat instance
                     // This should also evaluate the throttling level and other settings for the statsbeat instance
                     // to determine if it should be enabled or not.
-                    _statsBeatConfig = statsConfig.getCfg(core, details.cfg);
+                    _statsBeatConfig = statsConfig.getCfg(core, details);
                     if (_statsBeatConfig) {
                         _isMgrEnabled = true;
                         _shortInterval = STATS_COLLECTION_SHORT_INTERVAL; // Reset to the default in-case the config is removed / changed
@@ -544,6 +547,26 @@ export function createStatsMgr(): IStatsMgr {
 }
 
 /**
+ * The default {@link IStatsBeatConfig} values for SDK Stats collection. These are seeded into the
+ * single global config (via {@link IWatchDetails.setDf}) so they remain dynamic and can be overridden
+ * at runtime via the CDN / dynamic config or by the SKU (AISKU / 1DS).
+ */
+const _sdkStatsDefaults: IConfigDefaults<IConfiguration> = {
+    stats: cfgDfMerge<IStatsBeatConfig>({
+        mode: eStatsEndpointType.SdkStats,
+        // The destination iKey / endpoint are resolved per-event in _track based on the mode, so the
+        // default key map only needs to match all endpoints. A full key map (including explicit keys /
+        // urls) may be supplied via config.stats.endCfg to override this.
+        endCfg: [{
+            type: eStatsType.SDK,
+            keyMap: [{
+                match: ["*"]
+            }]
+        }]
+    })
+};
+
+/**
  * Create the default {@link IStatsMgrConfig} used to enable the SDK Stats collection. By default the
  * resulting events are routed to the distro-owned SDK Stats ingestion endpoint
  * (`stats.monitor.azure.com` / `eu.stats.monitor.azure.com`). The destination can be changed at
@@ -556,24 +579,12 @@ export function createStatsMgr(): IStatsMgr {
 export function createSdkStatsMgrConfig<CfgType extends IConfiguration = IConfiguration>(): IStatsMgrConfig<CfgType> {
     return {
         feature: STATS_SDK_FEATURE,
-        getCfg: (_core: IAppInsightsCore<CfgType>, cfg: CfgType): IStatsBeatConfig => {
-            // Read any CDN / dynamic config overrides. Accessing these inside the (dynamic) config
-            // change handler registers the dependency so changes are picked up at runtime.
-            let userCfg: IStatsBeatConfig = (cfg && cfg.stats) || {};
-
-            return {
-                mode: userCfg.mode || eStatsEndpointType.SdkStats,
-                shrtInt: userCfg.shrtInt,
-                // The destination iKey / endpoint are resolved per-event in _track based on the mode,
-                // so the default key map only needs to match all endpoints. A full key map (including
-                // explicit keys / urls) may be supplied via config.stats.endCfg to override this.
-                endCfg: userCfg.endCfg || [{
-                    type: eStatsType.SDK,
-                    keyMap: [{
-                        match: ["*"]
-                    }]
-                }]
-            };
+        getCfg: (_core: IAppInsightsCore<CfgType>, details: IWatchDetails<CfgType>): IStatsBeatConfig => {
+            // Seed the SDK Stats defaults into the single global config so they remain dynamic and can be
+            // overridden via the CDN / dynamic config or by the SKU. Return a live reference to the nested
+            // stats config so the dependency is registered and runtime changes are picked up.
+            details.setDf(details.cfg, _sdkStatsDefaults as IConfigDefaults<CfgType>);
+            return details.ref<CfgType, IStatsBeatConfig>(details.cfg, "stats");
         }
     };
 }
