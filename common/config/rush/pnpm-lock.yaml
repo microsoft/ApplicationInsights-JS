@@ -6,7 +6,7 @@ settings:
 
 overrides:
   minimatch: '>=3.1.5'
-  tar: '>=7.5.13'
+  tar: '>=7.5.16'
   glob: '>=7.2.3'
   lodash: '>=4.18.1'
   postcss: '>=8.5.14'
@@ -33,6 +33,9 @@ importers:
       '@nevware21/grunt-ts-plugin':
         specifier: ^0.5.2
         version: 0.5.2(grunt@1.6.2)(typescript@4.9.5)
+      '@nevware21/ts-async':
+        specifier: '>= 0.5.5 < 0.6.0'
+        version: 0.5.5
       '@nevware21/ts-utils':
         specifier: '>= 0.14.0 < 2.x'
         version: 0.15.0
@@ -428,11 +431,11 @@ packages:
         optional: true
 
   '@rush-temp/1ds-core-js@file:projects/1ds-core-js.tgz':
-    resolution: {integrity: sha512-2/FkrXchWja1GMSPd71TNIBrW6IwaVASOHkRHYLElw9XVIU101DwynrE+0Rkv4rcmAck5xvxVj242PkDrzhIXg==, tarball: file:projects/1ds-core-js.tgz}
+    resolution: {integrity: sha512-AUxOm0ClXeitQ4VZRyPf4QTSDLY9y+TlDsbiJvtDnNYWhTAcrzICQvF+9x1R8XHioKW8RBIMEitREuletDdBAg==, tarball: file:projects/1ds-core-js.tgz}
     version: 0.0.0
 
   '@rush-temp/1ds-post-js@file:projects/1ds-post-js.tgz':
-    resolution: {integrity: sha512-3/Tva5nvZjaDNyNPkmhkucYMVKEsTgbMao9FdS3wDjhxujNYwYTIeCrNYpT3GlxJxgZ3VxKLv2uGLJpsn6QlIg==, tarball: file:projects/1ds-post-js.tgz}
+    resolution: {integrity: sha512-IVOeHPF1HUN/2Mphsi/bSTj+4CMKgh7L6i2aJZcqKgrYndl3wMW6fdOcAqGm9qLa7Pnb/MRbENHcSdbAfl/7DQ==, tarball: file:projects/1ds-post-js.tgz}
     version: 0.0.0
 
   '@rush-temp/ai-test-framework@file:projects/ai-test-framework.tgz':
@@ -440,27 +443,27 @@ packages:
     version: 0.0.0
 
   '@rush-temp/applicationinsights-analytics-js@file:projects/applicationinsights-analytics-js.tgz':
-    resolution: {integrity: sha512-5uL02lSIcgF9+lKElzhZv46R6AeoU1kqj1DkEDftlXQGXqfQRlIx5jEkVIMJyaHf2oJl8L1yjiEmTCX8D5FH/w==, tarball: file:projects/applicationinsights-analytics-js.tgz}
+    resolution: {integrity: sha512-GdmtXUoMLZ44sZRT9ZwbTXFo+1kbooTTNmj+CLNqQZVwizyfs1UA3m2BEWcKLEbeCcbXsP7REkyJGrX3O+CeFg==, tarball: file:projects/applicationinsights-analytics-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-cfgsync-js@file:projects/applicationinsights-cfgsync-js.tgz':
-    resolution: {integrity: sha512-LHxlzt953as8Ab5ZJNjYYIs3gzt/GBnJ/iy0AOj/YgHBqoamMUNX3v+UGtOkE93NFo22SpVXMTCdj5KCvtlfiA==, tarball: file:projects/applicationinsights-cfgsync-js.tgz}
+    resolution: {integrity: sha512-/cn+mcRcE4C0zTtDP6Wi8zjRjwhgjFFAbWqqiBI11TCJDB3BBNOtgLt82f350BOWMuMyGHbd03Yau5rMkvuteQ==, tarball: file:projects/applicationinsights-cfgsync-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-channel-js@file:projects/applicationinsights-channel-js.tgz':
-    resolution: {integrity: sha512-Nqtg0omGe8PfvjRWt+Nk7j/JSjxJWWygbP8Zg7kj/CA96NQyqt2/c1MmDWWwgi1qzZhhO93Jszi1prM1qvf8pw==, tarball: file:projects/applicationinsights-channel-js.tgz}
+    resolution: {integrity: sha512-2iIOt636pnhHNea8bR1a3IdU4pJHA9zOVBoUyck8hg3Z8ppOOlSNFk8QvuIigFRPfDqXU6uyUbWFcrHyY/e2/A==, tarball: file:projects/applicationinsights-channel-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-chrome-debug-extension@file:projects/applicationinsights-chrome-debug-extension.tgz':
-    resolution: {integrity: sha512-hjfqNjhItYfg0V+nbphIrnRWwTVnNFY36bQWM24RzIZ7eKbBkmJxDXGqH+cU1C61LR0J1PcvaGIEeuOfLEVlMg==, tarball: file:projects/applicationinsights-chrome-debug-extension.tgz}
+    resolution: {integrity: sha512-vzksor/k62cbZTHLGqSdJcPjcUb3D5YJ3muPfOXWKk/NnmzyKbAul8NV0HB1xL6a80FtnFLBWIFTK5fWgYB/5Q==, tarball: file:projects/applicationinsights-chrome-debug-extension.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-clickanalytics-js@file:projects/applicationinsights-clickanalytics-js.tgz':
-    resolution: {integrity: sha512-LPU7MlWZIbssZZR8xhFZcdnOGIqLiN9Q/4dFRy8J0AtkaO3J5AV6bR1MBQKcmCOZCnxpjNpMpL1vdduYD0yZiQ==, tarball: file:projects/applicationinsights-clickanalytics-js.tgz}
+    resolution: {integrity: sha512-hrnstNWgW1lAJWWirP/rbFxIIEaf/6U8bmEkys8tNy6uBbM+lXzFUiOGCpE8LF1aS8nXddxThTPbE2ETFSp7UQ==, tarball: file:projects/applicationinsights-clickanalytics-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-common@file:projects/applicationinsights-common.tgz':
-    resolution: {integrity: sha512-iMiU4VkDtmsg13p7KCZbWGy8gBIaM3peXGAXct8153LMhaiS/1NRTOlyC6ChLnrcNupTuEHLs6+suxlJirNVcg==, tarball: file:projects/applicationinsights-common.tgz}
+    resolution: {integrity: sha512-XsKyAkBj03zVG1L8LabBgIjn3k0krrTuCV7QKgyHe3Zpinj96RQJVi+09NlqmaN9rY3wzCVluiGuU2VJ8RjJKQ==, tarball: file:projects/applicationinsights-common.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-core-js@file:projects/applicationinsights-core-js.tgz':
@@ -468,31 +471,31 @@ packages:
     version: 0.0.0
 
   '@rush-temp/applicationinsights-debugplugin-js@file:projects/applicationinsights-debugplugin-js.tgz':
-    resolution: {integrity: sha512-KvH6vwkvUHkOpy6ucq4EKVMH78z7EZFB3m8NoYED6qLLBKvyKywl+cGH6Q7DQ+Qm3QAEhoM4gSW/zXe/jN+84w==, tarball: file:projects/applicationinsights-debugplugin-js.tgz}
+    resolution: {integrity: sha512-v5nyxn820oWed/uLL9BbhMVPddWGyXSoatAK/GJVLyeq5aE5+sGSQknB/HEuUiUjL4QOaxkKDoPeRz2qTLgeqQ==, tarball: file:projects/applicationinsights-debugplugin-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-dependencies-js@file:projects/applicationinsights-dependencies-js.tgz':
-    resolution: {integrity: sha512-aKE18jDFhitkK32mv6ozdsoo6efNhFilg+zCmhWnUfCPVYZ5fXFJtz2vjyVYM6vSUMZcYBA0Nz3wkxpG7tDrQg==, tarball: file:projects/applicationinsights-dependencies-js.tgz}
+    resolution: {integrity: sha512-KOZQrYoHzLdq7/xkLojKsKKlI6D3LfnVa4oPCtkL4n42Uj16ZcsLfsLHHfJ49fKIAIzAT2xVZTsUDB/iNwATZg==, tarball: file:projects/applicationinsights-dependencies-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-example-aisku@file:projects/applicationinsights-example-aisku.tgz':
-    resolution: {integrity: sha512-M0JReqqSp9peFbH4dm7SmUtFd69z6Oj/ZvtjztWPhiQHFEOOpNMK33FaMqSJIgO96GdWLSFxcoAJuYKFuPyFIw==, tarball: file:projects/applicationinsights-example-aisku.tgz}
+    resolution: {integrity: sha512-jbtpZQN2cag0flu70wdJT5/0N3ws1HHhOILUCRL7eRvyX/YiUnQai/ceKK53fsl355MkT3MOVxRTl/wfleSVag==, tarball: file:projects/applicationinsights-example-aisku.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-example-cfgsync@file:projects/applicationinsights-example-cfgsync.tgz':
-    resolution: {integrity: sha512-WCzjQOw5YNjYQNYRs1LbV2nRVfvIwfb/VUevvMXe4PcXJsdX4HbkXjY1GNc9bL0EzNOEDESJigq2I9BJL9mzwA==, tarball: file:projects/applicationinsights-example-cfgsync.tgz}
+    resolution: {integrity: sha512-nRDvBUAoOKwOQVkU0f4ZvvZF1StjqLV5GJ1zNbhwEOCdEHKK6nLOmyupFoE9KFflHXThjm2aNxfkXd/S/Pa1kA==, tarball: file:projects/applicationinsights-example-cfgsync.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-example-dependencies@file:projects/applicationinsights-example-dependencies.tgz':
-    resolution: {integrity: sha512-t+6o6XcrSebi3K89mSYUamcUIRLW/XdxMYIxEFoMWwgf5DqZe8HZ4DGCY4T6w54hhIICgXS5dYyaPcsDJuI2qw==, tarball: file:projects/applicationinsights-example-dependencies.tgz}
+    resolution: {integrity: sha512-c/19sHnCpREgl3r0IDYRiNcJc981e21V854KxPLT6VIKu2U/bC1JQ3tyE9atj2HkOvqVTzY9RQlBXTypIpbDvw==, tarball: file:projects/applicationinsights-example-dependencies.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-example-shared-worker@file:projects/applicationinsights-example-shared-worker.tgz':
-    resolution: {integrity: sha512-6kE3/ZNTLgqyroOslhWmzrsreitkZT8C1mPDD6x2Ajf5DqdoTci2+DlGTQxbMPFCcsCaBjeJKE3qbZvYgYZI0A==, tarball: file:projects/applicationinsights-example-shared-worker.tgz}
+    resolution: {integrity: sha512-MCBCVwrx7Vwtp6cGoYodLXJusq5y2rGiemJ61eNXJ3KboyYnqV8OQ9g2rg2kVRQoerZd5FmwG1e2Y4o7geA2qQ==, tarball: file:projects/applicationinsights-example-shared-worker.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-example-startspan@file:projects/applicationinsights-example-startspan.tgz':
-    resolution: {integrity: sha512-MS40CRt8+ZEGQnuB06/NXUQER0odmUZ31opa5X4NrekadQrUGtumge2XKyW7upwd+t0In/QUqpLM03XKLF4wBg==, tarball: file:projects/applicationinsights-example-startspan.tgz}
+    resolution: {integrity: sha512-H2YKsa8LoOsFDw5DmmVtgv8hagIs9CFxq7FGrhzU1J624tEL10xTf07Y4hHXA1nL5fX0Bsru2d2X3rIO9qit0g==, tarball: file:projects/applicationinsights-example-startspan.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-js-release-tools@file:projects/applicationinsights-js-release-tools.tgz':
@@ -500,19 +503,19 @@ packages:
     version: 0.0.0
 
   '@rush-temp/applicationinsights-offlinechannel-js@file:projects/applicationinsights-offlinechannel-js.tgz':
-    resolution: {integrity: sha512-RdHAHUrLDR1kXOZxLdL1ZkTyDlJjyW5FNd4Op5KoQ8k9pAYWpCjX/xq2kj8ZYO8LwbE7eyK6UU1xIvjQyp8n4g==, tarball: file:projects/applicationinsights-offlinechannel-js.tgz}
+    resolution: {integrity: sha512-NrstZ9vF+Eu4DJBupajSpWtBLSW6kJxBsZddagxoloDpUCPgM4aZFW+cRfJcBVlnFPTScutLQcMkWNfPL1kI4g==, tarball: file:projects/applicationinsights-offlinechannel-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-osplugin-js@file:projects/applicationinsights-osplugin-js.tgz':
-    resolution: {integrity: sha512-ZSKXXrdICIl/BWvp45FO/ryqiJ+sosAigd2eTeV5h1HwCfOwqbTivc8N/TeU1Qn50BGySPnCtW37g9N/9QIW9A==, tarball: file:projects/applicationinsights-osplugin-js.tgz}
+    resolution: {integrity: sha512-0PqAI98eRialgofnRz0BbK2HxYN24XrpmHQ4PmNFzzsgTrHrF1PYBnihrJiloU9hgWM3nOPY21QRwdEi1Vklpg==, tarball: file:projects/applicationinsights-osplugin-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-perfmarkmeasure-js@file:projects/applicationinsights-perfmarkmeasure-js.tgz':
-    resolution: {integrity: sha512-SpBat5Qtas0+ZrqgnTfihzb2LFwhdmWSaTSyAUUL50rmpSw62NOaHyDAHuYh4s5csyGJXOKwEs0h4OAhiR44Kg==, tarball: file:projects/applicationinsights-perfmarkmeasure-js.tgz}
+    resolution: {integrity: sha512-RxcDoWeEjLIylobuI7suMklxJmGt9dx8GdbTe9A1viRtMsKOYRlDAEfxNv/oZmX8tFPn/D7D7ov3nAgXql4cVw==, tarball: file:projects/applicationinsights-perfmarkmeasure-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-properties-js@file:projects/applicationinsights-properties-js.tgz':
-    resolution: {integrity: sha512-a6oMNnMFVdkrIrQf9vjR/zjpyQdVz9+91RXfDENZoe8f+4EnmePCJTLg5UktYpPxiN/ntEqRj0MqqApMmVQ7uA==, tarball: file:projects/applicationinsights-properties-js.tgz}
+    resolution: {integrity: sha512-IGsK38G9BWcqqwRVEpZ2JLLkPG1p2EVI7ti+6KolUh0OIt8QD1OdK7o/IiVfcd/V5YQvR8NVJTrzfKesxyoySQ==, tarball: file:projects/applicationinsights-properties-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-rollup-es5@file:projects/applicationinsights-rollup-es5.tgz':
@@ -528,15 +531,15 @@ packages:
     version: 0.0.0
 
   '@rush-temp/applicationinsights-teechannel-js@file:projects/applicationinsights-teechannel-js.tgz':
-    resolution: {integrity: sha512-be/MEzXl9BNjQy58ls/k7udyd0jvjSO8DBNjHR2wTlO3BaJzxUnSUj27uJakAS0DQ44a8OBLmKw44MAPHFSO8A==, tarball: file:projects/applicationinsights-teechannel-js.tgz}
+    resolution: {integrity: sha512-RFeAOSpvRTeqs77fLhM06jkK363lrMPQsLH4SEmnDskR3xgq5xqUlDweKNW10G+k2rrOLUoXz5RH8iZdj0TNoA==, tarball: file:projects/applicationinsights-teechannel-js.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-test-module-type-check@file:projects/applicationinsights-test-module-type-check.tgz':
-    resolution: {integrity: sha512-gAICBFtB6Tk3UXfUGvErjLTCNfre006GoY4wmXW1ijPCHdOmU+qew5YWLEBdoTRJNu7Llanv4bzX0qYdHFoUrw==, tarball: file:projects/applicationinsights-test-module-type-check.tgz}
+    resolution: {integrity: sha512-x517DpVVLaV32/y+uWPmvnL5sDQfO4QC9/GcuI2294P/di9R24z9WDQyfeReOCuwzzFXdwINgt8DZhMXqhiodA==, tarball: file:projects/applicationinsights-test-module-type-check.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-web-basic@file:projects/applicationinsights-web-basic.tgz':
-    resolution: {integrity: sha512-PT50jUSz/u1ZMo/GzF8F/Epv8x9glO778Cw2X+nPnMyusEZTI1485tn3Yxn6pV99bZ6Zr7CkaG7wadVoBcJ3Hg==, tarball: file:projects/applicationinsights-web-basic.tgz}
+    resolution: {integrity: sha512-SpCzqlqzZXHOyIIUaA9ZAytBRiGisn7H5O+yTbtIeit69ag9A/JxUz9+QjnMunM0FoZksNfuqFeelHWHv9Vr3w==, tarball: file:projects/applicationinsights-web-basic.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-web-config@file:projects/applicationinsights-web-config.tgz':
@@ -544,11 +547,11 @@ packages:
     version: 0.0.0
 
   '@rush-temp/applicationinsights-web-snippet@file:projects/applicationinsights-web-snippet.tgz':
-    resolution: {integrity: sha512-ITZFKHCkvPGLIp4sZW0kee9VgkolUypBHCG/k5sNJYGlJEcuZUJu0zgLBwdg2hEpRL93U/JuMlAEPR9TNCaq5w==, tarball: file:projects/applicationinsights-web-snippet.tgz}
+    resolution: {integrity: sha512-Ks2o5g3zMNX2Ijw7Oyxza0Ul2/1yTvd0T+PTAUQD9H1dfE2Jyag+8aF4KQWc1rQRnJjWbShwZyHZeRmN2fGH7Q==, tarball: file:projects/applicationinsights-web-snippet.tgz}
     version: 0.0.0
 
   '@rush-temp/applicationinsights-web@file:projects/applicationinsights-web.tgz':
-    resolution: {integrity: sha512-jyMxNdZa3nAjD+a0bqQAaCyRXMkMKXjJ9pcfplHotUBcoLH6ZJylBYIJYTIEQvRBT2JjFqzWL/h+4/mNGlJ4cA==, tarball: file:projects/applicationinsights-web.tgz}
+    resolution: {integrity: sha512-SzWyvuY86wtJaGB4Nh62Z5YYYGJgYBztNcN5K5MkmwWLlFpb5Yst1ncK21SJEiANVL8zyf914fkTL4L24aPSkg==, tarball: file:projects/applicationinsights-web.tgz}
     version: 0.0.0
 
   '@rushstack/node-core-library@5.23.1':
