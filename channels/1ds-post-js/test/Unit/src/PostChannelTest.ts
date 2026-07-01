@@ -4004,6 +4004,70 @@ export class PostChannelTest extends AITestClass {
             }
         });
 
+        this.testCase({
+            name: "Regression (permanent stall): auto flush does not wedge behind the flush() wait-for-idle timer",
+            useFakeTimers: true,
+            test: () => {
+                // Fully controllable transport: record each request and let the test decide
+                // if/when it completes.
+                let sentRequests: Array<{ oncomplete: (status: number, headers: any) => void }> = [];
+                this.config.extensionConfig[this.postChannel.identifier] = {
+                    httpXHROverride: {
+                        sendPOST: (payload: IPayloadData, oncomplete: (status: number, headers: { [headerName: string]: string }) => void, sync?: boolean) => {
+                            sentRequests.push({ oncomplete: oncomplete });
+                        }
+                    },
+                    // Drive auto flush purely from the queued-event count (not the per-batch limit).
+                    autoFlushEventsLimit: 5,
+                    disableAutoBatchFlushLimit: true,
+                    eventsLimitInMem: 1000
+                };
+
+                this.core.initialize(this.config, [this.postChannel]);
+                this.clock.tick(1);
+
+                let addEvents = (count: number) => {
+                    for (let lp = 0; lp < count; lp++) {
+                        this.postChannel.processTelemetry({
+                            name: "stallEvt",
+                            latency: EventLatency.Normal,
+                            iKey: "testIkey"
+                        } as IPostTransmissionTelemetryItem);
+                    }
+                    // Let any 0ms timer settle (the fix drains synchronously; this is defensive).
+                    this.clock.tick(1);
+                };
+
+                // First burst crosses autoFlushEventsLimit -> auto flush triggers -> request #1 is sent.
+                addEvents(6);
+                QUnit.assert.equal(sentRequests.length, 1, "request #1 should have been sent, got " + sentRequests.length);
+
+                // Complete request #1. This clears the "first response" (clock-skew) gate so more
+                // requests are allowed to be sent again. Note we only advance the clock by 1ms, so any
+                // pending timer with a larger delay does NOT fire yet.
+                sentRequests[0].oncomplete(200, {});
+                this.clock.tick(1);
+
+                // A second burst crosses the auto flush limit again.
+                //
+                // Before the fix, the auto flush in the first burst routed through
+                // flush() -> _flushImpl -> _waitForIdleManager, which parked _flushCallbackTimer as a
+                // poll timer (fires on the FlushCheckTimer interval, not within our 1ms tick). While
+                // _flushCallbackTimer is non-null BOTH the scheduled timer and any further auto flush
+                // are suppressed, so this second burst would NOT be sent here (the channel is wedged
+                // waiting for the manager to become "completely idle"). With the fix, auto flush drains
+                // directly and never sets _flushCallbackTimer, so request #2 goes out immediately.
+                addEvents(6);
+                QUnit.assert.equal(sentRequests.length, 2, "request #2 must be sent - auto flush must not be wedged behind the flush() wait-for-idle timer (got " + sentRequests.length + ")");
+
+                // And it must keep working for subsequent bursts too.
+                sentRequests[1].oncomplete(200, {});
+                this.clock.tick(1);
+                addEvents(6);
+                QUnit.assert.equal(sentRequests.length, 3, "request #3 must be sent - the channel keeps draining (got " + sentRequests.length + ")");
+            }
+        });
+
     }
 }
 
