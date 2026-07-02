@@ -4,6 +4,27 @@
 
 <!-- ## Unreleased Changes -->
 
+## 3.4.3 (July 2nd, 2026)
+
+This is a maintenance release for the 3.4.x version line adding a new SDK statistics feature, a PostChannel reliability fix, and dependency security hardening. The `@microsoft/1ds-post-js` channel is numbered 4.4.3 and requires v3.4.3.
+
+### Significant Changes (since 3.4.2)
+
+- **Customer SDK Stats**: Added a new `SdkStats` feature that periodically collects internal SDK usage/health statistics. It is enabled by default and can be disabled (or explicitly configured) via the `featureOptIn` configuration (e.g. `featureOptIn: { SdkStats: { mode: FeatureOptInMode.disable } }`); the collection interval defaults to 15 minutes (`sdkStats.int`).
+
+- **PostChannel Auto-Flush Stall Fix**: Fixed a permanent stall in `@microsoft/1ds-post-js` where, under sustained intermittent send failures (e.g. a load balancer returning occasional 503s), auto flush could wedge behind the `flush()` wait-for-idle timer and permanently stop draining the in-memory queue — causing telemetry to be silently dropped as `QueueFull` until the process was restarted. Auto flush is now fire-and-forget and no longer parks the scheduler waiting for the manager to become completely idle.
+
+- **Dependency Security Hardening**: Pinned `tar` to `>=7.5.16` to remediate CVE-2026-53655 and resolved the remaining `npm audit` findings in build tooling via dependency overrides (`js-yaml`, `yaml`, `markdown-it`, `linkify-it`). These are build/tooling changes and do not affect the published runtime packages.
+
+### Changelog
+
+- #2746 Fix PostChannel auto-flush permanent stall under sustained intermittent send failures
+- #2745 fix(security): pin tar >=7.5.16 to remediate CVE-2026-53655
+- #2707 Enable Customer SDK Stats
+- Resolve remaining npm audit findings via dependency overrides (js-yaml, yaml, markdown-it, linkify-it)
+
+**Full Changelog**: https://github.com/microsoft/ApplicationInsights-JS/compare/3.4.2...3.4.3
+
 ## 3.4.2 (June 18th, 2026)
 
 This is a maintenance release for the 3.4.x version line containing security hardening, bug fixes, build tooling improvements, and CI updates. The `@microsoft/1ds-post-js` channel is numbered 4.4.2 and requires v3.4.2.
