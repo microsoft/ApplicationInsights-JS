@@ -15,6 +15,8 @@ import { INotificationListener } from "./INotificationListener";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManagerProvider } from "./IPerfManager";
 import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
+import { IStatsBeat, IStatsBeatState } from "./IStatsBeat";
+import { IStatsMgr } from "./IStatsMgr";
 import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./ITelemetryInitializers";
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IPlugin, ITelemetryPlugin } from "./ITelemetryPlugin";
@@ -22,8 +24,6 @@ import { ITelemetryUnloadState } from "./ITelemetryUnloadState";
 import { ITraceHost, ITraceProvider } from "./ITraceProvider";
 import { ILegacyUnloadHook, IUnloadHook } from "./IUnloadHook";
 
-// import { IStatsBeat, IStatsBeatState } from "./IStatsBeat";
-// import { IStatsMgr } from "./IStatsMgr";
 export interface ILoadedPlugin<T extends IPlugin> {
     plugin: T;
 
@@ -121,21 +121,21 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
 
     pollInternalLogs?(eventName?: string): ITimerHandler;
 
-    // /**
-    //  * Get the current stats beat instance for the provided configuration, if enabled.
-    //  * @param statsBeatConfig - The configuration to use to create the stats beat instance.
-    //  * @returns The stats beat instance or null if not available
-    //  */
-    // getStatsBeat?(statsBeatConfig: IStatsBeatState): IStatsBeat;
+    /**
+     * Get the current stats beat instance for the provided configuration, if enabled.
+     * @param statsBeatConfig - The configuration to use to create the stats beat instance.
+     * @returns The stats beat instance or null if not available
+     */
+    getStatsBeat?(statsBeatConfig: IStatsBeatState): IStatsBeat;
 
-    // /**
-    //  * Set the stats beat manager instance which will be used to create the stats beat instances
-    //  * using the provided configuration. This is used to provide greater control over the stats beat
-    //  * instance creation and management.
-    //  * @param statsMgrCfg - The configuration to use to create the stats beat instance.
-    //  * @returns The stats beat instance or null if not available
-    //  */
-    // setStatsMgr?(statsMgrCfg?: IStatsMgr): void;
+    /**
+     * Set the stats beat manager instance which will be used to create the stats beat instances
+     * using the provided configuration. This is used to provide greater control over the stats beat
+     * instance creation and management.
+     * @param statsMgrCfg - The configuration to use to create the stats beat instance.
+     * @returns The stats beat instance or null if not available
+     */
+    setStatsMgr?(statsMgrCfg?: IStatsMgr): void;
 
     stopPollingInternalLogs?(): void;
 

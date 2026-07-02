@@ -3,12 +3,14 @@ import {
     ActiveStatus, BaseTelemetryPlugin, BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, EventDataType,
     ExceptionDataType, IAppInsightsCore, IBackendResponse, IChannelControls, IConfig, IConfigDefaults, IConfiguration, IDiagnosticLogger,
     IEnvelope, IInternalOfflineSupport, INotificationManager, IOfflineListener, IPayloadData, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ISample, IStorageBuffer, ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, IXDomainRequest,
+    IProcessTelemetryUnloadContext, ISample, IStatsBeatState, IStatsEventData, IStorageBuffer, ITelemetryItem, ITelemetryPluginChain,
+    ITelemetryUnloadState, IXDomainRequest,
     IXHROverride, MetricDataType, OnCompleteCallback, PageViewDataType, PageViewPerformanceDataType, ProcessLegacy, RemoteDependencyDataType,
-    RequestDataType, RequestHeaders, SampleRate, SendPOSTFunction, SendRequestReason, SenderPostManager, TraceDataType, TransportType,
+    RequestDataType, RequestHeaders, STATS_SDK_ENDPOINT_KEY, SampleRate, SendPOSTFunction, SendRequestReason, SenderPostManager, TraceDataType,
+    TransportType,
     _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
     createOfflineListener, createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, eRequestHeaders,
-    formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFeatureEnabled,
+    eStatsType, formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFeatureEnabled,
     isFetchSupported, isInternalApplicationInsightsEndpoint, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse,
     prependTransports, runTargetUnload, utlCanUseSessionStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-core-js";
@@ -34,7 +36,7 @@ const FetchSyncRequestSizeLimitBytes = 65000; // approx 64kb (the current Edge, 
 interface IInternalPayloadData extends IPayloadData {
     oriPayload: IInternalStorageItem[];
     retryCnt?: number;
-    // statsBeatData?: IStatsEventData;
+    statsBeatData?: IStatsEventData;
 }
 
 
@@ -188,6 +190,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _sendPostMgr: SenderPostManager;
         let _retryCodes: number[];
         let _zipPayload: boolean;
+        let _httpInterface: IXHROverride;       // The resolved http sender, captured so SDK Stats can be sent to their own endpoint
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -453,6 +456,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
     
                     httpInterface = _alwaysUseCustomSend? customInterface : (httpInterface || customInterface || xhrInterface);
 
+                    _httpInterface = httpInterface;
+
                     _self._sender = (payload: IInternalStorageItem[], isAsync: boolean) => {
                         return _doSend(httpInterface, payload, isAsync);
                     };
@@ -497,7 +502,17 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     if (!isValidate) {
                         return;
                     }
-        
+
+                    // SDK Stats events carry the destination SDK Stats ingestion endpoint
+                    // so they can be redirected away from the customer's breeze endpoint. Extract and
+                    // remove the marker so it is not serialized into the outgoing envelope.
+                    let statsEndpoint: string;
+                    let data = telemetryItem.data;
+                    if (data && data[STATS_SDK_ENDPOINT_KEY]) {
+                        statsEndpoint = data[STATS_SDK_ENDPOINT_KEY];
+                        delete data[STATS_SDK_ENDPOINT_KEY];
+                    }
+
                     let aiEnvelope = _getEnvelope(telemetryItem, diagLogger);
                     if (!aiEnvelope) {
                         return;
@@ -505,22 +520,28 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         
                     // check if the incoming payload is too large, truncate if necessary
                     const payload: string = _serializer.serialize(aiEnvelope);
-        
-                    // flush if we would exceed the max-size limit by adding this item
-                    const buffer = _self._buffer;
-                    _checkMaxSize(payload);
-                    let payloadItem = {
-                        item: payload,
-                        cnt: 0, // inital cnt will always be 0
-                        bT: telemetryItem.baseType, // store baseType for SDK stats telemetryType mapping
-                        iN: telemetryItem.name // store name so SDK stats can self-filter its own metrics
-                    } as IInternalStorageItem;
 
-                    // enqueue the payload
-                    buffer.enqueue(payloadItem);
-        
-                    // ensure an invocation timeout is set
-                    _setupTimer();
+                    if (statsEndpoint) {
+                        // Route SDK Stats directly to the SDK Stats ingestion endpoint, bypassing the
+                        // customer send buffer so it is never mixed with customer telemetry.
+                        _sendStatsBeat(payload, statsEndpoint);
+                    } else {
+                        // flush if we would exceed the max-size limit by adding this item
+                        const buffer = _self._buffer;
+                        _checkMaxSize(payload);
+                        let payloadItem = {
+                            item: payload,
+                            cnt: 0, // inital cnt will always be 0
+                            bT: telemetryItem.baseType, // store baseType for SDK stats telemetryType mapping
+                            iN: telemetryItem.name // store name so SDK stats can self-filter its own metrics
+                        } as IInternalStorageItem;
+
+                        // enqueue the payload
+                        buffer.enqueue(payloadItem);
+
+                        // ensure an invocation timeout is set
+                        _setupTimer();
+                    }
         
                 } catch (e) {
                     _throwInternal(diagLogger,
@@ -673,20 +694,60 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             }
 
-            // function _getStatsBeat() {
-            //     let statsBeatConfig: IStatsBeatState = {
-            //         cKey: _self._senderConfig.instrumentationKey,
-            //         endpoint: _endpointUrl,
-            //         sdkVer: EnvelopeCreator.Version,
-            //         type: eStatsType.SDK
-            //     };
+            function _getStatsBeat() {
+                let statsBeatConfig: IStatsBeatState = {
+                    cKey: _self._senderConfig.instrumentationKey,
+                    endpoint: _endpointUrl,
+                    sdkVer: EnvelopeCreator.Version,
+                    type: eStatsType.SDK
+                };
 
-            //     let core = _self.core;
+                let core = _self.core;
 
-            //     // During page unload the core may have been cleared and some async events may not have been sent yet
-            //     // resulting in the core being null. In this case we don't want to create a statsbeat instance
-            //     return core ? core.getStatsBeat(statsBeatConfig) : null;
-            // }
+                // During page unload the core may have been cleared and some async events may not have been sent yet
+                // resulting in the core being null. In this case we don't want to create a SDK Stats instance
+                return core && core.getStatsBeat ? core.getStatsBeat(statsBeatConfig) : null;
+            }
+
+            /**
+             * Send a single serialized SDK Stats payload to the provided SDK Stats ingestion
+             * endpoint. SDK Stats are routed to the distro-owned endpoint instead of the customer's breeze
+             * endpoint and therefore bypass the normal send buffer. The send reuses the resolved http
+             * sender and is sent immediately (SDK Stats events are infrequent and low volume).
+             * @param payloadStr - The serialized envelope to send.
+             * @param statsEndpoint - The SDK Stats ingestion endpoint URL to send the payload to.
+             */
+            function _sendStatsBeat(payloadStr: string, statsEndpoint: string) {
+                try {
+                    let sendInterface = _httpInterface;
+                    if (sendInterface && payloadStr && statsEndpoint) {
+                        let payloadItem = {
+                            item: payloadStr,
+                            cnt: 0
+                        } as IInternalStorageItem;
+                        // markAsSent=false so the main send buffer is never touched, statsUrl redirects the POST
+                        _doSend(sendInterface, [payloadItem], true, false, statsEndpoint);
+                    }
+                } catch (e) {
+                    // SDK Stats are best-effort and must never break customer telemetry
+                }
+            }
+
+            /**
+             * Record the result of a send against the SDK Stats instance for the customer
+             * endpoint. Sends to the SDK Stats ingestion endpoint itself are intentionally skipped (the
+             * payload targets a different url) to avoid a self-referential feedback loop.
+             * @param status - The resulting status code of the send.
+             * @param payload - The payload that was sent.
+             */
+            function _countStatsBeat(status: number, payload?: IPayloadData) {
+                if (payload && payload.urlString === _endpointUrl) {
+                    let statsbeat = _getStatsBeat();
+                    if (statsbeat) {
+                        statsbeat.count(status, payload, _endpointUrl);
+                    }
+                }
+            }
 
             function _xdrOnLoad (xdr: IXDomainRequest, payload: IInternalStorageItem[]) {
                 const responseText = _getResponseText(xdr);
@@ -714,23 +775,25 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
-                            //const responseText = _getResponseText(xdr);
-                            // let statsbeat = _getStatsBeat();
-                            // if (statsbeat) {
-                            //     if (xdr && (responseText + "" === "200" || responseText === "")) {
-                            //         _consecutiveErrors = 0;
-                            //         statsbeat.count(200, payload, _endpointUrl);
-                            //     } else {
-                            //         const results = parseResponse(responseText);
-                        
-                            //         if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
-                            //             && !_isRetryDisabled) {
-                            //             statsbeat.count(206, payload, _endpointUrl);
-                            //         } else {
-                            //             statsbeat.count(499, payload, _endpointUrl);
-                            //         }
-                            //     }
-                            // }
+                            if (payload && payload.urlString === _endpointUrl) {
+                                const responseText = _getResponseText(xdr);
+                                let statsbeat = _getStatsBeat();
+                                if (statsbeat) {
+                                    if (xdr && (responseText + "" === "200" || responseText === "")) {
+                                        _consecutiveErrors = 0;
+                                        statsbeat.count(200, payload, _endpointUrl);
+                                    } else {
+                                        const results = parseResponse(responseText);
+
+                                        if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
+                                            && !_isRetryDisabled) {
+                                            statsbeat.count(206, payload, _endpointUrl);
+                                        } else {
+                                            statsbeat.count(499, payload, _endpointUrl);
+                                        }
+                                    }
+                                }
+                            }
 
                             return _xdrOnLoad(xdr, payloadArr);
                            
@@ -740,10 +803,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
-                            // let statsbeat = _getStatsBeat();
-                            // if (statsbeat) {
-                            //     statsbeat.count(response.status, payload, _endpointUrl);
-                            // }
+                            _countStatsBeat(response.status, payload);
                             return _checkResponsStatus(response.status, payloadArr, response.url, payloadArr.length, response.statusText, resValue || "");
                         },
                         xhrOnComplete: (request: XMLHttpRequest, oncomplete: OnCompleteCallback, payload?: IPayloadData) => {
@@ -751,18 +811,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
-                            // let statsbeat = _getStatsBeat();
-                            // if (statsbeat && request.readyState === 4) {
-                            //     statsbeat.count(request.status, payload, _endpointUrl);
-                            // }
+                            if (request.readyState === 4) {
+                                _countStatsBeat(request.status, payload);
+                            }
 
                             return _xhrReadyStateChange(request, payloadArr, payloadArr.length);
                         },
                         beaconOnRetry: (data: IPayloadData, onComplete: OnCompleteCallback, canSend: (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean) => {
-                            // let statsbeat = _getStatsBeat();
-                            // if (statsbeat) {
-                            //     statsbeat.count(499, data, _endpointUrl);
-                            // }
+                            _countStatsBeat(499, data);
 
                             return _onBeaconRetry(data, onComplete, canSend);
                         }
@@ -1026,19 +1082,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 }
             }
 
-            function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true): void | IPromise<boolean> {
+            function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true, urlOverride?: string): void | IPromise<boolean> {
                 let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
-                    // let statsbeat = _getStatsBeat();
-                    // if (statsbeat) {
-                    //     statsbeat.count(status, payloadData, _endpointUrl);
-                    // }
+                    _countStatsBeat(status, payloadData);
 
                     return _getOnComplete(payload, status, headers, response);
                 };
-                let payloadData = _getPayload(payload);
-                // if (payloadData) {
-                //     payloadData.statsBeatData = {startTime: dateNow()};
-                // }
+                let payloadData = _getPayload(payload, urlOverride);
+                if (payloadData) {
+                    payloadData.statsBeatData = {startTime: dateNow()};
+                }
 
                 let sendPostFunc:  SendPOSTFunction = sendInterface && sendInterface.sendPOST;
                 if (sendPostFunc && payloadData) {
@@ -1074,13 +1127,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 return null;
             }
 
-            function _getPayload(payload: IInternalStorageItem[]): IInternalPayloadData {
+            function _getPayload(payload: IInternalStorageItem[], urlOverride?: string): IInternalPayloadData {
                 if (isArray(payload) && payload.length > 0) {
                     let batch = _self._buffer.batchPayloads(payload);
                     let headers = _getHeaders();
                     let payloadData: IInternalPayloadData = {
                         data: batch,
-                        urlString: _endpointUrl,
+                        urlString: urlOverride || _endpointUrl,
                         headers: headers,
                         disableXhrSync: _disableXhr,
                         disableFetchKeepAlive: !_fetchKeepAlive,
@@ -1469,6 +1522,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             function _initDefaults() {
                 _self._sender = null;
                 _self._buffer = null;
+                _httpInterface = null;
                 _self._appId = null;
                 _self._sample = null;
                 _headers = {};

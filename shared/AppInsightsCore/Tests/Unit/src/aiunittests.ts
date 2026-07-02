@@ -12,7 +12,7 @@ import { EventsDiscardedReasonTests } from "./ai/EventsDiscardedReason.Tests";
 import { W3cTraceParentTests } from "./trace/W3cTraceParentTests";
 import { DynamicConfigTests } from "./config/DynamicConfig.Tests";
 import { SendPostManagerTests } from "./ai/SendPostManager.Tests";
-// import { StatsBeatTests } from "./StatsBeat.Tests";
+import { StatsBeatTests } from "./ai/StatsBeat.Tests";
 import { OTelTraceApiTests } from "./trace/traceState.Tests";
 import { CommonUtilsTests } from "./OpenTelemetry/commonUtils.Tests";
 import { OpenTelemetryErrorsTests } from "./OpenTelemetry/errors.Tests";
@@ -64,8 +64,8 @@ export function runTests() {
     new W3cTraceStateTests().registerTests();
     new TraceUtilsTests().registerTests();
     new OTelNegativeTests().registerTests();
-    // new StatsBeatTests(false).registerTests();
-    // new StatsBeatTests(true).registerTests();
+    new StatsBeatTests(false).registerTests();
+    new StatsBeatTests(true).registerTests();
     new SendPostManagerTests().registerTests();
     new SdkStatsNotificationCbkTests().registerTests();
 

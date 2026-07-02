@@ -12,6 +12,7 @@ import { IExceptionConfig } from "./IExceptionConfig";
 import { IFeatureOptIn } from "./IFeatureOptIn";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManager } from "./IPerfManager";
+import { IStatsBeatConfig } from "./IStatsBeat";
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
 
 /**
@@ -247,6 +248,14 @@ export interface IConfiguration extends IOTelConfig {
      * @example ["sig", "Signature", "AWSAccessKeyId", "X-Goog-Signature","auth_token", "api_key", "private_data"]
      */
     redactQueryParams?: string[];
+
+    /**
+     * [Optional] Configuration for the SDK Stats (internal SDK statistics) collection. This may be
+     * supplied / overridden via the CDN / dynamic config to change the SDK Stats behaviour at runtime,
+     * for example setting `stats.mode` to {@link eStatsEndpointType.Breeze} routes SDK Stats to the
+     * legacy breeze endpoint instead of the distro-owned SDK Stats endpoint.
+     */
+    stats?: IStatsBeatConfig;
 
     ///**
     // * [Optional] Internal SDK configuration for developers
