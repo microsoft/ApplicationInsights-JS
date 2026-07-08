@@ -14,11 +14,10 @@ import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import { INetworkStatsbeat } from "../interfaces/ai/INetworkStatsbeat";
 import { IStatsBeat, IStatsBeatConfig, IStatsBeatKeyMap, IStatsBeatState, IStatsEndpointConfig } from "../interfaces/ai/IStatsBeat";
-import { IStatsMgr, IStatsMgrConfig } from "../interfaces/ai/IStatsMgr";
+import { IStatsMgr } from "../interfaces/ai/IStatsMgr";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 import { IPayloadData } from "../interfaces/ai/IXHROverride";
 import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
-import { IWatchDetails } from "../interfaces/config/IDynamicWatcher";
 import { isFeatureEnabled } from "../utils/HelperFuncs";
 
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
@@ -448,7 +447,7 @@ export function createStatsMgr(): IStatsMgr {
 
     // Lazily initialize the manager and start listening for configuration changes
     // This is also required to handle "unloading" and then re-initializing again
-    function _init<CfgType extends IConfiguration = IConfiguration>(core: IAppInsightsCore<CfgType>, statsConfig: IStatsMgrConfig<CfgType>, featureName?: string) {
+    function _init<CfgType extends IConfiguration = IConfiguration>(core: IAppInsightsCore<CfgType>, featureName?: string) {
         if (_core) {
             // If the core is already set, then just return with an empty unload hook
             _throwInternal(safeGetLogger(core), eLoggingSeverity.WARNING, _eInternalMessageId.StatsBeatManagerException, "StatsBeat manager is already initialized");
@@ -457,16 +456,18 @@ export function createStatsMgr(): IStatsMgr {
 
         _core = core;
         if (core && core.isInitialized()) {
-            // Start listening for configuration changes from the core config, within a config change handler
-            // This will support the scenario where the config is changed after the statsbeat has been created
+            // Start listening for configuration changes from the single global config, within a config
+            // change handler. This supports the scenario where the config is changed after the manager
+            // has been created (including CDN / dynamic config updates).
             return onConfigChange(core.config, (details) => {
-                // Check the feature state again to see if it has changed
+                // Re-evaluate the feature flag on every config change (enabled by default, opt-out via featureOptIn)
                 _isMgrEnabled = false;
-                if (statsConfig && isFeatureEnabled(statsConfig.feature, details.cfg, true) === true) {
-                    // Call the getCfg function to get the latest configuration for the statsbeat instance
-                    // This should also evaluate the throttling level and other settings for the statsbeat instance
-                    // to determine if it should be enabled or not.
-                    _statsBeatConfig = statsConfig.getCfg(core, details);
+                if (isFeatureEnabled(featureName || STATS_SDK_FEATURE, details.cfg, true) === true) {
+                    // Seed the SDK Stats defaults into the single global config so they remain dynamic and
+                    // can be overridden via the CDN / dynamic config or by the SKU, then reference the live
+                    // nested stats config so the dependency is registered and runtime changes are picked up.
+                    details.setDf(details.cfg, _sdkStatsDefaults as IConfigDefaults<CfgType>);
+                    _statsBeatConfig = details.ref<CfgType, IStatsBeatConfig>(details.cfg, "stats");
                     if (_statsBeatConfig) {
                         _isMgrEnabled = true;
                         _shortInterval = STATS_COLLECTION_SHORT_INTERVAL; // Reset to the default in-case the config is removed / changed
@@ -548,8 +549,12 @@ export function createStatsMgr(): IStatsMgr {
 
 /**
  * The default {@link IStatsBeatConfig} values for SDK Stats collection. These are seeded into the
- * single global config (via {@link IWatchDetails.setDf}) so they remain dynamic and can be overridden
- * at runtime via the CDN / dynamic config or by the SKU (AISKU / 1DS).
+ * single global config (via {@link IWatchDetails.setDf}) by the manager so they remain dynamic and
+ * can be overridden at runtime via the CDN / dynamic config or by the SKU (AISKU / 1DS). By default
+ * the events are routed to the distro-owned SDK Stats ingestion endpoint (`stats.monitor.azure.com`
+ * / `eu.stats.monitor.azure.com`); setting `config.stats.mode` to {@link eStatsEndpointType.Breeze}
+ * routes SDK Stats to the legacy breeze endpoint instead. SDK Stats are enabled by default and can be
+ * opted-out using the `featureOptIn` configuration with the {@link STATS_SDK_FEATURE} name.
  */
 const _sdkStatsDefaults: IConfigDefaults<IConfiguration> = {
     stats: cfgDfMerge<IStatsBeatConfig>({
@@ -565,27 +570,3 @@ const _sdkStatsDefaults: IConfigDefaults<IConfiguration> = {
         }]
     })
 };
-
-/**
- * Create the default {@link IStatsMgrConfig} used to enable the SDK Stats collection. By default the
- * resulting events are routed to the distro-owned SDK Stats ingestion endpoint
- * (`stats.monitor.azure.com` / `eu.stats.monitor.azure.com`). The destination can be changed at
- * runtime via the CDN / dynamic config by setting `config.stats` (an {@link IStatsBeatConfig}) - for
- * example setting `config.stats.mode` to {@link eStatsEndpointType.Breeze} routes SDK Stats to the
- * legacy breeze endpoint instead. SDK Stats are enabled by default and can be opted-out using the
- * `featureOptIn` configuration with the {@link STATS_SDK_FEATURE} name.
- * @returns The {@link IStatsMgrConfig} to pass to {@link IStatsMgr.init}.
- */
-export function createSdkStatsMgrConfig<CfgType extends IConfiguration = IConfiguration>(): IStatsMgrConfig<CfgType> {
-    return {
-        feature: STATS_SDK_FEATURE,
-        getCfg: (_core: IAppInsightsCore<CfgType>, details: IWatchDetails<CfgType>): IStatsBeatConfig => {
-            // Seed the SDK Stats defaults into the single global config so they remain dynamic and can be
-            // overridden via the CDN / dynamic config or by the SKU. Return a live reference to the nested
-            // stats config so the dependency is registered and runtime changes are picked up.
-            details.setDf(details.cfg, _sdkStatsDefaults as IConfigDefaults<CfgType>);
-            return details.ref<CfgType, IStatsBeatConfig>(details.cfg, "stats");
-        }
-    };
-}
-

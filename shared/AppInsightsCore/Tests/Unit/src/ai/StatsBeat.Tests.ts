@@ -39,7 +39,7 @@ export class StatsBeatTests extends AITestClass {
             stats: {
                 shrtInt: STATS_COLLECTION_SHORT_INTERVAL,
                 endCfg: [
-                    { 
+                    {
                         type: 0,
                         keyMap: [
                             {
@@ -86,12 +86,7 @@ export class StatsBeatTests extends AITestClass {
                 Assert.equal(null, this._statsMgr.newInst(statsBeatState), "SDK Stats should not be created before initialization");
 
                 // Initialize
-                this._statsMgr.init(this._core, {
-                    feature: "StatsBeat",
-                    getCfg: (core, details) => {
-                        return details.cfg?.stats;
-                    }
-                });
+                this._statsMgr.init(this._core, "StatsBeat");
                 Assert.equal(true, this._statsMgr.enabled, "SDK Stats manager should be initialized after initialization");
 
                 let newInst = this._statsMgr.newInst(statsBeatState);
@@ -107,12 +102,7 @@ export class StatsBeatTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 // Initialize SDK Stats manager
-                this._statsMgr.init(this._core, {
-                    feature: "StatsBeat",
-                    getCfg: (core, details) => {
-                        return details.cfg?.stats;
-                    }
-                });
+                this._statsMgr.init(this._core, "StatsBeat");
                 
                 // Create mock payload data with timing information
                 const payloadData = {
@@ -131,7 +121,7 @@ export class StatsBeatTests extends AITestClass {
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
                     type: eStatsType.SDK
-                };                
+                };
                 let statsBeat = this._statsMgr.newInst(statsBeatState);
 
                 // Test successful request
@@ -159,20 +149,15 @@ export class StatsBeatTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 // Initialize SDK Stats manager
-                this._statsMgr.init(this._core, {
-                    feature: "StatsBeat",
-                    getCfg: (core, details) => {
-                        return details.cfg?.stats;
-                    }
-                });                
+                this._statsMgr.init(this._core, "StatsBeat");
 
                 let statsBeatState: IStatsBeatState = {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
                     type: eStatsType.SDK
-                };                
-                let statsBeat = this._statsMgr.newInst(statsBeatState);                
+                };
+                let statsBeat = this._statsMgr.newInst(statsBeatState);
                 
                 // Count an exception
                 statsBeat.countException("https://example.endpoint.com", "NetworkError");
@@ -188,8 +173,8 @@ export class StatsBeatTests extends AITestClass {
                 for (let i = 0; i < this._trackSpy.callCount; i++) {
                     const call = this._trackSpy.getCall(i);
                     const item: ITelemetryItem = call.args[0];
-                    if (item.baseData && 
-                        item.baseData.properties && 
+                    if (item.baseData &&
+                        item.baseData.properties &&
                         item.baseData.properties.exceptionType === "NetworkError") {
                         foundExceptionMetric = true;
                         break;
@@ -205,12 +190,7 @@ export class StatsBeatTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 // Initialize SDK Stats manager for a specific endpoint
-                this._statsMgr.init(this._core, {
-                    feature: "StatsBeat",
-                    getCfg: (core, details) => {
-                        return details.cfg?.stats;
-                    }
-                });
+                this._statsMgr.init(this._core, "StatsBeat");
                 
                 // Create mock payload data
                 const payloadData = {
@@ -229,8 +209,8 @@ export class StatsBeatTests extends AITestClass {
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
                     type: eStatsType.SDK
-                };                
-                let statsBeat = this._statsMgr.newInst(statsBeatState);      
+                };
+                let statsBeat = this._statsMgr.newInst(statsBeatState);
 
                 // Set up spies to check internal calls
                 const countSpy = this.sandbox.spy(statsBeat, "count");
@@ -256,20 +236,15 @@ export class StatsBeatTests extends AITestClass {
                     this._core.initialize(this._config, [new ChannelPlugin()]);
                 }
                 // Initialize SDK Stats manager for a specific endpoint
-                this._statsMgr.init(this._core, {
-                    feature: "StatsBeat",
-                    getCfg: (core, details) => {
-                        return details.cfg?.stats;
-                    }
-                });
-                this._core.setStatsMgr(this._statsMgr);                
+                this._statsMgr.init(this._core, "StatsBeat");
+                this._core.setStatsMgr(this._statsMgr);
 
                 let statsBeatState: IStatsBeatState = {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
                     type: eStatsType.SDK
-                };   
+                };
 
                 // Verify that SDK Stats is created
                 const statsbeat = this._core.getStatsBeat(statsBeatState);
@@ -361,8 +336,8 @@ class ChannelPlugin implements IPlugin {
 
 class CustomTestError extends Error {
     constructor(message = "") {
-      super(message);
-      this.name = "CustomTestError";
-      this.message = message + " -- test error.";
+        super(message);
+        this.name = "CustomTestError";
+        this.message = message + " -- test error.";
     }
 }

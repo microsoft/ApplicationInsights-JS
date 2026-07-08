@@ -15,7 +15,7 @@ import {
     ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, ITraceApi, ITraceProvider,
     ITraceTelemetry, IUnloadHook, OTelTimeInput, PropertiesPluginIdentifier, ThrottleMgr, UnloadHandler, WatcherFunction,
     _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate,
-    createDynamicConfig, createOTelApi, createProcessTelemetryContext, createSdkStatsMgrConfig, createSdkStatsNotifCbk, createStatsMgr,
+    createDynamicConfig, createOTelApi, createProcessTelemetryContext, createSdkStatsNotifCbk, createStatsMgr,
     createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity,
     hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace,
     onConfigChange, parseConnectionString, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener, useSpan
@@ -398,13 +398,14 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                     // initialize core
                     _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin], logger, notificationManager);
 
-                    // Enable SDK Stats collection. The manager collects SDK request statistics
-                    // and routes the resulting events to the distro-owned SDK Stats ingestion endpoint
+                    // Enable SDK Stats collection. The manager reads its configuration directly from the
+                    // single global config (config.stats) and gates itself behind the SDK Stats feature
+                    // flag, routing the resulting events to the distro-owned SDK Stats ingestion endpoint
                     // (stats.monitor.azure.com). Enabled by default; opt-out via featureOptIn "sdkStats".
                     if (_core.setStatsMgr) {
                         let statsMgr = createStatsMgr();
                         _core.setStatsMgr(statsMgr);
-                        let statsHook = statsMgr.init(_core, createSdkStatsMgrConfig<IConfiguration & IConfig>());
+                        let statsHook = statsMgr.init<IConfiguration & IConfig>(_core);
                         if (statsHook) {
                             _core.addUnloadHook(statsHook);
                         }

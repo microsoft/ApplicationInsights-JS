@@ -42,9 +42,9 @@ export { _ISenderOnComplete, _ISendPostMgrConfig, _ITimeoutOverrideWrapper, _IIn
 export { SenderPostManager } from "./core/SenderPostManager";
 export { IStatsBeat, IStatsBeatConfig, IStatsBeatKeyMap as IStatsBeatEndpoints, IStatsBeatState} from "./interfaces/ai/IStatsBeat";
 export { IStatsEventData } from "./interfaces/ai/IStatsEventData";
-export { IStatsMgr, IStatsMgrConfig } from "./interfaces/ai/IStatsMgr";
+export { IStatsMgr } from "./interfaces/ai/IStatsMgr";
 export {
-    createStatsMgr, createSdkStatsMgrConfig, getStatsEndpoint, getStatsBreezeIKey,
+    createStatsMgr, getStatsEndpoint, getStatsBreezeIKey,
     STATS_SDK_IKEY, STATS_SDK_ENDPOINT_NON_EU, STATS_SDK_ENDPOINT_EU, STATS_SDK_ENDPOINT_KEY, STATS_SDK_FEATURE,
     STATS_BREEZE_IKEY_NON_EU, STATS_BREEZE_IKEY_EU
 } from "./core/StatsBeat";

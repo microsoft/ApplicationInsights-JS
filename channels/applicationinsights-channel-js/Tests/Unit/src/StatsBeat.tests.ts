@@ -56,7 +56,7 @@ export class StatsbeatTests extends AITestClass {
             stats: {
                 shrtInt: 900,
                 endCfg: [
-                    { 
+                    {
                         type: 0,
                         keyMap: [
                             {
@@ -75,12 +75,7 @@ export class StatsbeatTests extends AITestClass {
         // Initialize the core first, then init the manager against that same (now initialized)
         // core so it can enable itself (createStatsMgr().init() only enables once the core is initialized).
         core.initialize(coreConfig, [sender]);
-        let unloadHook = statsMgr.init(core, {
-            feature: "StatsBeat",
-            getCfg: (core, details) => {
-                return details.cfg?.stats;
-            }
-        });
+        let unloadHook = statsMgr.init(core, "StatsBeat");
         core.setStatsMgr(statsMgr);
         this._statsMgrUnloadHook = unloadHook;
 
@@ -154,10 +149,10 @@ export class StatsbeatTests extends AITestClass {
                             mode: FeatureOptInMode.enable
                         }
                     },
-                    stats: { 
+                    stats: {
                         shrtInt: 900,
                         endCfg: [
-                            { 
+                            {
                                 type: 0,
                                 keyMap: [
                                     {
@@ -167,23 +162,18 @@ export class StatsbeatTests extends AITestClass {
                                 ]
                             }
                         ]
-                    },
+                    }
                 };
 
                 this._core.initialize(config, [this._sender]);
-                this._statsMgrUnloadHook = this._statsMgr.init(this._core, {
-                    feature: "StatsBeat",
-                    getCfg: (core, details) => {
-                        return details.cfg?.stats;
-                    }
-                });
+                this._statsMgrUnloadHook = this._statsMgr.init(this._core, "StatsBeat");
                 this._core.setStatsMgr(this._statsMgr);
                 let statsBeatState: IStatsBeatState = {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
                     type: eStatsType.SDK
-                };   
+                };
 
                 const statsbeat = this._core.getStatsBeat(statsBeatState);
 
@@ -289,41 +279,41 @@ export class StatsbeatTests extends AITestClass {
         });
     
 
-    this.testCaseAsync({
-        name: "SDK Stats increments success count for xhr sender",
-        useFakeTimers: true,
-        useFakeServer: true,
-        stepDelay: 100,
-        fakeServerAutoRespond: true,
-        steps: [
-            () => {
-                let window = getWindow();
-                let fakeXMLHttpRequest = (window as any).XMLHttpRequest; // why we do this?
-                let config: any = this.createSenderConfig(TransportType.Xhr);
-                config.disableSendBeaconSplit = true;
-                const { sender } = this.initializeCoreAndSender(config, "000e0000-e000-0000-a000-000000000000");
-                console.log("xhr sender called", this._getXhrRequests().length);
+        this.testCaseAsync({
+            name: "SDK Stats increments success count for xhr sender",
+            useFakeTimers: true,
+            useFakeServer: true,
+            stepDelay: 100,
+            fakeServerAutoRespond: true,
+            steps: [
+                () => {
+                    let window = getWindow();
+                    let fakeXMLHttpRequest = (window as any).XMLHttpRequest; // why we do this?
+                    let config: any = this.createSenderConfig(TransportType.Xhr);
+                    config.disableSendBeaconSplit = true;
+                    const { sender } = this.initializeCoreAndSender(config, "000e0000-e000-0000-a000-000000000000");
+                    console.log("xhr sender called", this._getXhrRequests().length);
 
-                const telemetryItem: ITelemetryItem = {
-                    name: "fake item",
-                    iKey: "testIkey2;ingestionendpoint=testUrl1",
-                    baseType: "some type",
-                    baseData: {}
-                };
-                this.processTelemetryAndFlush(sender, telemetryItem);
-                QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
-                console.log("xhr sender is called", this._getXhrRequests().length);
-                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+                    const telemetryItem: ITelemetryItem = {
+                        name: "fake item",
+                        iKey: "testIkey2;ingestionendpoint=testUrl1",
+                        baseType: "some type",
+                        baseData: {}
+                    };
+                    this.processTelemetryAndFlush(sender, telemetryItem);
+                    QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
+                    console.log("xhr sender is called", this._getXhrRequests().length);
+                    (window as any).XMLHttpRequest = fakeXMLHttpRequest;
 
-            }
-        ].concat(PollingAssert.createPollingAssert(() => {
-            if (this.statsbeatCountSpy.called) {
-                this.assertStatsbeatCall(200, "Request_Success_Count");
-                console.log("SDK Stats count called with success count for xhr sender");
-                return true;
-            }
-            return false;
-        }, "Waiting for xhr sender and SDK Stats count to be called", 60, 1000) as any)
-    });
-}
+                }
+            ].concat(PollingAssert.createPollingAssert(() => {
+                if (this.statsbeatCountSpy.called) {
+                    this.assertStatsbeatCall(200, "Request_Success_Count");
+                    console.log("SDK Stats count called with success count for xhr sender");
+                    return true;
+                }
+                return false;
+            }, "Waiting for xhr sender and SDK Stats count to be called", 60, 1000) as any)
+        });
+    }
 }
