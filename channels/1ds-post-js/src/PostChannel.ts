@@ -805,7 +805,6 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
             }
 
             function _performAutoFlush(isAsync: boolean, doFlush?: boolean) {
-                // Only perform the auto flush check if the httpManager has an idle connection and we are not in a backoff situation
                 if (_httpManager.canSendRequest() && !_currentBackoffCount) {
                     if (_autoFlushEventsLimit > 0 && _queueSize > _autoFlushEventsLimit) {
                         // Force flushing
@@ -813,8 +812,46 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                     }
 
                     if (doFlush && _flushCallbackTimer == null) {
-                        // Auto flush the queue, adding a callback to avoid the creation of a promise
-                        _self.flush(isAsync, () => {}, SendRequestReason.MaxQueuedEvents);
+                        // Auto flush is fire-and-forget (the callback is a no-op). Historically it
+                        // called flush(), whose async path defers the send via a 0ms timer and then
+                        // calls _waitForIdleManager(), which re-arms _flushCallbackTimer and polls
+                        // (every FlushCheckTimer) until the HttpManager reports it is "completely idle"
+                        // (no outstanding requests AND an empty send queue). While _flushCallbackTimer
+                        // is non-null BOTH the normal scheduled timer (_scheduleTimer) and any further
+                        // auto flush are suppressed. Under sustained intermittent failures (e.g. a load
+                        // balancer recycling connections) there is almost always a retry in-flight or a
+                        // re-queued batch, so the manager is rarely completely idle at the polling
+                        // instant: the wait never completes, _flushCallbackTimer stays set and the
+                        // channel stops draining permanently (the in-memory queue then saturates and
+                        // telemetry is silently dropped as QueueFull) until the process is restarted.
+                        //
+                        // We keep the original deferred fire-and-forget behaviour (so the queue/discard
+                        // semantics are unchanged) but tell _flushImpl NOT to wait for the manager to
+                        // become idle: after the send it just resumes the normal schedule, so a
+                        // busy/non-idle manager can no longer wedge draining.
+                        if (isAsync) {
+                            // Clear the normal schedule timer as we are going to try and flush ASAP
+                            _clearScheduledTimer();
+
+                            // Move all queued events to the HttpManager so that we don't discard new events (Auto flush scenario)
+                            _queueBatches(EventLatencyValue.Normal, EventSendType.Batched, SendRequestReason.MaxQueuedEvents);
+
+                            _flushCallbackTimer = _createTimer(() => {
+                                _flushCallbackTimer = null;
+                                // waitForIdle = false -> fire-and-forget: do not park the scheduler
+                                _flushImpl(() => { /* no-op */ }, SendRequestReason.MaxQueuedEvents, false);
+                            }, 0);
+                        } else {
+                            let cleared = _clearScheduledTimer();
+
+                            // Now cause all queued events to be sent synchronously
+                            _sendEventsForLatencyAndAbove(EventLatencyValue.Normal, EventSendType.Synchronous, SendRequestReason.MaxQueuedEvents);
+
+                            if (cleared) {
+                                // restart the normal event timer if it was cleared
+                                _scheduleTimer();
+                            }
+                        }
                     }
                 }
             }
@@ -961,15 +998,17 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
              * @param callback - The callback method to call after the flush is complete
              * @param sendReason - The reason why the flush is being called
              */
-            function _flushImpl(callback: () => void, sendReason: SendRequestReason) {
+            function _flushImpl(callback: () => void, sendReason: SendRequestReason, waitForIdle?: boolean) {
                 // Add any additional queued events and cause all queued events to be sent asynchronously
                 _sendEventsForLatencyAndAbove(EventLatencyValue.Normal, EventSendType.Batched, sendReason);
 
                 // All events (should) have been queue -- lets just make sure the queue counts are correct to avoid queue exhaustion (previous bug #9685112)
                 _resetQueueCounts();
 
-                _waitForIdleManager(() => {
-                    // Only called AFTER the httpManager does not have any outstanding requests
+                let onFlushComplete = () => {
+                    // Only called AFTER the httpManager does not have any outstanding requests, or
+                    // immediately for a fire-and-forget auto flush (waitForIdle === false), which must
+                    // not park the scheduler waiting for a manager that may never become idle.
                     if (callback) {
                         callback();
                     }
@@ -986,7 +1025,13 @@ export class PostChannel extends BaseTelemetryPlugin implements IChannelControls
                         // Restart the normal timer schedule
                         _scheduleTimer();
                     }
-                });
+                };
+
+                if (waitForIdle === false) {
+                    onFlushComplete();
+                } else {
+                    _waitForIdleManager(onFlushComplete);
+                }
             }
 
             function _waitForIdleManager(callback: () => void) {
