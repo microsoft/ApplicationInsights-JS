@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { doAwaitResponse } from "@nevware21/ts-async";
 import {
-    ITimerHandler, arrForEach, isNumber, makeGlobRegex, objDefineProps, scheduleTimeout, strIndexOf, strLower, utcNow
+    ITimerHandler, arrForEach, isNumber, makeGlobRegex, objDefineProps, scheduleTimeout, strEndsWith, strIndexOf, strLower, strStartsWith,
+    strSubstring, utcNow
 } from "@nevware21/ts-utils";
 import { cfgDfMerge } from "../config/ConfigDefaultHelpers";
 import { onConfigChange } from "../config/DynamicConfig";
+import { DEFAULT_BREEZE_PATH, DisabledPropertyName } from "../constants/Constants";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { _throwInternal, safeGetLogger } from "../diagnostics/DiagnosticLogger";
 import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
@@ -13,12 +16,15 @@ import { eStatsEndpointType, eStatsType } from "../enums/ai/StatsType";
 import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import { INetworkStatsbeat } from "../interfaces/ai/INetworkStatsbeat";
-import { IStatsBeat, IStatsBeatConfig, IStatsBeatKeyMap, IStatsBeatState, IStatsEndpointConfig } from "../interfaces/ai/IStatsBeat";
+import {
+    IStatsBeat, IStatsBeatCfgResult, IStatsBeatConfig, IStatsBeatKeyMap, IStatsBeatState, IStatsEndpointConfig
+} from "../interfaces/ai/IStatsBeat";
 import { IStatsMgr } from "../interfaces/ai/IStatsMgr";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 import { IPayloadData } from "../interfaces/ai/IXHROverride";
 import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
-import { isFeatureEnabled } from "../utils/HelperFuncs";
+import { getJSON, isFetchSupported, isXhrSupported } from "../utils/EnvUtils";
+import { getResponseText, isFeatureEnabled, openXhr } from "../utils/HelperFuncs";
 
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
 const STATS_MIN_INTERVAL_SECONDS = 60; // 1 minute
@@ -34,13 +40,14 @@ const STATSBEAT_TYPE = "Browser";
 export const STATS_SDK_IKEY = "00000000-0000-0000-0000-000000000000";
 
 /**
- * Distro-owned SDK statistics ingestion endpoints. SDK Stats events are routed here instead of
- * to the customer's breeze endpoint. The EU endpoint is used when the customer's endpoint maps
- * to an EU data-boundary region, otherwise the non-EU endpoint is used.
- * @see https://github.com/microsoft/opentelemetry-distro-dotnet
+ * SDK Stats config endpoints (`cfg/v1.json`). The `{ ver, enabled, url }` JSON is read at runtime to
+ * gate collection and resolve the ingestion host. EU endpoint is used for EU data-boundary regions.
  */
-export const STATS_SDK_ENDPOINT_NON_EU = "https://stats.monitor.azure.com/v2/track";
-export const STATS_SDK_ENDPOINT_EU = "https://eu.stats.monitor.azure.com/v2/track";
+export const STATS_SDK_CFG_URL_NON_EU = "https://data.stats.monitor.azure.com/cfg/v1.json";
+export const STATS_SDK_CFG_URL_EU = "https://eu-data.stats.monitor.azure.com/cfg/v1.json";
+
+/** Ingestion path for future 1DS (OneCollector) SDK Stats; the AI SKU uses {@link DEFAULT_BREEZE_PATH}. */
+export const STATS_SDK_ONECOLLECTOR_PATH = "/OneCollector/1.0";
 
 /**
  * The Microsoft-owned instrumentation keys used when reporting SDK statistics to the legacy
@@ -107,14 +114,94 @@ function _isEuEndpoint(endpoint: string): boolean {
 }
 
 /**
- * Determine the distro-owned SDK Stats ingestion endpoint for the provided customer endpoint.
- * When the region maps to an EU region the EU endpoint is returned, otherwise (including unknown
- * regions) the non-EU endpoint is returned.
- * @param endpoint - The customer breeze endpoint that the SDK Stats are being collected for.
- * @returns The SDK Stats ingestion endpoint URL.
+ * Returns the SDK Stats config URL (`cfg/v1.json`) for the endpoint (EU vs non-EU).
  */
-export function getStatsEndpoint(endpoint: string): string {
-    return _isEuEndpoint(endpoint) ? STATS_SDK_ENDPOINT_EU : STATS_SDK_ENDPOINT_NON_EU;
+export function getStatsCfgUrl(endpoint: string): string {
+    return _isEuEndpoint(endpoint) ? STATS_SDK_CFG_URL_EU : STATS_SDK_CFG_URL_NON_EU;
+}
+
+/** Parse the SDK Stats config JSON (`{ ver, enabled, url }`); null if empty or unparseable. */
+function _parseStatsCfg(response: string): IStatsBeatCfgResult {
+    let result: IStatsBeatCfgResult = null;
+    let json = getJSON();
+    if (response && json) {
+        try {
+            let cfg = json.parse(response);
+            if (cfg) {
+                result = {
+                    enabled: !!cfg.enabled,
+                    url: cfg.url
+                };
+            }
+        } catch (e) {
+            // Unparseable -> no config available
+        }
+    }
+
+    return result;
+}
+
+/** Default SDK Stats config fetch (fetch, else XHR); calls oncomplete with the parsed config or null. */
+function _defaultStatsCfgFetch(cfgUrl: string, oncomplete: (result: IStatsBeatCfgResult) => void): void {
+    function _complete(response?: string) {
+        try {
+            oncomplete(response ? _parseStatsCfg(response) : null);
+        } catch (e) {
+            // Ignore callback errors
+        }
+    }
+
+    try {
+        if (isFetchSupported()) {
+            let init: RequestInit = { method: "GET" };
+            init[DisabledPropertyName] = true;
+
+            doAwaitResponse(fetch(cfgUrl, init), (result) => {
+                let response = result.value;
+                if (!result.rejected && response && response.ok) {
+                    doAwaitResponse(response.text(), (res) => {
+                        _complete(res.rejected ? null : res.value);
+                    });
+                } else {
+                    _complete();
+                }
+            });
+        } else if (isXhrSupported()) {
+            // openXhr marks the request disabled so it isn't self-tracked
+            let xhr = openXhr("GET", cfgUrl, false, true, false, 10000);
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4) {
+                    _complete(xhr.status >= 200 && xhr.status < 400 ? getResponseText(xhr) : null);
+                }
+            };
+            xhr.onerror = () => {
+                _complete();
+            };
+            xhr.ontimeout = () => {
+                _complete();
+            };
+            xhr.send();
+        } else {
+            _complete();
+        }
+    } catch (e) {
+        _complete();
+    }
+}
+
+/** Build the ingestion endpoint from the config host: `https://<host>` + {@link DEFAULT_BREEZE_PATH}. */
+function _buildStatsEndpoint(host: string): string {
+    let endpoint: string = null;
+    if (host) {
+        let base = strStartsWith(strLower(host), "http") ? host : "https://" + host;
+        if (strEndsWith(base, "/")) {
+            base = strSubstring(base, 0, base.length - 1);
+        }
+
+        endpoint = base + DEFAULT_BREEZE_PATH;
+    }
+
+    return endpoint;
 }
 
 /**
@@ -444,6 +531,8 @@ export function createStatsMgr(): IStatsMgr {
     let _core: IAppInsightsCore; // The core instance that is used to send telemetry
     let _shortInterval = STATS_COLLECTION_SHORT_INTERVAL;
     let _statsBeatConfig: IStatsBeatConfig;
+    // Resolved remote config cached per cfg URL (EU / non-EU); tracks in-flight fetch and last result.
+    let _cfgCache: { [cfgUrl: string]: { pending: boolean, result: IStatsBeatCfgResult } } = {};
 
     // Lazily initialize the manager and start listening for configuration changes
     // This is also required to handle "unloading" and then re-initializing again
@@ -480,6 +569,35 @@ export function createStatsMgr(): IStatsMgr {
         }
     }
 
+    /**
+     * Resolve the remote SDK Stats config for the endpoint, starting a fetch on first use. Returns
+     * null until resolved (or on failure) so the caller skips sending.
+     */
+    function _resolveStatsCfg(endpoint: string): IStatsBeatCfgResult {
+        let cfgUrl = getStatsCfgUrl(endpoint);
+        let entry = _cfgCache[cfgUrl];
+        if (!entry) {
+            entry = _cfgCache[cfgUrl] = { pending: false, result: null };
+        }
+
+        if (!entry.result && !entry.pending) {
+            entry.pending = true;
+            let fetchFn = (_statsBeatConfig && _statsBeatConfig.overrideCfgFn) || _defaultStatsCfgFetch;
+            try {
+                fetchFn(cfgUrl, (result) => {
+                    entry.pending = false;
+                    // null on failure so a later interval retries
+                    entry.result = result;
+                });
+            } catch (e) {
+                // Reset so a later interval retries
+                entry.pending = false;
+            }
+        }
+
+        return entry.result;
+    }
+
     function _track(statsBeat: IStatsBeat, statsBeatEvent: ITelemetryItem) {
         if (_isMgrEnabled && _statsBeatConfig) {
             let endpoint = statsBeat.endpoint;
@@ -500,11 +618,26 @@ export function createStatsMgr(): IStatsMgr {
                     // map does not specify one. Breeze mode uses the Microsoft-owned breeze SDK Stats
                     // iKey (region dependent); the SDK Stats endpoint uses the placeholder iKey.
                     let iKey = (keyMap && keyMap.key) || (useBreeze ? getStatsBreezeIKey(endpoint) : STATS_SDK_IKEY);
+
+                    // Destination host / enabled state come from the remote config, unless the key
+                    // map sets an explicit url. Breeze mode sends to the customer endpoint (no redirect).
+                    let url = keyMap && keyMap.url;
+                    if (!url && !useBreeze) {
+                        let cfgResult = _resolveStatsCfg(endpoint);
+                        if (!cfgResult || !cfgResult.enabled) {
+                            // Not resolved yet, or disabled -> skip
+                            return;
+                        }
+
+                        url = _buildStatsEndpoint(cfgResult.url);
+                        if (!url) {
+                            // Enabled but no usable host -> skip (don't leak to the customer endpoint)
+                            return;
+                        }
+                    }
+
                     statsBeatEvent.iKey = iKey;
 
-                    // Resolve the destination SDK Stats ingestion endpoint. When sending to the legacy
-                    // breeze endpoint there is no redirect (the event is sent to the customer's endpoint).
-                    let url = (keyMap && keyMap.url) || (useBreeze ? null : getStatsEndpoint(endpoint));
                     if (url) {
                         // Carry the SDK Stats ingestion endpoint so the sending channel can redirect the
                         // event away from the customer's breeze endpoint. This marker is removed by the
@@ -523,6 +656,11 @@ export function createStatsMgr(): IStatsMgr {
         let instance: IStatsBeat = null;
 
         if (_isMgrEnabled) {
+            // Prefetch the remote config (SDK Stats mode) so it's ready by the first interval
+            if (state && state.endpoint && _statsBeatConfig.mode !== eStatsEndpointType.Breeze) {
+                _resolveStatsCfg(state.endpoint);
+            }
+
             let callbacks: _IMgrCallbacks = {
                 start: (cb: () => void) => {
                     return scheduleTimeout(cb, _shortInterval);
@@ -551,10 +689,12 @@ export function createStatsMgr(): IStatsMgr {
  * The default {@link IStatsBeatConfig} values for SDK Stats collection. These are seeded into the
  * single global config (via {@link IWatchDetails.setDf}) by the manager so they remain dynamic and
  * can be overridden at runtime via the CDN / dynamic config or by the SKU (AISKU / 1DS). By default
- * the events are routed to the distro-owned SDK Stats ingestion endpoint (`stats.monitor.azure.com`
- * / `eu.stats.monitor.azure.com`); setting `config.stats.mode` to {@link eStatsEndpointType.Breeze}
- * routes SDK Stats to the legacy breeze endpoint instead. SDK Stats are enabled by default and can be
- * opted-out using the `featureOptIn` configuration with the {@link STATS_SDK_FEATURE} name.
+ * the events are routed to the distro-owned SDK Stats ingestion endpoint, whose host (and whether
+ * collection is enabled) is read at runtime from the SDK Stats configuration
+ * (`data.stats.monitor.azure.com` / `eu-data.stats.monitor.azure.com`); setting `config.stats.mode`
+ * to {@link eStatsEndpointType.Breeze} routes SDK Stats to the legacy breeze endpoint instead. SDK
+ * Stats are enabled by default and can be opted-out using the `featureOptIn` configuration with the
+ * {@link STATS_SDK_FEATURE} name.
  */
 const _sdkStatsDefaults: IConfigDefaults<IConfiguration> = {
     stats: cfgDfMerge<IStatsBeatConfig>({

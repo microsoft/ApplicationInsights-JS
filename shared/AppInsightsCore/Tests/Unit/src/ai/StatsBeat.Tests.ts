@@ -4,7 +4,7 @@ import { IPayloadData } from "../../../../src/interfaces/ai/IXHROverride";
 import { IStatsMgr } from "../../../../src/interfaces/ai/IStatsMgr";
 import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
 import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
-import { createStatsMgr } from "../../../../src/core/StatsBeat";
+import { createStatsMgr, STATS_SDK_ENDPOINT_KEY } from "../../../../src/core/StatsBeat";
 import { IStatsBeatState } from "../../../../src/interfaces/ai/IStatsBeat";
 import { eStatsType } from "../../../../src/enums/ai/StatsType";
 import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
@@ -38,6 +38,11 @@ export class StatsBeatTests extends AITestClass {
             },
             stats: {
                 shrtInt: STATS_COLLECTION_SHORT_INTERVAL,
+                // Resolve the remote SDK Stats configuration synchronously (as enabled) so the tests
+                // do not attempt a real network fetch of the cfg/v1.json endpoint.
+                overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
+                    oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
+                },
                 endCfg: [
                     {
                         type: 0,
@@ -284,6 +289,89 @@ export class StatsBeatTests extends AITestClass {
                 
                 // Verify that SDK Stats is recreated (null defaults to enabled)
                 Assert.ok(!!this._core.getStatsBeat(statsBeatState), "SDK Stats should remain enabled when mode is null (defaults to enabled)");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: routes events to the remote configured SDK Stats endpoint",
+            useFakeTimers: true,
+            test: () => {
+                this._statsMgr.init(this._core, "StatsBeat");
+
+                const payloadData = {
+                    urlString: "https://example.endpoint.com",
+                    data: "testData",
+                    headers: {},
+                    timeout: 0,
+                    disableXhrSync: false,
+                    statsBeatData: {
+                        startTime: Date.now()
+                    }
+                } as IPayloadData;
+
+                let statsBeatState: IStatsBeatState = {
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0",
+                    type: eStatsType.SDK
+                };
+                let statsBeat = this._statsMgr.newInst(statsBeatState);
+                statsBeat.count(200, payloadData, "https://example.endpoint.com");
+
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.ok(this._trackSpy.called, "track should be called when SDK Stats timer fires");
+
+                // The host returned by the remote configuration (data.stats.monitor.azure.com) should be
+                // combined with the /v2/track path to form the SDK Stats ingestion endpoint.
+                let foundEndpoint = false;
+                for (let i = 0; i < this._trackSpy.callCount; i++) {
+                    const item: ITelemetryItem = this._trackSpy.getCall(i).args[0];
+                    if (item.data && item.data[STATS_SDK_ENDPOINT_KEY] === "https://data.stats.monitor.azure.com/v2/track") {
+                        foundEndpoint = true;
+                        break;
+                    }
+                }
+
+                Assert.ok(foundEndpoint, "SDK Stats events should be routed to the remote configured ingestion endpoint");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: does not send when the remote configuration is disabled",
+            useFakeTimers: true,
+            test: () => {
+                // Override the remote SDK Stats configuration to report collection as disabled
+                this._core.config.stats.overrideCfgFn = (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
+                    oncomplete({ enabled: false, url: "data.stats.monitor.azure.com" });
+                };
+                this.clock.tick(1); // Allow the config change to propagate
+
+                this._statsMgr.init(this._core, "StatsBeat");
+
+                const payloadData = {
+                    urlString: "https://example.endpoint.com",
+                    data: "testData",
+                    headers: {},
+                    timeout: 0,
+                    disableXhrSync: false,
+                    statsBeatData: {
+                        startTime: Date.now()
+                    }
+                } as IPayloadData;
+
+                let statsBeatState: IStatsBeatState = {
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0",
+                    type: eStatsType.SDK
+                };
+                let statsBeat = this._statsMgr.newInst(statsBeatState);
+                statsBeat.count(200, payloadData, "https://example.endpoint.com");
+
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.equal(0, this._trackSpy.callCount, "track should not be called when the remote configuration disables SDK Stats");
             }
         });
     }

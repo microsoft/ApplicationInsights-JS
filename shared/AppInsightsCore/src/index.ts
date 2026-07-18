@@ -40,12 +40,14 @@ export { parseResponse } from "./core/ResponseHelpers";
 export { IXDomainRequest, IBackendResponse } from "./interfaces/ai/IXDomainRequest";
 export { _ISenderOnComplete, _ISendPostMgrConfig, _ITimeoutOverrideWrapper, _IInternalXhrOverride } from "./interfaces/ai/ISenderPostManager";
 export { SenderPostManager } from "./core/SenderPostManager";
-export { IStatsBeat, IStatsBeatConfig, IStatsBeatKeyMap as IStatsBeatEndpoints, IStatsBeatState} from "./interfaces/ai/IStatsBeat";
+export {
+    IStatsBeat, IStatsBeatCfgResult, IStatsBeatConfig, IStatsBeatKeyMap as IStatsBeatEndpoints, IStatsBeatState, StatsBeatCfgFetchFn
+} from "./interfaces/ai/IStatsBeat";
 export { IStatsEventData } from "./interfaces/ai/IStatsEventData";
 export { IStatsMgr } from "./interfaces/ai/IStatsMgr";
 export {
-    createStatsMgr, getStatsEndpoint, getStatsBreezeIKey,
-    STATS_SDK_IKEY, STATS_SDK_ENDPOINT_NON_EU, STATS_SDK_ENDPOINT_EU, STATS_SDK_ENDPOINT_KEY, STATS_SDK_FEATURE,
+    createStatsMgr, getStatsCfgUrl, getStatsBreezeIKey,
+    STATS_SDK_IKEY, STATS_SDK_CFG_URL_NON_EU, STATS_SDK_CFG_URL_EU, STATS_SDK_ONECOLLECTOR_PATH, STATS_SDK_ENDPOINT_KEY, STATS_SDK_FEATURE,
     STATS_BREEZE_IKEY_NON_EU, STATS_BREEZE_IKEY_EU
 } from "./core/StatsBeat";
 export { createSdkStatsNotifCbk, ISdkStatsConfig, ISdkStatsNotifCbk } from "./core/SdkStatsNotificationCbk";

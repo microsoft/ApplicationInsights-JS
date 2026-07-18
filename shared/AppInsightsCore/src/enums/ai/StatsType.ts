@@ -16,8 +16,9 @@ export type StatsType = number | eStatsType;
  */
 export const enum eStatsEndpointType {
     /**
-     * Send SDK Stats to the distro-owned SDK Stats ingestion endpoint (stats.monitor.azure.com).
-     * This is the default.
+     * Send SDK Stats to the distro-owned SDK Stats ingestion endpoint. The destination host (and
+     * whether collection is enabled) is read at runtime from the SDK Stats configuration
+     * (`data.stats.monitor.azure.com` / `eu-data.stats.monitor.azure.com`). This is the default.
      */
     SdkStats = 0,
 

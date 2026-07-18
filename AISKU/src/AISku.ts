@@ -401,7 +401,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                     // Enable SDK Stats collection. The manager reads its configuration directly from the
                     // single global config (config.stats) and gates itself behind the SDK Stats feature
                     // flag, routing the resulting events to the distro-owned SDK Stats ingestion endpoint
-                    // (stats.monitor.azure.com). Enabled by default; opt-out via featureOptIn "sdkStats".
+                    // (data.stats.monitor.azure.com). Enabled by default; opt-out via featureOptIn "sdkStats".
                     if (_core.setStatsMgr) {
                         let statsMgr = createStatsMgr();
                         _core.setStatsMgr(statsMgr);

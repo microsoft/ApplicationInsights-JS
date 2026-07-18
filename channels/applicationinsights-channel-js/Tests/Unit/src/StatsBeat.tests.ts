@@ -55,6 +55,11 @@ export class StatsbeatTests extends AITestClass {
             instrumentationKey,
             stats: {
                 shrtInt: 900,
+                // Resolve the remote SDK Stats configuration synchronously (as enabled) so the tests
+                // do not depend on a network fetch of the cfg/v1.json endpoint.
+                overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
+                    oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
+                },
                 endCfg: [
                     {
                         type: 0,
@@ -151,6 +156,9 @@ export class StatsbeatTests extends AITestClass {
                     },
                     stats: {
                         shrtInt: 900,
+                        overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
+                            oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
+                        },
                         endCfg: [
                             {
                                 type: 0,

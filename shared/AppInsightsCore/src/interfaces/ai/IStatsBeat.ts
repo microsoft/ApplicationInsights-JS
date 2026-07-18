@@ -114,6 +114,36 @@ export interface IStatsEndpointConfig {
 }
 
 /**
+ * The parsed result of the remote SDK Stats configuration (`cfg/v1.json`). It identifies whether
+ * SDK Stats collection is currently enabled and the host that matching events should be sent to.
+ * @since 3.3.7
+ */
+export interface IStatsBeatCfgResult {
+    /**
+     * Identifies whether SDK Stats collection is enabled. When false the SDK Stats events are not
+     * sent (the feature is effectively disabled by the distro-owned configuration).
+     */
+    enabled: boolean;
+
+    /**
+     * The host (or full URL) that the SDK Stats events should be sent to. The ingestion path (e.g.
+     * `/v2/track`) is appended by the SDK, so this generally only carries the host (for example
+     * `data.stats.monitor.azure.com`).
+     */
+    url: string;
+}
+
+/**
+ * The signature of the function used to fetch (and parse) the remote SDK Stats configuration. It is
+ * primarily used to allow the fetch implementation to be overridden (for testing or advanced
+ * scenarios) via {@link IStatsBeatConfig.overrideCfgFn}.
+ * @param cfgUrl - The SDK Stats configuration URL (`cfg/v1.json`) to fetch.
+ * @param oncomplete - The callback to invoke with the parsed configuration, or null on any failure.
+ * @since 3.3.7
+ */
+export type StatsBeatCfgFetchFn = (cfgUrl: string, oncomplete: (result: IStatsBeatCfgResult | null) => void) => void;
+
+/**
  * The configuration for the stats beat definition
  * @since 3.3.7
  */
@@ -138,4 +168,12 @@ export interface IStatsBeatConfig {
      * This is used to identify the endpoints that are supported by the stats beat plugin.
      */
     endCfg?: IStatsEndpointConfig[];
+
+    /**
+     * Optional override for the function used to fetch the remote SDK Stats configuration
+     * (`cfg/v1.json`). When not provided the default fetch / XHR based implementation is used. This
+     * is primarily intended for testing or advanced scenarios where the configuration needs to be
+     * resolved through a custom mechanism.
+     */
+    overrideCfgFn?: StatsBeatCfgFetchFn;
 }
