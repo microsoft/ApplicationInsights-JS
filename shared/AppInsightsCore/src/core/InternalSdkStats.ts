@@ -15,10 +15,11 @@ import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums"
 import { eStatsEndpointType, eStatsType } from "../enums/ai/StatsType";
 import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
-import { INetworkStatsbeat } from "../interfaces/ai/INetworkStatsbeat";
 import {
-    IStatsBeat, IStatsBeatCfgResult, IStatsBeatConfig, IStatsBeatKeyMap, IStatsBeatState, IStatsEndpointConfig
-} from "../interfaces/ai/IStatsBeat";
+    IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsConfig, IInternalSdkStatsKeyMap, IInternalSdkStatsState,
+    IStatsEndpointConfig
+} from "../interfaces/ai/IInternalSdkStats";
+import { IInternalSdkStatsNetwork } from "../interfaces/ai/IInternalSdkStatsNetwork";
 import { IStatsMgr } from "../interfaces/ai/IStatsMgr";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 import { IPayloadData } from "../interfaces/ai/IXHROverride";
@@ -28,8 +29,8 @@ import { getResponseText, isFeatureEnabled, openXhr } from "../utils/HelperFuncs
 
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
 const STATS_MIN_INTERVAL_SECONDS = 60; // 1 minute
-const STATSBEAT_LANGUAGE = "JavaScript";
-const STATSBEAT_TYPE = "Browser";
+const STATS_LANGUAGE = "JavaScript";
+const STATS_TYPE = "Browser";
 
 /**
  * The placeholder instrumentation key used when reporting SDK statistics to the distro-owned
@@ -121,8 +122,8 @@ export function getStatsCfgUrl(endpoint: string): string {
 }
 
 /** Parse the SDK Stats config JSON (`{ ver, enabled, url }`); null if empty or unparseable. */
-function _parseStatsCfg(response: string): IStatsBeatCfgResult {
-    let result: IStatsBeatCfgResult = null;
+function _parseStatsCfg(response: string): IInternalSdkStatsCfgResult {
+    let result: IInternalSdkStatsCfgResult = null;
     let json = getJSON();
     if (response && json) {
         try {
@@ -142,7 +143,7 @@ function _parseStatsCfg(response: string): IStatsBeatCfgResult {
 }
 
 /** Default SDK Stats config fetch (fetch, else XHR); calls oncomplete with the parsed config or null. */
-function _defaultStatsCfgFetch(cfgUrl: string, oncomplete: (result: IStatsBeatCfgResult) => void): void {
+function _defaultStatsCfgFetch(cfgUrl: string, oncomplete: (result: IInternalSdkStatsCfgResult) => void): void {
     function _complete(response?: string) {
         try {
             oncomplete(response ? _parseStatsCfg(response) : null);
@@ -217,7 +218,7 @@ export function getStatsBreezeIKey(endpoint: string): string {
 
 
 /**
- * An internal interface to allow the IStatsBeat instance to call back to the manager for
+ * An internal interface to allow the IInternalSdkStats instance to call back to the manager for
  * critical tasks, like starting the timer, sending the events and to inform the manager
  * that this instance is stopping. This is used to ensure that the manager is able to
  * track and control the lifecycle of the instance.
@@ -225,7 +226,7 @@ export function getStatsBreezeIKey(endpoint: string): string {
  */
 interface _IMgrCallbacks {
     /**
-     * Provides a callback to the manager to start a timer for the statsbeat instance.
+     * Provides a callback to the manager to start a timer for the internalSdkStats instance.
      * This is used to ensure that the manager is able to control the lifecycle of the instance
      * @param cb - The callback to call when the timer is started
      * @returns A handle to the timer that was started, this can be used to cancel the timer if needed
@@ -233,12 +234,12 @@ interface _IMgrCallbacks {
     start: (cb: () => void) => ITimerHandler;
 
     /**
-     * Provides a callback to the manager to send the statsbeat event to the core.
+     * Provides a callback to the manager to send the internalSdkStats event to the core.
      * This is used to ensure that the manager is able to control the lifecycle of the instance
-     * @param statsbeatEvent - The statsbeat event to send to the core
+     * @param internalSdkStatsEvent - The internalSdkStats event to send to the core
      * @param endpoint - The endpoint to send the event to
      */
-    track: (statsBeat: IStatsBeat, statsbeatEvent: ITelemetryItem) => void;
+    track: (internalSdkStats: IInternalSdkStats, internalSdkStatsEvent: ITelemetryItem) => void;
 }
 
 /**
@@ -271,11 +272,11 @@ function _isMatchEndpoint(endpoint: string, urlMatch: string): boolean {
 }
 
 /**
- * Creates a new INetworkStatsbeat instance with the specified host.
- * @param host - The host for the INetworkStatsbeat instance.
- * @returns A new INetworkStatsbeat instance.
+ * Creates a new IInternalSdkStatsNetwork instance with the specified host.
+ * @param host - The host for the IInternalSdkStatsNetwork instance.
+ * @returns A new IInternalSdkStatsNetwork instance.
  */
-function _createNetworkStatsbeat(host: string): INetworkStatsbeat {
+function _createInternalSdkStatsNetwork(host: string): IInternalSdkStatsNetwork {
     return {
         host,
         totalRequest: 0,
@@ -289,30 +290,30 @@ function _createNetworkStatsbeat(host: string): INetworkStatsbeat {
 }
 
 /**
- * Creates a new IStatsBeat instance with the specified manager callbacks and statsbeat state.
- * @param mgr - The manager callbacks to use for the IStatsBeat instance.
- * @param statsBeatStats - The statsbeat state to use for the IStatsBeat instance.
- * @returns A new IStatsBeat instance.
+ * Creates a new IInternalSdkStats instance with the specified manager callbacks and internalSdkStats state.
+ * @param mgr - The manager callbacks to use for the IInternalSdkStats instance.
+ * @param internalSdkStatsStats - The internalSdkStats state to use for the IInternalSdkStats instance.
+ * @returns A new IInternalSdkStats instance.
  */
-function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState): IStatsBeat {
-    let _networkCounter: INetworkStatsbeat = _createNetworkStatsbeat(statsBeatStats.endpoint);
+function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IInternalSdkStatsState): IInternalSdkStats {
+    let _networkCounter: IInternalSdkStatsNetwork = _createInternalSdkStatsNetwork(internalSdkStatsStats.endpoint);
     let _timeoutHandle: ITimerHandler;      // Handle to the timer for sending telemetry. This way, we would not send telemetry when system sleep.
-    let _isEnabled: boolean = true;         // Flag to check if statsbeat is enabled or not
+    let _isEnabled: boolean = true;         // Flag to check if internalSdkStats is enabled or not
 
     function _setupTimer() {
         if (_isEnabled && !_timeoutHandle) {
             _timeoutHandle = mgr.start(() => {
                 _timeoutHandle = null;
-                trackStatsbeats();
+                trackInternalSdkStatss();
             });
         }
     }
 
-    function trackStatsbeats() {
+    function trackInternalSdkStatss() {
         if (_isEnabled) {
             _trackSendRequestDuration();
             _trackSendRequestsCount();
-            _networkCounter = _createNetworkStatsbeat(_networkCounter.host);
+            _networkCounter = _createInternalSdkStatsNetwork(_networkCounter.host);
             _timeoutHandle && _timeoutHandle.cancel();
             _timeoutHandle = null;
         }
@@ -320,9 +321,9 @@ function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState):
 
     /**
      * This is a simple helper that checks if the currently reporting endpoint is the same as this instance was
-     * created with. This is used to ensure that we only send statsbeat events to the endpoint that was used
+     * created with. This is used to ensure that we only send internalSdkStats events to the endpoint that was used
      * when the instance was created. This is important as the endpoint can change during the lifetime of the
-     * instance and we don't want to send statsbeat events to the wrong endpoint.
+     * instance and we don't want to send internalSdkStats events to the wrong endpoint.
      * @param endpoint
      * @returns true if the endpoint is the same as the one used to create the instance, false otherwise
      */
@@ -331,26 +332,26 @@ function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState):
     }
 
     /**
-     * Attempt to send statsbeat events to the server. This is done by creating a new event and sending it to the core.
+     * Attempt to send internalSdkStats events to the server. This is done by creating a new event and sending it to the core.
      * The event is created with the name and value passed in, and any additional properties are added to the event as well.
      * This will only send the event when
-     * - the statsbeat is enabled
-     * - the statsbeat key is set for the current endpoint
+     * - the internalSdkStats is enabled
+     * - the internalSdkStats key is set for the current endpoint
      * - the value is greater than 0
      * @param name - The name of the event to send
      * @param val - The value of the event to send
      * @param properties - Optional additional properties to add to the event
      */
-    function _sendStatsbeats(name: string, val: number, properties?: { [name: string]: any }) {
+    function _sendInternalSdkStatss(name: string, val: number, properties?: { [name: string]: any }) {
         if (_isEnabled && val && val > 0){
             // Add extra properties
             let baseProperties = {
                 "rp": "unknown",
                 "attach": "Manual",
-                "cikey": statsBeatStats.cKey,
-                "os": STATSBEAT_TYPE,
-                "language": STATSBEAT_LANGUAGE,
-                "version": statsBeatStats.sdkVer || "unknown",
+                "cikey": internalSdkStatsStats.cKey,
+                "os": STATS_TYPE,
+                "language": STATS_LANGUAGE,
+                "version": internalSdkStatsStats.sdkVer || "unknown",
                 "endpoint": "breeze",
                 "host": _networkCounter.host
             } as { [key: string]: any };
@@ -374,7 +375,7 @@ function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState):
                 }
             }
 
-            let statsbeatEvent: ITelemetryItem = {
+            let internalSdkStatsEvent: ITelemetryItem = {
                 name: name,
                 baseData: {
                     name: name,
@@ -386,7 +387,7 @@ function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState):
 
             // The destination iKey and (optional) SDK Stats ingestion endpoint are resolved and
             // stamped by the manager (see _track) based on the current (dynamic) configuration.
-            mgr.track(statsBeat, statsbeatEvent);
+            mgr.track(internalSdkStats, internalSdkStatsEvent);
         }
     }
 
@@ -395,32 +396,32 @@ function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState):
     
         if (_networkCounter.totalRequest > 0 ) {
             let averageRequestExecutionTime = _networkCounter.requestDuration / totalRequest;
-            _sendStatsbeats("Request_Duration", averageRequestExecutionTime);
+            _sendInternalSdkStatss("Request_Duration", averageRequestExecutionTime);
         }
     }
 
     function _trackSendRequestsCount() {
         var currentCounter = _networkCounter;
-        _sendStatsbeats("Request_Success_Count", currentCounter.success);
+        _sendInternalSdkStatss("Request_Success_Count", currentCounter.success);
         
         for (const code in currentCounter.failure) {
             const count = currentCounter.failure[code];
-            _sendStatsbeats("failure", count, { statusCode: code });
+            _sendInternalSdkStatss("failure", count, { statusCode: code });
         }
 
         for (const code in currentCounter.retry) {
             const count = currentCounter.retry[code];
-            _sendStatsbeats("retry", count, { statusCode: code });
+            _sendInternalSdkStatss("retry", count, { statusCode: code });
         }
 
         for (const code in currentCounter.exception) {
             const count = currentCounter.exception[code];
-            _sendStatsbeats("exception", count, { exceptionType: code });
+            _sendInternalSdkStatss("exception", count, { exceptionType: code });
         }
     
         for (const code in currentCounter.throttle) {
             const count = currentCounter.throttle[code];
-            _sendStatsbeats("Throttle_Count", count, { statusCode: code });
+            _sendInternalSdkStatss("Throttle_Count", count, { statusCode: code });
         }
     }
 
@@ -434,16 +435,16 @@ function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState):
         }
     }
 
-    // THE statsbeat instance being created and returned
-    let statsBeat: IStatsBeat = {
+    // THE internalSdkStats instance being created and returned
+    let internalSdkStats: IInternalSdkStats = {
         enabled: !!_isEnabled,
         endpoint: STR_EMPTY,
         type: eStatsType.SDK,
         count: (status: number, payloadData: IPayloadData, endpoint: string) => {
             if (_isEnabled && _checkEndpoint(endpoint)) {
-                if (payloadData && (payloadData as any)["statsBeatData"] && (payloadData as any)["statsBeatData"]["startTime"]) {
+                if (payloadData && (payloadData as any)["statsData"] && (payloadData as any)["statsData"]["startTime"]) {
                     _networkCounter.totalRequest = (_networkCounter.totalRequest || 0) + 1;
-                    _networkCounter.requestDuration += utcNow() - (payloadData as any)["statsBeatData"]["startTime"];
+                    _networkCounter.requestDuration += utcNow() - (payloadData as any)["statsData"]["startTime"];
                 }
 
                 let retryArray = [401, 403, 408, 429, 500, 502, 503, 504];
@@ -471,17 +472,17 @@ function _createStatsBeat(mgr: _IMgrCallbacks, statsBeatStats: IStatsBeatState):
     };
 
     // Make the properties readonly / reactive to changes
-    return objDefineProps(statsBeat, {
+    return objDefineProps(internalSdkStats, {
         enabled: { g: () => _isEnabled, s: _setEnabled },
-        type: { g: () => statsBeatStats.type },
+        type: { g: () => internalSdkStatsStats.type },
         endpoint: { g: () => _networkCounter.host }
     });
 }
 
-function _getEndpointCfg(statsBeatConfig: IStatsBeatConfig, type: eStatsType): IStatsEndpointConfig {
+function _getEndpointCfg(internalSdkStatsConfig: IInternalSdkStatsConfig, type: eStatsType): IStatsEndpointConfig {
     let endpointCfg: IStatsEndpointConfig = null;
-    if (statsBeatConfig && statsBeatConfig.endCfg) {
-        arrForEach(statsBeatConfig.endCfg, (value) => {
+    if (internalSdkStatsConfig && internalSdkStatsConfig.endCfg) {
+        arrForEach(internalSdkStatsConfig.endCfg, (value) => {
             if (value.type === type) {
                 endpointCfg = value;
                 return -1; // Stop the loop if we found a match
@@ -493,16 +494,16 @@ function _getEndpointCfg(statsBeatConfig: IStatsBeatConfig, type: eStatsType): I
 }
 
 /**
- * This function retrieves the matching {@link IStatsBeatKeyMap} entry for the given endpoint from
+ * This function retrieves the matching {@link IInternalSdkStatsKeyMap} entry for the given endpoint from
  * the provided endpoint configuration. It iterates through the key maps and checks if the endpoint
  * matches any of the configured URL patterns. If a match is found, the corresponding key map entry
  * (which carries the optional instrumentation key and SDK Stats ingestion endpoint URL) is returned.
  * @param endpointCfg - The endpoint configuration to search.
  * @param endpoint - The endpoint to check against the URLs in the configuration.
- * @returns The matching {@link IStatsBeatKeyMap} entry, or null if no match is found.
+ * @returns The matching {@link IInternalSdkStatsKeyMap} entry, or null if no match is found.
  */
-function _getKeyMap(endpointCfg: IStatsEndpointConfig, endpoint: string): IStatsBeatKeyMap | null {
-    let matched: IStatsBeatKeyMap = null;
+function _getKeyMap(endpointCfg: IStatsEndpointConfig, endpoint: string): IInternalSdkStatsKeyMap | null {
+    let matched: IInternalSdkStatsKeyMap = null;
     if (endpointCfg.keyMap) {
         arrForEach(endpointCfg.keyMap, (keyMap) => {
             if (keyMap.match) {
@@ -527,19 +528,19 @@ function _getKeyMap(endpointCfg: IStatsEndpointConfig, endpoint: string): IStats
 }
 
 export function createStatsMgr(): IStatsMgr {
-    let _isMgrEnabled: boolean = false; // Flag to check if statsbeat is enabled or not
+    let _isMgrEnabled: boolean = false; // Flag to check if internalSdkStats is enabled or not
     let _core: IAppInsightsCore; // The core instance that is used to send telemetry
     let _shortInterval = STATS_COLLECTION_SHORT_INTERVAL;
-    let _statsBeatConfig: IStatsBeatConfig;
+    let _internalSdkStatsConfig: IInternalSdkStatsConfig;
     // Resolved remote config cached per cfg URL (EU / non-EU); tracks in-flight fetch and last result.
-    let _cfgCache: { [cfgUrl: string]: { pending: boolean, result: IStatsBeatCfgResult } } = {};
+    let _cfgCache: { [cfgUrl: string]: { pending: boolean, result: IInternalSdkStatsCfgResult } } = {};
 
     // Lazily initialize the manager and start listening for configuration changes
     // This is also required to handle "unloading" and then re-initializing again
     function _init<CfgType extends IConfiguration = IConfiguration>(core: IAppInsightsCore<CfgType>, featureName?: string) {
         if (_core) {
             // If the core is already set, then just return with an empty unload hook
-            _throwInternal(safeGetLogger(core), eLoggingSeverity.WARNING, _eInternalMessageId.StatsBeatManagerException, "StatsBeat manager is already initialized");
+            _throwInternal(safeGetLogger(core), eLoggingSeverity.WARNING, _eInternalMessageId.InternalSdkStatsManagerException, "InternalSdkStats manager is already initialized");
             return null;
         }
 
@@ -556,12 +557,12 @@ export function createStatsMgr(): IStatsMgr {
                     // can be overridden via the CDN / dynamic config or by the SKU, then reference the live
                     // nested stats config so the dependency is registered and runtime changes are picked up.
                     details.setDf(details.cfg, _sdkStatsDefaults as IConfigDefaults<CfgType>);
-                    _statsBeatConfig = details.ref<CfgType, IStatsBeatConfig>(details.cfg, "stats");
-                    if (_statsBeatConfig) {
+                    _internalSdkStatsConfig = details.ref<CfgType, IInternalSdkStatsConfig>(details.cfg, "stats");
+                    if (_internalSdkStatsConfig) {
                         _isMgrEnabled = true;
                         _shortInterval = STATS_COLLECTION_SHORT_INTERVAL; // Reset to the default in-case the config is removed / changed
-                        if (isNumber(_statsBeatConfig.shrtInt) && _statsBeatConfig.shrtInt > STATS_MIN_INTERVAL_SECONDS) {
-                            _shortInterval = _statsBeatConfig.shrtInt * 1000; // Convert to milliseconds
+                        if (isNumber(_internalSdkStatsConfig.shrtInt) && _internalSdkStatsConfig.shrtInt > STATS_MIN_INTERVAL_SECONDS) {
+                            _shortInterval = _internalSdkStatsConfig.shrtInt * 1000; // Convert to milliseconds
                         }
                     }
                 }
@@ -573,7 +574,7 @@ export function createStatsMgr(): IStatsMgr {
      * Resolve the remote SDK Stats config for the endpoint, starting a fetch on first use. Returns
      * null until resolved (or on failure) so the caller skips sending.
      */
-    function _resolveStatsCfg(endpoint: string): IStatsBeatCfgResult {
+    function _resolveStatsCfg(endpoint: string): IInternalSdkStatsCfgResult {
         let cfgUrl = getStatsCfgUrl(endpoint);
         let entry = _cfgCache[cfgUrl];
         if (!entry) {
@@ -582,7 +583,7 @@ export function createStatsMgr(): IStatsMgr {
 
         if (!entry.result && !entry.pending) {
             entry.pending = true;
-            let fetchFn = (_statsBeatConfig && _statsBeatConfig.overrideCfgFn) || _defaultStatsCfgFetch;
+            let fetchFn = (_internalSdkStatsConfig && _internalSdkStatsConfig.overrideCfgFn) || _defaultStatsCfgFetch;
             try {
                 fetchFn(cfgUrl, (result) => {
                     entry.pending = false;
@@ -598,21 +599,21 @@ export function createStatsMgr(): IStatsMgr {
         return entry.result;
     }
 
-    function _track(statsBeat: IStatsBeat, statsBeatEvent: ITelemetryItem) {
-        if (_isMgrEnabled && _statsBeatConfig) {
-            let endpoint = statsBeat.endpoint;
+    function _track(internalSdkStats: IInternalSdkStats, internalSdkStatsEvent: ITelemetryItem) {
+        if (_isMgrEnabled && _internalSdkStatsConfig) {
+            let endpoint = internalSdkStats.endpoint;
 
             // Fetching the matching key map for the endpoint here to support the scenario where the
             // endpoint is changed after the SDK Stats instance is created. This will ensure that the
             // correct key / destination is used for the endpoint, and avoids tracking the event if the
             // endpoint is not in the config.
-            let endpointCfg = _getEndpointCfg(_statsBeatConfig, statsBeat.type);
+            let endpointCfg = _getEndpointCfg(_internalSdkStatsConfig, internalSdkStats.type);
             if (endpointCfg) {
                 let keyMap = _getKeyMap(endpointCfg, endpoint);
                 // Only send the event if the endpoint matched a configured key map (or the event type
                 // is non-zero, preserving the legacy behaviour for explicitly typed stats events).
-                if (keyMap || statsBeat.type) {
-                    let useBreeze = _statsBeatConfig.mode === eStatsEndpointType.Breeze;
+                if (keyMap || internalSdkStats.type) {
+                    let useBreeze = _internalSdkStatsConfig.mode === eStatsEndpointType.Breeze;
 
                     // Resolve the iKey to use, falling back to the mode default when the matched key
                     // map does not specify one. Breeze mode uses the Microsoft-owned breeze SDK Stats
@@ -636,28 +637,28 @@ export function createStatsMgr(): IStatsMgr {
                         }
                     }
 
-                    statsBeatEvent.iKey = iKey;
+                    internalSdkStatsEvent.iKey = iKey;
 
                     if (url) {
                         // Carry the SDK Stats ingestion endpoint so the sending channel can redirect the
                         // event away from the customer's breeze endpoint. This marker is removed by the
                         // channel before the event is serialized.
-                        statsBeatEvent.data = statsBeatEvent.data || {};
-                        statsBeatEvent.data[STATS_SDK_ENDPOINT_KEY] = url;
+                        internalSdkStatsEvent.data = internalSdkStatsEvent.data || {};
+                        internalSdkStatsEvent.data[STATS_SDK_ENDPOINT_KEY] = url;
                     }
 
-                    _core.track(statsBeatEvent);
+                    _core.track(internalSdkStatsEvent);
                 }
             }
         }
     }
 
-    function _createInstance(state: IStatsBeatState): IStatsBeat {
-        let instance: IStatsBeat = null;
+    function _createInstance(state: IInternalSdkStatsState): IInternalSdkStats {
+        let instance: IInternalSdkStats = null;
 
         if (_isMgrEnabled) {
             // Prefetch the remote config (SDK Stats mode) so it's ready by the first interval
-            if (state && state.endpoint && _statsBeatConfig.mode !== eStatsEndpointType.Breeze) {
+            if (state && state.endpoint && _internalSdkStatsConfig.mode !== eStatsEndpointType.Breeze) {
                 _resolveStatsCfg(state.endpoint);
             }
 
@@ -668,7 +669,7 @@ export function createStatsMgr(): IStatsMgr {
                 track: _track
             };
 
-            instance = _createStatsBeat(callbacks, state);
+            instance = _createInternalSdkStats(callbacks, state);
         }
 
         return instance;
@@ -686,7 +687,7 @@ export function createStatsMgr(): IStatsMgr {
 }
 
 /**
- * The default {@link IStatsBeatConfig} values for SDK Stats collection. These are seeded into the
+ * The default {@link IInternalSdkStatsConfig} values for SDK Stats collection. These are seeded into the
  * single global config (via {@link IWatchDetails.setDf}) by the manager so they remain dynamic and
  * can be overridden at runtime via the CDN / dynamic config or by the SKU (AISKU / 1DS). By default
  * the events are routed to the distro-owned SDK Stats ingestion endpoint, whose host (and whether
@@ -697,7 +698,7 @@ export function createStatsMgr(): IStatsMgr {
  * {@link STATS_SDK_FEATURE} name.
  */
 const _sdkStatsDefaults: IConfigDefaults<IConfiguration> = {
-    stats: cfgDfMerge<IStatsBeatConfig>({
+    stats: cfgDfMerge<IInternalSdkStatsConfig>({
         mode: eStatsEndpointType.SdkStats,
         // The destination iKey / endpoint are resolved per-event in _track based on the mode, so the
         // default key map only needs to match all endpoints. A full key map (including explicit keys /

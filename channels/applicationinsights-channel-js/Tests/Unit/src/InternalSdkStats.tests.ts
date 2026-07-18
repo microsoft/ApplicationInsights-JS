@@ -1,16 +1,16 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, createStatsMgr, eStatsType, FeatureOptInMode, getWindow, IPayloadData, IStatsBeatState, IStatsMgr, ITelemetryItem, IUnloadHook, TransportType } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, createStatsMgr, eStatsType, FeatureOptInMode, getWindow, IPayloadData, IInternalSdkStatsState, IStatsMgr, ITelemetryItem, IUnloadHook, TransportType } from "@microsoft/applicationinsights-core-js";
 import { Sender } from "../../../src/Sender";
 import { SinonSpy, SinonStub } from "sinon";
 import { ISenderConfig } from "../../../types/applicationinsights-channel-js";
 import { isBeaconsSupported } from "@microsoft/applicationinsights-core-js";
 
-export class StatsbeatTests extends AITestClass {
+export class InternalSdkStatsTests extends AITestClass {
     private _core: AppInsightsCore;
     private _sender: Sender;
     private _statsMgr: IStatsMgr;
     private _statsMgrUnloadHook: IUnloadHook | null;
-    private statsbeatCountSpy: SinonSpy;
+    private internalSdkStatsCountSpy: SinonSpy;
     private fetchStub: sinon.SinonStub;
     private beaconStub: sinon.SinonStub;
     private trackSpy: SinonSpy;
@@ -34,8 +34,8 @@ export class StatsbeatTests extends AITestClass {
             this._statsMgrUnloadHook.rm();
             this._statsMgrUnloadHook = null;
         }
-        if (this.statsbeatCountSpy) {
-            this.statsbeatCountSpy.restore();
+        if (this.internalSdkStatsCountSpy) {
+            this.internalSdkStatsCountSpy.restore();
         }
         if (this.fetchStub) {
             this.fetchStub.restore();
@@ -80,18 +80,18 @@ export class StatsbeatTests extends AITestClass {
         // Initialize the core first, then init the manager against that same (now initialized)
         // core so it can enable itself (createStatsMgr().init() only enables once the core is initialized).
         core.initialize(coreConfig, [sender]);
-        let unloadHook = statsMgr.init(core, "StatsBeat");
+        let unloadHook = statsMgr.init(core, "InternalSdkStats");
         core.setStatsMgr(statsMgr);
         this._statsMgrUnloadHook = unloadHook;
 
-        let statsBeatState: IStatsBeatState = {
+        let internalSdkStatsState: IInternalSdkStatsState = {
             cKey: instrumentationKey,
             endpoint: config.endpointUrl,
             sdkVer: "1.0.0",
             type: eStatsType.SDK
         };
 
-        this.statsbeatCountSpy = this.sandbox.spy(core.getStatsBeat(statsBeatState), "count");
+        this.internalSdkStatsCountSpy = this.sandbox.spy(core.getSdkStats(internalSdkStatsState), "count");
         this.trackSpy = this.sandbox.spy(core, "track");
 
         this.onDone(() => {
@@ -130,17 +130,17 @@ export class StatsbeatTests extends AITestClass {
         } catch (e) {
             QUnit.assert.ok(false, "Unexpected error during telemetry processing");
         }
-        this.clock.tick(900000); // Simulate time passing for statsbeat to be sent
+        this.clock.tick(900000); // Simulate time passing for internalSdkStats to be sent
     }
 
-    private assertStatsbeatCall(statusCode: number, eventName: string) {
-        Assert.equal(this.statsbeatCountSpy.callCount, 1, "SDK Stats count should be called once");
-        Assert.equal(this.statsbeatCountSpy.firstCall.args[0], statusCode, `Statsbeat count should be called with status ${statusCode}`);
-        const data = JSON.stringify(this.statsbeatCountSpy.firstCall.args[1]);
+    private assertInternalSdkStatsCall(statusCode: number, eventName: string) {
+        Assert.equal(this.internalSdkStatsCountSpy.callCount, 1, "SDK Stats count should be called once");
+        Assert.equal(this.internalSdkStatsCountSpy.firstCall.args[0], statusCode, `InternalSdkStats count should be called with status ${statusCode}`);
+        const data = JSON.stringify(this.internalSdkStatsCountSpy.firstCall.args[1]);
         Assert.ok(data.includes("startTime"), "SDK Stats count should be called with startTime set");
-        const statsbeatEvent = this.trackSpy.firstCall.args[0];
-        Assert.equal(statsbeatEvent.baseType, "MetricData", "SDK Stats event should be of type MetricData");
-        Assert.equal(statsbeatEvent.baseData.name, eventName, `Statsbeat event should be of type ${eventName}`);
+        const internalSdkStatsEvent = this.trackSpy.firstCall.args[0];
+        Assert.equal(internalSdkStatsEvent.baseType, "MetricData", "SDK Stats event should be of type MetricData");
+        Assert.equal(internalSdkStatsEvent.baseData.name, eventName, `InternalSdkStats event should be of type ${eventName}`);
     }
 
     public registerTests() {
@@ -150,7 +150,7 @@ export class StatsbeatTests extends AITestClass {
                 const config = {
                     instrumentationKey: "Test-iKey",
                     featureOptIn: {
-                        "StatsBeat": {
+                        "InternalSdkStats": {
                             mode: FeatureOptInMode.enable
                         }
                     },
@@ -174,19 +174,19 @@ export class StatsbeatTests extends AITestClass {
                 };
 
                 this._core.initialize(config, [this._sender]);
-                this._statsMgrUnloadHook = this._statsMgr.init(this._core, "StatsBeat");
+                this._statsMgrUnloadHook = this._statsMgr.init(this._core, "InternalSdkStats");
                 this._core.setStatsMgr(this._statsMgr);
-                let statsBeatState: IStatsBeatState = {
+                let internalSdkStatsState: IInternalSdkStatsState = {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
                     type: eStatsType.SDK
                 };
 
-                const statsbeat = this._core.getStatsBeat(statsBeatState);
+                const internalSdkStats = this._core.getSdkStats(internalSdkStatsState);
 
-                QUnit.assert.ok(statsbeat, "SDK Stats is initialized");
-                QUnit.assert.ok(statsbeat.enabled, "SDK Stats is marked as initialized");
+                QUnit.assert.ok(internalSdkStats, "SDK Stats is initialized");
+                QUnit.assert.ok(internalSdkStats.enabled, "SDK Stats is marked as initialized");
             }
         });
 
@@ -215,8 +215,8 @@ export class StatsbeatTests extends AITestClass {
                     
                 }
             ].concat(PollingAssert.createPollingAssert(() => {
-                if (this.statsbeatCountSpy.called && this.fetchStub.called) {
-                    this.assertStatsbeatCall(200, "Request_Success_Count");
+                if (this.internalSdkStatsCountSpy.called && this.fetchStub.called) {
+                    this.assertInternalSdkStatsCall(200, "Request_Success_Count");
                     return true;
                 }
                 return false;
@@ -246,8 +246,8 @@ export class StatsbeatTests extends AITestClass {
                     this.processTelemetryAndFlush(sender, telemetryItem);
                 }
             ].concat(PollingAssert.createPollingAssert(() => {
-                if (this.statsbeatCountSpy.called && this.fetchStub.called) {
-                    this.assertStatsbeatCall(439, "Throttle_Count");
+                if (this.internalSdkStatsCountSpy.called && this.fetchStub.called) {
+                    this.assertInternalSdkStatsCall(439, "Throttle_Count");
                     return true;
                 }
                 return false;
@@ -278,8 +278,8 @@ export class StatsbeatTests extends AITestClass {
                     this.processTelemetryAndFlush(sender, telemetryItem);
                 }
             ].concat(PollingAssert.createPollingAssert(() => {
-                if (this.statsbeatCountSpy.called) {
-                    this.assertStatsbeatCall(200, "Request_Success_Count");
+                if (this.internalSdkStatsCountSpy.called) {
+                    this.assertInternalSdkStatsCall(200, "Request_Success_Count");
                     return true;
                 }
                 return false;
@@ -315,8 +315,8 @@ export class StatsbeatTests extends AITestClass {
 
                 }
             ].concat(PollingAssert.createPollingAssert(() => {
-                if (this.statsbeatCountSpy.called) {
-                    this.assertStatsbeatCall(200, "Request_Success_Count");
+                if (this.internalSdkStatsCountSpy.called) {
+                    this.assertInternalSdkStatsCall(200, "Request_Success_Count");
                     console.log("SDK Stats count called with success count for xhr sender");
                     return true;
                 }

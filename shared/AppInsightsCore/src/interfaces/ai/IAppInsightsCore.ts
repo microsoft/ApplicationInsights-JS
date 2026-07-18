@@ -11,11 +11,11 @@ import { IChannelControls } from "./IChannelControls";
 import { IConfiguration } from "./IConfiguration";
 import { ICookieMgr } from "./ICookieMgr";
 import { IDiagnosticLogger } from "./IDiagnosticLogger";
+import { IInternalSdkStats, IInternalSdkStatsState } from "./IInternalSdkStats";
 import { INotificationListener } from "./INotificationListener";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManagerProvider } from "./IPerfManager";
 import { IProcessTelemetryContext } from "./IProcessTelemetryContext";
-import { IStatsBeat, IStatsBeatState } from "./IStatsBeat";
 import { IStatsMgr } from "./IStatsMgr";
 import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "./ITelemetryInitializers";
 import { ITelemetryItem } from "./ITelemetryItem";
@@ -123,10 +123,10 @@ export interface IAppInsightsCore<CfgType extends IConfiguration = IConfiguratio
 
     /**
      * Get the current stats beat instance for the provided configuration, if enabled.
-     * @param statsBeatConfig - The configuration to use to create the stats beat instance.
+     * @param internalSdkStatsConfig - The configuration to use to create the stats beat instance.
      * @returns The stats beat instance or null if not available
      */
-    getStatsBeat?(statsBeatConfig: IStatsBeatState): IStatsBeat;
+    getSdkStats?(internalSdkStatsConfig: IInternalSdkStatsState): IInternalSdkStats;
 
     /**
      * Set the stats beat manager instance which will be used to create the stats beat instances

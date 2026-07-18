@@ -3,12 +3,12 @@
 
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IConfiguration } from "./IConfiguration";
-import { IStatsBeat, IStatsBeatState } from "./IStatsBeat";
+import { IInternalSdkStats, IInternalSdkStatsState } from "./IInternalSdkStats";
 import { IUnloadHook } from "./IUnloadHook";
 
 /**
- * The Interface which defines the StatsBeat manager, which is responsible for creating and
- * managing the StatsBeat instance.
+ * The Interface which defines the InternalSdkStats manager, which is responsible for creating and
+ * managing the InternalSdkStats instance.
  * @since 3.3.7
  */
 export interface IStatsMgr {
@@ -34,12 +34,12 @@ export interface IStatsMgr {
     init: <CfgType extends IConfiguration = IConfiguration>(core: IAppInsightsCore<CfgType>, featureName?: string) => IUnloadHook | null;
     
     /**
-     * Returns a new {@link IStatsBeat} instance for the current state which includes the endpoint.
+     * Returns a new {@link IInternalSdkStats} instance for the current state which includes the endpoint.
      * This method should be called only after the manager has been initialized and the
-     * {@link IStatsBeatConfig} has been set, otherwise it will return null.
+     * {@link IInternalSdkStatsConfig} has been set, otherwise it will return null.
      * @param state - The current state of the stats beat manager.
      * @returns A new instance of the stats beat or null if the manager or the configuration does not support
-     * the {@link IStatsBeatState}.
+     * the {@link IInternalSdkStatsState}.
      */
-    newInst: (state: IStatsBeatState) => IStatsBeat;
+    newInst: (state: IInternalSdkStatsState) => IInternalSdkStats;
 }

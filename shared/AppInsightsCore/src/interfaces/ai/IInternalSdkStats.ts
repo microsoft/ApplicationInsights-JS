@@ -9,7 +9,7 @@ import { IPayloadData } from "./IXHROverride";
  * It is used to track the performance and usage of the SDK, and to identify any issues or errors that may occur.
  * @since 3.3.7
  */
-export interface IStatsBeat {
+export interface IInternalSdkStats {
     /**
      * Returns whether this instance of the stats beat is enabled or not.
      * @returns True if the stats beat is enabled, false otherwise.
@@ -48,7 +48,7 @@ export interface IStatsBeat {
  * The configuration passed to the stats beat plugin to record statistics about the SDK
  * @since 3.3.7
  */
-export interface IStatsBeatState {
+export interface IInternalSdkStatsState {
     /**
      * The current instrumentation key.
      */
@@ -74,7 +74,7 @@ export interface IStatsBeatState {
  * The configuration for the collection of supported endpoints
  * @since 3.3.7
  */
-export interface IStatsBeatKeyMap {
+export interface IInternalSdkStatsKeyMap {
     /**
      * The key to used to for any matching endpoints.
      */
@@ -110,7 +110,7 @@ export interface IStatsEndpointConfig {
     /**
      * The matching endpoints.
      */
-    keyMap?: IStatsBeatKeyMap[]
+    keyMap?: IInternalSdkStatsKeyMap[]
 }
 
 /**
@@ -118,7 +118,7 @@ export interface IStatsEndpointConfig {
  * SDK Stats collection is currently enabled and the host that matching events should be sent to.
  * @since 3.3.7
  */
-export interface IStatsBeatCfgResult {
+export interface IInternalSdkStatsCfgResult {
     /**
      * Identifies whether SDK Stats collection is enabled. When false the SDK Stats events are not
      * sent (the feature is effectively disabled by the distro-owned configuration).
@@ -136,18 +136,18 @@ export interface IStatsBeatCfgResult {
 /**
  * The signature of the function used to fetch (and parse) the remote SDK Stats configuration. It is
  * primarily used to allow the fetch implementation to be overridden (for testing or advanced
- * scenarios) via {@link IStatsBeatConfig.overrideCfgFn}.
+ * scenarios) via {@link IInternalSdkStatsConfig.overrideCfgFn}.
  * @param cfgUrl - The SDK Stats configuration URL (`cfg/v1.json`) to fetch.
  * @param oncomplete - The callback to invoke with the parsed configuration, or null on any failure.
  * @since 3.3.7
  */
-export type StatsBeatCfgFetchFn = (cfgUrl: string, oncomplete: (result: IStatsBeatCfgResult | null) => void) => void;
+export type InternalSdkStatsCfgFetchFn = (cfgUrl: string, oncomplete: (result: IInternalSdkStatsCfgResult | null) => void) => void;
 
 /**
  * The configuration for the stats beat definition
  * @since 3.3.7
  */
-export interface IStatsBeatConfig {
+export interface IInternalSdkStatsConfig {
     /**
      * The short collection interval in seconds to send the stats beat events.
      * Default: 15 min
@@ -175,5 +175,5 @@ export interface IStatsBeatConfig {
      * is primarily intended for testing or advanced scenarios where the configuration needs to be
      * resolved through a custom mechanism.
      */
-    overrideCfgFn?: StatsBeatCfgFetchFn;
+    overrideCfgFn?: InternalSdkStatsCfgFetchFn;
 }

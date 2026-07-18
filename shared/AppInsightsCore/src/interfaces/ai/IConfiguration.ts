@@ -10,9 +10,9 @@ import { IChannelControls } from "./IChannelControls";
 import { ICookieMgrConfig } from "./ICookieMgr";
 import { IExceptionConfig } from "./IExceptionConfig";
 import { IFeatureOptIn } from "./IFeatureOptIn";
+import { IInternalSdkStatsConfig } from "./IInternalSdkStats";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManager } from "./IPerfManager";
-import { IStatsBeatConfig } from "./IStatsBeat";
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
 
 /**
@@ -255,7 +255,7 @@ export interface IConfiguration extends IOTelConfig {
      * for example setting `stats.mode` to {@link eStatsEndpointType.Breeze} routes SDK Stats to the
      * legacy breeze endpoint instead of the distro-owned SDK Stats endpoint.
      */
-    stats?: IStatsBeatConfig;
+    stats?: IInternalSdkStatsConfig;
 
     ///**
     // * [Optional] Internal SDK configuration for developers
@@ -283,8 +283,8 @@ export interface IConfiguration extends IOTelConfig {
 // */
 //export interface IInternalSdkConfiguration {
 //    /**
-//     * [Optional] Enable Internal StatsBeat
+//     * [Optional] Enable Internal InternalSdkStats
 //     * @internal
 //     */
-//    stats?: IStatsBeatConfig;
+//    stats?: IInternalSdkStatsConfig;
 //}

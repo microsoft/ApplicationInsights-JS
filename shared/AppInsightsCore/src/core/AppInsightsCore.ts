@@ -28,11 +28,11 @@ import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import { ICookieMgr } from "../interfaces/ai/ICookieMgr";
 import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
 import { IDistributedTraceContext } from "../interfaces/ai/IDistributedTraceContext";
+import { IInternalSdkStats, IInternalSdkStatsState } from "../interfaces/ai/IInternalSdkStats";
 import { INotificationListener } from "../interfaces/ai/INotificationListener";
 import { INotificationManager } from "../interfaces/ai/INotificationManager";
 import { IPerfManager } from "../interfaces/ai/IPerfManager";
 import { IProcessTelemetryContext, IProcessTelemetryUpdateContext } from "../interfaces/ai/IProcessTelemetryContext";
-import { IStatsBeat, IStatsBeatState } from "../interfaces/ai/IStatsBeat";
 import { IStatsMgr } from "../interfaces/ai/IStatsMgr";
 import { ITelemetryInitializerHandler, TelemetryInitializerFunction } from "../interfaces/ai/ITelemetryInitializers";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
@@ -79,10 +79,10 @@ const maxAttributeCount = 128;
 // const strPluginUnloadFailed = "Failed to unload plugin";
 
 // /**
-//  * Default StatsBeatMgr configuration
+//  * Default InternalSdkStatsMgr configuration
 //  * @internal
 //  */
-// const defaultStatsCfg: IConfigDefaults<IStatsBeatConfig> = objDeepFreeze({
+// const defaultStatsCfg: IConfigDefaults<IInternalSdkStatsConfig> = objDeepFreeze({
 //     shrtInt: UNDEFINED_VALUE,
 //     endCfg: cfgDfMerge([])
 // });
@@ -385,7 +385,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         let _logger: IDiagnosticLogger;
         let _eventQueue: ITelemetryItem[];
         let _notificationManager: INotificationManager | null | undefined;
-        let _statsBeat: IStatsBeat | null;
+        let _internalSdkStats: IInternalSdkStats | null;
         let _statsMgr: IStatsMgr | null;
         let _perfManager: IPerfManager | null;
         let _cfgPerfManager: IPerfManager | null;
@@ -626,30 +626,30 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 _perfManager = perfMgr;
             };
 
-            _self.getStatsBeat = (statsBeatState: IStatsBeatState) => {
+            _self.getSdkStats = (internalSdkStatsState: IInternalSdkStatsState) => {
                 // create a new SDK Stats instance if not initialized yet or the endpoint is different
                 // otherwise, return the existing one, or null
 
-                if (statsBeatState) {
+                if (internalSdkStatsState) {
                     if (_statsMgr && _statsMgr.enabled) {
-                        if (_statsBeat && _statsBeat.endpoint !== statsBeatState.endpoint) {
+                        if (_internalSdkStats && _internalSdkStats.endpoint !== internalSdkStatsState.endpoint) {
                             // Different endpoint, so unload the existing and create a new one
-                            _statsBeat.enabled = false;
-                            _statsBeat = null;
+                            _internalSdkStats.enabled = false;
+                            _internalSdkStats = null;
                         }
 
-                        if (!_statsBeat) {
+                        if (!_internalSdkStats) {
                             // Create a new SDK Stats instance
-                            _statsBeat = _statsMgr.newInst(statsBeatState);
+                            _internalSdkStats = _statsMgr.newInst(internalSdkStatsState);
                         }
-                    } else if (_statsBeat) {
+                    } else if (_internalSdkStats) {
                         // Disable and remove any previously created SDK Stats instance
-                        _statsBeat.enabled = false;
-                        _statsBeat = null;
+                        _internalSdkStats.enabled = false;
+                        _internalSdkStats = null;
                     }
 
                     // Return the current SDK Stats instance or null if not created
-                    return _statsBeat;
+                    return _internalSdkStats;
                 }
 
                 // Return null as no SDK Stats state was provided
@@ -659,9 +659,9 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
             _self.setStatsMgr = (statsMgr: IStatsMgr) => {
                 if (_statsMgr && _statsMgr !== statsMgr) {
                     // Disable any previously created SDK Stats instance
-                    if (_statsBeat) {
-                        _statsBeat.enabled = false;
-                        _statsBeat = null;
+                    if (_internalSdkStats) {
+                        _internalSdkStats.enabled = false;
+                        _internalSdkStats = null;
                     }
                 }
 
@@ -911,10 +911,10 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
 
                 let processUnloadCtx = createProcessTelemetryUnloadContext(_getPluginChain(), _self);
                 processUnloadCtx.onComplete(() => {
-                    if (_statsBeat) {
+                    if (_internalSdkStats) {
                         // Disable any SDK Stats instance
-                        _statsBeat.enabled = false;
-                        _statsBeat = null;
+                        _internalSdkStats.enabled = false;
+                        _internalSdkStats = null;
                     }
 
                     _hookContainer.run(_self.logger);
@@ -1317,11 +1317,11 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
                 runTargetUnload(_notificationManager, false);
                 _notificationManager = null;
                 _perfManager = null;
-                if (_statsBeat) {
+                if (_internalSdkStats) {
                     // Disable any SDK Stats instance
-                    _statsBeat.enabled = false;
+                    _internalSdkStats.enabled = false;
                 }
-                _statsBeat = null;
+                _internalSdkStats = null;
                 _statsMgr = null;
                 _cfgPerfManager = null;
                 runTargetUnload(_cookieManager, false);
@@ -1736,7 +1736,7 @@ export class AppInsightsCore<CfgType extends IConfiguration = IConfiguration> im
         return null;
     }
 
-    public getStatsBeat(statsBeatState: IStatsBeatState): IStatsBeat {
+    public getSdkStats(internalSdkStatsState: IInternalSdkStatsState): IInternalSdkStats {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }

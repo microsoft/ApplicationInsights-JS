@@ -4,8 +4,8 @@ import { IPayloadData } from "../../../../src/interfaces/ai/IXHROverride";
 import { IStatsMgr } from "../../../../src/interfaces/ai/IStatsMgr";
 import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
 import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
-import { createStatsMgr, STATS_SDK_ENDPOINT_KEY } from "../../../../src/core/StatsBeat";
-import { IStatsBeatState } from "../../../../src/interfaces/ai/IStatsBeat";
+import { createStatsMgr, STATS_SDK_ENDPOINT_KEY } from "../../../../src/core/InternalSdkStats";
+import { IInternalSdkStatsState } from "../../../../src/interfaces/ai/IInternalSdkStats";
 import { eStatsType } from "../../../../src/enums/ai/StatsType";
 import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
 import { IPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
@@ -14,14 +14,14 @@ import { FeatureOptInMode } from "../../../../src/enums/ai/FeatureOptInEnums";
 
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900; // 15 minutes
 
-export class StatsBeatTests extends AITestClass {
+export class InternalSdkStatsTests extends AITestClass {
     private _core: AppInsightsCore;
     private _config: IConfiguration;
     private _statsMgr: IStatsMgr;
     private _trackSpy: sinon.SinonSpy;
 
     constructor(emulateIe: boolean) {
-        super("StatsBeatTests", emulateIe);
+        super("InternalSdkStatsTests", emulateIe);
     }
 
     public testInitialize() {
@@ -32,7 +32,7 @@ export class StatsBeatTests extends AITestClass {
             instrumentationKey: "Test-iKey",
             disableInstrumentationKeyValidation: true,
             featureOptIn: {
-                "StatsBeat": {
+                "InternalSdkStats": {
                     mode: FeatureOptInMode.enable
                 }
             },
@@ -82,19 +82,19 @@ export class StatsBeatTests extends AITestClass {
                 // Test with no initialization
                 Assert.equal(false, this._statsMgr.enabled, "SDK Stats manager should not be initialized by default");
                 
-                let statsBeatState: IStatsBeatState = {
+                let internalSdkStatsState: IInternalSdkStatsState = {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
                     type: eStatsType.SDK
                 };
-                Assert.equal(null, this._statsMgr.newInst(statsBeatState), "SDK Stats should not be created before initialization");
+                Assert.equal(null, this._statsMgr.newInst(internalSdkStatsState), "SDK Stats should not be created before initialization");
 
                 // Initialize
-                this._statsMgr.init(this._core, "StatsBeat");
+                this._statsMgr.init(this._core, "InternalSdkStats");
                 Assert.equal(true, this._statsMgr.enabled, "SDK Stats manager should be initialized after initialization");
 
-                let newInst = this._statsMgr.newInst(statsBeatState);
+                let newInst = this._statsMgr.newInst(internalSdkStatsState);
                 Assert.ok(!!newInst, "SDK Stats should be created after initialization");
                 Assert.equal(true, newInst.enabled, "SDK Stats should be enabled after initialization");
                 Assert.equal("https://example.endpoint.com", newInst.endpoint);
@@ -107,7 +107,7 @@ export class StatsBeatTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 // Initialize SDK Stats manager
-                this._statsMgr.init(this._core, "StatsBeat");
+                this._statsMgr.init(this._core, "InternalSdkStats");
                 
                 // Create mock payload data with timing information
                 const payloadData = {
@@ -116,29 +116,29 @@ export class StatsBeatTests extends AITestClass {
                     headers: {},
                     timeout: 0,
                     disableXhrSync: false,
-                    statsBeatData: {
+                    statsData: {
                         startTime: "2023-10-01T00:00:00Z" // Simulated start time
                     }
                 } as IPayloadData;
                 
-                let statsBeatState: IStatsBeatState = {
+                let internalSdkStatsState: IInternalSdkStatsState = {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
                     type: eStatsType.SDK
                 };
-                let statsBeat = this._statsMgr.newInst(statsBeatState);
+                let internalSdkStats = this._statsMgr.newInst(internalSdkStatsState);
 
                 // Test successful request
-                statsBeat.count(200, payloadData, "https://example.endpoint.com");
+                internalSdkStats.count(200, payloadData, "https://example.endpoint.com");
                 
                 // Test failed request
-                statsBeat.count(500, payloadData, "https://example.endpoint.com");
+                internalSdkStats.count(500, payloadData, "https://example.endpoint.com");
                 
                 // Test throttled request
-                statsBeat.count(429, payloadData, "https://example.endpoint.com");
+                internalSdkStats.count(429, payloadData, "https://example.endpoint.com");
                 
-                // Verify that trackStatsbeats is called when the timer fires
+                // Verify that trackInternalSdkStatss is called when the timer fires
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
                 
                 // Verify that track was called
@@ -154,20 +154,20 @@ export class StatsBeatTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 // Initialize SDK Stats manager
-                this._statsMgr.init(this._core, "StatsBeat");
+                this._statsMgr.init(this._core, "InternalSdkStats");
 
-                let statsBeatState: IStatsBeatState = {
+                let internalSdkStatsState: IInternalSdkStatsState = {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
                     type: eStatsType.SDK
                 };
-                let statsBeat = this._statsMgr.newInst(statsBeatState);
+                let internalSdkStats = this._statsMgr.newInst(internalSdkStatsState);
                 
                 // Count an exception
-                statsBeat.countException("https://example.endpoint.com", "NetworkError");
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
                 
-                // Verify that trackStatsbeats is called when the timer fires
+                // Verify that trackInternalSdkStatss is called when the timer fires
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
                 
                 // Verify that track was called
@@ -195,7 +195,7 @@ export class StatsBeatTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 // Initialize SDK Stats manager for a specific endpoint
-                this._statsMgr.init(this._core, "StatsBeat");
+                this._statsMgr.init(this._core, "InternalSdkStats");
                 
                 // Create mock payload data
                 const payloadData = {
@@ -204,26 +204,26 @@ export class StatsBeatTests extends AITestClass {
                     headers: {},
                     timeout: 0,
                     disableXhrSync: false,
-                    statsBeatData: {
+                    statsData: {
                         startTime: Date.now()
                     }
                 } as IPayloadData;
                 
-                let statsBeatState: IStatsBeatState = {
+                let internalSdkStatsState: IInternalSdkStatsState = {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
                     type: eStatsType.SDK
                 };
-                let statsBeat = this._statsMgr.newInst(statsBeatState);
+                let internalSdkStats = this._statsMgr.newInst(internalSdkStatsState);
 
                 // Set up spies to check internal calls
-                const countSpy = this.sandbox.spy(statsBeat, "count");
+                const countSpy = this.sandbox.spy(internalSdkStats, "count");
                 
                 // Count metrics for a different endpoint
-                statsBeat.count(200, payloadData, "https://different.endpoint.com");
+                internalSdkStats.count(200, payloadData, "https://different.endpoint.com");
 
-                // Verify that trackStatsbeats is called when the timer fires
+                // Verify that trackInternalSdkStatss is called when the timer fires
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
                 // The count method was called, but it should return early
                 Assert.equal(1, countSpy.callCount, "count method should be called");
@@ -235,16 +235,16 @@ export class StatsBeatTests extends AITestClass {
             name: "SDK Stats: test dynamic configuration changes",
             useFakeTimers: true,
             test: () => {
-                // Setup core with statsbeat enabled (guard against re-initialization since the
+                // Setup core with internalSdkStats enabled (guard against re-initialization since the
                 // core is now initialized in testInitialize())
                 if (!this._core.isInitialized()) {
                     this._core.initialize(this._config, [new ChannelPlugin()]);
                 }
                 // Initialize SDK Stats manager for a specific endpoint
-                this._statsMgr.init(this._core, "StatsBeat");
+                this._statsMgr.init(this._core, "InternalSdkStats");
                 this._core.setStatsMgr(this._statsMgr);
 
-                let statsBeatState: IStatsBeatState = {
+                let internalSdkStatsState: IInternalSdkStatsState = {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
@@ -252,43 +252,43 @@ export class StatsBeatTests extends AITestClass {
                 };
 
                 // Verify that SDK Stats is created
-                const statsbeat = this._core.getStatsBeat(statsBeatState);
-                Assert.ok(!!statsbeat, "Statsbeat should be created");
+                const internalSdkStats = this._core.getSdkStats(internalSdkStatsState);
+                Assert.ok(!!internalSdkStats, "InternalSdkStats should be created");
                 
                 // Explicitly disable SDK Stats
-                this._core.config.featureOptIn["StatsBeat"].mode = FeatureOptInMode.disable;
+                this._core.config.featureOptIn["InternalSdkStats"].mode = FeatureOptInMode.disable;
                 this.clock.tick(1); // Allow time for config changes to propagate
                 
                 // Verify that SDK Stats is removed
-                const updatedStatsbeat = this._core.getStatsBeat(statsBeatState);
-                Assert.ok(!updatedStatsbeat, "SDK Stats should be removed when disabled");
+                const updatedInternalSdkStats = this._core.getSdkStats(internalSdkStatsState);
+                Assert.ok(!updatedInternalSdkStats, "SDK Stats should be removed when disabled");
                 
                 // Re-enable SDK Stats
-                this._core.config.featureOptIn["StatsBeat"].mode = FeatureOptInMode.enable;
+                this._core.config.featureOptIn["InternalSdkStats"].mode = FeatureOptInMode.enable;
                 this.clock.tick(1); // Allow time for config changes to propagate
                 
                 // Verify that SDK Stats is created again
-                const reenabledStatsbeat = this._core.getStatsBeat(statsBeatState);
-                Assert.ok(reenabledStatsbeat, "SDK Stats should be recreated when re-enabled");
+                const reenabledInternalSdkStats = this._core.getSdkStats(internalSdkStatsState);
+                Assert.ok(reenabledInternalSdkStats, "SDK Stats should be recreated when re-enabled");
 
                 // FeatureOptInMode.none falls back to the SDK default state (enabled), so SDK Stats stays enabled
-                this._core.config.featureOptIn["StatsBeat"].mode = FeatureOptInMode.none;
+                this._core.config.featureOptIn["InternalSdkStats"].mode = FeatureOptInMode.none;
                 this.clock.tick(1); // Allow time for config changes to propagate
                 
                 // Verify that SDK Stats remains enabled (none defaults to enabled)
-                Assert.ok(!!this._core.getStatsBeat(statsBeatState), "SDK Stats should remain enabled when mode is none (defaults to enabled)");
+                Assert.ok(!!this._core.getSdkStats(internalSdkStatsState), "SDK Stats should remain enabled when mode is none (defaults to enabled)");
 
                 // Explicitly disable again before testing the null case
-                this._core.config.featureOptIn["StatsBeat"].mode = FeatureOptInMode.disable;
+                this._core.config.featureOptIn["InternalSdkStats"].mode = FeatureOptInMode.disable;
                 this.clock.tick(1); // Allow time for config changes to propagate
-                Assert.ok(!this._core.getStatsBeat(statsBeatState), "SDK Stats should be removed when disabled");
+                Assert.ok(!this._core.getSdkStats(internalSdkStatsState), "SDK Stats should be removed when disabled");
 
                 // A null mode also falls back to the SDK default state (enabled)
-                this._core.config.featureOptIn["StatsBeat"].mode = null;
+                this._core.config.featureOptIn["InternalSdkStats"].mode = null;
                 this.clock.tick(1); // Allow time for config changes to propagate
                 
                 // Verify that SDK Stats is recreated (null defaults to enabled)
-                Assert.ok(!!this._core.getStatsBeat(statsBeatState), "SDK Stats should remain enabled when mode is null (defaults to enabled)");
+                Assert.ok(!!this._core.getSdkStats(internalSdkStatsState), "SDK Stats should remain enabled when mode is null (defaults to enabled)");
             }
         });
 
@@ -296,7 +296,7 @@ export class StatsBeatTests extends AITestClass {
             name: "SDK Stats: routes events to the remote configured SDK Stats endpoint",
             useFakeTimers: true,
             test: () => {
-                this._statsMgr.init(this._core, "StatsBeat");
+                this._statsMgr.init(this._core, "InternalSdkStats");
 
                 const payloadData = {
                     urlString: "https://example.endpoint.com",
@@ -304,19 +304,19 @@ export class StatsBeatTests extends AITestClass {
                     headers: {},
                     timeout: 0,
                     disableXhrSync: false,
-                    statsBeatData: {
+                    statsData: {
                         startTime: Date.now()
                     }
                 } as IPayloadData;
 
-                let statsBeatState: IStatsBeatState = {
+                let internalSdkStatsState: IInternalSdkStatsState = {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
                     type: eStatsType.SDK
                 };
-                let statsBeat = this._statsMgr.newInst(statsBeatState);
-                statsBeat.count(200, payloadData, "https://example.endpoint.com");
+                let internalSdkStats = this._statsMgr.newInst(internalSdkStatsState);
+                internalSdkStats.count(200, payloadData, "https://example.endpoint.com");
 
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
 
@@ -347,7 +347,7 @@ export class StatsBeatTests extends AITestClass {
                 };
                 this.clock.tick(1); // Allow the config change to propagate
 
-                this._statsMgr.init(this._core, "StatsBeat");
+                this._statsMgr.init(this._core, "InternalSdkStats");
 
                 const payloadData = {
                     urlString: "https://example.endpoint.com",
@@ -355,19 +355,19 @@ export class StatsBeatTests extends AITestClass {
                     headers: {},
                     timeout: 0,
                     disableXhrSync: false,
-                    statsBeatData: {
+                    statsData: {
                         startTime: Date.now()
                     }
                 } as IPayloadData;
 
-                let statsBeatState: IStatsBeatState = {
+                let internalSdkStatsState: IInternalSdkStatsState = {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
                     type: eStatsType.SDK
                 };
-                let statsBeat = this._statsMgr.newInst(statsBeatState);
-                statsBeat.count(200, payloadData, "https://example.endpoint.com");
+                let internalSdkStats = this._statsMgr.newInst(internalSdkStatsState);
+                internalSdkStats.count(200, payloadData, "https://example.endpoint.com");
 
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
 

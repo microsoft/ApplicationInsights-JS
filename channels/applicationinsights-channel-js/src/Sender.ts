@@ -2,15 +2,14 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     ActiveStatus, BaseTelemetryPlugin, BreezeChannelIdentifier, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, EventDataType,
     ExceptionDataType, IAppInsightsCore, IBackendResponse, IChannelControls, IConfig, IConfigDefaults, IConfiguration, IDiagnosticLogger,
-    IEnvelope, IInternalOfflineSupport, INotificationManager, IOfflineListener, IPayloadData, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ISample, IStatsBeatState, IStatsEventData, IStorageBuffer, ITelemetryItem, ITelemetryPluginChain,
-    ITelemetryUnloadState, IXDomainRequest,
-    IXHROverride, MetricDataType, OnCompleteCallback, PageViewDataType, PageViewPerformanceDataType, ProcessLegacy, RemoteDependencyDataType,
-    RequestDataType, RequestHeaders, STATS_SDK_ENDPOINT_KEY, SampleRate, SendPOSTFunction, SendRequestReason, SenderPostManager, TraceDataType,
-    TransportType,
-    _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
-    createOfflineListener, createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, eRequestHeaders,
-    eStatsType, formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFeatureEnabled,
+    IEnvelope, IInternalOfflineSupport, IInternalSdkStatsState, INotificationManager, IOfflineListener, IPayloadData, IPlugin,
+    IProcessTelemetryContext, IProcessTelemetryUnloadContext, ISample, IStatsEventData, IStorageBuffer, ITelemetryItem,
+    ITelemetryPluginChain, ITelemetryUnloadState, IXDomainRequest, IXHROverride, MetricDataType, OnCompleteCallback, PageViewDataType,
+    PageViewPerformanceDataType, ProcessLegacy, RemoteDependencyDataType, RequestDataType, RequestHeaders, STATS_SDK_ENDPOINT_KEY,
+    SampleRate, SendPOSTFunction, SendRequestReason, SenderPostManager, TraceDataType, TransportType, _ISendPostMgrConfig,
+    _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createOfflineListener,
+    createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, eRequestHeaders, eStatsType,
+    formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFeatureEnabled,
     isFetchSupported, isInternalApplicationInsightsEndpoint, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse,
     prependTransports, runTargetUnload, utlCanUseSessionStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-core-js";
@@ -36,7 +35,7 @@ const FetchSyncRequestSizeLimitBytes = 65000; // approx 64kb (the current Edge, 
 interface IInternalPayloadData extends IPayloadData {
     oriPayload: IInternalStorageItem[];
     retryCnt?: number;
-    statsBeatData?: IStatsEventData;
+    statsData?: IStatsEventData;
 }
 
 
@@ -524,7 +523,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     if (statsEndpoint) {
                         // Route SDK Stats directly to the SDK Stats ingestion endpoint, bypassing the
                         // customer send buffer so it is never mixed with customer telemetry.
-                        _sendStatsBeat(payload, statsEndpoint);
+                        _sendInternalSdkStats(payload, statsEndpoint);
                     } else {
                         // flush if we would exceed the max-size limit by adding this item
                         const buffer = _self._buffer;
@@ -694,8 +693,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             }
 
-            function _getStatsBeat() {
-                let statsBeatConfig: IStatsBeatState = {
+            function _getSdkStats() {
+                let internalSdkStatsConfig: IInternalSdkStatsState = {
                     cKey: _self._senderConfig.instrumentationKey,
                     endpoint: _endpointUrl,
                     sdkVer: EnvelopeCreator.Version,
@@ -706,7 +705,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
                 // During page unload the core may have been cleared and some async events may not have been sent yet
                 // resulting in the core being null. In this case we don't want to create a SDK Stats instance
-                return core && core.getStatsBeat ? core.getStatsBeat(statsBeatConfig) : null;
+                return core && core.getSdkStats ? core.getSdkStats(internalSdkStatsConfig) : null;
             }
 
             /**
@@ -717,7 +716,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              * @param payloadStr - The serialized envelope to send.
              * @param statsEndpoint - The SDK Stats ingestion endpoint URL to send the payload to.
              */
-            function _sendStatsBeat(payloadStr: string, statsEndpoint: string) {
+            function _sendInternalSdkStats(payloadStr: string, statsEndpoint: string) {
                 try {
                     let sendInterface = _httpInterface;
                     if (sendInterface && payloadStr && statsEndpoint) {
@@ -740,11 +739,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              * @param status - The resulting status code of the send.
              * @param payload - The payload that was sent.
              */
-            function _countStatsBeat(status: number, payload?: IPayloadData) {
+            function _countInternalSdkStats(status: number, payload?: IPayloadData) {
                 if (payload && payload.urlString === _endpointUrl) {
-                    let statsbeat = _getStatsBeat();
-                    if (statsbeat) {
-                        statsbeat.count(status, payload, _endpointUrl);
+                    let internalSdkStats = _getSdkStats();
+                    if (internalSdkStats) {
+                        internalSdkStats.count(status, payload, _endpointUrl);
                     }
                 }
             }
@@ -777,19 +776,19 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             }
                             if (payload && payload.urlString === _endpointUrl) {
                                 const responseText = _getResponseText(xdr);
-                                let statsbeat = _getStatsBeat();
-                                if (statsbeat) {
+                                let internalSdkStats = _getSdkStats();
+                                if (internalSdkStats) {
                                     if (xdr && (responseText + "" === "200" || responseText === "")) {
                                         _consecutiveErrors = 0;
-                                        statsbeat.count(200, payload, _endpointUrl);
+                                        internalSdkStats.count(200, payload, _endpointUrl);
                                     } else {
                                         const results = parseResponse(responseText);
 
                                         if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
                                             && !_isRetryDisabled) {
-                                            statsbeat.count(206, payload, _endpointUrl);
+                                            internalSdkStats.count(206, payload, _endpointUrl);
                                         } else {
-                                            statsbeat.count(499, payload, _endpointUrl);
+                                            internalSdkStats.count(499, payload, _endpointUrl);
                                         }
                                     }
                                 }
@@ -803,7 +802,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
-                            _countStatsBeat(response.status, payload);
+                            _countInternalSdkStats(response.status, payload);
                             return _checkResponsStatus(response.status, payloadArr, response.url, payloadArr.length, response.statusText, resValue || "");
                         },
                         xhrOnComplete: (request: XMLHttpRequest, oncomplete: OnCompleteCallback, payload?: IPayloadData) => {
@@ -812,13 +811,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                                 return;
                             }
                             if (request.readyState === 4) {
-                                _countStatsBeat(request.status, payload);
+                                _countInternalSdkStats(request.status, payload);
                             }
 
                             return _xhrReadyStateChange(request, payloadArr, payloadArr.length);
                         },
                         beaconOnRetry: (data: IPayloadData, onComplete: OnCompleteCallback, canSend: (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => boolean) => {
-                            _countStatsBeat(499, data);
+                            _countInternalSdkStats(499, data);
 
                             return _onBeaconRetry(data, onComplete, canSend);
                         }
@@ -1084,13 +1083,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true, urlOverride?: string): void | IPromise<boolean> {
                 let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
-                    _countStatsBeat(status, payloadData);
+                    _countInternalSdkStats(status, payloadData);
 
                     return _getOnComplete(payload, status, headers, response);
                 };
                 let payloadData = _getPayload(payload, urlOverride);
                 if (payloadData) {
-                    payloadData.statsBeatData = {startTime: dateNow()};
+                    payloadData.statsData = {startTime: dateNow()};
                 }
 
                 let sendPostFunc:  SendPOSTFunction = sendInterface && sendInterface.sendPOST;
@@ -1441,7 +1440,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 let core = _self.core;
                 if (core) {
                     // During page unload the core may have been cleared and some async events may not have been sent yet
-                    // resulting in the core being null. In this case we don't want to create a statsbeat instance
+                    // resulting in the core being null. In this case we don't want to create a internalSdkStats instance
 
                     if (core[func]) {
                         result = core[func]();

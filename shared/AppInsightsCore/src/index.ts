@@ -41,15 +41,15 @@ export { IXDomainRequest, IBackendResponse } from "./interfaces/ai/IXDomainReque
 export { _ISenderOnComplete, _ISendPostMgrConfig, _ITimeoutOverrideWrapper, _IInternalXhrOverride } from "./interfaces/ai/ISenderPostManager";
 export { SenderPostManager } from "./core/SenderPostManager";
 export {
-    IStatsBeat, IStatsBeatCfgResult, IStatsBeatConfig, IStatsBeatKeyMap as IStatsBeatEndpoints, IStatsBeatState, StatsBeatCfgFetchFn
-} from "./interfaces/ai/IStatsBeat";
+    IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsConfig, IInternalSdkStatsKeyMap as IInternalSdkStatsEndpoints, IInternalSdkStatsState, InternalSdkStatsCfgFetchFn
+} from "./interfaces/ai/IInternalSdkStats";
 export { IStatsEventData } from "./interfaces/ai/IStatsEventData";
 export { IStatsMgr } from "./interfaces/ai/IStatsMgr";
 export {
     createStatsMgr, getStatsCfgUrl, getStatsBreezeIKey,
     STATS_SDK_IKEY, STATS_SDK_CFG_URL_NON_EU, STATS_SDK_CFG_URL_EU, STATS_SDK_ONECOLLECTOR_PATH, STATS_SDK_ENDPOINT_KEY, STATS_SDK_FEATURE,
     STATS_BREEZE_IKEY_NON_EU, STATS_BREEZE_IKEY_EU
-} from "./core/StatsBeat";
+} from "./core/InternalSdkStats";
 export { createSdkStatsNotifCbk, ISdkStatsConfig, ISdkStatsNotifCbk } from "./core/SdkStatsNotificationCbk";
 export {
     isArray, isTypeof, isUndefined, isNullOrUndefined, isStrictUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,
