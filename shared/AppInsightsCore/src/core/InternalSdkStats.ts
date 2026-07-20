@@ -451,14 +451,14 @@ export function createStatsMgr(): IStatsMgr {
             // Start listening for configuration changes from the single global config, within a config
             // change handler. This supports the scenario where the config is changed after the manager
             // has been created (including CDN / dynamic config updates).
-            return onConfigChange(core.config, (details) => {
+            return onConfigChange<IConfiguration>(core.config, (details) => {
                 // Re-evaluate the feature flag on every config change (enabled by default, opt-out via featureOptIn)
                 _isMgrEnabled = false;
                 _statsCfgFetchFn = null;
                 if (isFeatureEnabled(featureName || STATS_SDK_FEATURE, details.cfg, true) === true) {
                     // Seed the SDK Stats defaults into the single global config so they remain dynamic and
                     // can be overridden via the CDN / dynamic config or by the SKU.
-                    details.setDf(details.cfg, _sdkStatsDefaults as IConfigDefaults<CfgType>);
+                    details.setDf(details.cfg, _sdkStatsDefaults);
                     // Read the nested stats config directly (registers the dynamic dependency on the
                     // stats object) and copy the individual values into local (minifiable) variables
                     // instead of holding the config object and repeatedly reading its properties.
