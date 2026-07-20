@@ -6,7 +6,6 @@ import {
     ITimerHandler, arrForEach, isNumber, isString, objDefineProps, scheduleTimeout, strEndsWith, strIndexOf, strLower, strStartsWith,
     strSubstring, utcNow
 } from "@nevware21/ts-utils";
-import { cfgDfMerge } from "../config/ConfigDefaultHelpers";
 import { onConfigChange } from "../config/DynamicConfig";
 import { DEFAULT_BREEZE_PATH, DisabledPropertyName } from "../constants/Constants";
 import { STR_EMPTY } from "../constants/InternalConstants";
@@ -16,7 +15,7 @@ import { eStatsType } from "../enums/ai/StatsType";
 import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import {
-    IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsConfig, IInternalSdkStatsState
+    IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsState, InternalSdkStatsCfgFetchFn
 } from "../interfaces/ai/IInternalSdkStats";
 import { IInternalSdkStatsNetwork } from "../interfaces/ai/IInternalSdkStatsNetwork";
 import { IStatsMgr } from "../interfaces/ai/IStatsMgr";
@@ -434,7 +433,7 @@ export function createStatsMgr(): IStatsMgr {
     let _isMgrEnabled: boolean = false; // Flag to check if internalSdkStats is enabled or not
     let _core: IAppInsightsCore; // The core instance that is used to send telemetry
     let _shortInterval = STATS_COLLECTION_SHORT_INTERVAL;
-    let _internalSdkStatsConfig: IInternalSdkStatsConfig;
+    let _statsCfgFetchFn: InternalSdkStatsCfgFetchFn;
     // Resolved remote config cached per cfg URL (EU / non-EU); tracks in-flight fetch and last result.
     let _cfgCache: { [cfgUrl: string]: { pending: boolean, result: IInternalSdkStatsCfgResult } } = {};
 
@@ -455,17 +454,23 @@ export function createStatsMgr(): IStatsMgr {
             return onConfigChange(core.config, (details) => {
                 // Re-evaluate the feature flag on every config change (enabled by default, opt-out via featureOptIn)
                 _isMgrEnabled = false;
+                _statsCfgFetchFn = null;
                 if (isFeatureEnabled(featureName || STATS_SDK_FEATURE, details.cfg, true) === true) {
                     // Seed the SDK Stats defaults into the single global config so they remain dynamic and
-                    // can be overridden via the CDN / dynamic config or by the SKU, then reference the live
-                    // nested stats config so the dependency is registered and runtime changes are picked up.
+                    // can be overridden via the CDN / dynamic config or by the SKU.
                     details.setDf(details.cfg, _sdkStatsDefaults as IConfigDefaults<CfgType>);
-                    _internalSdkStatsConfig = details.ref<CfgType, IInternalSdkStatsConfig>(details.cfg, "stats");
-                    if (_internalSdkStatsConfig) {
+                    // Read the nested stats config directly (registers the dynamic dependency on the
+                    // stats object) and copy the individual values into local (minifiable) variables
+                    // instead of holding the config object and repeatedly reading its properties.
+                    let statsCfg = details.cfg.stats;
+                    if (statsCfg) {
                         _isMgrEnabled = true;
+                        // Make the override fetch fn a dynamic property before snapshotting it so a later
+                        // merged (CDN / updateCfg) change to it re-runs this handler and refreshes the local.
+                        _statsCfgFetchFn = details.set(statsCfg, "overrideCfgFn", statsCfg.overrideCfgFn);
                         _shortInterval = STATS_COLLECTION_SHORT_INTERVAL; // Reset to the default in-case the config is removed / changed
-                        if (isNumber(_internalSdkStatsConfig.shrtInt) && _internalSdkStatsConfig.shrtInt > STATS_MIN_INTERVAL_SECONDS) {
-                            _shortInterval = _internalSdkStatsConfig.shrtInt * 1000; // Convert to milliseconds
+                        if (isNumber(statsCfg.shrtInt) && statsCfg.shrtInt > STATS_MIN_INTERVAL_SECONDS) {
+                            _shortInterval = statsCfg.shrtInt * 1000; // Convert to milliseconds
                         }
                     }
                 }
@@ -486,7 +491,7 @@ export function createStatsMgr(): IStatsMgr {
 
         if (!entry.result && !entry.pending) {
             entry.pending = true;
-            let fetchFn = (_internalSdkStatsConfig && _internalSdkStatsConfig.overrideCfgFn) || _defaultStatsCfgFetch;
+            let fetchFn = _statsCfgFetchFn || _defaultStatsCfgFetch;
             try {
                 fetchFn(cfgUrl, (result) => {
                     entry.pending = false;
@@ -503,7 +508,7 @@ export function createStatsMgr(): IStatsMgr {
     }
 
     function _track(internalSdkStats: IInternalSdkStats, internalSdkStatsEvent: ITelemetryItem) {
-        if (_isMgrEnabled && _internalSdkStatsConfig) {
+        if (_isMgrEnabled) {
             // The remote cfg file is the sole authority for whether collection is enabled and where
             // to send the events. Re-resolved here (rather than cached on the instance) to support the
             // endpoint changing after the instance was created.
@@ -574,6 +579,8 @@ export function createStatsMgr(): IStatsMgr {
  */
 const _sdkStatsDefaults: IConfigDefaults<IConfiguration> = {
     // Seeding an (empty) stats object enables the manager by default; the destination and enabled
-    // state are resolved per-event from the remote SDK Stats configuration.
-    stats: cfgDfMerge<IInternalSdkStatsConfig>({})
+    // state are resolved per-event from the remote SDK Stats configuration. A plain object (rather
+    // than cfgDfMerge) is used so setDf seeds and makes the stats property dynamic without marking
+    // it as a reference (avoiding the in-place reference side effect).
+    stats: {}
 };
