@@ -251,9 +251,9 @@ export interface IConfiguration extends IOTelConfig {
 
     /**
      * [Optional] Configuration for the SDK Stats (internal SDK statistics) collection. This may be
-     * supplied / overridden via the CDN / dynamic config to change the SDK Stats behaviour at runtime,
-     * for example setting `stats.mode` to {@link eStatsEndpointType.Breeze} routes SDK Stats to the
-     * legacy breeze endpoint instead of the distro-owned SDK Stats endpoint.
+     * supplied / overridden via the CDN / dynamic config to change the SDK Stats behaviour at runtime.
+     * Whether collection is enabled and the destination host are read at runtime from the SDK Stats
+     * configuration (`cfg/v1.json`).
      */
     stats?: IInternalSdkStatsConfig;
 

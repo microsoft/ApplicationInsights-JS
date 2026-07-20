@@ -42,18 +42,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 // do not attempt a real network fetch of the cfg/v1.json endpoint.
                 overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
                     oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
-                },
-                endCfg: [
-                    {
-                        type: 0,
-                        keyMap: [
-                            {
-                                key: "stats-key1",
-                                match: [ "https://example.endpoint.com" ]
-                            }
-                        ]
-                    }
-                ]
+                }
             }
         };
         
@@ -138,7 +127,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 // Test throttled request
                 internalSdkStats.count(429, payloadData, "https://example.endpoint.com");
                 
-                // Verify that trackInternalSdkStatss is called when the timer fires
+                // Verify that track is called when the collection timer fires
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
                 
                 // Verify that track was called
@@ -167,7 +156,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 // Count an exception
                 internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
                 
-                // Verify that trackInternalSdkStatss is called when the timer fires
+                // Verify that track is called when the collection timer fires
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
                 
                 // Verify that track was called
@@ -223,7 +212,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 // Count metrics for a different endpoint
                 internalSdkStats.count(200, payloadData, "https://different.endpoint.com");
 
-                // Verify that trackInternalSdkStatss is called when the timer fires
+                // Verify that track is called when the collection timer fires
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
                 // The count method was called, but it should return early
                 Assert.equal(1, countSpy.callCount, "count method should be called");
@@ -372,6 +361,27 @@ export class InternalSdkStatsTests extends AITestClass {
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
 
                 Assert.equal(0, this._trackSpy.callCount, "track should not be called when the remote configuration disables SDK Stats");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: manager enables by default when config.stats is not provided",
+            test: () => {
+                // A core without an explicit config.stats should still enable the manager, because the
+                // manager seeds an (empty) stats config default.
+                let core = new AppInsightsCore();
+                core.initialize({
+                    instrumentationKey: "Test-iKey",
+                    disableInstrumentationKeyValidation: true
+                } as IConfiguration, [new ChannelPlugin()]);
+
+                let statsMgr = createStatsMgr();
+                let hook = statsMgr.init(core, "InternalSdkStats");
+
+                Assert.equal(true, statsMgr.enabled, "Manager should be enabled by default via the seeded stats config");
+
+                hook && hook.rm();
+                core.unload(false);
             }
         });
     }

@@ -59,19 +59,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 // do not depend on a network fetch of the cfg/v1.json endpoint.
                 overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
                     oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
-                },
-                endCfg: [
-                    {
-                        type: 0,
-                        keyMap: [
-                            {
-                                key: "stats-key1",
-                                // Match the Sender's endpoint so SDK Stats are tracked for it
-                                match: [ config.endpointUrl ]
-                            }
-                        ]
-                    }
-                ]
+                }
             },
             extensionConfig: { [sender.identifier]: config }
         };
@@ -158,18 +146,7 @@ export class InternalSdkStatsTests extends AITestClass {
                         shrtInt: 900,
                         overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
                             oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
-                        },
-                        endCfg: [
-                            {
-                                type: 0,
-                                keyMap: [
-                                    {
-                                        key: "stats-key1",
-                                        match: [ "https://example.endpoint.com" ]
-                                    }
-                                ]
-                            }
-                        ]
+                        }
                     }
                 };
 

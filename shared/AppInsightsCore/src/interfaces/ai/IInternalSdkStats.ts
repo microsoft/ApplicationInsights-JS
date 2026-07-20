@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { StatsEndpointType, StatsType } from "../../enums/ai/StatsType";
+import { StatsType } from "../../enums/ai/StatsType";
 import { IPayloadData } from "./IXHROverride";
 
 /**
@@ -71,49 +71,6 @@ export interface IInternalSdkStatsState {
 }
 
 /**
- * The configuration for the collection of supported endpoints
- * @since 3.3.7
- */
-export interface IInternalSdkStatsKeyMap {
-    /**
-     * The key to used to for any matching endpoints.
-     */
-    key?: string;
-
-    /**
-     * The SDK Stats ingestion endpoint URL that matching events should be redirected to. When
-     * omitted, matching events are sent to the customer's configured (breeze) endpoint instead.
-     */
-    url?: string;
-
-    /**
-     * An array of string URLs that are supported by the endpoint,
-     * the string values are used to compar against the endpoint URL
-     * in a case insensitive manner. The values may also contain wildcards
-     * characters "*", "**" and "?" to match any number of characters using
-     * a glob style pattern.
-     */
-    match: string[];
-}
-
-/**
- * The configuration for the stats beat plugin, which is used to track the performance and usage of the SDK.
- * It is used to identify any issues or errors that may occur, and to provide insights into the usage of the SDK.
- * @since 3.3.7
- */
-export interface IStatsEndpointConfig {
-    /**
-     * Identifies the key(s) associated with the endpoints for the type of stats event.
-     */
-    type: StatsType;
-
-    /**
-     * The matching endpoints.
-     */
-    keyMap?: IInternalSdkStatsKeyMap[]
-}
-
-/**
  * The parsed result of the remote SDK Stats configuration (`cfg/v1.json`). It identifies whether
  * SDK Stats collection is currently enabled and the host that matching events should be sent to.
  * @since 3.3.7
@@ -126,9 +83,8 @@ export interface IInternalSdkStatsCfgResult {
     enabled: boolean;
 
     /**
-     * The host (or full URL) that the SDK Stats events should be sent to. The ingestion path (e.g.
-     * `/v2/track`) is appended by the SDK, so this generally only carries the host (for example
-     * `data.stats.monitor.azure.com`).
+     * The host that the SDK Stats events should be sent to (host only, for example
+     * `data.stats.monitor.azure.com`). The ingestion path (`/v2/track`) is appended by the SDK.
      */
     url: string;
 }
@@ -153,21 +109,6 @@ export interface IInternalSdkStatsConfig {
      * Default: 15 min
      */
     shrtInt?: number;
-
-    /**
-     * Identifies which ingestion endpoint the SDK Stats events are sent to. When set to
-     * {@link eStatsEndpointType.Breeze} the events are sent to the legacy breeze endpoint, otherwise
-     * they are sent to the distro-owned SDK Stats endpoint. This is configurable via the CDN /
-     * dynamic config so the destination can be changed at runtime.
-     * Default: {@link eStatsEndpointType.SdkStats}
-     */
-    mode?: StatsEndpointType;
-
-    /**
-     * The Endpoint configurations for the stats beat plugin.
-     * This is used to identify the endpoints that are supported by the stats beat plugin.
-     */
-    endCfg?: IStatsEndpointConfig[];
 
     /**
      * Optional override for the function used to fetch the remote SDK Stats configuration

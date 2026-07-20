@@ -19,7 +19,7 @@ export { IUnloadHook, ILegacyUnloadHook } from "./interfaces/ai/IUnloadHook";
 export { eEventsDiscardedReason, EventsDiscardedReason, eBatchDiscardedReason, BatchDiscardedReason } from "./enums/ai/EventsDiscardedReason";
 export { eDependencyTypes, DependencyTypes } from "./enums/ai/DependencyTypes";
 export { SendRequestReason } from "./enums/ai/SendRequestReason";
-export { StatsType, eStatsType, StatsEndpointType, eStatsEndpointType } from "./enums/ai/StatsType";
+export { StatsType, eStatsType } from "./enums/ai/StatsType";
 export { TelemetryUpdateReason } from "./enums/ai/TelemetryUpdateReason";
 export { TelemetryUnloadReason } from "./enums/ai/TelemetryUnloadReason";
 export { eUrlRedactionOptions, UrlRedactionOptions } from "./enums/ai/UrlRedactionOptions"
@@ -41,14 +41,13 @@ export { IXDomainRequest, IBackendResponse } from "./interfaces/ai/IXDomainReque
 export { _ISenderOnComplete, _ISendPostMgrConfig, _ITimeoutOverrideWrapper, _IInternalXhrOverride } from "./interfaces/ai/ISenderPostManager";
 export { SenderPostManager } from "./core/SenderPostManager";
 export {
-    IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsConfig, IInternalSdkStatsKeyMap as IInternalSdkStatsEndpoints, IInternalSdkStatsState, InternalSdkStatsCfgFetchFn
+    IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsConfig, IInternalSdkStatsState, InternalSdkStatsCfgFetchFn
 } from "./interfaces/ai/IInternalSdkStats";
 export { IStatsEventData } from "./interfaces/ai/IStatsEventData";
 export { IStatsMgr } from "./interfaces/ai/IStatsMgr";
 export {
-    createStatsMgr, getStatsCfgUrl, getStatsBreezeIKey,
-    STATS_SDK_IKEY, STATS_SDK_CFG_URL_NON_EU, STATS_SDK_CFG_URL_EU, STATS_SDK_ONECOLLECTOR_PATH, STATS_SDK_ENDPOINT_KEY, STATS_SDK_FEATURE,
-    STATS_BREEZE_IKEY_NON_EU, STATS_BREEZE_IKEY_EU
+    createStatsMgr, getStatsCfgUrl,
+    STATS_SDK_IKEY, STATS_SDK_CFG_URL_NON_EU, STATS_SDK_CFG_URL_EU, STATS_SDK_ONECOLLECTOR_PATH, STATS_SDK_ENDPOINT_KEY, STATS_SDK_FEATURE
 } from "./core/InternalSdkStats";
 export { createSdkStatsNotifCbk, ISdkStatsConfig, ISdkStatsNotifCbk } from "./core/SdkStatsNotificationCbk";
 export {

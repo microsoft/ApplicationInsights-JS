@@ -3,7 +3,7 @@
 
 import { doAwaitResponse } from "@nevware21/ts-async";
 import {
-    ITimerHandler, arrForEach, isNumber, makeGlobRegex, objDefineProps, scheduleTimeout, strEndsWith, strIndexOf, strLower, strStartsWith,
+    ITimerHandler, arrForEach, isNumber, isString, objDefineProps, scheduleTimeout, strEndsWith, strIndexOf, strLower, strStartsWith,
     strSubstring, utcNow
 } from "@nevware21/ts-utils";
 import { cfgDfMerge } from "../config/ConfigDefaultHelpers";
@@ -12,12 +12,11 @@ import { DEFAULT_BREEZE_PATH, DisabledPropertyName } from "../constants/Constant
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { _throwInternal, safeGetLogger } from "../diagnostics/DiagnosticLogger";
 import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
-import { eStatsEndpointType, eStatsType } from "../enums/ai/StatsType";
+import { eStatsType } from "../enums/ai/StatsType";
 import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import {
-    IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsConfig, IInternalSdkStatsKeyMap, IInternalSdkStatsState,
-    IStatsEndpointConfig
+    IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsConfig, IInternalSdkStatsState
 } from "../interfaces/ai/IInternalSdkStats";
 import { IInternalSdkStatsNetwork } from "../interfaces/ai/IInternalSdkStatsNetwork";
 import { IStatsMgr } from "../interfaces/ai/IStatsMgr";
@@ -49,15 +48,6 @@ export const STATS_SDK_CFG_URL_EU = "https://eu-data.stats.monitor.azure.com/cfg
 
 /** Ingestion path for future 1DS (OneCollector) SDK Stats; the AI SKU uses {@link DEFAULT_BREEZE_PATH}. */
 export const STATS_SDK_ONECOLLECTOR_PATH = "/OneCollector/1.0";
-
-/**
- * The Microsoft-owned instrumentation keys used when reporting SDK statistics to the legacy
- * breeze ingestion endpoints (the customer's own breeze endpoint is used as the host, only the
- * iKey differs so the data lands in the Microsoft SDK Stats resource). The EU key is used when
- * the customer's endpoint maps to an EU data-boundary region, otherwise the non-EU key is used.
- */
-export const STATS_BREEZE_IKEY_NON_EU = "c4a29126-a7cb-47e5-b348-11414998b11e";
-export const STATS_BREEZE_IKEY_EU = "7dc56bab-3c0c-4e9f-9ebb-d1acadee8d0f";
 
 /**
  * The transient marker key, set on the {@link ITelemetryItem.data} of a SDK Stats event, that
@@ -130,8 +120,9 @@ function _parseStatsCfg(response: string): IInternalSdkStatsCfgResult {
             let cfg = json.parse(response);
             if (cfg) {
                 result = {
-                    enabled: !!cfg.enabled,
-                    url: cfg.url
+                    // Fail-closed: only treat as enabled when explicitly true
+                    enabled: cfg.enabled === true,
+                    url: isString(cfg.url) ? cfg.url : null
                 };
             }
         } catch (e) {
@@ -205,17 +196,6 @@ function _buildStatsEndpoint(host: string): string {
     return endpoint;
 }
 
-/**
- * Determine the Microsoft-owned instrumentation key to use when reporting SDK Stats to the legacy
- * breeze endpoint for the provided customer endpoint. When the region maps to an EU region the EU
- * key is returned, otherwise (including unknown regions) the non-EU key is returned.
- * @param endpoint - The customer breeze endpoint that the SDK Stats are being collected for.
- * @returns The breeze SDK Stats instrumentation key.
- */
-export function getStatsBreezeIKey(endpoint: string): string {
-    return _isEuEndpoint(endpoint) ? STATS_BREEZE_IKEY_EU : STATS_BREEZE_IKEY_NON_EU;
-}
-
 
 /**
  * An internal interface to allow the IInternalSdkStats instance to call back to the manager for
@@ -240,35 +220,6 @@ interface _IMgrCallbacks {
      * @param endpoint - The endpoint to send the event to
      */
     track: (internalSdkStats: IInternalSdkStats, internalSdkStatsEvent: ITelemetryItem) => void;
-}
-
-/**
- * This function checks if the provided endpoint matches the provided urlMatch. It
- * compares the endpoint with the urlMatch in a case-insensitive manner and also checks
- * if the endpoint is a substring of the urlMatch. The urlMatch can also be a regex
- * pattern, in which case it will be checked against the endpoint using regex.
- * @param endpoint - The endpoint to check against the URL.
- * @param urlMatch - The URL to check against the endpoint.
- * @returns true if the URL matches the endpoint, false otherwise.
- */
-function _isMatchEndpoint(endpoint: string, urlMatch: string): boolean {
-    let lwrUrl = strLower(urlMatch);
-
-    // Check if the endpoint is a substring of the URL
-    if (strIndexOf(endpoint, lwrUrl) !== -1) {
-        return true;
-    }
-
-    // If it looks like a regex pattern, check if the endpoint matches the regex
-    if (strIndexOf(lwrUrl, "*") != -1 || strIndexOf(lwrUrl, "?") != -1) {
-        // Check if the endpoint is a regex pattern
-        let regex = makeGlobRegex(lwrUrl);
-        if (regex.test(endpoint)) {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 /**
@@ -304,12 +255,12 @@ function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IIn
         if (_isEnabled && !_timeoutHandle) {
             _timeoutHandle = mgr.start(() => {
                 _timeoutHandle = null;
-                trackInternalSdkStatss();
+                trackInternalSdkStats();
             });
         }
     }
 
-    function trackInternalSdkStatss() {
+    function trackInternalSdkStats() {
         if (_isEnabled) {
             _trackSendRequestDuration();
             _trackSendRequestsCount();
@@ -479,54 +430,6 @@ function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IIn
     });
 }
 
-function _getEndpointCfg(internalSdkStatsConfig: IInternalSdkStatsConfig, type: eStatsType): IStatsEndpointConfig {
-    let endpointCfg: IStatsEndpointConfig = null;
-    if (internalSdkStatsConfig && internalSdkStatsConfig.endCfg) {
-        arrForEach(internalSdkStatsConfig.endCfg, (value) => {
-            if (value.type === type) {
-                endpointCfg = value;
-                return -1; // Stop the loop if we found a match
-            }
-        });
-    }
-
-    return endpointCfg;
-}
-
-/**
- * This function retrieves the matching {@link IInternalSdkStatsKeyMap} entry for the given endpoint from
- * the provided endpoint configuration. It iterates through the key maps and checks if the endpoint
- * matches any of the configured URL patterns. If a match is found, the corresponding key map entry
- * (which carries the optional instrumentation key and SDK Stats ingestion endpoint URL) is returned.
- * @param endpointCfg - The endpoint configuration to search.
- * @param endpoint - The endpoint to check against the URLs in the configuration.
- * @returns The matching {@link IInternalSdkStatsKeyMap} entry, or null if no match is found.
- */
-function _getKeyMap(endpointCfg: IStatsEndpointConfig, endpoint: string): IInternalSdkStatsKeyMap | null {
-    let matched: IInternalSdkStatsKeyMap = null;
-    if (endpointCfg.keyMap) {
-        arrForEach(endpointCfg.keyMap, (keyMap) => {
-            if (keyMap.match) {
-                arrForEach(keyMap.match, (url) => {
-                    if (_isMatchEndpoint(url, endpoint)) {
-                        matched = keyMap;
-
-                        // Stop the loop if we found a match
-                        return -1;
-                    }
-                });
-            }
-
-            if (matched) {
-                // Stop the loop if we found a match
-                return -1;
-            }
-        });
-    }
-
-    return matched;
-}
-
 export function createStatsMgr(): IStatsMgr {
     let _isMgrEnabled: boolean = false; // Flag to check if internalSdkStats is enabled or not
     let _core: IAppInsightsCore; // The core instance that is used to send telemetry
@@ -601,55 +504,29 @@ export function createStatsMgr(): IStatsMgr {
 
     function _track(internalSdkStats: IInternalSdkStats, internalSdkStatsEvent: ITelemetryItem) {
         if (_isMgrEnabled && _internalSdkStatsConfig) {
-            let endpoint = internalSdkStats.endpoint;
-
-            // Fetching the matching key map for the endpoint here to support the scenario where the
-            // endpoint is changed after the SDK Stats instance is created. This will ensure that the
-            // correct key / destination is used for the endpoint, and avoids tracking the event if the
-            // endpoint is not in the config.
-            let endpointCfg = _getEndpointCfg(_internalSdkStatsConfig, internalSdkStats.type);
-            if (endpointCfg) {
-                let keyMap = _getKeyMap(endpointCfg, endpoint);
-                // Only send the event if the endpoint matched a configured key map (or the event type
-                // is non-zero, preserving the legacy behaviour for explicitly typed stats events).
-                if (keyMap || internalSdkStats.type) {
-                    let useBreeze = _internalSdkStatsConfig.mode === eStatsEndpointType.Breeze;
-
-                    // Resolve the iKey to use, falling back to the mode default when the matched key
-                    // map does not specify one. Breeze mode uses the Microsoft-owned breeze SDK Stats
-                    // iKey (region dependent); the SDK Stats endpoint uses the placeholder iKey.
-                    let iKey = (keyMap && keyMap.key) || (useBreeze ? getStatsBreezeIKey(endpoint) : STATS_SDK_IKEY);
-
-                    // Destination host / enabled state come from the remote config, unless the key
-                    // map sets an explicit url. Breeze mode sends to the customer endpoint (no redirect).
-                    let url = keyMap && keyMap.url;
-                    if (!url && !useBreeze) {
-                        let cfgResult = _resolveStatsCfg(endpoint);
-                        if (!cfgResult || !cfgResult.enabled) {
-                            // Not resolved yet, or disabled -> skip
-                            return;
-                        }
-
-                        url = _buildStatsEndpoint(cfgResult.url);
-                        if (!url) {
-                            // Enabled but no usable host -> skip (don't leak to the customer endpoint)
-                            return;
-                        }
-                    }
-
-                    internalSdkStatsEvent.iKey = iKey;
-
-                    if (url) {
-                        // Carry the SDK Stats ingestion endpoint so the sending channel can redirect the
-                        // event away from the customer's breeze endpoint. This marker is removed by the
-                        // channel before the event is serialized.
-                        internalSdkStatsEvent.data = internalSdkStatsEvent.data || {};
-                        internalSdkStatsEvent.data[STATS_SDK_ENDPOINT_KEY] = url;
-                    }
-
-                    _core.track(internalSdkStatsEvent);
-                }
+            // The remote cfg file is the sole authority for whether collection is enabled and where
+            // to send the events. Re-resolved here (rather than cached on the instance) to support the
+            // endpoint changing after the instance was created.
+            let cfgResult = _resolveStatsCfg(internalSdkStats.endpoint);
+            if (!cfgResult || !cfgResult.enabled) {
+                // Not resolved yet, or disabled -> skip
+                return;
             }
+
+            let url = _buildStatsEndpoint(cfgResult.url);
+            if (!url) {
+                // Enabled but no usable host -> skip
+                return;
+            }
+
+            internalSdkStatsEvent.iKey = STATS_SDK_IKEY;
+            // Carry the SDK Stats ingestion endpoint so the sending channel can redirect the event
+            // away from the customer's breeze endpoint. This marker is removed by the channel before
+            // the event is serialized.
+            internalSdkStatsEvent.data = internalSdkStatsEvent.data || {};
+            internalSdkStatsEvent.data[STATS_SDK_ENDPOINT_KEY] = url;
+
+            _core.track(internalSdkStatsEvent);
         }
     }
 
@@ -657,8 +534,8 @@ export function createStatsMgr(): IStatsMgr {
         let instance: IInternalSdkStats = null;
 
         if (_isMgrEnabled) {
-            // Prefetch the remote config (SDK Stats mode) so it's ready by the first interval
-            if (state && state.endpoint && _internalSdkStatsConfig.mode !== eStatsEndpointType.Breeze) {
+            // Prefetch the remote config so it's ready by the first interval
+            if (state && state.endpoint) {
                 _resolveStatsCfg(state.endpoint);
             }
 
@@ -689,25 +566,14 @@ export function createStatsMgr(): IStatsMgr {
 /**
  * The default {@link IInternalSdkStatsConfig} values for SDK Stats collection. These are seeded into the
  * single global config (via {@link IWatchDetails.setDf}) by the manager so they remain dynamic and
- * can be overridden at runtime via the CDN / dynamic config or by the SKU (AISKU / 1DS). By default
- * the events are routed to the distro-owned SDK Stats ingestion endpoint, whose host (and whether
- * collection is enabled) is read at runtime from the SDK Stats configuration
- * (`data.stats.monitor.azure.com` / `eu-data.stats.monitor.azure.com`); setting `config.stats.mode`
- * to {@link eStatsEndpointType.Breeze} routes SDK Stats to the legacy breeze endpoint instead. SDK
- * Stats are enabled by default and can be opted-out using the `featureOptIn` configuration with the
- * {@link STATS_SDK_FEATURE} name.
+ * can be overridden at runtime via the CDN / dynamic config or by the SKU (AISKU / 1DS). The events
+ * are routed to the distro-owned SDK Stats ingestion endpoint, whose host (and whether collection is
+ * enabled) is read at runtime from the SDK Stats configuration (`data.stats.monitor.azure.com` /
+ * `eu-data.stats.monitor.azure.com`). SDK Stats are enabled by default and can be opted-out using the
+ * `featureOptIn` configuration with the {@link STATS_SDK_FEATURE} name.
  */
 const _sdkStatsDefaults: IConfigDefaults<IConfiguration> = {
-    stats: cfgDfMerge<IInternalSdkStatsConfig>({
-        mode: eStatsEndpointType.SdkStats,
-        // The destination iKey / endpoint are resolved per-event in _track based on the mode, so the
-        // default key map only needs to match all endpoints. A full key map (including explicit keys /
-        // urls) may be supplied via config.stats.endCfg to override this.
-        endCfg: [{
-            type: eStatsType.SDK,
-            keyMap: [{
-                match: ["*"]
-            }]
-        }]
-    })
+    // Seeding an (empty) stats object enables the manager by default; the destination and enabled
+    // state are resolved per-event from the remote SDK Stats configuration.
+    stats: cfgDfMerge<IInternalSdkStatsConfig>({})
 };
