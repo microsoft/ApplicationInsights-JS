@@ -109,26 +109,22 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
         return item.name === _statsEventName;
     }
 
-    // Iterates items (skipping our own emitted stats) and increments target[telType]; returns true if any counted.
-    function _incCounts(target: { [telType: string]: number }, items: ITelemetryItem[]): boolean {
+    function _incSuccess(items: ITelemetryItem[]) {
+        if (_unloaded || !items || !items.length) {
+            return;
+        }
         var changed = false;
         for (var i = 0; i < items.length; i++) {
             if (!_isSdkStatsMetric(items[i])) {
                 var t = _getTelType(items[i]);
                 if (!isUnsafePropKey(t)) {
-                    target[t] = (target[t] || 0) + 1;
+                    // _successCounts is a null-prototype object (objCreate(null)) so this cannot pollute Object.prototype
+                    _successCounts[t] = (_successCounts[t] || 0) + 1;
                     changed = true;
                 }
             }
         }
-        return changed;
-    }
-
-    function _incSuccess(items: ITelemetryItem[]) {
-        if (_unloaded || !items || !items.length) {
-            return;
-        }
-        if (_incCounts(_successCounts, items)) {
+        if (changed) {
             _ensureTimer();
         }
     }
@@ -144,7 +140,18 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
         if (!bucket) {
             bucket = counters[code] = objCreate(null);
         }
-        if (_incCounts(bucket, items)) {
+        var changed = false;
+        for (var i = 0; i < items.length; i++) {
+            if (!_isSdkStatsMetric(items[i])) {
+                var t = _getTelType(items[i]);
+                if (!isUnsafePropKey(t)) {
+                    // bucket is a null-prototype object (objCreate(null)) so this cannot pollute Object.prototype
+                    bucket[t] = (bucket[t] || 0) + 1;
+                    changed = true;
+                }
+            }
+        }
+        if (changed) {
             _ensureTimer();
         }
     }
