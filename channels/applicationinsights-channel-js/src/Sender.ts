@@ -8,10 +8,10 @@ import {
     PageViewPerformanceDataType, ProcessLegacy, RemoteDependencyDataType, RequestDataType, RequestHeaders, STATS_SDK_ENDPOINT_KEY,
     SampleRate, SendPOSTFunction, SendRequestReason, SenderPostManager, TraceDataType, TransportType, _ISendPostMgrConfig,
     _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createOfflineListener,
-    createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, eRequestHeaders, eStatsType,
-    formatErrorMessageXdr, formatErrorMessageXhr, getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFeatureEnabled,
-    isFetchSupported, isInternalApplicationInsightsEndpoint, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse,
-    prependTransports, runTargetUnload, utlCanUseSessionStorage, utlSetStoragePrefix
+    createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, eRequestHeaders, formatErrorMessageXdr,
+    formatErrorMessageXhr, getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFeatureEnabled, isFetchSupported,
+    isInternalApplicationInsightsEndpoint, isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse, prependTransports,
+    runTargetUnload, utlCanUseSessionStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
 import {
@@ -698,7 +698,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     cKey: _self._senderConfig.instrumentationKey,
                     endpoint: _endpointUrl,
                     sdkVer: EnvelopeCreator.Version,
-                    type: eStatsType.SDK
                 };
 
                 let core = _self.core;

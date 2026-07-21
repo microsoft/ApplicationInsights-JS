@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { StatsType } from "../../enums/ai/StatsType";
 import { IPayloadData } from "./IXHROverride";
 
 /**
@@ -21,12 +20,6 @@ export interface IInternalSdkStats {
      * @returns The current endpoint URL.
      */
     endpoint: string;
-
-    /**
-     * Returns the StatsType for this instance of the stats beat.
-     * @returns The current stats type.
-     */
-    type: StatsType;
 
     /**
      * Count the number of events sent to the endpoint with the given status code.
@@ -63,11 +56,6 @@ export interface IInternalSdkStatsState {
      * The current Sdk version.
      */
     sdkVer?: string;
-
-    /**
-     * The type of the stats event.
-     */
-    type?: StatsType;
 }
 
 /**

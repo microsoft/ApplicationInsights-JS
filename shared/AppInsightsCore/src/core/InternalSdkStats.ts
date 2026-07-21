@@ -11,7 +11,6 @@ import { DEFAULT_BREEZE_PATH, DisabledPropertyName } from "../constants/Constant
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { _throwInternal, safeGetLogger } from "../diagnostics/DiagnosticLogger";
 import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
-import { eStatsType } from "../enums/ai/StatsType";
 import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import {
@@ -389,7 +388,6 @@ function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IIn
     let internalSdkStats: IInternalSdkStats = {
         enabled: !!_isEnabled,
         endpoint: STR_EMPTY,
-        type: eStatsType.SDK,
         count: (status: number, payloadData: IPayloadData, endpoint: string) => {
             if (_isEnabled && _checkEndpoint(endpoint)) {
                 if (payloadData && (payloadData as any)["statsData"] && (payloadData as any)["statsData"]["startTime"]) {
@@ -424,7 +422,6 @@ function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IIn
     // Make the properties readonly / reactive to changes
     return objDefineProps(internalSdkStats, {
         enabled: { g: () => _isEnabled, s: _setEnabled },
-        type: { g: () => internalSdkStatsStats.type },
         endpoint: { g: () => _networkCounter.host }
     });
 }

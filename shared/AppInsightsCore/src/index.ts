@@ -19,7 +19,6 @@ export { IUnloadHook, ILegacyUnloadHook } from "./interfaces/ai/IUnloadHook";
 export { eEventsDiscardedReason, EventsDiscardedReason, eBatchDiscardedReason, BatchDiscardedReason } from "./enums/ai/EventsDiscardedReason";
 export { eDependencyTypes, DependencyTypes } from "./enums/ai/DependencyTypes";
 export { SendRequestReason } from "./enums/ai/SendRequestReason";
-export { StatsType, eStatsType } from "./enums/ai/StatsType";
 export { TelemetryUpdateReason } from "./enums/ai/TelemetryUpdateReason";
 export { TelemetryUnloadReason } from "./enums/ai/TelemetryUnloadReason";
 export { eUrlRedactionOptions, UrlRedactionOptions } from "./enums/ai/UrlRedactionOptions"

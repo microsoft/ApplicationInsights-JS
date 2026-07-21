@@ -6,7 +6,6 @@ import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
 import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
 import { createStatsMgr, STATS_SDK_ENDPOINT_KEY } from "../../../../src/core/InternalSdkStats";
 import { IInternalSdkStatsState } from "../../../../src/interfaces/ai/IInternalSdkStats";
-import { eStatsType } from "../../../../src/enums/ai/StatsType";
 import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
 import { IPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
 import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
@@ -75,7 +74,6 @@ export class InternalSdkStatsTests extends AITestClass {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
-                    type: eStatsType.SDK
                 };
                 Assert.equal(null, this._statsMgr.newInst(internalSdkStatsState), "SDK Stats should not be created before initialization");
 
@@ -87,7 +85,6 @@ export class InternalSdkStatsTests extends AITestClass {
                 Assert.ok(!!newInst, "SDK Stats should be created after initialization");
                 Assert.equal(true, newInst.enabled, "SDK Stats should be enabled after initialization");
                 Assert.equal("https://example.endpoint.com", newInst.endpoint);
-                Assert.equal(0, newInst.type);
             }
         });
 
@@ -114,7 +111,6 @@ export class InternalSdkStatsTests extends AITestClass {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
-                    type: eStatsType.SDK
                 };
                 let internalSdkStats = this._statsMgr.newInst(internalSdkStatsState);
 
@@ -149,7 +145,6 @@ export class InternalSdkStatsTests extends AITestClass {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
-                    type: eStatsType.SDK
                 };
                 let internalSdkStats = this._statsMgr.newInst(internalSdkStatsState);
                 
@@ -202,7 +197,6 @@ export class InternalSdkStatsTests extends AITestClass {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
-                    type: eStatsType.SDK
                 };
                 let internalSdkStats = this._statsMgr.newInst(internalSdkStatsState);
 
@@ -237,7 +231,6 @@ export class InternalSdkStatsTests extends AITestClass {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
-                    type: eStatsType.SDK
                 };
 
                 // Verify that SDK Stats is created
@@ -302,7 +295,6 @@ export class InternalSdkStatsTests extends AITestClass {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
-                    type: eStatsType.SDK
                 };
                 let internalSdkStats = this._statsMgr.newInst(internalSdkStatsState);
                 internalSdkStats.count(200, payloadData, "https://example.endpoint.com");
@@ -353,7 +345,6 @@ export class InternalSdkStatsTests extends AITestClass {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
-                    type: eStatsType.SDK
                 };
                 let internalSdkStats = this._statsMgr.newInst(internalSdkStatsState);
                 internalSdkStats.count(200, payloadData, "https://example.endpoint.com");

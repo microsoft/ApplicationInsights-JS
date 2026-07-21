@@ -1,5 +1,5 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, createStatsMgr, eStatsType, FeatureOptInMode, getWindow, IPayloadData, IInternalSdkStatsState, IStatsMgr, ITelemetryItem, IUnloadHook, TransportType } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, createStatsMgr, FeatureOptInMode, getWindow, IPayloadData, IInternalSdkStatsState, IStatsMgr, ITelemetryItem, IUnloadHook, TransportType } from "@microsoft/applicationinsights-core-js";
 import { Sender } from "../../../src/Sender";
 import { SinonSpy, SinonStub } from "sinon";
 import { ISenderConfig } from "../../../types/applicationinsights-channel-js";
@@ -76,7 +76,6 @@ export class InternalSdkStatsTests extends AITestClass {
             cKey: instrumentationKey,
             endpoint: config.endpointUrl,
             sdkVer: "1.0.0",
-            type: eStatsType.SDK
         };
 
         this.internalSdkStatsCountSpy = this.sandbox.spy(core.getSdkStats(internalSdkStatsState), "count");
@@ -157,7 +156,6 @@ export class InternalSdkStatsTests extends AITestClass {
                     cKey: "Test-iKey",
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0",
-                    type: eStatsType.SDK
                 };
 
                 const internalSdkStats = this._core.getSdkStats(internalSdkStatsState);
