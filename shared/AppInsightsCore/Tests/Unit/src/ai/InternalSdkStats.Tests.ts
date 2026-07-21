@@ -58,6 +58,9 @@ export class InternalSdkStatsTests extends AITestClass {
 
     public testCleanup() {
         super.testCleanup();
+        if (this._core && this._core.isInitialized()) {
+            this._core.unload(false);
+        }
         this._core = null as any;
         this._statsMgr = null as any;
     }
