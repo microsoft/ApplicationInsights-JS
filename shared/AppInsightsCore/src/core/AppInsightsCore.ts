@@ -78,23 +78,6 @@ const maxInitTimeout = 50000;
 const maxAttributeCount = 128;
 // const strPluginUnloadFailed = "Failed to unload plugin";
 
-// /**
-//  * Default InternalSdkStatsMgr configuration
-//  * @internal
-//  */
-// const defaultStatsCfg: IConfigDefaults<IInternalSdkStatsConfig> = objDeepFreeze({
-//     shrtInt: UNDEFINED_VALUE,
-//     endCfg: cfgDfMerge([])
-// });
-
-// /**
-//  * Default SDK initialization configuration
-//  * @internal
-//  */
-// const defaultSdkConfig: IConfigDefaults<IInternalSdkConfiguration> = objDeepFreeze({
-//     stats: { rdOnly: true, mrg: true, v: defaultStatsCfg }
-// });
-
 /**
  * The default settings for the config.
  * WE MUST include all defaults here to ensure that the config is created with all of the properties
@@ -129,7 +112,6 @@ const defaultConfig: IConfigDefaults<IConfiguration> = objDeepFreeze({
         serviceName: null,
         suppressTracing: false
     })
-    // _sdk: { rdOnly: true, ref: true, v: defaultSdkConfig }
 });
 
 function _getDefaultConfig<CfgType>(core: IAppInsightsCore): IConfigDefaults<CfgType> {

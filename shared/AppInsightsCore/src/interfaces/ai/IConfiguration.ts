@@ -257,12 +257,6 @@ export interface IConfiguration extends IOTelConfig {
      */
     stats?: IInternalSdkStatsConfig;
 
-    ///**
-    // * [Optional] Internal SDK configuration for developers
-    // * @internal
-    // */
-    //_sdk?: IInternalSdkConfiguration;
-
     /**
      * [Optional] Controls if the SDK should look for the `traceparent` and/or `tracestate` values from
      * the service timing headers or meta tags from the initial page load.
@@ -276,15 +270,3 @@ export interface IConfiguration extends IOTelConfig {
      */
     sdkStats?: ISdkStatsConfig;
 }
-
-///**
-// * Internal SDK configuration options
-// * @internal
-// */
-//export interface IInternalSdkConfiguration {
-//    /**
-//     * [Optional] Enable Internal InternalSdkStats
-//     * @internal
-//     */
-//    stats?: IInternalSdkStatsConfig;
-//}
