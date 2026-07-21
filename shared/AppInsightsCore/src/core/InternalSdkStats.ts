@@ -3,8 +3,8 @@
 
 import { doAwaitResponse } from "@nevware21/ts-async";
 import {
-    ITimerHandler, arrForEach, isNumber, isString, objDefineProps, scheduleTimeout, strEndsWith, strIndexOf, strLower, strStartsWith,
-    strSubstring, utcNow
+    ITimerHandler, arrIndexOf, isNumber, isString, objDefineProps, objForEachKey, scheduleTimeout, strEndsWith, strIndexOf, strLower,
+    strStartsWith, strSubstring, utcNow
 } from "@nevware21/ts-utils";
 import { onConfigChange } from "../config/DynamicConfig";
 import { DEFAULT_BREEZE_PATH, DisabledPropertyName } from "../constants/Constants";
@@ -21,6 +21,7 @@ import { IStatsMgr } from "../interfaces/ai/IStatsMgr";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 import { IPayloadData } from "../interfaces/ai/IXHROverride";
 import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
+import { MetricDataType } from "../telemetry/ai/DataTypes";
 import { getJSON, isFetchSupported, isXhrSupported } from "../utils/EnvUtils";
 import { getResponseText, isFeatureEnabled, openXhr } from "../utils/HelperFuncs";
 
@@ -80,7 +81,7 @@ function _isEuEndpoint(endpoint: string): boolean {
         // Strip the scheme
         let schemeIdx = strIndexOf(host, "://");
         if (schemeIdx !== -1) {
-            host = host.substring(schemeIdx + 3);
+            host = strSubstring(host, schemeIdx + 3);
         }
 
         // Extract the leading host label, e.g. "westeurope-5" from "westeurope-5.in.applicationinsights.azure.com/"
@@ -88,15 +89,10 @@ function _isEuEndpoint(endpoint: string): boolean {
         // Remove any trailing region replica suffix, e.g. "westeurope-5" => "westeurope"
         let dashIdx = strIndexOf(label, "-");
         if (dashIdx !== -1) {
-            label = label.substring(0, dashIdx);
+            label = strSubstring(label, 0, dashIdx);
         }
 
-        arrForEach(STATS_EU_REGIONS, (region) => {
-            if (region === label) {
-                isEU = true;
-                return -1;
-            }
-        });
+        isEU = arrIndexOf(STATS_EU_REGIONS, label) !== -1;
     }
 
     return isEU;
@@ -280,6 +276,10 @@ function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IIn
         return _networkCounter.host === endpoint;
     }
 
+    function _inc(counter: { [key: string]: number }, key: string | number) {
+        counter[key] = (counter[key] || 0) + 1;
+    }
+
     /**
      * Attempt to send internalSdkStats events to the server. This is done by creating a new event and sending it to the core.
      * The event is created with the name and value passed in, and any additional properties are added to the event as well.
@@ -305,24 +305,13 @@ function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IIn
                 "host": _networkCounter.host
             } as { [key: string]: any };
 
-            // Manually merge properties instead of using spread syntax
-            let combinedProps: { [key: string]: any } = { "host": _networkCounter.host };
-            
-            // Add properties if present
-            if (properties) {
-                for (let key in properties) {
-                    if (properties.hasOwnProperty(key)) {
-                        combinedProps[key] = properties[key];
-                    }
-                }
-            }
-
-            // Add base properties
-            for (let key in baseProperties) {
-                if (baseProperties.hasOwnProperty(key)) {
-                    combinedProps[key] = baseProperties[key];
-                }
-            }
+            let combinedProps: { [key: string]: any } = {};
+            objForEachKey(properties, (key, value) => {
+                combinedProps[key] = value;
+            });
+            objForEachKey(baseProperties, (key, value) => {
+                combinedProps[key] = value;
+            });
 
             let internalSdkStatsEvent: ITelemetryItem = {
                 name: name,
@@ -331,7 +320,7 @@ function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IIn
                     average: val,
                     properties: combinedProps
                 },
-                baseType: "MetricData"
+                baseType: MetricDataType
             };
 
             // The destination iKey and (optional) SDK Stats ingestion endpoint are resolved and
@@ -342,36 +331,27 @@ function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IIn
 
     function _trackSendRequestDuration() {
         var totalRequest = _networkCounter.totalRequest;
-    
-        if (_networkCounter.totalRequest > 0 ) {
-            let averageRequestExecutionTime = _networkCounter.requestDuration / totalRequest;
-            _sendInternalSdkStatss("Request_Duration", averageRequestExecutionTime);
+
+        if (totalRequest > 0 ) {
+            _sendInternalSdkStatss("Request_Duration", _networkCounter.requestDuration / totalRequest);
+        }
+    }
+
+    function _sendCounts(counts: { [code: string]: number }, name: string, codeKey: string) {
+        for (const code in counts) {
+            let props: { [key: string]: any } = {};
+            props[codeKey] = code;
+            _sendInternalSdkStatss(name, counts[code], props);
         }
     }
 
     function _trackSendRequestsCount() {
         var currentCounter = _networkCounter;
         _sendInternalSdkStatss("Request_Success_Count", currentCounter.success);
-        
-        for (const code in currentCounter.failure) {
-            const count = currentCounter.failure[code];
-            _sendInternalSdkStatss("failure", count, { statusCode: code });
-        }
-
-        for (const code in currentCounter.retry) {
-            const count = currentCounter.retry[code];
-            _sendInternalSdkStatss("retry", count, { statusCode: code });
-        }
-
-        for (const code in currentCounter.exception) {
-            const count = currentCounter.exception[code];
-            _sendInternalSdkStatss("exception", count, { exceptionType: code });
-        }
-    
-        for (const code in currentCounter.throttle) {
-            const count = currentCounter.throttle[code];
-            _sendInternalSdkStatss("Throttle_Count", count, { statusCode: code });
-        }
+        _sendCounts(currentCounter.failure, "failure", "statusCode");
+        _sendCounts(currentCounter.retry, "retry", "statusCode");
+        _sendCounts(currentCounter.exception, "exception", "exceptionType");
+        _sendCounts(currentCounter.throttle, "Throttle_Count", "statusCode");
     }
 
     function _setEnabled(isEnabled: boolean) {
@@ -390,9 +370,11 @@ function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IIn
         endpoint: STR_EMPTY,
         count: (status: number, payloadData: IPayloadData, endpoint: string) => {
             if (_isEnabled && _checkEndpoint(endpoint)) {
-                if (payloadData && (payloadData as any)["statsData"] && (payloadData as any)["statsData"]["startTime"]) {
-                    _networkCounter.totalRequest = (_networkCounter.totalRequest || 0) + 1;
-                    _networkCounter.requestDuration += utcNow() - (payloadData as any)["statsData"]["startTime"];
+                let statsData = payloadData && (payloadData as any)["statsData"];
+                let startTime = statsData && statsData["startTime"];
+                if (startTime) {
+                    _networkCounter.totalRequest++;
+                    _networkCounter.requestDuration += utcNow() - startTime;
                 }
 
                 let retryArray = [401, 403, 408, 429, 500, 502, 503, 504];
@@ -401,11 +383,11 @@ function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IIn
                 if (status >= 200 && status < 300) {
                     _networkCounter.success++;
                 } else if (retryArray.indexOf(status) !== -1) {
-                    _networkCounter.retry[status] = (_networkCounter.retry[status] || 0) + 1;
+                    _inc(_networkCounter.retry, status);
                 } else if (throttleArray.indexOf(status) !== -1) {
-                    _networkCounter.throttle[status] = (_networkCounter.throttle[status] || 0) + 1;
+                    _inc(_networkCounter.throttle, status);
                 } else if (status !== 307 && status !== 308) {
-                    _networkCounter.failure[status] = (_networkCounter.failure[status] || 0) + 1;
+                    _inc(_networkCounter.failure, status);
                 }
 
                 _setupTimer();
@@ -413,7 +395,7 @@ function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IIn
         },
         countException: (endpoint: string, exceptionType: string) => {
             if (_isEnabled && _checkEndpoint(endpoint)) {
-                _networkCounter.exception[exceptionType] = (_networkCounter.exception[exceptionType] || 0) + 1;
+                _inc(_networkCounter.exception, exceptionType);
                 _setupTimer();
             }
         }
