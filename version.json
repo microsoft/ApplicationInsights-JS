@@ -56,6 +56,10 @@
             "package": "channels/offline-channel-js/package.json",
             "release": "0.4.3"
         },
+        "@microsoft/applicationinsights-otlpchannel-js": {
+            "package": "channels/otlp-channel-js/package.json",
+            "release": "0.1.0"
+        },
         "@microsoft/applicationinsights-chrome-debug-extension": {
             "package": "tools/chrome-debug-extension/package.json",
             "release": "0.9.3"

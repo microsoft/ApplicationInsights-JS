@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>OTLP Inspector - what is being sent to the collector</title>
+    <link rel="stylesheet" href="/site.css">
+    <style>
+        .entries { max-height: 70vh; overflow: auto; border: 1px solid #e1dfdd; background: #fff; }
+        .entry { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-size: 13px; }
+        .entry:hover { background: #f3f2f1; }
+        .entry.selected { background: #e5f1fb; }
+        .badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px;
+                 font-weight: 600; margin-right: 6px; }
+        .ok { background: #dff6dd; color: #107c10; }
+        .bad { background: #fde7e9; color: #a4262c; }
+        .sig { background: #e5f1fb; color: #005a9e; }
+        .stat { display: flex; gap: 18px; flex-wrap: wrap; margin: 10px 0; }
+        .stat div { background: #fff; border: 1px solid #e1dfdd; padding: 8px 14px; }
+        .stat b { display: block; font-size: 20px; }
+        .muted { color: #605e5c; font-size: 12px; }
+    </style>
+</head>
+<body data-page="inspect">
+    <header>
+        <h1>OTLP Inspector &mdash; what the SDK is sending to the collector</h1>
+        <nav>
+            <a href="/index.html">Home</a>
+            <a href="/products.html">Products</a>
+            <a href="/checkout.html">Checkout</a>
+            <a href="/inspect.html" class="current">Inspector</a>
+        </nav>
+    </header>
+
+    <p class="muted" id="target"></p>
+
+    <button id="refresh">Refresh</button>
+    <button id="validateSent">Validate what was sent</button>
+    <button id="reset">Reset</button>
+    <label style="margin-left:12px;font-size:13px;">
+        <input type="checkbox" id="auto" checked> auto refresh
+    </label>
+
+    <div class="stat" id="stats"></div>
+
+    <div class="cols">
+        <div class="col">
+            <h2>Requests sent to the collector</h2>
+            <div class="entries" id="entries"></div>
+            <h2>Validation of what was sent</h2>
+            <pre id="validation"></pre>
+        </div>
+        <div class="col">
+            <h2>Collector response</h2>
+            <pre id="response"></pre>
+            <h2>Exact payload sent (pretty printed)</h2>
+            <pre id="payload"></pre>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            "use strict";
+
+            var entries = [];
+            var selected = 0;
+
+            function el(id) { return document.getElementById(id); }
+
+            function show(id, value) {
+                el(id).textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+            }
+
+            function renderStats(data) {
+                var configured = null;
+                try { configured = window.localStorage.getItem("otlpExample.collector"); } catch (e) { /* ignore */ }
+
+                var tapUrl = window.location.origin + "/tap";
+                var usingTap = configured === tapUrl;
+
+                var target = el("target");
+                target.innerHTML = "";
+
+                var line1 = document.createElement("div");
+                line1.textContent = "Tap forwards to the real collector at " + data.collectorUrl;
+                target.appendChild(line1);
+
+                var line2 = document.createElement("div");
+                line2.style.marginTop = "6px";
+                line2.style.fontWeight = "600";
+
+                if (usingTap) {
+                    line2.style.color = "#107c10";
+                    line2.textContent = "The site pages are exporting through the tap. Press " +
+                        "\"Generate telemetry\" on a page and requests will appear below.";
+                } else {
+                    line2.style.color = "#a4262c";
+                    line2.textContent = "The site pages are currently exporting to the built in mock " +
+                        "collector (" + (configured || window.location.origin) + "), so nothing will " +
+                        "appear here.";
+
+                    var fix = document.createElement("button");
+                    fix.textContent = "Switch the site to the tap";
+                    fix.style.marginLeft = "10px";
+                    fix.addEventListener("click", function () {
+                        try { window.localStorage.setItem("otlpExample.collector", tapUrl); } catch (e) { /* ignore */ }
+                        line2.textContent = "Switched. Reload any open site page, then press " +
+                            "\"Generate telemetry\".";
+                        line2.style.color = "#107c10";
+                    });
+                    line2.appendChild(fix);
+                }
+
+                target.appendChild(line2);
+
+                el("stats").innerHTML =
+                    "<div><b>" + data.requests + "</b>requests sent</div>" +
+                    "<div><b>" + data.records + "</b>spans + log records</div>" +
+                    "<div><b>" + data.acceptedByCollector + "</b>accepted by collector</div>" +
+                    "<div><b>" + data.rejectedByCollector + "</b>rejected by collector</div>";
+            }
+
+            function renderEntries() {
+                var host = el("entries");
+                host.innerHTML = "";
+
+                entries.forEach(function (entry, idx) {
+                    var div = document.createElement("div");
+                    div.className = "entry" + (idx === selected ? " selected" : "");
+
+                    var c = entry.collector || {};
+                    var okClass = c.accepted ? "ok" : "bad";
+                    var status = c.status === 0 ? "unreachable" : c.status;
+
+                    div.innerHTML =
+                        "<span class='badge " + okClass + "'>" + status + "</span>" +
+                        "<span class='badge sig'>" + entry.signal + "</span>" +
+                        entry.recordCount + " record(s), " + entry.rawLength + " bytes " +
+                        "<span class='muted'>" + entry.sentAt.substring(11, 19) + "</span>";
+
+                    div.addEventListener("click", function () {
+                        selected = idx;
+                        renderEntries();
+                        renderSelected();
+                    });
+
+                    host.appendChild(div);
+                });
+
+                if (!entries.length) {
+                    host.innerHTML = "<div class='entry muted'>Nothing sent yet. Make sure the banner " +
+                        "above is green, open a site page, then press <b>Generate telemetry</b>.</div>";
+                }
+            }
+
+            function renderSelected() {
+                var entry = entries[selected];
+                if (!entry) {
+                    show("payload", "");
+                    show("response", "");
+                    return;
+                }
+
+                show("response", {
+                    forwardedTo: entry.collector ? entry.collector.url : null,
+                    status: entry.collector ? entry.collector.status : null,
+                    acceptedByCollector: entry.collector ? entry.collector.accepted : null,
+                    durationMs: entry.collector ? entry.collector.durationMs : null,
+                    error: entry.collector ? entry.collector.error : null,
+                    responseBody: entry.collector ? entry.collector.body : null
+                });
+
+                show("payload", entry.parseError
+                    ? "COULD NOT PARSE: " + entry.parseError + "\n\n" + entry.raw
+                    : entry.body);
+            }
+
+            function refresh() {
+                return fetch("/__tapped").then(function (r) { return r.json(); }).then(function (data) {
+                    entries = data.entries || [];
+                    if (selected >= entries.length) { selected = Math.max(0, entries.length - 1); }
+                    renderStats(data);
+                    renderEntries();
+                    renderSelected();
+                });
+            }
+
+            el("refresh").addEventListener("click", refresh);
+
+            el("validateSent").addEventListener("click", function () {
+                fetch("/__tap-validate").then(function (r) { return r.json(); }).then(function (report) {
+                    show("validation", report);
+                });
+            });
+
+            el("reset").addEventListener("click", function () {
+                fetch("/__reset", { method: "POST" }).then(function () {
+                    entries = [];
+                    selected = 0;
+                    show("validation", "");
+                    refresh();
+                });
+            });
+
+            refresh();
+            setInterval(function () {
+                if (el("auto").checked) { refresh(); }
+            }, 2000);
+        })();
+    </script>
+</body>
+</html>

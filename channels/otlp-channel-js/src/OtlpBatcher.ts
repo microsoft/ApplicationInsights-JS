@@ -1,0 +1,289 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { arrForEach, isNullOrUndefined } from "@nevware21/ts-utils";
+import { eOtlpSignal } from "./Enums";
+import { safeStringify } from "./convert/AttributeBuilder";
+import { IOtlpRecord } from "./convert/ItemConverter";
+import { IOtlpResourceInfo } from "./convert/ResourceBuilder";
+
+/**
+ * A batch of records that are ready to be sent, all of which share a resource and a signal.
+ */
+export interface IOtlpBatch {
+    signal: eOtlpSignal;
+
+    resourceInfo: IOtlpResourceInfo;
+
+    /**
+     * The serialized records making up this batch.
+     */
+    fragments: string[];
+
+    /**
+     * The total number of bytes of the serialized records, maintained incrementally.
+     */
+    bytes: number;
+
+    /**
+     * The number of times sending this batch has been attempted.
+     */
+    attempts: number;
+}
+
+/**
+ * The buffered records for a single resource.
+ */
+interface IOtlpBucket {
+    resourceInfo: IOtlpResourceInfo;
+    spans: string[];
+    logs: string[];
+    spanBytes: number;
+    logBytes: number;
+}
+
+/**
+ * Accumulates converted records, grouped by resource and signal, so that building an export payload
+ * requires nothing more than joining strings.
+ *
+ * @remarks
+ * The batcher never sees an `ITelemetryItem`; records are already converted (and normally already
+ * serialized) by the time they arrive here. Byte totals are maintained incrementally as records are
+ * added so that deciding whether a batch is full is a constant time comparison rather than a walk
+ * of the buffer.
+ */
+export class OtlpBatcher {
+
+    private _buckets: { [key: string]: IOtlpBucket };
+    private _order: string[];
+    private _count: number;
+    private _bytes: number;
+
+    constructor() {
+        this._buckets = {};
+        this._order = [];
+        this._count = 0;
+        this._bytes = 0;
+    }
+
+    /**
+     * Adds a converted record to the buffer.
+     * @param resourceInfo - The resource that the record belongs to.
+     * @param record - The converted record.
+     * @returns The number of bytes that the record added to the buffer.
+     */
+    public add(resourceInfo: IOtlpResourceInfo, record: IOtlpRecord): number {
+        let key = resourceInfo.key;
+        let bucket = this._buckets[key];
+        if (!bucket) {
+            bucket = this._buckets[key] = {
+                resourceInfo: resourceInfo,
+                spans: [],
+                logs: [],
+                spanBytes: 0,
+                logBytes: 0
+            };
+
+            this._order.push(key);
+        }
+
+        // When the channel is not pre-serializing the record is serialized here instead, which still
+        // keeps the cost off the send path.
+        let json = isNullOrUndefined(record.json) ? safeStringify(record.record) : record.json;
+        let bytes = json.length;
+
+        if (record.signal === eOtlpSignal.Span) {
+            bucket.spans.push(json);
+            bucket.spanBytes += bytes;
+        } else {
+            bucket.logs.push(json);
+            bucket.logBytes += bytes;
+        }
+
+        this._count++;
+        this._bytes += bytes;
+
+        return bytes;
+    }
+
+    /**
+     * The number of buffered records.
+     */
+    public count(): number {
+        return this._count;
+    }
+
+    /**
+     * The total number of bytes of the buffered records.
+     */
+    public size(): number {
+        return this._bytes;
+    }
+
+    /**
+     * Removes and returns every buffered record as a set of batches, one per resource and signal.
+     * @param maxRecords - The maximum number of records to include in a single batch, `0` for no limit.
+     * @param maxBytes - The maximum number of bytes to include in a single batch, `0` for no limit.
+     * @returns The batches that were removed from the buffer.
+     */
+    public takeBatches(maxRecords?: number, maxBytes?: number): IOtlpBatch[] {
+        let batches: IOtlpBatch[] = [];
+        let buckets = this._buckets;
+        let order = this._order;
+
+        arrForEach(order, (key) => {
+            let bucket = buckets[key];
+            if (!bucket) {
+                return;
+            }
+
+            _split(batches, bucket.resourceInfo, eOtlpSignal.Span, bucket.spans, maxRecords, maxBytes);
+            _split(batches, bucket.resourceInfo, eOtlpSignal.Log, bucket.logs, maxRecords, maxBytes);
+        });
+
+        this._buckets = {};
+        this._order = [];
+        this._count = 0;
+        this._bytes = 0;
+
+        return batches;
+    }
+
+    /**
+     * Returns a previously taken batch to the buffer so that it can be retried.
+     * @remarks
+     * The batch is placed at the head of its bucket so that the oldest records are still sent first.
+     * @param batch - The batch to return.
+     */
+    public requeue(batch: IOtlpBatch): void {
+        if (!batch || !batch.fragments.length) {
+            return;
+        }
+
+        let key = batch.resourceInfo.key;
+        let bucket = this._buckets[key];
+        if (!bucket) {
+            bucket = this._buckets[key] = {
+                resourceInfo: batch.resourceInfo,
+                spans: [],
+                logs: [],
+                spanBytes: 0,
+                logBytes: 0
+            };
+
+            this._order.push(key);
+        }
+
+        let target = batch.signal === eOtlpSignal.Span ? bucket.spans : bucket.logs;
+        // unshift the whole batch back to the front, preserving the original ordering
+        for (let lp = batch.fragments.length - 1; lp >= 0; lp--) {
+            target.unshift(batch.fragments[lp]);
+        }
+
+        if (batch.signal === eOtlpSignal.Span) {
+            bucket.spanBytes += batch.bytes;
+        } else {
+            bucket.logBytes += batch.bytes;
+        }
+
+        this._count += batch.fragments.length;
+        this._bytes += batch.bytes;
+    }
+
+    /**
+     * Drops the oldest buffered records.
+     * @param dropCount - The number of records to drop.
+     * @returns The number of records that were actually dropped.
+     */
+    public dropOldest(dropCount: number): number {
+        let dropped = 0;
+        let buckets = this._buckets;
+        let order = this._order;
+
+        for (let idx = 0; idx < order.length && dropped < dropCount; idx++) {
+            let bucket = buckets[order[idx]];
+            if (!bucket) {
+                continue;
+            }
+
+            dropped += this._dropFrom(bucket, true, dropCount - dropped);
+            if (dropped < dropCount) {
+                dropped += this._dropFrom(bucket, false, dropCount - dropped);
+            }
+        }
+
+        return dropped;
+    }
+
+    private _dropFrom(bucket: IOtlpBucket, isSpan: boolean, dropCount: number): number {
+        let target = isSpan ? bucket.spans : bucket.logs;
+        let dropped = 0;
+
+        while (dropped < dropCount && target.length) {
+            let removed = target.shift();
+            let bytes = removed.length;
+            if (isSpan) {
+                bucket.spanBytes -= bytes;
+            } else {
+                bucket.logBytes -= bytes;
+            }
+
+            this._count--;
+            this._bytes -= bytes;
+            dropped++;
+        }
+
+        return dropped;
+    }
+}
+
+function _split(batches: IOtlpBatch[], resourceInfo: IOtlpResourceInfo, signal: eOtlpSignal, fragments: string[],
+        maxRecords: number, maxBytes: number): void {
+    if (!fragments.length) {
+        return;
+    }
+
+    let current: string[] = [];
+    let currentBytes = 0;
+
+    arrForEach(fragments, (fragment) => {
+        let bytes = fragment.length;
+        let wouldExceed = (maxRecords > 0 && current.length >= maxRecords) ||
+            (maxBytes > 0 && current.length > 0 && (currentBytes + bytes) > maxBytes);
+
+        if (wouldExceed) {
+            batches.push({ signal: signal, resourceInfo: resourceInfo, fragments: current, bytes: currentBytes, attempts: 0 });
+            current = [];
+            currentBytes = 0;
+        }
+
+        current.push(fragment);
+        currentBytes += bytes;
+    });
+
+    if (current.length) {
+        batches.push({ signal: signal, resourceInfo: resourceInfo, fragments: current, bytes: currentBytes, attempts: 0 });
+    }
+}
+
+/**
+ * Builds the OTLP export payload for a batch.
+ *
+ * @remarks
+ * Every part of the payload other than the records themselves was serialized when the resource was
+ * created, so this is a string concatenation and nothing more.
+ *
+ * @param batch - The batch to serialize.
+ * @returns The complete JSON body to POST to the collector.
+ */
+export function buildPayload(batch: IOtlpBatch): string {
+    let info = batch.resourceInfo;
+    let isSpan = batch.signal === eOtlpSignal.Span;
+    let resourceKey = isSpan ? "resourceSpans" : "resourceLogs";
+    let scopeKey = isSpan ? "scopeSpans" : "scopeLogs";
+    let recordKey = isSpan ? "spans" : "logRecords";
+
+    return "{\"" + resourceKey + "\":[{\"resource\":" + info.resourceJson +
+        ",\"" + scopeKey + "\":[{\"scope\":" + info.scopeJson +
+        ",\"" + recordKey + "\":[" + batch.fragments.join(",") + "]}]}]}";
+}
