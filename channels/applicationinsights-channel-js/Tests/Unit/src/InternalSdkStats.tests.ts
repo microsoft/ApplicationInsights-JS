@@ -55,6 +55,8 @@ export class InternalSdkStatsTests extends AITestClass {
             instrumentationKey,
             stats: {
                 shrtInt: 900,
+                // The config url gates collection, without it nothing is collected or sent
+                cfgUrl: "https://data.stats.monitor.azure.com/cfg/v1.json",
                 // Resolve the remote SDK Stats configuration synchronously (as enabled) so the tests
                 // do not depend on a network fetch of the cfg/v1.json endpoint.
                 overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
@@ -143,6 +145,7 @@ export class InternalSdkStatsTests extends AITestClass {
                     },
                     stats: {
                         shrtInt: 900,
+                        cfgUrl: "https://data.stats.monitor.azure.com/cfg/v1.json",
                         overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
                             oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
                         }

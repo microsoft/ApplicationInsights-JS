@@ -11,14 +11,14 @@ import {
     IAutoExceptionTelemetry, IChannelControls, IConfig, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDependencyTelemetry,
     IDiagnosticLogger, IDistributedTraceContext, IDynamicConfigHandler, IEventTelemetry, IExceptionTelemetry, ILoadedPlugin,
     IMetricTelemetry, INotificationManager, IOTelApi, IOTelSpanOptions, IPageViewPerformanceTelemetry, IPageViewTelemetry, IPlugin,
-    IReadableSpan, IRequestHeaders, ISdkStatsNotifCbk, ISpanScope, ITelemetryContext as Common_ITelemetryContext, ITelemetryInitializerHandler,
-    ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IThrottleInterval, IThrottleLimit, IThrottleMgrConfig, ITraceApi, ITraceProvider,
-    ITraceTelemetry, IUnloadHook, OTelTimeInput, PropertiesPluginIdentifier, ThrottleMgr, UnloadHandler, WatcherFunction,
-    _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate,
-    createDynamicConfig, createOTelApi, createProcessTelemetryContext, createSdkStatsNotifCbk, createStatsMgr,
-    createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity,
-    hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace,
-    onConfigChange, parseConnectionString, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener, useSpan
+    IReadableSpan, IRequestHeaders, ISdkStatsNotifCbk, ISpanScope, ITelemetryContext as Common_ITelemetryContext,
+    ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IThrottleInterval, IThrottleLimit,
+    IThrottleMgrConfig, ITraceApi, ITraceProvider, ITraceTelemetry, IUnloadHook, OTelTimeInput, PropertiesPluginIdentifier, ThrottleMgr,
+    UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge,
+    cfgDfValidate, createDynamicConfig, createOTelApi, createProcessTelemetryContext, createSdkStatsNotifCbk, createStatsMgr,
+    createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction,
+    isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, parseConnectionString, proxyAssign, proxyFunctions,
+    removePageHideEventListener, removePageUnloadEventListener, useSpan
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
@@ -66,7 +66,7 @@ const CDN_USAGE = "CdnUsage";
 const SDK_LOADER_VER = "SdkLoaderVer";
 const ZIP_PAYLOAD = "zipPayload";
 const SDK_STATS = "SdkStats";
-var _sdkVersion = "#version#";
+var _sdkVersion = '3.4.3';
 
 const default_limit = {
     samplingRate: 100,
@@ -400,8 +400,9 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
 
                     // Enable SDK Stats collection. The manager reads its configuration directly from the
                     // single global config (config.stats) and gates itself behind the SDK Stats feature
-                    // flag, routing the resulting events to the distro-owned SDK Stats ingestion endpoint
-                    // (data.stats.monitor.azure.com). Enabled by default; opt-out via featureOptIn "sdkStats".
+                    // flag, routing the resulting events to the distro-owned SDK Stats ingestion endpoint.
+                    // The config url (config.stats.cfgUrl) is supplied by the CDN configuration, until it
+                    // is present no SDK Stats are collected or sent. Opt-out via featureOptIn "sdkStats".
                     if (_core.setStatsMgr) {
                         let statsMgr = createStatsMgr();
                         _core.setStatsMgr(statsMgr);

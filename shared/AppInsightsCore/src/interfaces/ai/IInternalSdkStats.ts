@@ -99,6 +99,20 @@ export interface IInternalSdkStatsConfig {
     shrtInt?: number;
 
     /**
+     * The url of the remote SDK Stats configuration (`cfg/v1.json`) that identifies whether SDK Stats
+     * collection is currently enabled and the host that the events should be sent to. This value is
+     * normally delivered by the CDN / dynamic configuration rather than being hard coded by the SDK.
+     *
+     * When the customer endpoint maps to an EU data-boundary region the `eu-` prefix is automatically
+     * inserted in front of the host, e.g. `https://data.stats.monitor.azure.com/cfg/v1.json` becomes
+     * `https://eu-data.stats.monitor.azure.com/cfg/v1.json`.
+     *
+     * When not supplied no SDK Stats are collected or sent.
+     * @default undefined
+     */
+    cfgUrl?: string;
+
+    /**
      * Optional override for the function used to fetch the remote SDK Stats configuration
      * (`cfg/v1.json`). When not provided the default fetch / XHR based implementation is used. This
      * is primarily intended for testing or advanced scenarios where the configuration needs to be

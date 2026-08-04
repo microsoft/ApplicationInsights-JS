@@ -3,8 +3,8 @@
 
 import { doAwaitResponse } from "@nevware21/ts-async";
 import {
-    ITimerHandler, arrIndexOf, isNumber, isString, objDefineProps, objForEachKey, scheduleTimeout, strEndsWith, strIndexOf, strLower,
-    strStartsWith, strSubstring, utcNow
+    ITimerHandler, arrIndexOf, isNumber, isString, objCreate, objDefineProps, objForEachKey, scheduleTimeout, strEndsWith, strIndexOf,
+    strLower, strStartsWith, strSubstring, utcNow
 } from "@nevware21/ts-utils";
 import { onConfigChange } from "../config/DynamicConfig";
 import { DEFAULT_BREEZE_PATH, DisabledPropertyName } from "../constants/Constants";
@@ -38,12 +38,8 @@ const STATS_TYPE = "Browser";
  */
 export const STATS_SDK_IKEY = "00000000-0000-0000-0000-000000000000";
 
-/**
- * SDK Stats config endpoints (`cfg/v1.json`). The `{ ver, enabled, url }` JSON is read at runtime to
- * gate collection and resolve the ingestion host. EU endpoint is used for EU data-boundary regions.
- */
-export const STATS_SDK_CFG_URL_NON_EU = "https://data.stats.monitor.azure.com/cfg/v1.json";
-export const STATS_SDK_CFG_URL_EU = "https://eu-data.stats.monitor.azure.com/cfg/v1.json";
+/** The host prefix added to the configured SDK Stats config url for EU data-boundary regions. */
+const STATS_EU_HOST_PREFIX = "eu-";
 
 /** Ingestion path for future 1DS (OneCollector) SDK Stats; the AI SKU uses {@link DEFAULT_BREEZE_PATH}. */
 export const STATS_SDK_ONECOLLECTOR_PATH = "/OneCollector/1.0";
@@ -99,10 +95,26 @@ function _isEuEndpoint(endpoint: string): boolean {
 }
 
 /**
- * Returns the SDK Stats config URL (`cfg/v1.json`) for the endpoint (EU vs non-EU).
+ * Returns the SDK Stats config URL (`cfg/v1.json`) for the endpoint, derived from the configured
+ * base url. For EU data-boundary endpoints the {@link STATS_EU_HOST_PREFIX} is inserted in front of
+ * the host, e.g. `https://data.stats...` => `https://eu-data.stats...`.
+ * @param endpoint - The customer breeze endpoint that the SDK Stats are being collected for.
+ * @param cfgUrl - The configured (non-EU) SDK Stats config url, when not supplied null is returned.
+ * @returns The config url to fetch, or null when no url has been configured.
  */
-export function getStatsCfgUrl(endpoint: string): string {
-    return _isEuEndpoint(endpoint) ? STATS_SDK_CFG_URL_EU : STATS_SDK_CFG_URL_NON_EU;
+export function getStatsCfgUrl(endpoint: string, cfgUrl: string): string {
+    let result: string = null;
+    if (cfgUrl) {
+        result = cfgUrl;
+        if (_isEuEndpoint(endpoint)) {
+            // Insert the EU prefix in front of the host (after any scheme)
+            let schemeIdx = strIndexOf(cfgUrl, "://");
+            let hostIdx = schemeIdx !== -1 ? schemeIdx + 3 : 0;
+            result = strSubstring(cfgUrl, 0, hostIdx) + STATS_EU_HOST_PREFIX + strSubstring(cfgUrl, hostIdx);
+        }
+    }
+
+    return result;
 }
 
 /** Parse the SDK Stats config JSON (`{ ver, enabled, url }`); null if empty or unparseable. */
@@ -413,8 +425,12 @@ export function createStatsMgr(): IStatsMgr {
     let _core: IAppInsightsCore; // The core instance that is used to send telemetry
     let _shortInterval = STATS_COLLECTION_SHORT_INTERVAL;
     let _statsCfgFetchFn: InternalSdkStatsCfgFetchFn;
+    // The configured SDK Stats config url (cfg/v1.json), sourced from the dynamic config. When it is
+    // not supplied (no CDN / host configuration) SDK Stats are not collected or sent.
+    let _statsCfgUrl: string;
     // Resolved remote config cached per cfg URL (EU / non-EU); tracks in-flight fetch and last result.
-    let _cfgCache: { [cfgUrl: string]: { pending: boolean, result: IInternalSdkStatsCfgResult } } = {};
+    // Null-prototype so the config supplied url can never be used to pollute Object.prototype.
+    let _cfgCache: { [cfgUrl: string]: { pending: boolean, result: IInternalSdkStatsCfgResult } } = objCreate(null);
 
     // Lazily initialize the manager and start listening for configuration changes
     // This is also required to handle "unloading" and then re-initializing again
@@ -434,6 +450,7 @@ export function createStatsMgr(): IStatsMgr {
                 // Re-evaluate the feature flag on every config change (enabled by default, opt-out via featureOptIn)
                 _isMgrEnabled = false;
                 _statsCfgFetchFn = null;
+                _statsCfgUrl = null;
                 if (isFeatureEnabled(featureName || STATS_SDK_FEATURE, details.cfg, true) === true) {
                     // Seed the SDK Stats defaults into the single global config so they remain dynamic and
                     // can be overridden via the CDN / dynamic config or by the SKU.
@@ -447,6 +464,9 @@ export function createStatsMgr(): IStatsMgr {
                         // Make the override fetch fn a dynamic property before snapshotting it so a later
                         // merged (CDN / updateCfg) change to it re-runs this handler and refreshes the local.
                         _statsCfgFetchFn = details.set(statsCfg, "overrideCfgFn", statsCfg.overrideCfgFn);
+                        // Same for the config url, it is normally delivered by the CDN configuration after
+                        // initialization has completed, so this handler must re-run when it arrives.
+                        _statsCfgUrl = details.set(statsCfg, "cfgUrl", statsCfg.cfgUrl);
                         _shortInterval = STATS_COLLECTION_SHORT_INTERVAL; // Reset to the default in-case the config is removed / changed
                         if (isNumber(statsCfg.shrtInt) && statsCfg.shrtInt > STATS_MIN_INTERVAL_SECONDS) {
                             _shortInterval = statsCfg.shrtInt * 1000; // Convert to milliseconds
@@ -459,10 +479,16 @@ export function createStatsMgr(): IStatsMgr {
 
     /**
      * Resolve the remote SDK Stats config for the endpoint, starting a fetch on first use. Returns
-     * null until resolved (or on failure) so the caller skips sending.
+     * null until resolved (or on failure, or when no config url has been configured) so the caller
+     * skips sending.
      */
     function _resolveStatsCfg(endpoint: string): IInternalSdkStatsCfgResult {
-        let cfgUrl = getStatsCfgUrl(endpoint);
+        let cfgUrl = getStatsCfgUrl(endpoint, _statsCfgUrl);
+        if (!cfgUrl) {
+            // No configured SDK Stats config url -> nothing to resolve and nothing is sent
+            return null;
+        }
+
         let entry = _cfgCache[cfgUrl];
         if (!entry) {
             entry = _cfgCache[cfgUrl] = { pending: false, result: null };
@@ -550,16 +576,17 @@ export function createStatsMgr(): IStatsMgr {
 /**
  * The default {@link IInternalSdkStatsConfig} values for SDK Stats collection. These are seeded into the
  * single global config (via {@link IWatchDetails.setDf}) by the manager so they remain dynamic and
- * can be overridden at runtime via the CDN / dynamic config or by the SKU (AISKU / 1DS). The events
- * are routed to the distro-owned SDK Stats ingestion endpoint, whose host (and whether collection is
- * enabled) is read at runtime from the SDK Stats configuration (`data.stats.monitor.azure.com` /
- * `eu-data.stats.monitor.azure.com`). SDK Stats are enabled by default and can be opted-out using the
- * `featureOptIn` configuration with the {@link STATS_SDK_FEATURE} name.
+ * can be overridden at runtime via the CDN / dynamic config or by the SKU (AISKU / 1DS). No config
+ * url is defaulted, the `stats.cfgUrl` value is expected to be delivered by the CDN / dynamic
+ * configuration, and until it is, no SDK Stats are collected or sent. The events are routed to the
+ * distro-owned SDK Stats ingestion endpoint, whose host (and whether collection is enabled) is read
+ * at runtime from the SDK Stats configuration identified by that url. SDK Stats can also be
+ * opted-out using the `featureOptIn` configuration with the {@link STATS_SDK_FEATURE} name.
  */
 const _sdkStatsDefaults: IConfigDefaults<IConfiguration> = {
-    // Seeding an (empty) stats object enables the manager by default; the destination and enabled
-    // state are resolved per-event from the remote SDK Stats configuration. A plain object (rather
-    // than cfgDfMerge) is used so setDf seeds and makes the stats property dynamic without marking
-    // it as a reference (avoiding the in-place reference side effect).
+    // Seeding an (empty) stats object allows the manager to run; the config url, destination and
+    // enabled state are all resolved from the dynamic / remote SDK Stats configuration. A plain
+    // object (rather than cfgDfMerge) is used so setDf seeds and makes the stats property dynamic
+    // without marking it as a reference (avoiding the in-place reference side effect).
     stats: {}
 };

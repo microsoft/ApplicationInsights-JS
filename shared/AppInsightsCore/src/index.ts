@@ -46,7 +46,7 @@ export { IStatsEventData } from "./interfaces/ai/IStatsEventData";
 export { IStatsMgr } from "./interfaces/ai/IStatsMgr";
 export {
     createStatsMgr, getStatsCfgUrl,
-    STATS_SDK_IKEY, STATS_SDK_CFG_URL_NON_EU, STATS_SDK_CFG_URL_EU, STATS_SDK_ONECOLLECTOR_PATH, STATS_SDK_ENDPOINT_KEY, STATS_SDK_FEATURE
+    STATS_SDK_IKEY, STATS_SDK_ONECOLLECTOR_PATH, STATS_SDK_ENDPOINT_KEY, STATS_SDK_FEATURE
 } from "./core/InternalSdkStats";
 export { createSdkStatsNotifCbk, ISdkStatsConfig, ISdkStatsNotifCbk } from "./core/SdkStatsNotificationCbk";
 export {

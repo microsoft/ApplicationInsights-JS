@@ -4,7 +4,7 @@ import { IPayloadData } from "../../../../src/interfaces/ai/IXHROverride";
 import { IStatsMgr } from "../../../../src/interfaces/ai/IStatsMgr";
 import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
 import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
-import { createStatsMgr, STATS_SDK_ENDPOINT_KEY } from "../../../../src/core/InternalSdkStats";
+import { createStatsMgr, getStatsCfgUrl, STATS_SDK_ENDPOINT_KEY } from "../../../../src/core/InternalSdkStats";
 import { IInternalSdkStatsState } from "../../../../src/interfaces/ai/IInternalSdkStats";
 import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
 import { IPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
@@ -12,6 +12,7 @@ import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore
 import { FeatureOptInMode } from "../../../../src/enums/ai/FeatureOptInEnums";
 
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900; // 15 minutes
+const STATS_TEST_CFG_URL = "https://data.stats.monitor.azure.com/cfg/v1.json";
 
 export class InternalSdkStatsTests extends AITestClass {
     private _core: AppInsightsCore;
@@ -37,6 +38,8 @@ export class InternalSdkStatsTests extends AITestClass {
             },
             stats: {
                 shrtInt: STATS_COLLECTION_SHORT_INTERVAL,
+                // The config url gates collection, without it nothing is collected or sent
+                cfgUrl: STATS_TEST_CFG_URL,
                 // Resolve the remote SDK Stats configuration synchronously (as enabled) so the tests
                 // do not attempt a real network fetch of the cfg/v1.json endpoint.
                 overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
@@ -376,6 +379,82 @@ export class InternalSdkStatsTests extends AITestClass {
 
                 hook && hook.rm();
                 core.unload(false);
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: does not send when no cfgUrl has been configured",
+            useFakeTimers: true,
+            test: () => {
+                // Remove the configured cfg url, without it there is nothing to resolve so nothing is sent
+                this._core.config.stats.cfgUrl = null;
+                this.clock.tick(1); // Allow the config change to propagate
+
+                this._statsMgr.init(this._core, "InternalSdkStats");
+
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.equal(0, this._trackSpy.callCount, "track should not be called when no cfgUrl is configured");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: starts sending once the cfgUrl arrives from the dynamic config",
+            useFakeTimers: true,
+            test: () => {
+                // Simulate the CDN configuration arriving after initialization by starting without a url
+                this._core.config.stats.cfgUrl = null;
+                this.clock.tick(1);
+
+                this._statsMgr.init(this._core, "InternalSdkStats");
+
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+                Assert.equal(0, this._trackSpy.callCount, "Nothing should be sent before the cfgUrl is available");
+
+                // The CDN / dynamic config now supplies the url
+                this._core.config.stats.cfgUrl = STATS_TEST_CFG_URL;
+                this.clock.tick(1); // Allow the config change to propagate
+
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.ok(this._trackSpy.called, "SDK Stats should be sent once the cfgUrl is supplied by the config");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: getStatsCfgUrl derives the EU url and requires a configured url",
+            test: () => {
+                Assert.equal(null, getStatsCfgUrl("https://westeurope.in.applicationinsights.azure.com/", null),
+                    "No configured url should resolve to null");
+                Assert.equal(null, getStatsCfgUrl("https://eastus.in.applicationinsights.azure.com/", undefined),
+                    "No configured url should resolve to null");
+
+                Assert.equal(STATS_TEST_CFG_URL, getStatsCfgUrl("https://eastus.in.applicationinsights.azure.com/", STATS_TEST_CFG_URL),
+                    "A non-EU endpoint should use the configured url as-is");
+                Assert.equal("https://eu-data.stats.monitor.azure.com/cfg/v1.json",
+                    getStatsCfgUrl("https://westeurope.in.applicationinsights.azure.com/", STATS_TEST_CFG_URL),
+                    "An EU endpoint should have the eu- prefix inserted in front of the host");
+                Assert.equal("https://eu-data.stats.monitor.azure.com/cfg/v1.json",
+                    getStatsCfgUrl("https://westeurope-5.in.applicationinsights.azure.com/", STATS_TEST_CFG_URL),
+                    "An EU region replica endpoint should also resolve to the EU url");
+                Assert.equal("eu-data.stats.monitor.azure.com/cfg/v1.json",
+                    getStatsCfgUrl("https://northeurope.in.applicationinsights.azure.com/", "data.stats.monitor.azure.com/cfg/v1.json"),
+                    "A configured url without a scheme should still get the eu- prefix");
             }
         });
     }
