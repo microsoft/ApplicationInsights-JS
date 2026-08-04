@@ -106,7 +106,7 @@ export function getStatsCfgUrl(endpoint: string): string {
 }
 
 /** Parse the SDK Stats config JSON (`{ ver, enabled, url }`); null if empty or unparseable. */
-function _parseStatsCfg(response: string): IInternalSdkStatsCfgResult {
+function _parseStatsCfg(response: string): IInternalSdkStatsCfgResult | null {
     let result: IInternalSdkStatsCfgResult = null;
     let json = getJSON();
     if (response && json) {
@@ -128,7 +128,7 @@ function _parseStatsCfg(response: string): IInternalSdkStatsCfgResult {
 }
 
 /** Default SDK Stats config fetch (fetch, else XHR); calls oncomplete with the parsed config or null. */
-function _defaultStatsCfgFetch(cfgUrl: string, oncomplete: (result: IInternalSdkStatsCfgResult) => void): void {
+function _defaultStatsCfgFetch(cfgUrl: string, oncomplete: (result: IInternalSdkStatsCfgResult | null) => void): void {
     function _complete(response?: string) {
         try {
             oncomplete(response ? _parseStatsCfg(response) : null);

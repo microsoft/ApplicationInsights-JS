@@ -106,7 +106,7 @@ export class InternalSdkStatsTests extends AITestClass {
                     timeout: 0,
                     disableXhrSync: false,
                     statsData: {
-                        startTime: "2023-10-01T00:00:00Z" // Simulated start time
+                        startTime: Date.now() // Simulated start time (numeric, used in duration arithmetic)
                     }
                 } as IPayloadData;
                 

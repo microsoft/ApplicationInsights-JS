@@ -1128,7 +1128,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             function _getPayload(payload: IInternalStorageItem[], urlOverride?: string): IInternalPayloadData {
                 if (isArray(payload) && payload.length > 0) {
                     let batch = _self._buffer.batchPayloads(payload);
-                    let headers = _getHeaders();
+                    // When the destination url is overridden (SDK Stats ingestion endpoint) the customer
+                    // configured headers must NOT be forwarded, they may contain authorization or other
+                    // sensitive values that are only intended for the customer's own endpoint.
+                    let headers = urlOverride ? {} : _getHeaders();
                     let payloadData: IInternalPayloadData = {
                         data: batch,
                         urlString: urlOverride || _endpointUrl,
