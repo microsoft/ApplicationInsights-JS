@@ -93,8 +93,9 @@ export type InternalSdkStatsCfgFetchFn = (cfgUrl: string, oncomplete: (result: I
  */
 export interface IInternalSdkStatsConfig {
     /**
-     * The short collection interval in seconds to send the stats beat events.
-     * Default: 15 min
+     * Collection interval in seconds. Counters persist in session storage across page loads.
+     * Non-positive values are ignored and the default is used instead.
+     * @default 3600 (1 hour)
      */
     shrtInt?: number;
 
@@ -111,6 +112,12 @@ export interface IInternalSdkStatsConfig {
      * @default undefined
      */
     cfgUrl?: string;
+
+    /**
+     * Instrumentation key used for SDK Stats events. When omitted, SDK Stats are not sent.
+     * @default undefined
+     */
+    iKey?: string;
 
     /**
      * Optional override for the function used to fetch the remote SDK Stats configuration

@@ -5,6 +5,27 @@ import { SinonSpy, SinonStub } from "sinon";
 import { ISenderConfig } from "../../../types/applicationinsights-channel-js";
 import { isBeaconsSupported } from "@microsoft/applicationinsights-core-js";
 
+function _clearStatsStorage() {
+    try {
+        let storage = typeof sessionStorage !== "undefined" ? sessionStorage : null;
+        if (storage) {
+            let keys: string[] = [];
+            for (let lp = 0; lp < storage.length; lp++) {
+                let key = storage.key(lp);
+                if (key && key.indexOf("000e0000-e000-0000-a000-000000000000:") === 0) {
+                    keys.push(key);
+                }
+            }
+
+            for (let lp = 0; lp < keys.length; lp++) {
+                storage.removeItem(keys[lp]);
+            }
+        }
+    } catch (e) {
+        // Session storage may be unavailable.
+    }
+}
+
 export class InternalSdkStatsTests extends AITestClass {
     private _core: AppInsightsCore;
     private _sender: Sender;
@@ -16,12 +37,14 @@ export class InternalSdkStatsTests extends AITestClass {
     private trackSpy: SinonSpy;
 
     public testInitialize() {
+        _clearStatsStorage();
         this._core = new AppInsightsCore();
         this._sender = new Sender();
         this._statsMgr = createStatsMgr();
     }
 
     public testFinishedCleanup() {
+        _clearStatsStorage();
         if (this._sender && this._sender.isInitialized()) {
             this._sender.pause();
             this._sender._buffer.clear();
@@ -57,6 +80,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 shrtInt: 900,
                 // The config url gates collection, without it nothing is collected or sent
                 cfgUrl: "https://data.stats.monitor.azure.com/cfg/v1.json",
+                iKey: "Stats-Test-iKey",
                 // Resolve the remote SDK Stats configuration synchronously (as enabled) so the tests
                 // do not depend on a network fetch of the cfg/v1.json endpoint.
                 overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
@@ -146,6 +170,7 @@ export class InternalSdkStatsTests extends AITestClass {
                     stats: {
                         shrtInt: 900,
                         cfgUrl: "https://data.stats.monitor.azure.com/cfg/v1.json",
+                        iKey: "Stats-Test-iKey",
                         overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
                             oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
                         }

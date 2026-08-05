@@ -13,6 +13,7 @@ import { _throwInternal, safeGetLogger } from "../diagnostics/DiagnosticLogger";
 import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
 import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
 import {
     IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsState, InternalSdkStatsCfgFetchFn
 } from "../interfaces/ai/IInternalSdkStats";
@@ -24,19 +25,12 @@ import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
 import { MetricDataType } from "../telemetry/ai/DataTypes";
 import { getJSON, isFetchSupported, isXhrSupported } from "../utils/EnvUtils";
 import { getResponseText, isFeatureEnabled, openXhr } from "../utils/HelperFuncs";
+import { utlGetSessionStorage, utlSetSessionStorage } from "../utils/StorageHelperFuncs";
 
-const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
-const STATS_MIN_INTERVAL_SECONDS = 60; // 1 minute
+/** Default collection interval in seconds; override with `stats.shrtInt`. */
+const STATS_COLLECTION_INTERVAL_SECONDS = 3600; // 1 hour
 const STATS_LANGUAGE = "JavaScript";
 const STATS_TYPE = "Browser";
-
-/**
- * The placeholder instrumentation key used when reporting SDK statistics to the distro-owned
- * SDK Stats ingestion endpoint. The endpoint does not require authentication, the placeholder
- * key only satisfies the connection-string / envelope iKey requirement and is ignored
- * server-side. This matches the convention used by the Microsoft OpenTelemetry distros.
- */
-export const STATS_SDK_IKEY = "00000000-0000-0000-0000-000000000000";
 
 /** The host prefix added to the configured SDK Stats config url for EU data-boundary regions. */
 const STATS_EU_HOST_PREFIX = "eu-";
@@ -215,9 +209,16 @@ interface _IMgrCallbacks {
      * Provides a callback to the manager to start a timer for the internalSdkStats instance.
      * This is used to ensure that the manager is able to control the lifecycle of the instance
      * @param cb - The callback to call when the timer is started
+     * @param delay - The delay (in milliseconds) before the callback should be called
      * @returns A handle to the timer that was started, this can be used to cancel the timer if needed
      */
-    start: (cb: () => void) => ITimerHandler;
+    start: (cb: () => void, delay: number) => ITimerHandler;
+
+    /** Returns the current collection interval in milliseconds. */
+    interval: () => number;
+
+    /** Registers for collection interval changes. */
+    watchInterval: (cb: () => void) => () => void;
 
     /**
      * Provides a callback to the manager to send the internalSdkStats event to the core.
@@ -225,7 +226,7 @@ interface _IMgrCallbacks {
      * @param internalSdkStatsEvent - The internalSdkStats event to send to the core
      * @param endpoint - The endpoint to send the event to
      */
-    track: (internalSdkStats: IInternalSdkStats, internalSdkStatsEvent: ITelemetryItem) => void;
+    track: (internalSdkStats: IInternalSdkStats, internalSdkStatsEvent?: ITelemetryItem) => boolean | null;
 }
 
 /**
@@ -238,12 +239,69 @@ function _createInternalSdkStatsNetwork(host: string): IInternalSdkStatsNetwork 
         host,
         totalRequest: 0,
         success: 0,
-        throttle: {},
-        failure: {},
-        retry: {},
-        exception: {},
+        // Untrusted keys must not reach Object.prototype.
+        throttle: objCreate(null),
+        failure: objCreate(null),
+        retry: objCreate(null),
+        exception: objCreate(null),
         requestDuration: 0
     };
+}
+
+/** SDK Stats state persisted as `[windowStart, counters]`. */
+type _IStatsStore = [number, IInternalSdkStatsNetwork];
+
+/** Validates persisted counts and restores them to a null-prototype object. */
+function _reviveCounts(src: any): { [key: string]: number } {
+    let result: { [key: string]: number } = objCreate(null);
+    objForEachKey(src, (key, value) => {
+        value = +value;
+        if (value > 0) {
+            result[key] = value;
+        }
+    });
+
+    return result;
+}
+
+/** Restores validated counters from session storage. */
+function _reviveCounters(host: string, cnt: any): IInternalSdkStatsNetwork {
+    let counter = _createInternalSdkStatsNetwork(host);
+    if (cnt) {
+        counter.totalRequest = +cnt.totalRequest || 0;
+        counter.success = +cnt.success || 0;
+        counter.requestDuration = +cnt.requestDuration || 0;
+        counter.throttle = _reviveCounts(cnt.throttle);
+        counter.failure = _reviveCounts(cnt.failure);
+        counter.retry = _reviveCounts(cnt.retry);
+        counter.exception = _reviveCounts(cnt.exception);
+    }
+
+    return counter;
+}
+
+function _loadStore(logger: IDiagnosticLogger, key: string): _IStatsStore {
+    try {
+        let json = getJSON();
+        let raw = json && utlGetSessionStorage(logger, key);
+        if (raw) {
+            let parsed = json.parse(raw);
+            if (parsed[0] >= 0) {
+                return parsed;
+            }
+        }
+    } catch (e) {
+        // Start a new window.
+    }
+
+    return null;
+}
+
+function _saveStore(logger: IDiagnosticLogger, key: string, store: _IStatsStore) {
+    let json = getJSON();
+    if (json) {
+        utlSetSessionStorage(logger, key, json.stringify(store));
+    }
 }
 
 /**
@@ -252,27 +310,68 @@ function _createInternalSdkStatsNetwork(host: string): IInternalSdkStatsNetwork 
  * @param internalSdkStatsStats - The internalSdkStats state to use for the IInternalSdkStats instance.
  * @returns A new IInternalSdkStats instance.
  */
-function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IInternalSdkStatsState): IInternalSdkStats {
-    let _networkCounter: IInternalSdkStatsNetwork = _createInternalSdkStatsNetwork(internalSdkStatsStats.endpoint);
+function _createInternalSdkStats(
+    mgr: _IMgrCallbacks, internalSdkStatsStats: IInternalSdkStatsState, logger: IDiagnosticLogger
+): IInternalSdkStats {
+    // Isolate counters by customer key and endpoint.
+    let _storeKey = (internalSdkStatsStats.cKey || STR_EMPTY) + ":" + internalSdkStatsStats.endpoint;
+    let _store = _loadStore(logger, _storeKey);
+    // Start a new window only when the first value is recorded.
+    let _windowStart = _store ? _store[0] : -1;
+    let _networkCounter: IInternalSdkStatsNetwork = _reviveCounters(internalSdkStatsStats.endpoint, _store && _store[1]);
     let _timeoutHandle: ITimerHandler;      // Handle to the timer for sending telemetry. This way, we would not send telemetry when system sleep.
     let _isEnabled: boolean = true;         // Flag to check if internalSdkStats is enabled or not
+    let _removeIntervalListener: () => void;
+
+    function _startWindow() {
+        if (_windowStart < 0) {
+            _windowStart = utcNow();
+        }
+    }
+
+    function _persist() {
+        _saveStore(logger, _storeKey, [_windowStart, _networkCounter]);
+    }
+
+    /** Returns the remaining time in the current window. */
+    function _remaining() {
+        let interval = mgr.interval();
+        let elapsed = utcNow() - _windowStart;
+        let remaining = interval;
+        if (elapsed >= 0) {
+            remaining = interval - elapsed;
+        }
+
+        return remaining > 0 ? remaining : 0;
+    }
 
     function _setupTimer() {
-        if (_isEnabled && !_timeoutHandle) {
+        if (_isEnabled && _windowStart >= 0 && !_timeoutHandle) {
             _timeoutHandle = mgr.start(() => {
                 _timeoutHandle = null;
                 trackInternalSdkStats();
-            });
+            }, _remaining());
         }
     }
 
     function trackInternalSdkStats() {
         if (_isEnabled) {
-            _trackSendRequestDuration();
-            _trackSendRequestsCount();
-            _networkCounter = _createInternalSdkStatsNetwork(_networkCounter.host);
-            _timeoutHandle && _timeoutHandle.cancel();
-            _timeoutHandle = null;
+            let ready = mgr.track(internalSdkStats);
+            if (ready !== null) {
+                if (ready) {
+                    _trackSendRequestDuration();
+                    _trackSendRequestsCount();
+                }
+                _networkCounter = _createInternalSdkStatsNetwork(_networkCounter.host);
+                // Persist the reset state; restart the window on the next value.
+                _windowStart = -1;
+                _persist();
+            } else {
+                // Keep the counters and retry during the next interval.
+                _windowStart = utcNow();
+                _persist();
+                _setupTimer();
+            }
         }
     }
 
@@ -373,8 +472,20 @@ function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IIn
                 _timeoutHandle.cancel();
                 _timeoutHandle = null;
             }
+            if (_removeIntervalListener) {
+                _removeIntervalListener();
+                _removeIntervalListener = null;
+            }
         }
     }
+
+    _removeIntervalListener = mgr.watchInterval(() => {
+        if (_timeoutHandle) {
+            _timeoutHandle.cancel();
+            _timeoutHandle = null;
+        }
+        _setupTimer();
+    });
 
     // THE internalSdkStats instance being created and returned
     let internalSdkStats: IInternalSdkStats = {
@@ -402,12 +513,17 @@ function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IIn
                     _inc(_networkCounter.failure, status);
                 }
 
+                // Persist in case the page unloads before the interval ends.
+                _startWindow();
+                _persist();
                 _setupTimer();
             }
         },
         countException: (endpoint: string, exceptionType: string) => {
             if (_isEnabled && _checkEndpoint(endpoint)) {
                 _inc(_networkCounter.exception, exceptionType);
+                _startWindow();
+                _persist();
                 _setupTimer();
             }
         }
@@ -423,14 +539,16 @@ function _createInternalSdkStats(mgr: _IMgrCallbacks, internalSdkStatsStats: IIn
 export function createStatsMgr(): IStatsMgr {
     let _isMgrEnabled: boolean = false; // Flag to check if internalSdkStats is enabled or not
     let _core: IAppInsightsCore; // The core instance that is used to send telemetry
-    let _shortInterval = STATS_COLLECTION_SHORT_INTERVAL;
+    let _shortInterval = STATS_COLLECTION_INTERVAL_SECONDS * 1000;
     let _statsCfgFetchFn: InternalSdkStatsCfgFetchFn;
+    let _statsIKey: string;
     // The configured SDK Stats config url (cfg/v1.json), sourced from the dynamic config. When it is
     // not supplied (no CDN / host configuration) SDK Stats are not collected or sent.
     let _statsCfgUrl: string;
     // Resolved remote config cached per cfg URL (EU / non-EU); tracks in-flight fetch and last result.
     // Null-prototype so the config supplied url can never be used to pollute Object.prototype.
     let _cfgCache: { [cfgUrl: string]: { pending: boolean, result: IInternalSdkStatsCfgResult } } = objCreate(null);
+    let _intervalListeners: Array<() => void> = [];
 
     // Lazily initialize the manager and start listening for configuration changes
     // This is also required to handle "unloading" and then re-initializing again
@@ -447,9 +565,11 @@ export function createStatsMgr(): IStatsMgr {
             // change handler. This supports the scenario where the config is changed after the manager
             // has been created (including CDN / dynamic config updates).
             return onConfigChange<IConfiguration>(core.config, (details) => {
+                let previousInterval = _shortInterval;
                 // Re-evaluate the feature flag on every config change (enabled by default, opt-out via featureOptIn)
                 _isMgrEnabled = false;
                 _statsCfgFetchFn = null;
+                _statsIKey = null;
                 _statsCfgUrl = null;
                 if (isFeatureEnabled(featureName || STATS_SDK_FEATURE, details.cfg, true) === true) {
                     // Seed the SDK Stats defaults into the single global config so they remain dynamic and
@@ -464,13 +584,20 @@ export function createStatsMgr(): IStatsMgr {
                         // Make the override fetch fn a dynamic property before snapshotting it so a later
                         // merged (CDN / updateCfg) change to it re-runs this handler and refreshes the local.
                         _statsCfgFetchFn = details.set(statsCfg, "overrideCfgFn", statsCfg.overrideCfgFn);
+                        _statsIKey = details.set(statsCfg, "iKey", statsCfg.iKey);
                         // Same for the config url, it is normally delivered by the CDN configuration after
                         // initialization has completed, so this handler must re-run when it arrives.
                         _statsCfgUrl = details.set(statsCfg, "cfgUrl", statsCfg.cfgUrl);
-                        _shortInterval = STATS_COLLECTION_SHORT_INTERVAL; // Reset to the default in-case the config is removed / changed
-                        if (isNumber(statsCfg.shrtInt) && statsCfg.shrtInt > STATS_MIN_INTERVAL_SECONDS) {
+                        _shortInterval = STATS_COLLECTION_INTERVAL_SECONDS * 1000; // Reset to the default in-case the config is removed / changed
+                        if (isNumber(statsCfg.shrtInt) && statsCfg.shrtInt > 0) {
                             _shortInterval = statsCfg.shrtInt * 1000; // Convert to milliseconds
                         }
+                    }
+                }
+
+                if (_shortInterval !== previousInterval) {
+                    for (let lp = 0; lp < _intervalListeners.length; lp++) {
+                        _intervalListeners[lp]();
                     }
                 }
             });
@@ -512,32 +639,52 @@ export function createStatsMgr(): IStatsMgr {
         return entry.result;
     }
 
-    function _track(internalSdkStats: IInternalSdkStats, internalSdkStatsEvent: ITelemetryItem) {
+    function _track(internalSdkStats: IInternalSdkStats, internalSdkStatsEvent?: ITelemetryItem): boolean | null {
         if (_isMgrEnabled) {
+            if (!_statsIKey) {
+                return null;
+            }
+
             // The remote cfg file is the sole authority for whether collection is enabled and where
             // to send the events. Re-resolved here (rather than cached on the instance) to support the
             // endpoint changing after the instance was created.
             let cfgResult = _resolveStatsCfg(internalSdkStats.endpoint);
-            if (!cfgResult || !cfgResult.enabled) {
-                // Not resolved yet, or disabled -> skip
-                return;
+            if (!cfgResult) {
+                return null;
+            }
+            if (!cfgResult.enabled) {
+                return false;
             }
 
             let url = _buildStatsEndpoint(cfgResult.url);
             if (!url) {
-                // Enabled but no usable host -> skip
-                return;
+                return null;
             }
 
-            internalSdkStatsEvent.iKey = STATS_SDK_IKEY;
-            // Carry the SDK Stats ingestion endpoint so the sending channel can redirect the event
-            // away from the customer's breeze endpoint. This marker is removed by the channel before
-            // the event is serialized.
-            internalSdkStatsEvent.data = internalSdkStatsEvent.data || {};
-            internalSdkStatsEvent.data[STATS_SDK_ENDPOINT_KEY] = url;
+            if (internalSdkStatsEvent) {
+                internalSdkStatsEvent.iKey = _statsIKey;
+                // Carry the SDK Stats ingestion endpoint so the sending channel can redirect the event
+                // away from the customer's breeze endpoint. This marker is removed by the channel before
+                // the event is serialized.
+                internalSdkStatsEvent.data = internalSdkStatsEvent.data || {};
+                internalSdkStatsEvent.data[STATS_SDK_ENDPOINT_KEY] = url;
 
-            _core.track(internalSdkStatsEvent);
+                _core.track(internalSdkStatsEvent);
+            }
+            return true;
         }
+
+        return false;
+    }
+
+    function _watchInterval(cb: () => void): () => void {
+        _intervalListeners.push(cb);
+        return () => {
+            let idx = arrIndexOf(_intervalListeners, cb);
+            if (idx !== -1) {
+                _intervalListeners.splice(idx, 1);
+            }
+        };
     }
 
     function _createInstance(state: IInternalSdkStatsState): IInternalSdkStats {
@@ -550,13 +697,15 @@ export function createStatsMgr(): IStatsMgr {
             }
 
             let callbacks: _IMgrCallbacks = {
-                start: (cb: () => void) => {
-                    return scheduleTimeout(cb, _shortInterval);
+                start: (cb: () => void, delay: number) => {
+                    return scheduleTimeout(cb, delay);
                 },
+                interval: () => _shortInterval,
+                watchInterval: _watchInterval,
                 track: _track
             };
 
-            instance = _createInternalSdkStats(callbacks, state);
+            instance = _createInternalSdkStats(callbacks, state, safeGetLogger(_core));
         }
 
         return instance;

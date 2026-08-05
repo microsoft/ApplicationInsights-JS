@@ -13,6 +13,37 @@ import { FeatureOptInMode } from "../../../../src/enums/ai/FeatureOptInEnums";
 
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900; // 15 minutes
 const STATS_TEST_CFG_URL = "https://data.stats.monitor.azure.com/cfg/v1.json";
+const STATS_TEST_IKEY = "Stats-Test-iKey";
+function _clearStatsStorage() {
+    try {
+        let storage = typeof sessionStorage !== "undefined" ? sessionStorage : null;
+        if (storage) {
+            let keys: string[] = [];
+            for (let lp = 0; lp < storage.length; lp++) {
+                let key = storage.key(lp);
+                if (key && key.indexOf("Test-iKey:") === 0) {
+                    keys.push(key);
+                }
+            }
+
+            for (let lp = 0; lp < keys.length; lp++) {
+                storage.removeItem(keys[lp]);
+            }
+        }
+    } catch (e) {
+        // Session storage may be unavailable.
+    }
+}
+
+function _readStatsStorage(cKey: string, endpoint: string): any {
+    try {
+        let raw = sessionStorage.getItem(cKey + ":" + endpoint);
+        let value = raw ? JSON.parse(raw) : null;
+        return value ? { st: value[0], cnt: value[1] } : null;
+    } catch (e) {
+        return null;
+    }
+}
 
 export class InternalSdkStatsTests extends AITestClass {
     private _core: AppInsightsCore;
@@ -27,7 +58,9 @@ export class InternalSdkStatsTests extends AITestClass {
     public testInitialize() {
         let _self = this;
         super.testInitialize();
-        
+
+        _clearStatsStorage();
+
         _self._config = {
             instrumentationKey: "Test-iKey",
             disableInstrumentationKeyValidation: true,
@@ -40,6 +73,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 shrtInt: STATS_COLLECTION_SHORT_INTERVAL,
                 // The config url gates collection, without it nothing is collected or sent
                 cfgUrl: STATS_TEST_CFG_URL,
+                iKey: STATS_TEST_IKEY,
                 // Resolve the remote SDK Stats configuration synchronously (as enabled) so the tests
                 // do not attempt a real network fetch of the cfg/v1.json endpoint.
                 overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
@@ -66,6 +100,7 @@ export class InternalSdkStatsTests extends AITestClass {
         }
         this._core = null as any;
         this._statsMgr = null as any;
+        _clearStatsStorage();
     }
 
     public registerTests() {
@@ -315,6 +350,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 for (let i = 0; i < this._trackSpy.callCount; i++) {
                     const item: ITelemetryItem = this._trackSpy.getCall(i).args[0];
                     if (item.data && item.data[STATS_SDK_ENDPOINT_KEY] === "https://data.stats.monitor.azure.com/v2/track") {
+                        Assert.equal(STATS_TEST_IKEY, item.iKey, "SDK Stats should use the configured instrumentation key");
                         foundEndpoint = true;
                         break;
                     }
@@ -437,6 +473,70 @@ export class InternalSdkStatsTests extends AITestClass {
         });
 
         this.testCase({
+            name: "SDK Stats: does not send until an instrumentation key is configured",
+            useFakeTimers: true,
+            test: () => {
+                this._core.config.stats.iKey = null;
+                this.clock.tick(1);
+
+                this._statsMgr.init(this._core, "InternalSdkStats");
+
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.equal(0, this._trackSpy.callCount, "Nothing should be sent without an instrumentation key");
+                Assert.equal(1, _readStatsStorage("Test-iKey", "https://example.endpoint.com").cnt.exception["NetworkError"],
+                    "Counters should remain persisted");
+
+                this._core.config.stats.iKey = STATS_TEST_IKEY;
+                this.clock.tick(1);
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.ok(this._trackSpy.called, "Persisted counters should be sent after the instrumentation key is configured");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: retains persisted counters while remote config is unresolved",
+            useFakeTimers: true,
+            test: () => {
+                let completeFetch: (result: { enabled: boolean, url: string } | null) => void;
+                this._core.config.stats.overrideCfgFn = (_cfgUrl, oncomplete) => {
+                    completeFetch = oncomplete;
+                };
+                this.clock.tick(1);
+
+                this._statsMgr.init(this._core, "InternalSdkStats");
+
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.equal(0, this._trackSpy.callCount, "Nothing should be sent before remote config resolves");
+                Assert.equal(1, _readStatsStorage("Test-iKey", "https://example.endpoint.com").cnt.exception["NetworkError"],
+                    "Unsent counters should remain persisted");
+
+                completeFetch({ enabled: true, url: "data.stats.monitor.azure.com" });
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.ok(this._trackSpy.called, "Persisted counters should be sent on the next interval");
+                Assert.equal(undefined, _readStatsStorage("Test-iKey", "https://example.endpoint.com").cnt.exception["NetworkError"],
+                    "Counters should reset after they are processed");
+            }
+        });
+
+        this.testCase({
             name: "SDK Stats: getStatsCfgUrl derives the EU url and requires a configured url",
             test: () => {
                 Assert.equal(null, getStatsCfgUrl("https://westeurope.in.applicationinsights.azure.com/", null),
@@ -455,6 +555,210 @@ export class InternalSdkStatsTests extends AITestClass {
                 Assert.equal("eu-data.stats.monitor.azure.com/cfg/v1.json",
                     getStatsCfgUrl("https://northeurope.in.applicationinsights.azure.com/", "data.stats.monitor.azure.com/cfg/v1.json"),
                     "A configured url without a scheme should still get the eu- prefix");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: counters are persisted to session storage",
+            useFakeTimers: true,
+            test: () => {
+                this._statsMgr.init(this._core, "InternalSdkStats");
+                // Move off the fake timer epoch.
+                this.clock.tick(1000);
+
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+
+                internalSdkStats.count(200, { statsData: { startTime: Date.now() } } as any, "https://example.endpoint.com");
+                internalSdkStats.count(400, { statsData: { startTime: Date.now() } } as any, "https://example.endpoint.com");
+                internalSdkStats.count(500, { statsData: { startTime: Date.now() } } as any, "https://example.endpoint.com");
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+
+                let stored = _readStatsStorage("Test-iKey", "https://example.endpoint.com");
+                Assert.ok(!!stored, "The SDK Stats state should be persisted to session storage");
+                Assert.equal(1000, stored.st, "The collection window start should be persisted");
+                Assert.equal(1, stored.cnt.success, "The success count should be persisted");
+                Assert.equal(3, stored.cnt.totalRequest, "The total request count should be persisted");
+                Assert.equal(1, stored.cnt.failure["400"], "The failure count should be persisted");
+                Assert.equal(1, stored.cnt.retry["500"], "The retry count should be persisted");
+                Assert.equal(1, stored.cnt.exception["NetworkError"], "The exception count should be persisted");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: a new instance resumes the persisted counters and collection window",
+            useFakeTimers: true,
+            test: () => {
+                this._statsMgr.init(this._core, "InternalSdkStats");
+
+                let state = {
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                };
+
+                // First page load.
+                let first = this._statsMgr.newInst(state);
+                first.countException("https://example.endpoint.com", "NetworkError");
+                first.enabled = false;
+
+                let windowStart = _readStatsStorage("Test-iKey", "https://example.endpoint.com").st;
+
+                this.clock.tick((STATS_COLLECTION_SHORT_INTERVAL - 10) * 1000);
+
+                // Second page load resumes the window.
+                let second = this._statsMgr.newInst(state);
+                Assert.equal(windowStart, _readStatsStorage("Test-iKey", "https://example.endpoint.com").st,
+                    "The collection window should not be restarted by a new instance");
+
+                second.countException("https://example.endpoint.com", "NetworkError");
+
+                this.clock.tick(11 * 1000);
+
+                Assert.ok(this._trackSpy.called, "The resumed window should complete after the remaining time");
+
+                let exceptionCount = 0;
+                for (let i = 0; i < this._trackSpy.callCount; i++) {
+                    const item: ITelemetryItem = this._trackSpy.getCall(i).args[0];
+                    if (item.name === "exception") {
+                        exceptionCount = item.baseData.average;
+                    }
+                }
+
+                Assert.equal(2, exceptionCount, "The counts from both instances should be accumulated into one window");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: the persisted counters are reset once the window is sent",
+            useFakeTimers: true,
+            test: () => {
+                this._statsMgr.init(this._core, "InternalSdkStats");
+
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.ok(this._trackSpy.called, "The window should have been sent");
+
+                let stored = _readStatsStorage("Test-iKey", "https://example.endpoint.com");
+                Assert.ok(!!stored, "The reset state should still be persisted");
+                Assert.equal(0, stored.cnt.success, "The success count should be reset after sending");
+                Assert.equal(undefined, stored.cnt.exception["NetworkError"], "The exception counts should be reset after sending");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: separate endpoints do not share persisted counters",
+            useFakeTimers: true,
+            test: () => {
+                this._statsMgr.init(this._core, "InternalSdkStats");
+
+                let first = this._statsMgr.newInst({ cKey: "Test-iKey", endpoint: "https://one.endpoint.com", sdkVer: "1.0.0" });
+                let second = this._statsMgr.newInst({ cKey: "Test-iKey", endpoint: "https://two.endpoint.com", sdkVer: "1.0.0" });
+
+                first.countException("https://one.endpoint.com", "NetworkError");
+                second.countException("https://two.endpoint.com", "NetworkError");
+                second.countException("https://two.endpoint.com", "NetworkError");
+
+                Assert.equal(1, _readStatsStorage("Test-iKey", "https://one.endpoint.com").cnt.exception["NetworkError"],
+                    "The first endpoint should only have its own counts");
+                Assert.equal(2, _readStatsStorage("Test-iKey", "https://two.endpoint.com").cnt.exception["NetworkError"],
+                    "The second endpoint should only have its own counts");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: defaults to a one hour collection interval",
+            useFakeTimers: true,
+            test: () => {
+                let core = new AppInsightsCore();
+                core.initialize({
+                    instrumentationKey: "Test-iKey",
+                    disableInstrumentationKeyValidation: true,
+                    stats: {
+                        cfgUrl: STATS_TEST_CFG_URL,
+                        iKey: STATS_TEST_IKEY,
+                        overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
+                            oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
+                        }
+                    }
+                } as IConfiguration, [new ChannelPlugin()]);
+
+                let trackSpy = this.sandbox.spy(core, "track");
+                let statsMgr = createStatsMgr();
+                let hook = statsMgr.init(core, "InternalSdkStats");
+
+                let internalSdkStats = statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://hourly.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                internalSdkStats.countException("https://hourly.endpoint.com", "NetworkError");
+
+                this.clock.tick(60 * 60 * 1000 - 1);
+                Assert.equal(0, trackSpy.callCount, "Nothing should be sent before the one hour interval elapses");
+
+                this.clock.tick(2);
+                Assert.ok(trackSpy.called, "The stats should be sent once the one hour interval elapses");
+
+                hook && hook.rm();
+                core.unload(false);
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: accepts a positive interval below one minute from dynamic config",
+            useFakeTimers: true,
+            test: () => {
+                this._core.config.stats.shrtInt = 1;
+                this.clock.tick(1); // Allow the config change to propagate
+
+                this._statsMgr.init(this._core, "InternalSdkStats");
+
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://short.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                internalSdkStats.countException("https://short.endpoint.com", "NetworkError");
+
+                this.clock.tick(1001);
+
+                Assert.ok(this._trackSpy.called, "A positive dynamic interval below one minute should be honored");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: reschedules an active window when the dynamic interval changes",
+            useFakeTimers: true,
+            test: () => {
+                this._statsMgr.init(this._core, "InternalSdkStats");
+
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://dynamic.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                internalSdkStats.countException("https://dynamic.endpoint.com", "NetworkError");
+
+                this.clock.tick(100 * 1000);
+                this._core.config.stats.shrtInt = 120;
+                this.clock.tick(1);
+
+                this.clock.tick(20 * 1000 - 2);
+                Assert.equal(0, this._trackSpy.callCount, "The updated interval should not fire early");
+
+                this.clock.tick(2);
+                Assert.ok(this._trackSpy.called, "The active window should use the updated interval");
             }
         });
     }
