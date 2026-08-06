@@ -43,10 +43,10 @@ export {
     IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsConfig, IInternalSdkStatsState, InternalSdkStatsCfgFetchFn
 } from "./interfaces/ai/IInternalSdkStats";
 export { IStatsEventData } from "./interfaces/ai/IStatsEventData";
-export { IStatsMgr } from "./interfaces/ai/IStatsMgr";
+export { CreateStatsCoreFn, IStatsMgr } from "./interfaces/ai/IStatsMgr";
 export {
     createStatsMgr, getStatsCfgUrl,
-    STATS_SDK_ONECOLLECTOR_PATH, STATS_SDK_ENDPOINT_KEY, STATS_SDK_FEATURE
+    STATS_SDK_ONECOLLECTOR_PATH, STATS_SDK_FEATURE
 } from "./core/InternalSdkStats";
 export { createSdkStatsNotifCbk, ISdkStatsConfig, ISdkStatsNotifCbk } from "./core/SdkStatsNotificationCbk";
 export {

@@ -1,7 +1,7 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import {
-    AppInsightsCore, createStatsMgr, FeatureOptInMode, getWindow, IPayloadData, IInternalSdkStatsState, IStatsMgr, ITelemetryItem,
-    IUnloadHook, STATS_SDK_ENDPOINT_KEY, TransportType
+    AppInsightsCore, createStatsMgr, FeatureOptInMode, getWindow, IAppInsightsCore, IConfiguration, IPayloadData, IInternalSdkStatsState,
+    IStatsMgr, ITelemetryItem, IUnloadHook, TransportType
 } from "@microsoft/applicationinsights-core-js";
 import { Sender } from "../../../src/Sender";
 import { SinonSpy, SinonStub } from "sinon";
@@ -37,7 +37,7 @@ export class InternalSdkStatsTests extends AITestClass {
     private internalSdkStatsCountSpy: SinonSpy;
     private fetchStub: sinon.SinonStub;
     private beaconStub: sinon.SinonStub;
-    private trackSpy: SinonSpy;
+    private statsCore: IAppInsightsCore;
 
     public testInitialize() {
         _clearStatsStorage();
@@ -69,9 +69,20 @@ export class InternalSdkStatsTests extends AITestClass {
         if (this.beaconStub) {
             this.beaconStub.restore();
         }
-        if (this.trackSpy) {
-            this.trackSpy.restore();
+        if (this.statsCore) {
+            this.statsCore.unload(false);
         }
+    }
+
+    private createStatsCore(config: IConfiguration): IAppInsightsCore {
+        this.statsCore = {
+            isInitialized: () => true,
+            track: (item: ITelemetryItem) => {
+            },
+            unload: () => {
+            }
+        } as any;
+        return this.statsCore;
     }
 
     private initializeCoreAndSender(config: any, instrumentationKey: string) {
@@ -98,7 +109,7 @@ export class InternalSdkStatsTests extends AITestClass {
         // Initialize the core first, then init the manager against that same (now initialized)
         // core so it can enable itself (createStatsMgr().init() only enables once the core is initialized).
         core.initialize(coreConfig, [sender]);
-        let unloadHook = statsMgr.init(core, "InternalSdkStats");
+        let unloadHook = statsMgr.init(core, (config) => this.createStatsCore(config), "InternalSdkStats");
         core.setStatsMgr(statsMgr);
         this._statsMgrUnloadHook = unloadHook;
 
@@ -109,8 +120,6 @@ export class InternalSdkStatsTests extends AITestClass {
         };
 
         this.internalSdkStatsCountSpy = this.sandbox.spy(core.getSdkStats(internalSdkStatsState), "count");
-        this.trackSpy = this.sandbox.spy(core, "track");
-
         this.onDone(() => {
             sender.teardown();
         });
@@ -150,21 +159,14 @@ export class InternalSdkStatsTests extends AITestClass {
         this.clock.tick(900000); // Simulate time passing for internalSdkStats to be sent
     }
 
-    private assertInternalSdkStatsCall(statusCode: number, eventName: string) {
+    private assertInternalSdkStatsCall(statusCode: number) {
         Assert.equal(this.internalSdkStatsCountSpy.callCount, 1, "SDK Stats count should be called once");
         Assert.equal(this.internalSdkStatsCountSpy.firstCall.args[0], statusCode, `InternalSdkStats count should be called with status ${statusCode}`);
         const data = JSON.stringify(this.internalSdkStatsCountSpy.firstCall.args[1]);
         Assert.ok(data.includes("startTime"), "SDK Stats count should be called with startTime set");
-        const internalSdkStatsEvent = this.trackSpy.firstCall.args[0];
-        Assert.equal(internalSdkStatsEvent.baseType, "MetricData", "SDK Stats event should be of type MetricData");
-        Assert.equal(internalSdkStatsEvent.baseData.name, eventName, `InternalSdkStats event should be of type ${eventName}`);
-        Assert.equal("javascript:3.4.3:snp6", internalSdkStatsEvent.baseData.properties.version,
-            "SDK Stats should use the configured SDK version");
     }
 
     public registerTests() {
-        let redirectedSender: Sender;
-
         this.testCase({
             name: "SDK Stats initializes when stats is true",
             test: () => {
@@ -183,10 +185,13 @@ export class InternalSdkStatsTests extends AITestClass {
                             oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
                         }
                     }
+
                 };
 
                 this._core.initialize(config, [this._sender]);
-                this._statsMgrUnloadHook = this._statsMgr.init(this._core, "InternalSdkStats");
+                this._statsMgrUnloadHook = this._statsMgr.init(
+                    this._core, (statsConfig) => this.createStatsCore(statsConfig), "InternalSdkStats"
+                );
                 this._core.setStatsMgr(this._statsMgr);
                 let internalSdkStatsState: IInternalSdkStatsState = {
                     cKey: "Test-iKey",
@@ -199,55 +204,6 @@ export class InternalSdkStatsTests extends AITestClass {
                 QUnit.assert.ok(internalSdkStats, "SDK Stats is initialized");
                 QUnit.assert.ok(internalSdkStats.enabled, "SDK Stats is marked as initialized");
             }
-        });
-
-        this.testCaseAsync({
-            name: "SDK Stats redirected sends do not count themselves or replace the customer endpoint",
-            useFakeTimers: true,
-            useFakeServer: true,
-            stepDelay: 100,
-            steps: [
-                () => {
-                    this.fetchStub = this.sandbox.stub(window, "fetch").callsFake(() => {
-                        return Promise.resolve(new Response("{}", { status: 200, statusText: "OK" }));
-                    });
-
-                    const config = this.createSenderConfig(TransportType.Fetch);
-                    redirectedSender = this.initializeCoreAndSender(config, "000e0000-e000-0000-a000-000000000000").sender;
-
-                    redirectedSender.processTelemetry({
-                        name: "sdk-stat",
-                        baseType: "MetricData",
-                        baseData: {
-                            name: "sdk-stat",
-                            average: 1,
-                            properties: {}
-                        },
-                        data: {
-                            [STATS_SDK_ENDPOINT_KEY]: "https://stats.test/v2/track"
-                        }
-                    }, null);
-                }
-            ].concat(PollingAssert.createPollingAssert(() => {
-                if (this.fetchStub.called) {
-                    Assert.equal(0, this.internalSdkStatsCountSpy.callCount, "The redirected send should not count itself");
-                    redirectedSender.processTelemetry({
-                        name: "customer-event",
-                        baseType: "EventData",
-                        baseData: {}
-                    }, null);
-                    redirectedSender.flush();
-                    return true;
-                }
-                return false;
-            }, "Waiting for the redirected SDK Stats send") as any).concat(PollingAssert.createPollingAssert(() => {
-                if (this.fetchStub.callCount >= 2) {
-                    let request = this.fetchStub.secondCall.args[0] as Request;
-                    Assert.ok(request.url.indexOf("https://test") === 0, "Customer telemetry should still use the customer endpoint");
-                    return true;
-                }
-                return false;
-            }, "Waiting for the customer telemetry send") as any)
         });
 
         this.testCaseAsync({
@@ -276,7 +232,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 }
             ].concat(PollingAssert.createPollingAssert(() => {
                 if (this.internalSdkStatsCountSpy.called && this.fetchStub.called) {
-                    this.assertInternalSdkStatsCall(200, "Request_Success_Count");
+                    this.assertInternalSdkStatsCall(200);
                     return true;
                 }
                 return false;
@@ -307,7 +263,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 }
             ].concat(PollingAssert.createPollingAssert(() => {
                 if (this.internalSdkStatsCountSpy.called && this.fetchStub.called) {
-                    this.assertInternalSdkStatsCall(439, "Throttle_Count");
+                    this.assertInternalSdkStatsCall(439);
                     return true;
                 }
                 return false;
@@ -339,7 +295,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 }
             ].concat(PollingAssert.createPollingAssert(() => {
                 if (this.internalSdkStatsCountSpy.called) {
-                    this.assertInternalSdkStatsCall(200, "Request_Success_Count");
+                    this.assertInternalSdkStatsCall(200);
                     return true;
                 }
                 return false;
@@ -376,7 +332,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 }
             ].concat(PollingAssert.createPollingAssert(() => {
                 if (this.internalSdkStatsCountSpy.called) {
-                    this.assertInternalSdkStatsCall(200, "Request_Success_Count");
+                    this.assertInternalSdkStatsCall(200);
                     console.log("SDK Stats count called with success count for xhr sender");
                     return true;
                 }

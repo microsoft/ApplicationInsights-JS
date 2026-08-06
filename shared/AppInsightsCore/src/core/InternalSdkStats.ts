@@ -18,7 +18,7 @@ import {
     IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsState, InternalSdkStatsCfgFetchFn
 } from "../interfaces/ai/IInternalSdkStats";
 import { IInternalSdkStatsNetwork } from "../interfaces/ai/IInternalSdkStatsNetwork";
-import { IStatsMgr } from "../interfaces/ai/IStatsMgr";
+import { CreateStatsCoreFn, IStatsMgr } from "../interfaces/ai/IStatsMgr";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 import { IPayloadData } from "../interfaces/ai/IXHROverride";
 import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
@@ -37,13 +37,6 @@ const STATS_EU_HOST_PREFIX = "eu-";
 
 /** Ingestion path for future 1DS (OneCollector) SDK Stats; the AI SKU uses {@link DEFAULT_BREEZE_PATH}. */
 export const STATS_SDK_ONECOLLECTOR_PATH = "/OneCollector/1.0";
-
-/**
- * The transient marker key, set on the {@link ITelemetryItem.data} of a SDK Stats event, that
- * carries the destination SDK Stats ingestion endpoint. The sending channel reads this value to
- * redirect the event to the SDK Stats endpoint and removes it before serializing the event.
- */
-export const STATS_SDK_ENDPOINT_KEY = "_sdkStatsEndpoint";
 
 /**
  * The default feature name used to gate the SDK Stats manager. SDK Stats is enabled by default
@@ -535,7 +528,9 @@ function _createInternalSdkStats(
 
 export function createStatsMgr(): IStatsMgr {
     let _isMgrEnabled: boolean = false; // Flag to check if internalSdkStats is enabled or not
-    let _core: IAppInsightsCore; // The core instance that is used to send telemetry
+    let _core: IAppInsightsCore; // The customer core observed for configuration and endpoint changes
+    let _createStatsCore: CreateStatsCoreFn;
+    let _statsCore: IAppInsightsCore;
     let _shortInterval = STATS_COLLECTION_INTERVAL_SECONDS * 1000;
     let _statsCfgFetchFn: InternalSdkStatsCfgFetchFn;
     let _statsIKey: string;
@@ -548,9 +543,32 @@ export function createStatsMgr(): IStatsMgr {
     let _endpointCfgCache: { [endpoint: string]: string } = objCreate(null);
     let _intervalListeners: Array<() => void> = [];
 
+    function _unloadStatsCore() {
+        let statsCore = _statsCore;
+        _statsCore = null;
+        statsCore && statsCore.unload(false);
+    }
+
+    function _getStatsCore(endpoint: string): IAppInsightsCore {
+        if (_statsCore && _statsCore.config.endpointUrl !== endpoint) {
+            _unloadStatsCore();
+        }
+
+        if (!_statsCore) {
+            _statsCore = _createStatsCore({
+                instrumentationKey: _statsIKey,
+                endpointUrl: endpoint
+            });
+        }
+
+        return _statsCore;
+    }
+
     // Lazily initialize the manager and start listening for configuration changes
     // This is also required to handle "unloading" and then re-initializing again
-    function _init<CfgType extends IConfiguration = IConfiguration>(core: IAppInsightsCore<CfgType>, featureName?: string) {
+    function _init<CfgType extends IConfiguration = IConfiguration>(
+        core: IAppInsightsCore<CfgType>, createStatsCore: CreateStatsCoreFn, featureName?: string
+    ) {
         if (_core) {
             // If the core is already set, then just return with an empty unload hook
             _throwInternal(safeGetLogger(core), eLoggingSeverity.WARNING, _eInternalMessageId.InternalSdkStatsManagerException, "InternalSdkStats manager is already initialized");
@@ -558,53 +576,66 @@ export function createStatsMgr(): IStatsMgr {
         }
 
         _core = core;
-        if (core && core.isInitialized()) {
-            // Start listening for configuration changes from the single global config, within a config
-            // change handler. This supports the scenario where the config is changed after the manager
-            // has been created (including CDN / dynamic config updates).
-            return onConfigChange<IConfiguration>(core.config, (details) => {
-                let previousInterval = _shortInterval;
-                let previousCfgUrl = _statsCfgUrl;
-                // Re-evaluate the feature flag on every config change (enabled by default, opt-out via featureOptIn)
-                _isMgrEnabled = false;
-                _statsCfgFetchFn = null;
-                _statsIKey = null;
-                _statsCfgUrl = null;
-                if (isFeatureEnabled(featureName || STATS_SDK_FEATURE, details.cfg, true) === true) {
-                    // Seed the SDK Stats defaults into the single global config so they remain dynamic and
-                    // can be overridden via the CDN / dynamic config or by the SKU.
-                    details.setDf(details.cfg, _sdkStatsDefaults);
-                    // Read the nested stats config directly (registers the dynamic dependency on the
-                    // stats object) and copy the individual values into local (minifiable) variables
-                    // instead of holding the config object and repeatedly reading its properties.
-                    let statsCfg = details.cfg.stats;
-                    if (statsCfg) {
-                        _isMgrEnabled = true;
-                        // Make the override fetch fn a dynamic property before snapshotting it so a later
-                        // merged (CDN / updateCfg) change to it re-runs this handler and refreshes the local.
-                        _statsCfgFetchFn = details.set(statsCfg, "overrideCfgFn", statsCfg.overrideCfgFn);
-                        _statsIKey = details.set(statsCfg, "iKey", statsCfg.iKey);
-                        // Same for the config url, it is normally delivered by the CDN configuration after
-                        // initialization has completed, so this handler must re-run when it arrives.
-                        _statsCfgUrl = details.set(statsCfg, "cfgUrl", statsCfg.cfgUrl);
-                        _shortInterval = STATS_COLLECTION_INTERVAL_SECONDS * 1000; // Reset to the default in-case the config is removed / changed
-                        if (isNumber(statsCfg.shrtInt) && statsCfg.shrtInt > 0) {
-                            _shortInterval = statsCfg.shrtInt * 1000; // Convert to milliseconds
-                        }
+        _createStatsCore = createStatsCore;
+        // Start listening for configuration changes from the single global config, within a config
+        // change handler. This supports the scenario where the config is changed after the manager
+        // has been created (including CDN / dynamic config updates).
+        let configHook = onConfigChange<IConfiguration>(core.config, (details) => {
+            let previousInterval = _shortInterval;
+            let previousCfgUrl = _statsCfgUrl;
+            let previousIKey = _statsIKey;
+            // Re-evaluate the feature flag on every config change (enabled by default, opt-out via featureOptIn)
+            _isMgrEnabled = false;
+            _statsCfgFetchFn = null;
+            _statsIKey = null;
+            _statsCfgUrl = null;
+            if (isFeatureEnabled(featureName || STATS_SDK_FEATURE, details.cfg, true) === true) {
+                // Seed the SDK Stats defaults into the single global config so they remain dynamic and
+                // can be overridden via the CDN / dynamic config or by the SKU.
+                details.setDf(details.cfg, _sdkStatsDefaults);
+                // Read the nested stats config directly (registers the dynamic dependency on the
+                // stats object) and copy the individual values into local (minifiable) variables
+                // instead of holding the config object and repeatedly reading its properties.
+                let statsCfg = details.cfg.stats;
+                if (statsCfg) {
+                    _isMgrEnabled = true;
+                    // Make the override fetch fn a dynamic property before snapshotting it so a later
+                    // merged (CDN / updateCfg) change to it re-runs this handler and refreshes the local.
+                    _statsCfgFetchFn = details.set(statsCfg, "overrideCfgFn", statsCfg.overrideCfgFn);
+                    _statsIKey = details.set(statsCfg, "iKey", statsCfg.iKey);
+                    // Same for the config url, it is normally delivered by the CDN configuration after
+                    // initialization has completed, so this handler must re-run when it arrives.
+                    _statsCfgUrl = details.set(statsCfg, "cfgUrl", statsCfg.cfgUrl);
+                    _shortInterval = STATS_COLLECTION_INTERVAL_SECONDS * 1000; // Reset to the default in-case the config is removed / changed
+                    if (isNumber(statsCfg.shrtInt) && statsCfg.shrtInt > 0) {
+                        _shortInterval = statsCfg.shrtInt * 1000; // Convert to milliseconds
                     }
                 }
+            }
 
-                if (_statsCfgUrl !== previousCfgUrl) {
-                    _endpointCfgCache = objCreate(null);
-                }
+            if (!_isMgrEnabled || _statsCfgUrl !== previousCfgUrl || _statsIKey !== previousIKey) {
+                _unloadStatsCore();
+            }
 
-                if (_shortInterval !== previousInterval) {
-                    for (let lp = 0; lp < _intervalListeners.length; lp++) {
-                        _intervalListeners[lp]();
-                    }
+            if (_statsCfgUrl !== previousCfgUrl) {
+                _endpointCfgCache = objCreate(null);
+            }
+
+            if (_shortInterval !== previousInterval) {
+                for (let lp = 0; lp < _intervalListeners.length; lp++) {
+                    _intervalListeners[lp]();
                 }
-            });
-        }
+            }
+        });
+
+        return {
+            rm: () => {
+                configHook.rm();
+                _unloadStatsCore();
+                _createStatsCore = null;
+                _core = null;
+            }
+        };
     }
 
     /**
@@ -666,19 +697,13 @@ export function createStatsMgr(): IStatsMgr {
             }
 
             let url = _buildStatsEndpoint(cfgResult.url);
-            if (!url) {
+            let statsCore = _getStatsCore(url);
+            if (!statsCore) {
                 return null;
             }
 
             if (internalSdkStatsEvent) {
-                internalSdkStatsEvent.iKey = _statsIKey;
-                // Carry the SDK Stats ingestion endpoint so the sending channel can redirect the event
-                // away from the customer's breeze endpoint. This marker is removed by the channel before
-                // the event is serialized.
-                internalSdkStatsEvent.data = internalSdkStatsEvent.data || {};
-                internalSdkStatsEvent.data[STATS_SDK_ENDPOINT_KEY] = url;
-
-                _core.track(internalSdkStatsEvent);
+                statsCore.track(internalSdkStatsEvent);
             }
             return true;
         }

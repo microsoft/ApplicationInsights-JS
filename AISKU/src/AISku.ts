@@ -406,7 +406,18 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                     if (_core.setStatsMgr) {
                         let statsMgr = createStatsMgr();
                         _core.setStatsMgr(statsMgr);
-                        let statsHook = statsMgr.init<IConfiguration & IConfig>(_core);
+                        let statsHook = statsMgr.init<IConfiguration & IConfig>(_core, (statsConfig) => {
+                            try {
+                                let statsCore = new AppInsightsCore();
+                                (statsConfig as IConfiguration & IConfig).maxBatchInterval = 1;
+                                statsCore.initialize(statsConfig as IConfiguration & IConfig, [new Sender()]);
+                                return statsCore;
+                            } catch (e) {
+                                _throwInternal(_core.logger, eLoggingSeverity.WARNING,
+                                    _eInternalMessageId.InternalSdkStatsManagerException, "Failed to create SDK Stats core");
+                                return null;
+                            }
+                        });
                         if (statsHook) {
                             _core.addUnloadHook(statsHook);
                         }

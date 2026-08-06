@@ -4,7 +4,7 @@ import { IPayloadData } from "../../../../src/interfaces/ai/IXHROverride";
 import { IStatsMgr } from "../../../../src/interfaces/ai/IStatsMgr";
 import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
 import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
-import { createStatsMgr, getStatsCfgUrl, STATS_SDK_ENDPOINT_KEY } from "../../../../src/core/InternalSdkStats";
+import { createStatsMgr, getStatsCfgUrl } from "../../../../src/core/InternalSdkStats";
 import { IInternalSdkStatsState } from "../../../../src/interfaces/ai/IInternalSdkStats";
 import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
 import { IPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
@@ -50,6 +50,9 @@ export class InternalSdkStatsTests extends AITestClass {
     private _config: IConfiguration;
     private _statsMgr: IStatsMgr;
     private _trackSpy: sinon.SinonSpy;
+    private _rootTrackSpy: sinon.SinonSpy;
+    private _statsCoreConfigs: IConfiguration[];
+    private _statsCores: AppInsightsCore[];
 
     constructor(emulateIe: boolean) {
         super("InternalSdkStatsTests", emulateIe);
@@ -84,13 +87,15 @@ export class InternalSdkStatsTests extends AITestClass {
         
         _self._statsMgr = createStatsMgr();
         _self._core = new AppInsightsCore();
+        _self._statsCoreConfigs = [];
+        _self._statsCores = [];
         // Initialize the core once here (with a minimal channel plugin) so the stats manager
         // can be enabled when init() is called - createStatsMgr().init() only hooks config
         // changes and enables the manager when the core is already initialized.
         _self._core.initialize(_self._config, [new ChannelPlugin()]);
 
-        // Create spy for tracking telemetry
-        _self._trackSpy = this.sandbox.spy(_self._core, "track");
+        _self._trackSpy = this.sandbox.spy();
+        _self._rootTrackSpy = this.sandbox.spy(_self._core, "track");
     }
 
     public testCleanup() {
@@ -98,9 +103,30 @@ export class InternalSdkStatsTests extends AITestClass {
         if (this._core && this._core.isInitialized()) {
             this._core.unload(false);
         }
+        for (let lp = 0; lp < this._statsCores.length; lp++) {
+            this._statsCores[lp].isInitialized() && this._statsCores[lp].unload(false);
+        }
         this._core = null as any;
         this._statsMgr = null as any;
+        this._statsCores = [];
         _clearStatsStorage();
+    }
+
+    private _createStatsCore(config: IConfiguration): IAppInsightsCore {
+        let core = new AppInsightsCore();
+        core.initialize(config, [new ChannelPlugin()]);
+        let track = core.track;
+        this.sandbox.stub(core, "track").callsFake((item: ITelemetryItem) => {
+            this._trackSpy(item);
+            track.call(core, item);
+        });
+        this._statsCoreConfigs.push(config);
+        this._statsCores.push(core);
+        return core;
+    }
+
+    private _initStatsMgr(core: IAppInsightsCore = this._core, featureName: string = "InternalSdkStats") {
+        return this._statsMgr.init(core, (config) => this._createStatsCore(config), featureName);
     }
 
     public registerTests() {
@@ -119,7 +145,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 Assert.equal(null, this._statsMgr.newInst(internalSdkStatsState), "SDK Stats should not be created before initialization");
 
                 // Initialize
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
                 Assert.equal(true, this._statsMgr.enabled, "SDK Stats manager should be initialized after initialization");
 
                 let newInst = this._statsMgr.newInst(internalSdkStatsState);
@@ -134,7 +160,7 @@ export class InternalSdkStatsTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 // Initialize SDK Stats manager
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
                 
                 // Create mock payload data with timing information
                 const payloadData = {
@@ -180,7 +206,7 @@ export class InternalSdkStatsTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 // Initialize SDK Stats manager
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
 
                 let internalSdkStatsState: IInternalSdkStatsState = {
                     cKey: "Test-iKey",
@@ -220,7 +246,7 @@ export class InternalSdkStatsTests extends AITestClass {
             useFakeTimers: true,
             test: () => {
                 // Initialize SDK Stats manager for a specific endpoint
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
                 
                 // Create mock payload data
                 const payloadData = {
@@ -265,7 +291,7 @@ export class InternalSdkStatsTests extends AITestClass {
                     this._core.initialize(this._config, [new ChannelPlugin()]);
                 }
                 // Initialize SDK Stats manager for a specific endpoint
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
                 this._core.setStatsMgr(this._statsMgr);
 
                 let internalSdkStatsState: IInternalSdkStatsState = {
@@ -319,7 +345,7 @@ export class InternalSdkStatsTests extends AITestClass {
             name: "SDK Stats: routes events to the remote configured SDK Stats endpoint",
             useFakeTimers: true,
             test: () => {
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
 
                 const payloadData = {
                     urlString: "https://example.endpoint.com",
@@ -343,20 +369,17 @@ export class InternalSdkStatsTests extends AITestClass {
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
 
                 Assert.ok(this._trackSpy.called, "track should be called when SDK Stats timer fires");
+                Assert.equal(0, this._rootTrackSpy.callCount, "SDK Stats should not use the customer core");
+                Assert.equal(STATS_TEST_IKEY, this._statsCoreConfigs[0].instrumentationKey,
+                    "The isolated core should use the SDK Stats instrumentation key");
+                Assert.equal("https://data.stats.monitor.azure.com/v2/track", this._statsCoreConfigs[0].endpointUrl,
+                    "The isolated core should use the remote configured endpoint");
+                Assert.equal(1, this._statsCoreConfigs.length, "One isolated core should handle the SDK Stats batch");
 
-                // The host returned by the remote configuration (data.stats.monitor.azure.com) should be
-                // combined with the /v2/track path to form the SDK Stats ingestion endpoint.
-                let foundEndpoint = false;
                 for (let i = 0; i < this._trackSpy.callCount; i++) {
                     const item: ITelemetryItem = this._trackSpy.getCall(i).args[0];
-                    if (item.data && item.data[STATS_SDK_ENDPOINT_KEY] === "https://data.stats.monitor.azure.com/v2/track") {
-                        Assert.equal(STATS_TEST_IKEY, item.iKey, "SDK Stats should use the configured instrumentation key");
-                        foundEndpoint = true;
-                        break;
-                    }
+                    Assert.equal(STATS_TEST_IKEY, item.iKey, "SDK Stats should use the configured instrumentation key");
                 }
-
-                Assert.ok(foundEndpoint, "SDK Stats events should be routed to the remote configured ingestion endpoint");
             }
         });
 
@@ -370,7 +393,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 };
                 this.clock.tick(1); // Allow the config change to propagate
 
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
 
                 const payloadData = {
                     urlString: "https://example.endpoint.com",
@@ -398,6 +421,52 @@ export class InternalSdkStatsTests extends AITestClass {
         });
 
         this.testCase({
+            name: "SDK Stats: customer telemetry initializers cannot inspect or modify SDK Stats",
+            useFakeTimers: true,
+            test: () => {
+                let initializerCalls = 0;
+                this._core.addTelemetryInitializer(() => {
+                    initializerCalls++;
+                    throw new Error("Customer initializer should not receive SDK Stats");
+                });
+                this._initStatsMgr();
+
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.ok(this._trackSpy.called, "The isolated core should receive SDK Stats");
+                Assert.equal(0, initializerCalls, "Customer telemetry initializers should not receive SDK Stats");
+                Assert.equal(0, this._rootTrackSpy.callCount, "The customer core should not track SDK Stats");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: unloading the manager unloads the isolated core",
+            useFakeTimers: true,
+            test: () => {
+                let hook = this._initStatsMgr();
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                let unloadSpy = this.sandbox.spy(this._statsCores[0], "unload");
+                hook.rm();
+
+                Assert.equal(1, unloadSpy.callCount, "The isolated core should be unloaded with the manager");
+            }
+        });
+
+        this.testCase({
             name: "SDK Stats: invalidates the endpoint cache when cfgUrl changes",
             useFakeTimers: true,
             test: () => {
@@ -408,7 +477,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 };
                 this.clock.tick(1);
 
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
 
                 let internalSdkStats = this._statsMgr.newInst({
                     cKey: "Test-iKey",
@@ -442,12 +511,39 @@ export class InternalSdkStatsTests extends AITestClass {
                 } as IConfiguration, [new ChannelPlugin()]);
 
                 let statsMgr = createStatsMgr();
-                let hook = statsMgr.init(core, "InternalSdkStats");
+                let hook = statsMgr.init(core, (config) => this._createStatsCore(config), "InternalSdkStats");
 
                 Assert.equal(true, statsMgr.enabled, "Manager should be enabled by default via the seeded stats config");
 
                 hook && hook.rm();
                 core.unload(false);
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: recreates the isolated core when its configuration changes",
+            useFakeTimers: true,
+            test: () => {
+                this._initStatsMgr();
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                let unloadSpy = this.sandbox.spy(this._statsCores[0], "unload");
+                this._core.config.stats.iKey = "Updated-Stats-iKey";
+                this.clock.tick(1);
+
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.equal(1, unloadSpy.callCount, "The previous isolated core should be unloaded");
+                Assert.equal(2, this._statsCoreConfigs.length, "A new isolated core should be created");
+                Assert.equal("Updated-Stats-iKey", this._statsCoreConfigs[1].instrumentationKey,
+                    "The new isolated core should use the updated configuration");
             }
         });
 
@@ -459,7 +555,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 this._core.config.stats.cfgUrl = null;
                 this.clock.tick(1); // Allow the config change to propagate
 
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
 
                 let internalSdkStats = this._statsMgr.newInst({
                     cKey: "Test-iKey",
@@ -482,7 +578,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 this._core.config.stats.cfgUrl = null;
                 this.clock.tick(1);
 
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
 
                 let internalSdkStats = this._statsMgr.newInst({
                     cKey: "Test-iKey",
@@ -512,7 +608,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 this._core.config.stats.iKey = null;
                 this.clock.tick(1);
 
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
 
                 let internalSdkStats = this._statsMgr.newInst({
                     cKey: "Test-iKey",
@@ -545,7 +641,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 };
                 this.clock.tick(1);
 
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
 
                 let internalSdkStats = this._statsMgr.newInst({
                     cKey: "Test-iKey",
@@ -557,6 +653,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
 
                 Assert.equal(0, this._trackSpy.callCount, "Nothing should be sent before remote config resolves");
+                Assert.equal(0, this._statsCoreConfigs.length, "The isolated core should not be created before config resolves");
                 Assert.equal(1, _readStatsStorage("Test-iKey", "https://example.endpoint.com").cnt.exception["NetworkError"],
                     "Unsent counters should remain persisted");
 
@@ -564,6 +661,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
 
                 Assert.ok(this._trackSpy.called, "Persisted counters should be sent on the next interval");
+                Assert.equal(1, this._statsCoreConfigs.length, "The isolated core should be created after config resolves");
                 Assert.equal(undefined, _readStatsStorage("Test-iKey", "https://example.endpoint.com").cnt.exception["NetworkError"],
                     "Counters should reset after they are processed");
             }
@@ -606,7 +704,7 @@ export class InternalSdkStatsTests extends AITestClass {
             name: "SDK Stats: counters are persisted to session storage",
             useFakeTimers: true,
             test: () => {
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
                 // Move off the fake timer epoch.
                 this.clock.tick(1000);
 
@@ -636,7 +734,7 @@ export class InternalSdkStatsTests extends AITestClass {
             name: "SDK Stats: a new instance resumes the persisted counters and collection window",
             useFakeTimers: true,
             test: () => {
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
 
                 let state = {
                     cKey: "Test-iKey",
@@ -680,7 +778,7 @@ export class InternalSdkStatsTests extends AITestClass {
             name: "SDK Stats: the persisted counters are reset once the window is sent",
             useFakeTimers: true,
             test: () => {
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
 
                 let internalSdkStats = this._statsMgr.newInst({
                     cKey: "Test-iKey",
@@ -704,7 +802,7 @@ export class InternalSdkStatsTests extends AITestClass {
             name: "SDK Stats: separate endpoints do not share persisted counters",
             useFakeTimers: true,
             test: () => {
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
 
                 let first = this._statsMgr.newInst({ cKey: "Test-iKey", endpoint: "https://one.endpoint.com", sdkVer: "1.0.0" });
                 let second = this._statsMgr.newInst({ cKey: "Test-iKey", endpoint: "https://two.endpoint.com", sdkVer: "1.0.0" });
@@ -739,7 +837,7 @@ export class InternalSdkStatsTests extends AITestClass {
 
                 let trackSpy = this.sandbox.spy(core, "track");
                 let statsMgr = createStatsMgr();
-                let hook = statsMgr.init(core, "InternalSdkStats");
+                let hook = statsMgr.init(core, (config) => this._createStatsCore(config), "InternalSdkStats");
 
                 let internalSdkStats = statsMgr.newInst({
                     cKey: "Test-iKey",
@@ -752,7 +850,8 @@ export class InternalSdkStatsTests extends AITestClass {
                 Assert.equal(0, trackSpy.callCount, "Nothing should be sent before the one hour interval elapses");
 
                 this.clock.tick(2);
-                Assert.ok(trackSpy.called, "The stats should be sent once the one hour interval elapses");
+                Assert.ok(this._trackSpy.called, "The stats should be sent once the one hour interval elapses");
+                Assert.equal(0, trackSpy.callCount, "The customer core should not send SDK Stats");
 
                 hook && hook.rm();
                 core.unload(false);
@@ -766,7 +865,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 this._core.config.stats.shrtInt = 1;
                 this.clock.tick(1); // Allow the config change to propagate
 
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
 
                 let internalSdkStats = this._statsMgr.newInst({
                     cKey: "Test-iKey",
@@ -785,7 +884,7 @@ export class InternalSdkStatsTests extends AITestClass {
             name: "SDK Stats: reschedules an active window when the dynamic interval changes",
             useFakeTimers: true,
             test: () => {
-                this._statsMgr.init(this._core, "InternalSdkStats");
+                this._initStatsMgr();
 
                 let internalSdkStats = this._statsMgr.newInst({
                     cKey: "Test-iKey",
