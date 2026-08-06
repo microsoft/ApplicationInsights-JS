@@ -545,6 +545,7 @@ export function createStatsMgr(): IStatsMgr {
     // Resolved remote config cached per cfg URL (EU / non-EU); tracks in-flight fetch and last result.
     // Null-prototype so the config supplied url can never be used to pollute Object.prototype.
     let _cfgCache: { [cfgUrl: string]: { pending: boolean, result: IInternalSdkStatsCfgResult } } = objCreate(null);
+    let _endpointCfgCache: { [endpoint: string]: string } = objCreate(null);
     let _intervalListeners: Array<() => void> = [];
 
     // Lazily initialize the manager and start listening for configuration changes
@@ -563,6 +564,7 @@ export function createStatsMgr(): IStatsMgr {
             // has been created (including CDN / dynamic config updates).
             return onConfigChange<IConfiguration>(core.config, (details) => {
                 let previousInterval = _shortInterval;
+                let previousCfgUrl = _statsCfgUrl;
                 // Re-evaluate the feature flag on every config change (enabled by default, opt-out via featureOptIn)
                 _isMgrEnabled = false;
                 _statsCfgFetchFn = null;
@@ -592,6 +594,10 @@ export function createStatsMgr(): IStatsMgr {
                     }
                 }
 
+                if (_statsCfgUrl !== previousCfgUrl) {
+                    _endpointCfgCache = objCreate(null);
+                }
+
                 if (_shortInterval !== previousInterval) {
                     for (let lp = 0; lp < _intervalListeners.length; lp++) {
                         _intervalListeners[lp]();
@@ -607,7 +613,13 @@ export function createStatsMgr(): IStatsMgr {
      * skips sending.
      */
     function _resolveStatsCfg(endpoint: string): IInternalSdkStatsCfgResult {
-        let cfgUrl = getStatsCfgUrl(endpoint, _statsCfgUrl);
+        let cfgUrl = _endpointCfgCache[endpoint];
+        if (!cfgUrl) {
+            cfgUrl = getStatsCfgUrl(endpoint, _statsCfgUrl);
+            if (cfgUrl) {
+                _endpointCfgCache[endpoint] = cfgUrl;
+            }
+        }
         if (!cfgUrl) {
             // No configured SDK Stats config url -> nothing to resolve and nothing is sent
             return null;

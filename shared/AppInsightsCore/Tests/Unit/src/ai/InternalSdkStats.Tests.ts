@@ -398,6 +398,39 @@ export class InternalSdkStatsTests extends AITestClass {
         });
 
         this.testCase({
+            name: "SDK Stats: invalidates the endpoint cache when cfgUrl changes",
+            useFakeTimers: true,
+            test: () => {
+                let fetchedUrls: string[] = [];
+                this._core.config.stats.overrideCfgFn = (cfgUrl, oncomplete) => {
+                    fetchedUrls.push(cfgUrl);
+                    oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
+                };
+                this.clock.tick(1);
+
+                this._statsMgr.init(this._core, "InternalSdkStats");
+
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://westeurope.in.applicationinsights.azure.com",
+                    sdkVer: "1.0.0"
+                });
+
+                Assert.equal("https://eu-data.stats.monitor.azure.com/cfg/v1.json", fetchedUrls[0],
+                    "The initial endpoint should use the configured EU url");
+
+                this._core.config.stats.cfgUrl = "https://next.stats.monitor.azure.com/cfg/v1.json";
+                this.clock.tick(1);
+
+                internalSdkStats.countException("https://westeurope.in.applicationinsights.azure.com", "NetworkError");
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.equal("https://eu-next.stats.monitor.azure.com/cfg/v1.json", fetchedUrls[1],
+                    "The updated cfgUrl should replace the cached endpoint");
+            }
+        });
+
+        this.testCase({
             name: "SDK Stats: manager enables by default when config.stats is not provided",
             test: () => {
                 // A core without an explicit config.stats should still enable the manager, because the
