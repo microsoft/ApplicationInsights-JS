@@ -1,5 +1,8 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, createStatsMgr, FeatureOptInMode, getWindow, IPayloadData, IInternalSdkStatsState, IStatsMgr, ITelemetryItem, IUnloadHook, TransportType } from "@microsoft/applicationinsights-core-js";
+import {
+    AppInsightsCore, createStatsMgr, FeatureOptInMode, getWindow, IPayloadData, IInternalSdkStatsState, IStatsMgr, ITelemetryItem,
+    IUnloadHook, STATS_SDK_ENDPOINT_KEY, TransportType
+} from "@microsoft/applicationinsights-core-js";
 import { Sender } from "../../../src/Sender";
 import { SinonSpy, SinonStub } from "sinon";
 import { ISenderConfig } from "../../../types/applicationinsights-channel-js";
@@ -81,6 +84,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 // The config url gates collection, without it nothing is collected or sent
                 cfgUrl: "https://data.stats.monitor.azure.com/cfg/v1.json",
                 iKey: "Stats-Test-iKey",
+                snp: "6",
                 // Resolve the remote SDK Stats configuration synchronously (as enabled) so the tests
                 // do not depend on a network fetch of the cfg/v1.json endpoint.
                 overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
@@ -101,7 +105,7 @@ export class InternalSdkStatsTests extends AITestClass {
         let internalSdkStatsState: IInternalSdkStatsState = {
             cKey: instrumentationKey,
             endpoint: config.endpointUrl,
-            sdkVer: "1.0.0",
+            sdkVer: "javascript:3.4.3:snp6",
         };
 
         this.internalSdkStatsCountSpy = this.sandbox.spy(core.getSdkStats(internalSdkStatsState), "count");
@@ -154,9 +158,13 @@ export class InternalSdkStatsTests extends AITestClass {
         const internalSdkStatsEvent = this.trackSpy.firstCall.args[0];
         Assert.equal(internalSdkStatsEvent.baseType, "MetricData", "SDK Stats event should be of type MetricData");
         Assert.equal(internalSdkStatsEvent.baseData.name, eventName, `InternalSdkStats event should be of type ${eventName}`);
+        Assert.equal("javascript:3.4.3:snp6", internalSdkStatsEvent.baseData.properties.version,
+            "SDK Stats should use the configured SDK version");
     }
 
     public registerTests() {
+        let redirectedSender: Sender;
+
         this.testCase({
             name: "SDK Stats initializes when stats is true",
             test: () => {
@@ -191,6 +199,55 @@ export class InternalSdkStatsTests extends AITestClass {
                 QUnit.assert.ok(internalSdkStats, "SDK Stats is initialized");
                 QUnit.assert.ok(internalSdkStats.enabled, "SDK Stats is marked as initialized");
             }
+        });
+
+        this.testCaseAsync({
+            name: "SDK Stats redirected sends do not count themselves or replace the customer endpoint",
+            useFakeTimers: true,
+            useFakeServer: true,
+            stepDelay: 100,
+            steps: [
+                () => {
+                    this.fetchStub = this.sandbox.stub(window, "fetch").callsFake(() => {
+                        return Promise.resolve(new Response("{}", { status: 200, statusText: "OK" }));
+                    });
+
+                    const config = this.createSenderConfig(TransportType.Fetch);
+                    redirectedSender = this.initializeCoreAndSender(config, "000e0000-e000-0000-a000-000000000000").sender;
+
+                    redirectedSender.processTelemetry({
+                        name: "sdk-stat",
+                        baseType: "MetricData",
+                        baseData: {
+                            name: "sdk-stat",
+                            average: 1,
+                            properties: {}
+                        },
+                        data: {
+                            [STATS_SDK_ENDPOINT_KEY]: "https://stats.test/v2/track"
+                        }
+                    }, null);
+                }
+            ].concat(PollingAssert.createPollingAssert(() => {
+                if (this.fetchStub.called) {
+                    Assert.equal(0, this.internalSdkStatsCountSpy.callCount, "The redirected send should not count itself");
+                    redirectedSender.processTelemetry({
+                        name: "customer-event",
+                        baseType: "EventData",
+                        baseData: {}
+                    }, null);
+                    redirectedSender.flush();
+                    return true;
+                }
+                return false;
+            }, "Waiting for the redirected SDK Stats send") as any).concat(PollingAssert.createPollingAssert(() => {
+                if (this.fetchStub.callCount >= 2) {
+                    let request = this.fetchStub.secondCall.args[0] as Request;
+                    Assert.ok(request.url.indexOf("https://test") === 0, "Customer telemetry should still use the customer endpoint");
+                    return true;
+                }
+                return false;
+            }, "Waiting for the customer telemetry send") as any)
         });
 
         this.testCaseAsync({

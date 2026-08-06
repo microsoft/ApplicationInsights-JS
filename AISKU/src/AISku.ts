@@ -427,6 +427,10 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                         _self.context.internal.sdkSrc = sdkSrc;
                     }
                     _updateSnippetProperties(_self.snippet);
+
+                    if (_config.stats) {
+                        _config.stats.snp = _snippetVersion;
+                    }
         
                     // Empty queue of all api calls logged prior to sdk download
                     _self.emptyQueue();

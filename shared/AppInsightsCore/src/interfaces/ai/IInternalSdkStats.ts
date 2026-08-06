@@ -119,6 +119,9 @@ export interface IInternalSdkStatsConfig {
      */
     iKey?: string;
 
+    /** Snippet version appended to the SDK Stats version. */
+    snp?: string;
+
     /**
      * Optional override for the function used to fetch the remote SDK Stats configuration
      * (`cfg/v1.json`). When not provided the default fetch / XHR based implementation is used. This

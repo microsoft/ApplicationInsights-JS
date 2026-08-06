@@ -694,10 +694,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             }
 
             function _getSdkStats() {
+                let statsCfg = _self.core.config.stats;
+                let snp = statsCfg && statsCfg.snp;
                 let internalSdkStatsConfig: IInternalSdkStatsState = {
                     cKey: _self._senderConfig.instrumentationKey,
                     endpoint: _endpointUrl,
-                    sdkVer: EnvelopeCreator.Version,
+                    sdkVer: "javascript:" + EnvelopeCreator.Version + (snp ? ":snp" + snp : "")
                 };
 
                 let core = _self.core;
@@ -747,6 +749,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 }
             }
 
+            function _isSdkStatsPayload(payload?: IPayloadData): boolean {
+                return !!(payload && payload.urlString !== _endpointUrl);
+            }
+
             function _xdrOnLoad (xdr: IXDomainRequest, payload: IInternalStorageItem[]) {
                 const responseText = _getResponseText(xdr);
                 if (xdr && (responseText + "" === "200" || responseText === "")) {
@@ -771,6 +777,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         xdrOnComplete: (xdr: IXDomainRequest, oncomplete: OnCompleteCallback,payload?: IPayloadData) => {
                             let payloadArr = _getPayloadArr(payload);
                             if (!payloadArr) {
+                                return;
+                            }
+                            if (_isSdkStatsPayload(payload)) {
+                                let responseText = _getResponseText(xdr);
+                                oncomplete(xdr && (responseText + "" === "200" || responseText === "") ? 200 : 499, {});
                                 return;
                             }
                             if (payload && payload.urlString === _endpointUrl) {
@@ -801,6 +812,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                             if (!payloadArr) {
                                 return;
                             }
+                            if (_isSdkStatsPayload(payload)) {
+                                onComplete(response.status, {}, resValue);
+                                return;
+                            }
                             _countInternalSdkStats(response.status, payload);
                             return _checkResponsStatus(response.status, payloadArr, response.url, payloadArr.length, response.statusText, resValue || "");
                         },
@@ -810,6 +825,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                                 return;
                             }
                             if (request.readyState === 4) {
+                                if (_isSdkStatsPayload(payload)) {
+                                    oncomplete(request.status, {});
+                                    return;
+                                }
                                 _countInternalSdkStats(request.status, payload);
                             }
 
@@ -1082,9 +1101,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             function _doSend(sendInterface: IXHROverride, payload: IInternalStorageItem[], isAsync: boolean, markAsSent: boolean = true, urlOverride?: string): void | IPromise<boolean> {
                 let onComplete = (status: number, headers: {[headerName: string]: string;}, response?: string) => {
-                    _countInternalSdkStats(status, payloadData);
-
-                    return _getOnComplete(payload, status, headers, response);
+                    if (!urlOverride) {
+                        _countInternalSdkStats(status, payloadData);
+                        return _getOnComplete(payload, status, headers, response);
+                    }
                 };
                 let payloadData = _getPayload(payload, urlOverride);
                 if (payloadData) {
