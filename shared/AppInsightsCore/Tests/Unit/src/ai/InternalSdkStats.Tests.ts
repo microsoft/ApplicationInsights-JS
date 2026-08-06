@@ -552,6 +552,17 @@ export class InternalSdkStatsTests extends AITestClass {
                 Assert.equal("https://eu-data.stats.monitor.azure.com/cfg/v1.json",
                     getStatsCfgUrl("https://westeurope-5.in.applicationinsights.azure.com/", STATS_TEST_CFG_URL),
                     "An EU region replica endpoint should also resolve to the EU url");
+
+                let euRegions = [
+                    "francecentral", "francesouth", "germanywestcentral", "norwayeast",
+                    "norwaywest", "swedencentral", "switzerlandnorth", "switzerlandwest", "uksouth", "ukwest"
+                ];
+                for (let lp = 0; lp < euRegions.length; lp++) {
+                    Assert.equal("https://eu-data.stats.monitor.azure.com/cfg/v1.json",
+                        getStatsCfgUrl("https://" + euRegions[lp] + ".in.applicationinsights.azure.com/", STATS_TEST_CFG_URL),
+                        euRegions[lp] + " should resolve to the EU url");
+                }
+
                 Assert.equal("eu-data.stats.monitor.azure.com/cfg/v1.json",
                     getStatsCfgUrl("https://northeurope.in.applicationinsights.azure.com/", "data.stats.monitor.azure.com/cfg/v1.json"),
                     "A configured url without a scheme should still get the eu- prefix");

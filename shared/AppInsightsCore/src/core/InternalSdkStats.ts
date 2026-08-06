@@ -51,11 +51,8 @@ export const STATS_SDK_ENDPOINT_KEY = "_sdkStatsEndpoint";
  */
 export const STATS_SDK_FEATURE = "sdkStats";
 
-// EU data-boundary regions, mirrors the EU region set used by the Azure Monitor OpenTelemetry exporter
-const STATS_EU_REGIONS = [
-    "francecentral", "francesouth", "germanywestcentral", "northeurope", "norwayeast", "norwaywest",
-    "swedencentral", "switzerlandnorth", "switzerlandwest", "uksouth", "ukwest", "westeurope"
-];
+// Prefixes for EU data-boundary regions used by the Azure Monitor OpenTelemetry exporter
+const STATS_EU_REGION_PATTERN = /^(france|germany|northeurope|norway|sweden|switzerland|uk|westeurope)/;
 
 /**
  * Determine whether the provided customer endpoint maps to an EU data-boundary region. The region
@@ -82,7 +79,7 @@ function _isEuEndpoint(endpoint: string): boolean {
             label = strSubstring(label, 0, dashIdx);
         }
 
-        isEU = arrIndexOf(STATS_EU_REGIONS, label) !== -1;
+        isEU = STATS_EU_REGION_PATTERN.test(label);
     }
 
     return isEU;
