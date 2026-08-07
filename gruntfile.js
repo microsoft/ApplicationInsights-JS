@@ -544,6 +544,7 @@ module.exports = function (grunt) {
                                         path: "./channels/offline-channel-js"
                                     },
             "teechannel":           { path: "./channels/tee-channel-js" },
+            "otlpchannel":          { path: "./channels/otlp-channel-js" },
             "1dsPost":              {
                                         path: "./channels/1ds-post-js",
                                         unitTestName: "post.unittests.js"
@@ -883,6 +884,7 @@ module.exports = function (grunt) {
                 "aichannel":        "./channels/applicationinsights-channel-js",
                 "offlinechannel":   "./channels/offline-channel-js",
                 "teechannel":       "./channels/tee-channel-js",
+                "otlpchannel":      "./channels/otlp-channel-js",
                 "1dsPost":          "./channels/1ds-post-js",
                 "clickanalytics":   "./extensions/applicationinsights-clickanalytics-js",
                 "cfgsync":          "./extensions/applicationinsights-cfgsync-js",
@@ -938,7 +940,7 @@ module.exports = function (grunt) {
             }
             let packages = [
                 "core", "common", "appinsights", "aisku", "aiskulite", "perfmarkmeasure", "properties",
-                "cfgsync", "deps", "debugplugin", "aichannel", "offlinechannel", "teechannel", 
+                "cfgsync", "deps", "debugplugin", "aichannel", "offlinechannel", "teechannel", "otlpchannel",
                 "1dsCore", "1dsPost", "rollupuglify", "rollupes5", "shims", "chrome-debug-extension", 
                 "applicationinsights-web-snippet", "clickanalytics", "osplugin"
             ];
@@ -1047,6 +1049,12 @@ module.exports = function (grunt) {
         grunt.registerTask("teechannel-restore", restoreTasks("teechannel"));
         grunt.registerTask("teechanneltest", tsTestActions("teechannel"));
         grunt.registerTask("teechannel-mintest", tsTestActions("teechannel", true));
+
+        grunt.registerTask("otlpchannel", tsBuildActions("otlpchannel"));
+        grunt.registerTask("otlpchannel-min", minTasks("otlpchannel"));
+        grunt.registerTask("otlpchannel-restore", restoreTasks("otlpchannel"));
+        grunt.registerTask("otlpchanneltest", tsTestActions("otlpchannel"));
+        grunt.registerTask("otlpchannel-mintest", tsTestActions("otlpchannel", true));
 
         grunt.registerTask("rollupuglify", tsBuildActions("rollupuglify"));
         grunt.registerTask("rollupes5", tsBuildActions("rollupes5"));
