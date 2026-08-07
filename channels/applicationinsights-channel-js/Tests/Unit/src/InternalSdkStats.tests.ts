@@ -76,6 +76,7 @@ export class InternalSdkStatsTests extends AITestClass {
 
     private createStatsCore(config: IConfiguration): IAppInsightsCore {
         this.statsCore = {
+            config,
             isInitialized: () => true,
             track: (item: ITelemetryItem) => {
             },
