@@ -17,6 +17,41 @@ module.exports = function (grunt) {
     const configVer = getConfigVersion(false);
     const configMajorVer = getConfigVersion(true);
 
+    // Resolves the browser executable used by Puppeteer for the QUnit tests.
+    // On managed devices the Chromium that Puppeteer downloads is not on the
+    // approved software list and gets blocked by Defender/WDAC. Prefer an
+    // explicit PUPPETEER_EXECUTABLE_PATH override, otherwise fall back to the
+    // locally installed (IT-approved, signed) Microsoft Edge. Returns undefined
+    // when nothing is found so Puppeteer uses its bundled Chromium.
+    function _getBrowserExecutablePath() {
+        if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+            return process.env.PUPPETEER_EXECUTABLE_PATH;
+        }
+
+        // In CI / official release builds (e.g. Azure DevOps OneBranch) the build
+        // agent is provisioned specifically to run Puppeteer's bundled Chromium
+        // (it even installs the Server-Media-Foundation fonts feature) and does
+        // not enforce the local Defender/WDAC software policy. Leave that path
+        // untouched so the official build behaves exactly as before.
+        if (process.env.TF_BUILD || process.env.CI || process.env.BUILD_BUILDID) {
+            return undefined;
+        }
+
+        // Local managed dev machines only: fall back to installed, approved Edge.
+        var edgeCandidates = [
+            process.env["ProgramFiles(x86)"] + "\\Microsoft\\Edge\\Application\\msedge.exe",
+            process.env["ProgramFiles"] + "\\Microsoft\\Edge\\Application\\msedge.exe"
+        ];
+
+        for (var i = 0; i < edgeCandidates.length; i++) {
+            if (edgeCandidates[i] && grunt.file.exists(edgeCandidates[i])) {
+                return edgeCandidates[i];
+            }
+        }
+    }
+
+    var browserExecutablePath = _getBrowserExecutablePath();
+
     function _encodeStr(str) {
         return str.replace(/\\/g, '\\\\').
         replace(/"/g, '\\"').
@@ -420,6 +455,7 @@ module.exports = function (grunt) {
                                 headless: "new",
                                 timeout: 30000,
                                 ignoreHTTPErrors: true,
+                                executablePath: browserExecutablePath,
                                 args: [
                                     "--enable-precise-memory-info",
                                     "--expose-internals-for-testing",
@@ -472,6 +508,7 @@ module.exports = function (grunt) {
                                 headless: "new",
                                 timeout: 30000,
                                 ignoreHTTPErrors: true,
+                                executablePath: browserExecutablePath,
                                 args: [
                                     '--enable-precise-memory-info',
                                     '--expose-internals-for-testing',
