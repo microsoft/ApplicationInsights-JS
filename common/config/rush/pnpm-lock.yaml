@@ -14,7 +14,7 @@ overrides:
   form-data: '>=2.5.6 <3.0.0'
   js-yaml: '>=4.3.1 <5.0.0'
   markdown-it: '>=14.2.0'
-  brace-expansion: '>=1.1.18 <5.0.0'
+  brace-expansion: '>=5.0.7 <5.0.8'
   fast-uri: '>=3.1.5'
   ip-address: '>=10.4.0'
   linkify-it: '>=5.0.2'
@@ -885,9 +885,9 @@ packages:
       react-native-b4a:
         optional: true
 
-  balanced-match@3.0.1:
-    resolution: {integrity: sha1-6FSwmHJLFQdjhCZklzkqJx9KJqA=, tarball: https://ms-feed-25.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/balanced-match/-/balanced-match-3.0.1.tgz}
-    engines: {node: '>= 16'}
+  balanced-match@4.0.4:
+    resolution: {integrity: sha1-v7EGYv7tgZaixi58aOF3IMJ0F5o=, tarball: https://ms-feed-2.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/balanced-match/-/balanced-match-4.0.4.tgz}
+    engines: {node: 18 || 20 || >=22}
 
   bare-events@2.8.2:
     resolution: {integrity: sha512-riJjyv1/mHLIPX4RwiK+oW9/4c3TEUeORHKefKAKnZ5kyslbN+HXowtbaVEqt4IMUB7OXlfixcs6gsFeo/jhiQ==}
@@ -947,9 +947,9 @@ packages:
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
 
-  brace-expansion@4.0.1:
-    resolution: {integrity: sha1-M4fhPqopkgJdBepHMI935Kje3R4=, tarball: https://ms-feed-17.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/brace-expansion/-/brace-expansion-4.0.1.tgz}
-    engines: {node: '>= 18'}
+  brace-expansion@5.0.7:
+    resolution: {integrity: sha1-Gw5GlltHna1lr3N7SgJ5CgVJgzc=, tarball: https://ms-feed-12.pkgs.visualstudio.com/1es-public/_packaging/npm-public/npm/registry/brace-expansion/-/brace-expansion-5.0.7.tgz}
+    engines: {node: 18 || 20 || >=22}
 
   braces@3.0.3:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
@@ -4207,7 +4207,7 @@ snapshots:
 
   b4a@1.8.1: {}
 
-  balanced-match@3.0.1: {}
+  balanced-match@4.0.4: {}
 
   bare-events@2.8.2: {}
 
@@ -4257,9 +4257,9 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
 
-  brace-expansion@4.0.1:
+  brace-expansion@5.0.7:
     dependencies:
-      balanced-match: 3.0.1
+      balanced-match: 4.0.4
 
   braces@3.0.3:
     dependencies:
@@ -5286,7 +5286,7 @@ snapshots:
 
   minimatch@10.2.5:
     dependencies:
-      brace-expansion: 4.0.1
+      brace-expansion: 5.0.7
 
   minipass@7.1.3: {}
 
