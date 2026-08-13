@@ -215,20 +215,22 @@ export function startActiveSpan<T extends ITraceHost, F extends (this: ThisParam
             useAsync = true;
 
             return doAwait(result,
-                (value) => value,
+                (value) => {
+                    if (span) {
+                        span.end();
+                    }
+
+                    return value;
+                },
                 (reason) => {
                     if (span) {
                         span.setStatus({ code: reason ? eOTelSpanStatusCode.ERROR : eOTelSpanStatusCode.OK, message: reason ? reason.message || reason : undefined });
+                        span.end();
                     }
 
                     // Re-throw the rejection so the returned promise rejects rather than
                     // silently resolving with undefined (see issue #2749).
                     throw reason;
-                },
-                () => {
-                    if (span) {
-                        span.end();
-                    }
                 }) as ReturnType<F>;
         }
 

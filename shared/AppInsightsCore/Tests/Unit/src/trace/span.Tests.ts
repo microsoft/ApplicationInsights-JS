@@ -1,6 +1,6 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { getDeferred, ICachedValue, isNullOrUndefined, mathMin, objDefine, perfNow, strSubstr } from "@nevware21/ts-utils";
-import { createPromise, doAwait } from "@nevware21/ts-async";
+import { createRejectedPromise, doAwait } from "@nevware21/ts-async";
 import { createSpan } from "../../../../src/otel/api/trace/span";
 import { createOTelApi } from "../../../../src/otel/api/OTelApi";
 import { IOTelSpanCtx } from "../../../../src/interfaces/otel/trace/IOTelSpanCtx";
@@ -1046,6 +1046,7 @@ export class SpanTests extends AITestClass {
                 const otelApi = createOTelApi({ host: core });
                 const tracer = otelApi.trace.getTracer("test-tracer");
                 const initialActiveSpan = core.getActiveSpan();
+                const expectedError = new Error("boom");
 
                 let spanInsideCallback: IReadableSpan | null = null;
 
@@ -1053,31 +1054,22 @@ export class SpanTests extends AITestClass {
                 // returned promise to reject rather than silently resolve with undefined.
                 const result = tracer.startActiveSpan("reject-operation", (span) => {
                     spanInsideCallback = span;
-                    return createPromise((_resolve, reject) => {
-                        reject(new Error("boom"));
-                    });
+                    return createRejectedPromise(expectedError);
                 });
 
                 // Assert - the returned value must be a rejecting promise
-                return createPromise<void>((resolve, reject) => {
-                    doAwait(
-                        result,
-                        (value) => {
-                            reject(new Error("Expected the returned promise to reject, but it resolved with: " + value));
-                        },
-                        (reason: any) => {
-                            try {
-                                Assert.equal(reason && reason.message, "boom", "Rejection reason should be propagated to the caller");
-                                Assert.ok(spanInsideCallback, "Span should have been created");
-                                Assert.ok(spanInsideCallback!.ended, "Span should be ended even after rejection");
-                                Assert.equal(core.getActiveSpan(), initialActiveSpan, "Active span should be restored after rejection");
-                                resolve();
-                            } catch (e) {
-                                reject(e);
-                            }
-                        }
-                    );
-                });
+                return doAwait(
+                    result,
+                    () => {
+                        Assert.ok(false, "Expected the returned promise to reject, but it resolved");
+                    },
+                    (reason: any) => {
+                        Assert.equal(reason, expectedError, "Rejection reason should be propagated to the caller");
+                        Assert.ok(spanInsideCallback, "Span should have been created");
+                        Assert.ok(spanInsideCallback!.ended, "Span should be ended even after rejection");
+                        Assert.equal(core.getActiveSpan(), initialActiveSpan, "Active span should be restored after rejection");
+                    }
+                );
             }
         });
 
