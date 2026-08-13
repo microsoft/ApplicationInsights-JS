@@ -220,6 +220,10 @@ export function startActiveSpan<T extends ITraceHost, F extends (this: ThisParam
                     if (span) {
                         span.setStatus({ code: reason ? eOTelSpanStatusCode.ERROR : eOTelSpanStatusCode.OK, message: reason ? reason.message || reason : undefined });
                     }
+
+                    // Re-throw the rejection so the returned promise rejects rather than
+                    // silently resolving with undefined (see issue #2749).
+                    throw reason;
                 },
                 () => {
                     if (span) {
