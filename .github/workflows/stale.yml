@@ -13,7 +13,7 @@ jobs:
   stale:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v9
+      - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9.1.0
         id: stale
         with:
           stale-issue-message: 'This Issue will be closed in 30 days. Please remove the "Stale" label or comment to avoid closure with no action.'
@@ -33,7 +33,7 @@ jobs:
   mark-abandoned:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v9
+      - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9.1.0
         id: mark-abandoned
         with:
           days-before-stale: 30
@@ -51,7 +51,7 @@ jobs:
   stale-wontfix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v9
+      - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9.1.0
         id: stale-wontfix
         with:
           stale-issue-message: 'This Issue will be closed in 14 days. Please remove the "Stale" label or comment to avoid closure with no action.'
