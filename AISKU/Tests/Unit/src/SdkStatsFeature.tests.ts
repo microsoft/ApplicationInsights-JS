@@ -40,6 +40,7 @@ export class SdkStatsFeatureTests extends AITestClass {
         this._testSdkStatsDynamicEnableDisable();
         this._testSdkStatsConfigDefaults();
         this._testSdkStatsDynamicConfigChanges();
+        this._testSnippetSdkVersion();
     }
 
     private _createAi(configOverrides?: Partial<IConfiguration & IConfig>): AppInsightsSku {
@@ -303,4 +304,30 @@ export class SdkStatsFeatureTests extends AITestClass {
             }
         });
     }
+
+    private _testSnippetSdkVersion() {
+        this.testCase({
+            name: "SdkStatsFeature: snippet version is included in the SDK Stats version",
+            useFakeTimers: true,
+            test: () => {
+                let config = {
+                    connectionString: TestConnectionString,
+                    stats: {},
+                    extensionConfig: {
+                        ["AppInsightsCfgSyncPlugin"]: {
+                            syncMode: ICfgSyncMode.Receive,
+                            cfgUrl: ""
+                        }
+                    }
+                } as IConfiguration & IConfig;
+                let ai = new AppInsightsSku({ config: config, sv: "6", queue: [] } as any);
+                ai.loadAppInsights();
+                this._ai = ai;
+                this.clock.tick(1);
+
+                Assert.equal("6", ai.config.stats.snp, "SDK Stats config should contain snippet version 6");
+            }
+        });
+    }
+
 }

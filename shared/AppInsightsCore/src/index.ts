@@ -19,7 +19,6 @@ export { IUnloadHook, ILegacyUnloadHook } from "./interfaces/ai/IUnloadHook";
 export { eEventsDiscardedReason, EventsDiscardedReason, eBatchDiscardedReason, BatchDiscardedReason } from "./enums/ai/EventsDiscardedReason";
 export { eDependencyTypes, DependencyTypes } from "./enums/ai/DependencyTypes";
 export { SendRequestReason } from "./enums/ai/SendRequestReason";
-//export { StatsType, eStatsType } from "./enums/ai/StatsType";
 export { TelemetryUpdateReason } from "./enums/ai/TelemetryUpdateReason";
 export { TelemetryUnloadReason } from "./enums/ai/TelemetryUnloadReason";
 export { eUrlRedactionOptions, UrlRedactionOptions } from "./enums/ai/UrlRedactionOptions"
@@ -40,11 +39,16 @@ export { parseResponse } from "./core/ResponseHelpers";
 export { IXDomainRequest, IBackendResponse } from "./interfaces/ai/IXDomainRequest";
 export { _ISenderOnComplete, _ISendPostMgrConfig, _ITimeoutOverrideWrapper, _IInternalXhrOverride } from "./interfaces/ai/ISenderPostManager";
 export { SenderPostManager } from "./core/SenderPostManager";
+export {
+    IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsConfig, IInternalSdkStatsState, InternalSdkStatsCfgFetchFn
+} from "./interfaces/ai/IInternalSdkStats";
+export { IStatsEventData } from "./interfaces/ai/IStatsEventData";
+export { CreateStatsCoreFn, IStatsMgr } from "./interfaces/ai/IStatsMgr";
+export {
+    createStatsMgr, getStatsCfgUrl,
+    STATS_SDK_ONECOLLECTOR_PATH, STATS_SDK_FEATURE
+} from "./core/InternalSdkStats";
 export { createSdkStatsNotifCbk, ISdkStatsConfig, ISdkStatsNotifCbk } from "./core/SdkStatsNotificationCbk";
-//export { IStatsBeat, IStatsBeatConfig, IStatsBeatKeyMap as IStatsBeatEndpoints, IStatsBeatState} from "./interfaces/ai/IStatsBeat";
-//export { IStatsEventData } from "./interfaces/ai/IStatsEventData";
-//export { IStatsMgr, IStatsMgrConfig } from "./interfaces/ai/IStatsMgr";
-//export { createStatsMgr } from "./core/StatsBeat";
 export {
     isArray, isTypeof, isUndefined, isNullOrUndefined, isStrictUndefined, objHasOwnProperty as hasOwnProperty, isObject, isFunction,
     strEndsWith, strStartsWith, isDate, isError, isString, isNumber, isBoolean, arrForEach, arrIndexOf,

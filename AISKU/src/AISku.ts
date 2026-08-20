@@ -15,9 +15,9 @@ import {
     ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IThrottleInterval, IThrottleLimit,
     IThrottleMgrConfig, ITraceApi, ITraceProvider, ITraceTelemetry, IUnloadHook, OTelTimeInput, PropertiesPluginIdentifier, ThrottleMgr,
     UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge,
-    cfgDfValidate, createDynamicConfig, createOTelApi, createProcessTelemetryContext, createSdkStatsNotifCbk, createTraceProvider,
-    createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction, isNullOrUndefined,
-    isReactNative, isString, mergeEvtNamespace, onConfigChange, parseConnectionString, proxyAssign, proxyFunctions,
+    cfgDfValidate, createDynamicConfig, createOTelApi, createProcessTelemetryContext, createSdkStatsNotifCbk, createStatsMgr,
+    createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction,
+    isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, parseConnectionString, proxyAssign, proxyFunctions,
     removePageHideEventListener, removePageUnloadEventListener, useSpan
 } from "@microsoft/applicationinsights-core-js";
 import {
@@ -66,7 +66,7 @@ const CDN_USAGE = "CdnUsage";
 const SDK_LOADER_VER = "SdkLoaderVer";
 const ZIP_PAYLOAD = "zipPayload";
 const SDK_STATS = "SdkStats";
-var _sdkVersion = "#version#";
+var _sdkVersion = '3.4.3';
 
 const default_limit = {
     samplingRate: 100,
@@ -398,6 +398,31 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                     // initialize core
                     _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin], logger, notificationManager);
 
+                    // Enable SDK Stats collection. The manager reads its configuration directly from the
+                    // single global config (config.stats) and gates itself behind the SDK Stats feature
+                    // flag, routing the resulting events to the distro-owned SDK Stats ingestion endpoint.
+                    // The config url and iKey are supplied by config.stats, until both are present no
+                    // SDK Stats are sent. Opt-out via featureOptIn "sdkStats".
+                    if (_core.setStatsMgr) {
+                        let statsMgr = createStatsMgr();
+                        _core.setStatsMgr(statsMgr);
+                        let statsHook = statsMgr.init<IConfiguration & IConfig>(_core, (statsConfig) => {
+                            try {
+                                let statsCore = new AppInsightsCore();
+                                (statsConfig as IConfiguration & IConfig).maxBatchInterval = 1;
+                                statsCore.initialize(statsConfig as IConfiguration & IConfig, [new Sender()]);
+                                return statsCore;
+                            } catch (e) {
+                                _throwInternal(_core.logger, eLoggingSeverity.WARNING,
+                                    _eInternalMessageId.InternalSdkStatsManagerException, "Failed to create SDK Stats core");
+                                return null;
+                            }
+                        });
+                        if (statsHook) {
+                            _core.addUnloadHook(statsHook);
+                        }
+                    }
+
                     // Initialize the initial OTel API
                     _otelApi = _initOTel(_self, "aisku", _onEnd, _onException);
                     
@@ -413,6 +438,10 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                         _self.context.internal.sdkSrc = sdkSrc;
                     }
                     _updateSnippetProperties(_self.snippet);
+
+                    if (_config.stats) {
+                        _config.stats.snp = _snippetVersion;
+                    }
         
                     // Empty queue of all api calls logged prior to sdk download
                     _self.emptyQueue();
