@@ -1,7 +1,6 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import {
-    AppInsightsCore, BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfiguration, IPlugin,
-    IProcessTelemetryContext, ITelemetryItem, TraceDataType
+    AppInsightsCore, BaseTelemetryPlugin, IChannelControls, IConfiguration, IProcessTelemetryContext, ITelemetryItem, TraceDataType
 } from "@microsoft/applicationinsights-core-js";
 import { OtlpChannel } from "../../../src/OtlpChannel";
 
@@ -228,11 +227,8 @@ export class ChannelChainTests extends AITestClass {
         });
 
         this.testCase({
-            name: "The OTLP channel is discoverable by identifier so it can be a primaryOnlineChannelId",
+            name: "The OTLP channel is discoverable but rejects generic single-endpoint offline replay",
             test: () => {
-                // The offline channel resolves its online channel with core.getPlugin(<identifier>)
-                // and then calls getOfflineSupport() on it, so both must work for a custom SKU that
-                // configures `primaryOnlineChannelId: ["OtlpChannel"]`.
                 let offline = new ForwardingChannel("OfflineChannel", 1000);
                 this._init([offline, this._otlp]);
 
@@ -241,13 +237,9 @@ export class ChannelChainTests extends AITestClass {
                 Assert.equal("OtlpChannel", found.plugin.identifier, "The identifier matches");
                 Assert.ok(found.plugin.isInitialized(), "It reports as initialized");
                 Assert.equal("function", typeof found.plugin.getOfflineSupport,
-                    "It exposes getOfflineSupport, which the offline channel requires");
-
-                let support = found.plugin.getOfflineSupport();
-                Assert.ok(!!support, "Offline support is returned");
-                Assert.equal("https://collector.example.com/v1/traces", support.getUrl(),
-                    "The offline channel would persist against the OTLP endpoint");
-                Assert.ok(!!support.serialize(traceItem("hello")), "An item can be serialized for storage");
+                    "It explicitly exposes the capability check");
+                Assert.equal(null, found.plugin.getOfflineSupport(),
+                    "Generic replay is disabled because OTLP requires separate trace and log endpoints");
             }
         });
 

@@ -1,10 +1,13 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import {
-    AppInsightsCore, IPayloadData, IXHROverride, ITelemetryItem, MetricDataType, OnCompleteCallback, RequestDataType, TraceDataType
+    AppInsightsCore, IPayloadData, IStorageBuffer, IXHROverride, ITelemetryItem, MetricDataType, OnCompleteCallback, RequestDataType,
+    TraceDataType, eOfflineValue
 } from "@microsoft/applicationinsights-core-js";
 import { OtlpChannel } from "../../../src/OtlpChannel";
-import { getEndpointUrl, getRetryDelay, parsePartialSuccess } from "../../../src/OtlpHttpSender";
+import { IOtlpBatch, IOtlpStoredRecord } from "../../../src/OtlpBatcher";
+import { OtlpHttpSender, getEndpointUrl, getRetryDelay, parsePartialSuccess } from "../../../src/OtlpHttpSender";
 import { eOtlpSignal } from "../../../src/Enums";
+import { OtlpSessionStorageBuffer } from "../../../src/OtlpSessionStorageBuffer";
 
 const IKEY = "09465199-12AA-4124-817F-544738CC7C41";
 const ENDPOINT = "https://collector.example.com";
@@ -74,6 +77,24 @@ class TestSender implements IXHROverride {
         }
 
         return records;
+    }
+}
+
+class TestStorage implements IStorageBuffer {
+    public values: { [key: string]: string } = {};
+    public failNextName: string = null;
+
+    public getItem(logger: any, name: string): string {
+        return this.values[name] || null;
+    }
+
+    public setItem(logger: any, name: string, data: string): boolean {
+        if (this.failNextName === name) {
+            this.failNextName = null;
+            return false;
+        }
+        this.values[name] = data;
+        return true;
     }
 }
 
@@ -221,6 +242,204 @@ export class OtlpChannelTests extends AITestClass {
         });
 
         this.testCase({
+            name: "MetricData is retained by default for production replacement coverage",
+            useFakeTimers: true,
+            test: () => {
+                this._init({ maxBatchInterval: 1000 });
+                this._core.track(metricItem("retained by default"));
+                this.clock.tick(1001);
+
+                Assert.equal(1, this._sender.allRecords().length, "The metric was exported without extra configuration");
+            }
+        });
+
+        this.testCase({
+            name: "Session storage restores offline unsent records after a reload",
+            useFakeTimers: true,
+            test: () => {
+                let storage = new TestStorage();
+                this._init({
+                    bufferOverride: storage,
+                    enableSessionStorageBuffer: true,
+                    maxBatchInterval: 60000
+                });
+                this._channel.getOfflineListener().setOnlineState(eOfflineValue.Offline);
+                this._core.track(traceItem("survives reload"));
+                this._core.unload(false);
+
+                this._core = new AppInsightsCore();
+                this._channel = new OtlpChannel();
+                this._sender = new TestSender();
+                this._init({
+                    bufferOverride: storage,
+                    enableSessionStorageBuffer: true,
+                    maxBatchInterval: 60000
+                });
+                this._channel.flush(false);
+
+                Assert.equal(1, this._sender.allRecords().length, "The offline record was restored and exported");
+            }
+        });
+
+        this.testCase({
+            name: "Session storage restores unacknowledged sent records after a reload",
+            test: () => {
+                let storage = new TestStorage();
+                this._init({
+                    bufferOverride: storage,
+                    enableSessionStorageBuffer: true,
+                    maxBatchInterval: 60000
+                });
+
+                this.testCase({
+                    name: "Persistent capacity includes both unsent and unacknowledged records",
+                    test: () => {
+                        let originalLimit = OtlpSessionStorageBuffer.MAX_BUFFER_SIZE;
+                        OtlpSessionStorageBuffer.MAX_BUFFER_SIZE = 2;
+                        try {
+                            let storage = new TestStorage();
+                            let buffer = new OtlpSessionStorageBuffer(null, {
+                                enableSessionStorageBuffer: true,
+                                bufferOverride: storage
+                            });
+                            let resourceInfo: any = {
+                                key: "resource",
+                                resource: {},
+                                scope: {},
+                                resourceJson: "{}",
+                                scopeJson: "{}"
+                            };
+                            let first: IOtlpStoredRecord = {
+                                id: "first",
+                                signal: eOtlpSignal.Log,
+                                resourceInfo: resourceInfo,
+                                fragment: "{}",
+                                bytes: 2,
+                                item: traceItem("first"),
+                                attempts: 0
+                            };
+                            let second: IOtlpStoredRecord = {
+                                id: "second",
+                                signal: eOtlpSignal.Log,
+                                resourceInfo: resourceInfo,
+                                fragment: "{}",
+                                bytes: 2,
+                                item: traceItem("second"),
+                                attempts: 0
+                            };
+                            buffer.add(first);
+                            buffer.add(second);
+                            buffer.markAsSent({
+                                signal: eOtlpSignal.Log,
+                                resourceInfo: resourceInfo,
+                                fragments: ["{}"],
+                                items: [first.item],
+                                ids: [first.id],
+                                fragmentBytes: [2],
+                                bytes: 2,
+                                attempts: 1
+                            } as IOtlpBatch);
+
+                            Assert.ok(!buffer.canAdd(), "An unacknowledged record still consumes durable capacity");
+                        } finally {
+                            OtlpSessionStorageBuffer.MAX_BUFFER_SIZE = originalLimit;
+                        }
+                    }
+                });
+
+                this.testCase({
+                    name: "A failed unsent cleanup leaves a deduplicated recoverable record",
+                    test: () => {
+                        let storage = new TestStorage();
+                        this._init({
+                            bufferOverride: storage,
+                            enableSessionStorageBuffer: true,
+                            maxBatchInterval: 60000
+                        });
+                        this._sender.autoComplete = false;
+                        this._core.track(traceItem("atomic handoff"));
+                        storage.failNextName = Object.keys(storage.values).filter((key) => {
+                            return key.indexOf("AI_OTLP_BUFFER_1") !== -1;
+                        })[0];
+                        this._channel.flush(true, () => {
+                            // The simulated request intentionally remains unacknowledged.
+                        });
+                        this._core.unload(false);
+
+                        this._core = new AppInsightsCore();
+                        this._channel = new OtlpChannel();
+                        this._sender = new TestSender();
+                        this._init({
+                            bufferOverride: storage,
+                            enableSessionStorageBuffer: true,
+                            maxBatchInterval: 60000
+                        });
+                        this._channel.flush(false);
+
+                        Assert.equal(1, this._sender.allRecords().length,
+                            "Overlapping unsent and sent copies recovered exactly once");
+                    }
+                });
+
+                this.testCase({
+                    name: "Changing storage while a request is pending preserves crash recovery",
+                    useFakeTimers: true,
+                    test: () => {
+                        let firstStorage = new TestStorage();
+                        let secondStorage = new TestStorage();
+                        this._init({
+                            bufferOverride: firstStorage,
+                            enableSessionStorageBuffer: true,
+                            maxBatchInterval: 60000
+                        });
+                        this._sender.autoComplete = false;
+                        this._core.track(traceItem("migrated in flight"));
+                        this._channel.flush(true, () => {
+                            // The simulated request intentionally remains unacknowledged.
+                        });
+
+                        this._core.config.extensionConfig[this._channel.identifier].bufferOverride = secondStorage;
+                        this.clock.tick(1);
+                        this._core.unload(false);
+
+                        this._core = new AppInsightsCore();
+                        this._channel = new OtlpChannel();
+                        this._sender = new TestSender();
+                        this._init({
+                            bufferOverride: secondStorage,
+                            enableSessionStorageBuffer: true,
+                            maxBatchInterval: 60000
+                        });
+                        this._channel.flush(false);
+
+                        Assert.equal(1, this._sender.allRecords().length,
+                            "The destination storage recovered the in-flight record");
+                    }
+                });
+                this._sender.autoComplete = false;
+                this._core.track(traceItem("unacknowledged"));
+                this._channel.flush(true, () => {
+                    // The simulated request intentionally never completes.
+                });
+                Assert.equal(1, this._sender.requests.length, "The first request started");
+
+                this._core.unload(false);
+
+                this._core = new AppInsightsCore();
+                this._channel = new OtlpChannel();
+                this._sender = new TestSender();
+                this._init({
+                    bufferOverride: storage,
+                    enableSessionStorageBuffer: true,
+                    maxBatchInterval: 60000
+                });
+                this._channel.flush(false);
+
+                Assert.equal(1, this._sender.allRecords().length, "The unacknowledged record was recovered and exported");
+            }
+        });
+
+        this.testCase({
             name: "A request item is exported to the traces endpoint",
             useFakeTimers: true,
             test: () => {
@@ -331,6 +550,22 @@ export class OtlpChannelTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Offline records stay persisted until the browser returns online",
+            useFakeTimers: true,
+            test: () => {
+                this._init({ maxBatchInterval: 1000 });
+                this._channel.getOfflineListener().setOnlineState(eOfflineValue.Offline);
+                this._core.track(traceItem("offline"));
+                this.clock.tick(5000);
+                Assert.equal(0, this._sender.requests.length, "Nothing was sent while offline");
+
+                this._channel.getOfflineListener().setOnlineState(eOfflineValue.Online);
+                this.clock.tick(1001);
+                Assert.equal(1, this._sender.requests.length, "The persisted record was sent after reconnecting");
+            }
+        });
+
+        this.testCase({
             name: "flush sends immediately and invokes the callback",
             useFakeTimers: true,
             test: () => {
@@ -407,13 +642,65 @@ export class OtlpChannelTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Unload success remains recoverable until collector acknowledgement is possible",
+            test: () => {
+                let storage = new TestStorage();
+                this._init({
+                    bufferOverride: storage,
+                    enableSessionStorageBuffer: true,
+                    maxBatchInterval: 60000
+                });
+                this._core.track(traceItem("at least once"));
+                this._channel.onunloadFlush();
+                Assert.equal(1, this._sender.requests.length, "The unload request was queued");
+                this._core.unload(false);
+
+                this._core = new AppInsightsCore();
+                this._channel = new OtlpChannel();
+                this._sender = new TestSender();
+                this._init({
+                    bufferOverride: storage,
+                    enableSessionStorageBuffer: true,
+                    maxBatchInterval: 60000
+                });
+                this._channel.flush(false);
+
+                Assert.equal(1, this._sender.allRecords().length,
+                    "The unacknowledged unload record was replayed once");
+            }
+        });
+
+        this.testCase({
+            name: "Unload splitting sends one record per payload when enabled",
+            useFakeTimers: true,
+            test: () => {
+                this._init({
+                    maxBatchInterval: 60000,
+                    maxRecordsPerBatch: 100,
+                    disableSendBeaconSplit: false
+                });
+                this._core.track(traceItem("one"));
+                this._core.track(traceItem("two"));
+                this._channel.onunloadFlush();
+
+                Assert.equal(2, this._sender.requests.length, "Each record used an independent unload payload");
+                Assert.ok(this._sender.requests[0].sync && this._sender.requests[1].sync,
+                    "Both unload payloads used the synchronous path");
+            }
+        });
+
+        this.testCase({
             name: "The unload path performs no conversion work",
             useFakeTimers: true,
             test: () => {
                 // Every record is converted and serialized as it arrives, so by the time the page is
                 // unloading the payload is only a string join. Assert that the records really were
                 // serialized up front rather than at send time.
-                this._init({ maxBatchInterval: 60000, preSerialize: true });
+                this._init({
+                    maxBatchInterval: 60000,
+                    preSerialize: true,
+                    enableSessionStorageBuffer: false
+                });
 
                 this._core.track(traceItem("hello"));
 
@@ -471,36 +758,6 @@ export class OtlpChannelTests extends AITestClass {
                     }
                 });
 
-                this.testCase({
-                    name: "Retry attempts survive requeue and stop at the configured limit",
-                    useFakeTimers: true,
-                    test: () => {
-                        let discarded = 0;
-                        let completed = false;
-                        this._init({ maxBatchInterval: 60000, maxRetryAttempts: 3 });
-                        this._sender.status = 503;
-                        this._core.addNotificationListener({
-                            eventsDiscarded: (items: ITelemetryItem[]) => {
-                                discarded += items.length;
-                            }
-                        });
-
-                        this._core.track(traceItem("always fails"));
-                        this._channel.flush(true, () => {
-                            completed = true;
-                        });
-
-                        Assert.equal(1, this._sender.requests.length, "The initial attempt was made");
-                        Assert.ok(!completed, "Flush waits while the batch is retryable");
-
-                        this.clock.tick(180000);
-
-                        Assert.equal(3, this._sender.requests.length, "The batch stopped at the configured attempt limit");
-                        Assert.equal(1, discarded, "The exhausted batch was discarded");
-                        Assert.ok(completed, "Flush completed after the final discard");
-                    }
-                });
-
                 this._core.track(traceItem("hello"));
                 this.clock.tick(1001);
                 this._sender.status = 200;
@@ -512,7 +769,37 @@ export class OtlpChannelTests extends AITestClass {
         });
 
         this.testCase({
-            name: "Unload retry attempts are honored",
+            name: "Retry attempts survive requeue and stop at the configured limit",
+            useFakeTimers: true,
+            test: () => {
+                let discarded = 0;
+                let completed = false;
+                this._init({ maxBatchInterval: 60000, maxRetryAttempts: 3 });
+                this._sender.status = 503;
+                this._core.addNotificationListener({
+                    eventsDiscarded: (items: ITelemetryItem[]) => {
+                        discarded += items.length;
+                    }
+                });
+
+                this._core.track(traceItem("always fails"));
+                this._channel.flush(true, () => {
+                    completed = true;
+                });
+
+                Assert.equal(1, this._sender.requests.length, "The initial attempt was made");
+                Assert.ok(!completed, "Flush waits while the batch is retryable");
+
+                this.clock.tick(180000);
+
+                Assert.equal(3, this._sender.requests.length, "The batch stopped at the configured attempt limit");
+                Assert.equal(1, discarded, "The exhausted batch was discarded");
+                Assert.ok(completed, "Flush completed after the final discard");
+            }
+        });
+
+        this.testCase({
+            name: "Unload retry attempts preserve recoverable records",
             useFakeTimers: true,
             test: () => {
                 let discarded = 0;
@@ -529,7 +816,8 @@ export class OtlpChannelTests extends AITestClass {
                 this.clock.tick(1);
 
                 Assert.equal(2, this._sender.requests.length, "The unload send used the configured attempt limit");
-                Assert.equal(1, discarded, "The item was discarded after the retry limit");
+                Assert.equal(0, discarded, "A persisted retryable item was not discarded during unload");
+                Assert.ok(!this._channel.isCompletelyIdle(), "The recoverable item remains buffered");
             }
         });
 
@@ -650,23 +938,11 @@ export class OtlpChannelTests extends AITestClass {
         });
 
         this.testCase({
-            name: "getOfflineSupport describes how to persist and replay a payload",
+            name: "Generic OfflineChannel replay is disabled for split OTLP signals",
             test: () => {
                 this._init();
-
-                let support = this._channel.getOfflineSupport();
-                Assert.ok(!!support, "Offline support is provided");
-                Assert.equal(ENDPOINT + "/v1/traces", support.getUrl(), "The url");
-
-                let serialized = support.serialize(traceItem("hello"));
-                Assert.ok(!!serialized, "An item can be serialized");
-                Assert.ok(serialized.indexOf("hello") !== -1, "The serialized record contains the message");
-
-                let batched = support.batch([serialized, serialized]);
-                Assert.equal(2, JSON.parse(batched).length, "Records can be batched and re-parsed");
-
-                Assert.ok(support.shouldProcess(traceItem("hello")), "A trace is processed");
-                Assert.ok(!support.shouldProcess({ name: "x" } as ITelemetryItem), "An item with no baseType is not");
+                Assert.equal(null, this._channel.getOfflineSupport(),
+                    "Integrated persistence is used instead of an invalid single-endpoint offline adapter");
             }
         });
 
@@ -777,6 +1053,24 @@ export class OtlpChannelTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Dynamic config: re-enabling telemetry reschedules an existing buffer",
+            useFakeTimers: true,
+            test: () => {
+                this._init({ maxBatchInterval: 1000 });
+                this._core.track(traceItem("buffered before disable"));
+                this._core.config.extensionConfig[this._channel.identifier].disableTelemetry = true;
+                this.clock.tick(1001);
+                Assert.equal(0, this._sender.requests.length, "The disabled timer did not send");
+
+                this._core.config.extensionConfig[this._channel.identifier].disableTelemetry = false;
+                this.clock.tick(1);
+                this.clock.tick(1001);
+
+                Assert.equal(1, this._sender.requests.length, "The existing buffer was rescheduled");
+            }
+        });
+
+        this.testCase({
             name: "Dynamic config: changing pageViewAs changes the signal used",
             useFakeTimers: true,
             test: () => {
@@ -850,6 +1144,35 @@ export class OtlpChannelTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Redirect affinity reuses the final collector endpoint",
+            test: () => {
+                let sender = new OtlpHttpSender(null);
+                sender.setConfig({ endpointUrl: ENDPOINT });
+                (sender as any)._updateRedirect(ENDPOINT + "/v1/logs", "https://stamp.example.com/v1/logs");
+                let payload = sender.createPayload({
+                    signal: eOtlpSignal.Log,
+                    resourceInfo: {
+                        key: "resource",
+                        resource: {},
+                        scope: {},
+                        resourceJson: "{}",
+                        scopeJson: "{}"
+                    },
+                    fragments: ["{}"],
+                    items: [traceItem("hello")],
+                    ids: ["id"],
+                    fragmentBytes: [2],
+                    bytes: 2,
+                    attempts: 0
+                });
+
+                Assert.equal("https://stamp.example.com/v1/logs", payload.urlString,
+                    "The redirected endpoint is reused");
+                sender.teardown();
+            }
+        });
+
+        this.testCase({
             name: "parsePartialSuccess extracts the rejected count",
             test: () => {
                 let result = parsePartialSuccess("{\"partialSuccess\":{\"rejectedSpans\":3,\"errorMessage\":\"nope\"}}");
@@ -876,6 +1199,37 @@ export class OtlpChannelTests extends AITestClass {
 
                 Assert.equal(5000, getRetryDelay(1, "5"), "A numeric Retry-After is used as seconds");
                 Assert.equal(60000, getRetryDelay(1, "600"), "A large Retry-After is capped");
+            }
+        });
+
+        this.testCase({
+            name: "Fetch network failures and lowercase Retry-After remain retryable",
+            test: () => {
+                let sender = new OtlpHttpSender(null);
+                sender.setConfig({ endpointUrl: ENDPOINT, maxRetryAttempts: 3 });
+                let batch: IOtlpBatch = {
+                    signal: eOtlpSignal.Log,
+                    resourceInfo: {
+                        key: "resource",
+                        resource: {},
+                        scope: {},
+                        resourceJson: "{}",
+                        scopeJson: "{}"
+                    },
+                    fragments: ["{}"],
+                    items: [traceItem("hello")],
+                    ids: ["id"],
+                    fragmentBytes: [2],
+                    bytes: 2,
+                    attempts: 1
+                };
+
+                let networkFailure = (sender as any)._getResult(batch, 499, {}, "");
+                Assert.ok(networkFailure.retry, "The internal Fetch network-failure status is retried");
+
+                let throttled = (sender as any)._getResult(batch, 429, { "retry-after": "5" }, "");
+                Assert.equal(5000, throttled.retryAfterMs, "Lowercase Fetch headers preserve Retry-After");
+                sender.teardown();
             }
         });
     }

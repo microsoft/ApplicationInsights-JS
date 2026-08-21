@@ -12,7 +12,7 @@
 - Conversion and serialization happen on the `processTelemetry` path as each item is received, and records are buffered pre-grouped by resource and signal with incremental byte accounting, so sending a batch performs no conversion work. This keeps the page unload path as fast as possible.
 - `RequestData` / `RemoteDependencyData` / `PageviewData` are exported as spans and `MessageData` / `ExceptionData` / `EventData` / `PageviewPerformanceData` as log records. Native Common Schema spans (`OTelSpan`) are exported as spans directly, preserving their kind, parent, trace state and status. Context tags are promoted onto the OTLP `Resource`; everything else becomes record attributes, with Application Insights specific values namespaced under `microsoft.`.
 - Values that the Common Schema marks as PII or customer content are dropped by default (configurable via `piiMode`), since OTLP has no equivalent marker.
-- Implements `getOfflineSupport()` so it can be combined with `@microsoft/applicationinsights-offlinechannel-js`.
+- Includes Sender-equivalent session-storage buffering for unsent and unacknowledged records, plus browser online/offline recovery. The generic `OfflineChannel` adapter is intentionally disabled because its single-endpoint payload contract cannot safely replay OTLP's separate trace and log signals.
 - Added `examples/otlp`, a multi page test site that runs two independent SDK instances per page against a local mock OTLP collector. It can be driven manually or run headlessly (`npm test`), and validates the OTLP envelope, resource attributes, span/log field validity, nanosecond timestamp precision, attribute well-formedness, and that the two instances stay fully isolated from each other.
 
 ## 3.4.3 (July 2nd, 2026)

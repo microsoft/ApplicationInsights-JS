@@ -3,7 +3,8 @@
 
 import {
     IDiagnosticLogger, IPayloadData, IXHROverride, OnCompleteCallback, SendRequestReason, SenderPostManager, TransportType,
-    _ISendPostMgrConfig, _eInternalMessageId, _throwInternal, eLoggingSeverity, prependTransports
+    _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _getAllResponseHeaders, _throwInternal, eLoggingSeverity, getResponseText,
+    prependTransports
 } from "@microsoft/applicationinsights-core-js";
 import { isNumber, isString, mathMax, mathMin, objForEachKey, strTrim } from "@nevware21/ts-utils";
 import { eOtlpSignal } from "./Enums";
@@ -157,6 +158,8 @@ export class OtlpHttpSender {
     private _logger: IDiagnosticLogger;
     private _enableCompression: boolean;
     private _isTeardown: boolean;
+    private _redirects: { [url: string]: string };
+    private _redirectCount: number;
 
     constructor(logger: IDiagnosticLogger) {
         this._logger = logger;
@@ -166,6 +169,8 @@ export class OtlpHttpSender {
         this._config = null;
         this._enableCompression = false;
         this._isTeardown = false;
+        this._redirects = {};
+        this._redirectCount = 0;
     }
 
     /**
@@ -177,6 +182,23 @@ export class OtlpHttpSender {
         this._enableCompression = !!enableCompression;
         this._isTeardown = false;
 
+        let onComplete: _ISenderOnComplete = {
+            fetchOnComplete: (response, callback, responseText, payload) => {
+                this._updateRedirect(payload && payload.urlString, response && response.url);
+                let headers: { [name: string]: string } = {};
+                if (response && response.headers) {
+                    response.headers.forEach((value, name) => {
+                        headers[name] = value;
+                    });
+                }
+                callback(response ? response.status : 0, headers, responseText, payload);
+            },
+            xhrOnComplete: (request, callback, payload) => {
+                this._updateRedirect(payload && payload.urlString, request && request.responseURL);
+                callback(request ? request.status : 0, request ? _getAllResponseHeaders(request) : {},
+                    request ? getResponseText(request) : null, payload);
+            }
+        };
         let postConfig: _ISendPostMgrConfig = {
             enableSendPromise: false,
             isOneDs: false,
@@ -185,7 +207,8 @@ export class OtlpHttpSender {
             disableBeacon: false,
             disableBeaconSync: false,
             disableFetchKeepAlive: !!config.disableFetchKeepAlive,
-            fetchCredentials: config.fetchCredentials
+            fetchCredentials: config.fetchCredentials,
+            senderOnCompleteCallBack: onComplete
         };
 
         if (!this._postMgr) {
@@ -195,13 +218,13 @@ export class OtlpHttpSender {
             this._postMgr.SetConfig(postConfig);
         }
 
-        // An OTLP payload is JSON with (potentially) custom headers, which `sendBeacon` cannot carry,
-        // so it is only used as a last resort during unload.
+        // OTLP/JSON requires application/json and may require authentication headers. Beacon cannot
+        // reliably preserve either, so unload uses fetch keepalive or synchronous XHR.
         let asyncTransports = prependTransports([TransportType.Fetch, TransportType.Xhr], config.transports);
         this._asyncSender = this._postMgr.getSenderInst(asyncTransports, false);
 
-        let syncTransports = prependTransports([TransportType.Fetch, TransportType.Xhr, TransportType.Beacon],
-            config.unloadTransports);
+        let syncTransports = prependTransports([TransportType.Fetch, TransportType.Xhr], config.unloadTransports)
+            .filter((transport) => transport !== TransportType.Beacon);
         this._syncSender = this._postMgr.getSenderInst(syncTransports, true);
 
         let custom = config.httpXHROverride;
@@ -228,6 +251,7 @@ export class OtlpHttpSender {
     public createPayload(batch: IOtlpBatch, sendReason?: SendRequestReason): IPayloadData {
         let config = this._config;
         let url = getEndpointUrl(config, batch.signal);
+        url = this._redirects[url] || url;
         if (!url) {
             return null;
         }
@@ -324,6 +348,20 @@ export class OtlpHttpSender {
         this._postMgr = null;
     }
 
+    private _updateRedirect(requestUrl: string, responseUrl: string): void {
+        if (!requestUrl || !responseUrl || requestUrl === responseUrl || this._redirectCount >= 10) {
+            return;
+        }
+
+        objForEachKey(this._redirects, (key, value) => {
+            if (value === requestUrl) {
+                this._redirects[key] = responseUrl;
+            }
+        });
+        this._redirects[requestUrl] = responseUrl;
+        this._redirectCount++;
+    }
+
     private _getResult(batch: IOtlpBatch, status: number, headers: { [name: string]: string },
         response: string): IOtlpSendResult {
         let config = this._config;
@@ -348,7 +386,7 @@ export class OtlpHttpSender {
         // A status of 0 indicates the request never completed (offline, DNS failure, CORS), which is
         // worth retrying.
         let retryCodes = config.retryCodes;
-        let canRetry = !config.isRetryDisabled && (status === 0 ||
+        let canRetry = !config.isRetryDisabled && (status === 0 || status === 499 ||
             (retryCodes ? retryCodes.indexOf(status) !== -1 : !!RETRYABLE_STATUS[status]));
         let maxAttempts = config.maxRetryAttempts;
         if (batch.attempts >= maxAttempts) {
@@ -358,8 +396,18 @@ export class OtlpHttpSender {
         return {
             success: false,
             retry: canRetry,
-            retryAfterMs: canRetry ? getRetryDelay(batch.attempts, headers ? headers["Retry-After"] : null) : 0,
+            retryAfterMs: canRetry ? getRetryDelay(batch.attempts, _getHeader(headers, "retry-after")) : 0,
             status: status
         };
     }
+}
+
+function _getHeader(headers: { [name: string]: string }, name: string): string {
+    let result: string = null;
+    objForEachKey(headers, (key, value) => {
+        if (!result && key.toLowerCase() === name) {
+            result = value;
+        }
+    });
+    return result;
 }

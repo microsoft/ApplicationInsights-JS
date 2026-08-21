@@ -27,6 +27,16 @@ export interface IOtlpBatch {
     items: ITelemetryItem[];
 
     /**
+     * Stable record identifiers used by persistent storage.
+     */
+    ids: string[];
+
+    /**
+     * UTF-8 byte length for each serialized fragment.
+     */
+    fragmentBytes: number[];
+
+    /**
      * The total number of bytes of the serialized records, maintained incrementally.
      */
     bytes: number;
@@ -35,6 +45,21 @@ export interface IOtlpBatch {
      * The number of times sending this batch has been attempted.
      */
     attempts: number;
+}
+
+export interface IOtlpStoredRecord {
+    id: string;
+    signal: eOtlpSignal;
+    resourceInfo: IOtlpResourceInfo;
+    fragment: string;
+    bytes: number;
+    item: ITelemetryItem;
+    attempts: number;
+}
+
+export interface IOtlpDroppedRecords {
+    ids: string[];
+    items: ITelemetryItem[];
 }
 
 /**
@@ -48,6 +73,10 @@ interface IOtlpBucket {
     logItems: ITelemetryItem[];
     spanAttempts: number[];
     logAttempts: number[];
+    spanIds: string[];
+    logIds: string[];
+    spanRecordBytes: number[];
+    logRecordBytes: number[];
     spanBytes: number;
     logBytes: number;
 }
@@ -80,9 +109,28 @@ export class OtlpBatcher {
      * Adds a converted record to the buffer.
      * @param resourceInfo - The resource that the record belongs to.
      * @param record - The converted record.
-     * @returns The number of bytes that the record added to the buffer.
+     * @returns The persistent representation that was added to the buffer.
      */
-    public add(resourceInfo: IOtlpResourceInfo, record: IOtlpRecord, item?: ITelemetryItem): number {
+    public add(resourceInfo: IOtlpResourceInfo, record: IOtlpRecord, item?: ITelemetryItem, id?: string): IOtlpStoredRecord {
+        let json = isNullOrUndefined(record.json) ? safeStringify(record.record) : record.json;
+        let stored = {
+            id: id,
+            signal: record.signal,
+            resourceInfo: resourceInfo,
+            fragment: json,
+            bytes: _utf8ByteLength(json),
+            item: item,
+            attempts: 0
+        };
+        this.addStored(stored);
+        return stored;
+    }
+
+    /**
+     * Restores an already serialized record, normally from persistent storage.
+     */
+    public addStored(record: IOtlpStoredRecord): number {
+        let resourceInfo = record.resourceInfo;
         let key = resourceInfo.key;
         let bucket = this._buckets[key];
         if (!bucket) {
@@ -94,6 +142,10 @@ export class OtlpBatcher {
                 logItems: [],
                 spanAttempts: [],
                 logAttempts: [],
+                spanIds: [],
+                logIds: [],
+                spanRecordBytes: [],
+                logRecordBytes: [],
                 spanBytes: 0,
                 logBytes: 0
             };
@@ -101,20 +153,22 @@ export class OtlpBatcher {
             this._order.push(key);
         }
 
-        // When the channel is not pre-serializing the record is serialized here instead, which still
-        // keeps the cost off the send path.
-        let json = isNullOrUndefined(record.json) ? safeStringify(record.record) : record.json;
-        let bytes = json.length;
+        let json = record.fragment;
+        let bytes = record.bytes || _utf8ByteLength(json);
 
         if (record.signal === eOtlpSignal.Span) {
             bucket.spans.push(json);
-            bucket.spanItems.push(item);
-            bucket.spanAttempts.push(0);
+            bucket.spanItems.push(record.item);
+            bucket.spanAttempts.push(record.attempts || 0);
+            bucket.spanIds.push(record.id);
+            bucket.spanRecordBytes.push(bytes);
             bucket.spanBytes += bytes;
         } else {
             bucket.logs.push(json);
-            bucket.logItems.push(item);
-            bucket.logAttempts.push(0);
+            bucket.logItems.push(record.item);
+            bucket.logAttempts.push(record.attempts || 0);
+            bucket.logIds.push(record.id);
+            bucket.logRecordBytes.push(bytes);
             bucket.logBytes += bytes;
         }
 
@@ -122,6 +176,21 @@ export class OtlpBatcher {
         this._bytes += bytes;
 
         return bytes;
+    }
+
+    /**
+     * Returns a persistent representation of all currently buffered records.
+     */
+    public getRecords(): IOtlpStoredRecord[] {
+        let records: IOtlpStoredRecord[] = [];
+        arrForEach(this._order, (key) => {
+            let bucket = this._buckets[key];
+            if (bucket) {
+                _appendRecords(records, bucket, eOtlpSignal.Span);
+                _appendRecords(records, bucket, eOtlpSignal.Log);
+            }
+        });
+        return records;
     }
 
     /**
@@ -156,9 +225,9 @@ export class OtlpBatcher {
             }
 
             _split(batches, bucket.resourceInfo, eOtlpSignal.Span, bucket.spans, bucket.spanItems, bucket.spanAttempts,
-                maxRecords, maxBytes);
+                bucket.spanIds, bucket.spanRecordBytes, maxRecords, maxBytes);
             _split(batches, bucket.resourceInfo, eOtlpSignal.Log, bucket.logs, bucket.logItems, bucket.logAttempts,
-                maxRecords, maxBytes);
+                bucket.logIds, bucket.logRecordBytes, maxRecords, maxBytes);
         });
 
         this._buckets = {};
@@ -191,6 +260,10 @@ export class OtlpBatcher {
                 logItems: [],
                 spanAttempts: [],
                 logAttempts: [],
+                spanIds: [],
+                logIds: [],
+                spanRecordBytes: [],
+                logRecordBytes: [],
                 spanBytes: 0,
                 logBytes: 0
             };
@@ -201,11 +274,15 @@ export class OtlpBatcher {
         let target = batch.signal === eOtlpSignal.Span ? bucket.spans : bucket.logs;
         let targetItems = batch.signal === eOtlpSignal.Span ? bucket.spanItems : bucket.logItems;
         let targetAttempts = batch.signal === eOtlpSignal.Span ? bucket.spanAttempts : bucket.logAttempts;
+        let targetIds = batch.signal === eOtlpSignal.Span ? bucket.spanIds : bucket.logIds;
+        let targetRecordBytes = batch.signal === eOtlpSignal.Span ? bucket.spanRecordBytes : bucket.logRecordBytes;
         // unshift the whole batch back to the front, preserving the original ordering
         for (let lp = batch.fragments.length - 1; lp >= 0; lp--) {
             target.unshift(batch.fragments[lp]);
             targetItems.unshift(batch.items[lp]);
             targetAttempts.unshift(batch.attempts);
+            targetIds.unshift(batch.ids[lp]);
+            targetRecordBytes.unshift(batch.fragmentBytes[lp]);
         }
 
         if (batch.signal === eOtlpSignal.Span) {
@@ -223,37 +300,40 @@ export class OtlpBatcher {
      * @param dropCount - The number of records to drop.
      * @returns The number of records that were actually dropped.
      */
-    public dropOldest(dropCount: number): ITelemetryItem[] {
-        let dropped: ITelemetryItem[] = [];
+    public dropOldest(dropCount: number): IOtlpDroppedRecords {
+        let dropped: IOtlpDroppedRecords = { ids: [], items: [] };
         let buckets = this._buckets;
         let order = this._order;
 
-        for (let idx = 0; idx < order.length && dropped.length < dropCount; idx++) {
+        for (let idx = 0; idx < order.length && dropped.items.length < dropCount; idx++) {
             let bucket = buckets[order[idx]];
             if (!bucket) {
                 continue;
             }
 
-            dropped = dropped.concat(this._dropFrom(bucket, true, dropCount - dropped.length));
-            if (dropped.length < dropCount) {
-                dropped = dropped.concat(this._dropFrom(bucket, false, dropCount - dropped.length));
+            _appendDropped(dropped, this._dropFrom(bucket, true, dropCount - dropped.items.length));
+            if (dropped.items.length < dropCount) {
+                _appendDropped(dropped, this._dropFrom(bucket, false, dropCount - dropped.items.length));
             }
         }
 
         return dropped;
     }
 
-    private _dropFrom(bucket: IOtlpBucket, isSpan: boolean, dropCount: number): ITelemetryItem[] {
+    private _dropFrom(bucket: IOtlpBucket, isSpan: boolean, dropCount: number): IOtlpDroppedRecords {
         let target = isSpan ? bucket.spans : bucket.logs;
         let targetItems = isSpan ? bucket.spanItems : bucket.logItems;
         let targetAttempts = isSpan ? bucket.spanAttempts : bucket.logAttempts;
-        let dropped: ITelemetryItem[] = [];
+        let targetIds = isSpan ? bucket.spanIds : bucket.logIds;
+        let targetRecordBytes = isSpan ? bucket.spanRecordBytes : bucket.logRecordBytes;
+        let dropped: IOtlpDroppedRecords = { ids: [], items: [] };
 
-        while (dropped.length < dropCount && target.length) {
-            let removed = target.shift();
-            dropped.push(targetItems.shift());
+        while (dropped.items.length < dropCount && target.length) {
+            target.shift();
+            dropped.items.push(targetItems.shift());
+            dropped.ids.push(targetIds.shift());
             targetAttempts.shift();
-            let bytes = removed.length;
+            let bytes = targetRecordBytes.shift();
             if (isSpan) {
                 bucket.spanBytes -= bytes;
             } else {
@@ -269,20 +349,24 @@ export class OtlpBatcher {
 }
 
 function _split(batches: IOtlpBatch[], resourceInfo: IOtlpResourceInfo, signal: eOtlpSignal, fragments: string[],
-    items: ITelemetryItem[], attempts: number[], maxRecords: number, maxBytes: number): void {
+    items: ITelemetryItem[], attempts: number[], ids: string[], fragmentBytes: number[], maxRecords: number, maxBytes: number): void {
     if (!fragments.length) {
         return;
     }
 
     let current: string[] = [];
     let currentItems: ITelemetryItem[] = [];
+    let currentIds: string[] = [];
+    let currentFragmentBytes: number[] = [];
     let currentBytes = 0;
     let currentAttempts = 0;
+    let payloadOverhead = _payloadOverhead(resourceInfo, signal);
 
     arrForEach(fragments, (fragment, idx) => {
-        let bytes = fragment.length;
+        let bytes = fragmentBytes[idx];
         let wouldExceed = (maxRecords > 0 && current.length >= maxRecords) ||
-            (maxBytes > 0 && current.length > 0 && (currentBytes + bytes) > maxBytes) ||
+            (maxBytes > 0 && current.length > 0 &&
+                (payloadOverhead + currentBytes + bytes + current.length) > maxBytes) ||
             (current.length > 0 && currentAttempts !== attempts[idx]);
 
         if (wouldExceed) {
@@ -291,11 +375,15 @@ function _split(batches: IOtlpBatch[], resourceInfo: IOtlpResourceInfo, signal: 
                 resourceInfo: resourceInfo,
                 fragments: current,
                 items: currentItems,
+                ids: currentIds,
+                fragmentBytes: currentFragmentBytes,
                 bytes: currentBytes,
                 attempts: currentAttempts
             });
             current = [];
             currentItems = [];
+            currentIds = [];
+            currentFragmentBytes = [];
             currentBytes = 0;
         }
 
@@ -304,6 +392,8 @@ function _split(batches: IOtlpBatch[], resourceInfo: IOtlpResourceInfo, signal: 
         }
         current.push(fragment);
         currentItems.push(items[idx]);
+        currentIds.push(ids[idx]);
+        currentFragmentBytes.push(bytes);
         currentBytes += bytes;
     });
 
@@ -313,10 +403,69 @@ function _split(batches: IOtlpBatch[], resourceInfo: IOtlpResourceInfo, signal: 
             resourceInfo: resourceInfo,
             fragments: current,
             items: currentItems,
+            ids: currentIds,
+            fragmentBytes: currentFragmentBytes,
             bytes: currentBytes,
             attempts: currentAttempts
         });
     }
+}
+
+function _payloadOverhead(resourceInfo: IOtlpResourceInfo, signal: eOtlpSignal): number {
+    let isSpan = signal === eOtlpSignal.Span;
+    let resourceKey = isSpan ? "resourceSpans" : "resourceLogs";
+    let scopeKey = isSpan ? "scopeSpans" : "scopeLogs";
+    let recordKey = isSpan ? "spans" : "logRecords";
+    return _utf8ByteLength("{\"" + resourceKey + "\":[{\"resource\":" + resourceInfo.resourceJson +
+        ",\"" + scopeKey + "\":[{\"scope\":" + resourceInfo.scopeJson +
+        ",\"" + recordKey + "\":[]}]}]}");
+}
+
+function _utf8ByteLength(value: string): number {
+    let bytes = 0;
+    for (let lp = 0; lp < value.length; lp++) {
+        let code = value.charCodeAt(lp);
+        if (code < 0x80) {
+            bytes++;
+        } else if (code < 0x800) {
+            bytes += 2;
+        } else if (code >= 0xD800 && code <= 0xDBFF && lp + 1 < value.length) {
+            let next = value.charCodeAt(lp + 1);
+            if (next >= 0xDC00 && next <= 0xDFFF) {
+                bytes += 4;
+                lp++;
+            } else {
+                bytes += 3;
+            }
+        } else {
+            bytes += 3;
+        }
+    }
+    return bytes;
+}
+
+function _appendRecords(records: IOtlpStoredRecord[], bucket: IOtlpBucket, signal: eOtlpSignal): void {
+    let fragments = signal === eOtlpSignal.Span ? bucket.spans : bucket.logs;
+    let items = signal === eOtlpSignal.Span ? bucket.spanItems : bucket.logItems;
+    let attempts = signal === eOtlpSignal.Span ? bucket.spanAttempts : bucket.logAttempts;
+    let ids = signal === eOtlpSignal.Span ? bucket.spanIds : bucket.logIds;
+    let recordBytes = signal === eOtlpSignal.Span ? bucket.spanRecordBytes : bucket.logRecordBytes;
+    arrForEach(fragments, (fragment, idx) => {
+        records.push({
+            id: ids[idx],
+            signal: signal,
+            resourceInfo: bucket.resourceInfo,
+            fragment: fragment,
+            bytes: recordBytes[idx],
+            item: items[idx],
+            attempts: attempts[idx]
+        });
+    });
+}
+
+function _appendDropped(target: IOtlpDroppedRecords, source: IOtlpDroppedRecords): void {
+    target.ids = target.ids.concat(source.ids);
+    target.items = target.items.concat(source.items);
 }
 
 /**

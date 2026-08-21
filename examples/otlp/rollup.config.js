@@ -18,7 +18,6 @@ const workspacePackages = [
     "extensions/applicationinsights-dependencies-js",
     "extensions/applicationinsights-cfgsync-js",
     "channels/applicationinsights-channel-js",
-    "channels/offline-channel-js",
     "channels/otlp-channel-js",
     "AISKU"
 ];

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IXHROverride, TransportType } from "@microsoft/applicationinsights-core-js";
+import { IStorageBuffer, IXHROverride, TransportType } from "@microsoft/applicationinsights-core-js";
 
 /**
  * How a `PageviewData` telemetry item should be represented in OTLP.
@@ -99,7 +99,7 @@ export interface IOtlpChannelConfig {
     /**
      * Export `MetricData` items as log records. The OTLP metrics signal is not yet supported, so when
      * this is `false` metric items are ignored.
-     * Defaults to `false`.
+     * Defaults to `true` so replacing the classic Sender does not silently drop metrics.
      */
     metricsAsLogs?: boolean;
 
@@ -144,6 +144,22 @@ export interface IOtlpChannelConfig {
     eventsLimitInMem?: number;
 
     /**
+     * Persist unsent and unacknowledged records in session storage so they can be recovered after a
+     * page reload. Defaults to `true`.
+     */
+    enableSessionStorageBuffer?: boolean;
+
+    /**
+     * Optional prefix used for this channel's session-storage keys.
+     */
+    namePrefix?: string;
+
+    /**
+     * Custom storage implementation used instead of browser session storage.
+     */
+    bufferOverride?: IStorageBuffer | false;
+
+    /**
      * The ordered transports to use when sending asynchronously.
      */
     transports?: TransportType | TransportType[];
@@ -172,6 +188,12 @@ export interface IOtlpChannelConfig {
      * Disable the use of `fetch` with `keepalive` during unload.
      */
     disableFetchKeepAlive?: boolean;
+
+    /**
+     * Disable splitting unload batches into single-record payloads before Beacon fallback.
+     * Defaults to `true`, matching the classic Sender.
+     */
+    disableSendBeaconSplit?: boolean;
 
     /**
      * The timeout (in milliseconds) applied to `XMLHttpRequest` based requests.

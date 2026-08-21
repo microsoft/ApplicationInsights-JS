@@ -788,6 +788,34 @@ export class ConverterTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Batch byte limits include UTF-8 encoding, envelope, and separators",
+            test: () => {
+                let item: ITelemetryItem = {
+                    name: "msg",
+                    baseType: TraceDataType,
+                    baseData: { message: "unicode \ud83d\ude80 telemetry" }
+                };
+                let info = buildResourceInfo(item, {}, getResourceKey(item), "1.0.0");
+                let converted = convertItem(item, createCtx({ preSerialize: true }), "0");
+
+                let single = new OtlpBatcher();
+                single.add(info, converted);
+                let maxBytes = new Blob([buildPayload(single.takeBatches(100, 0)[0])]).size;
+
+                let pair = new OtlpBatcher();
+                pair.add(info, converted);
+                pair.add(info, converted);
+                let batches = pair.takeBatches(100, maxBytes);
+
+                Assert.equal(2, batches.length, "The second UTF-8 record exceeded the complete payload limit");
+                for (let lp = 0; lp < batches.length; lp++) {
+                    Assert.ok(new Blob([buildPayload(batches[lp])]).size <= maxBytes,
+                        "The encoded payload stays within the configured byte limit");
+                }
+            }
+        });
+
+        this.testCase({
             name: "Spans and logs are exported as separate batches",
             test: () => {
                 let span: ITelemetryItem = {

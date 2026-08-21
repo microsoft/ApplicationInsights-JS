@@ -4,22 +4,22 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
     BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IInternalOfflineSupport, INotificationManager,
-    IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ISample, ITelemetryItem, ITelemetryUnloadState,
+    IOfflineListener, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ISample, ITelemetryItem, ITelemetryUnloadState,
     SampleRate, SendRequestReason, _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageShowEventListener,
-    addPageUnloadEventListener, arrForEach, createProcessTelemetryContext, createUniqueNamespace, eEventsDiscardedReason, eLoggingSeverity,
-    hrTime, isFeatureEnabled, isGreaterThanZero, isNullOrUndefined, mergeEvtNamespace, onConfigChange, removePageHideEventListener,
-    removePageShowEventListener, removePageUnloadEventListener
+    addPageUnloadEventListener, arrForEach, createOfflineListener, createProcessTelemetryContext, createUniqueNamespace,
+    eEventsDiscardedReason, eLoggingSeverity, hrTime, isFeatureEnabled, isGreaterThanZero, isNullOrUndefined, mergeEvtNamespace, newId,
+    onConfigChange, removePageHideEventListener, removePageShowEventListener, removePageUnloadEventListener
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise } from "@nevware21/ts-async";
 import { ITimerHandler, isNumber, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
-import { eOtlpSignal } from "./Enums";
 import { IOtlpChannelConfig } from "./Interfaces/IOtlpChannelConfig";
 import { STR_OTLP_CHANNEL } from "./InternalConstants";
-import { IOtlpBatch, OtlpBatcher, buildPayload } from "./OtlpBatcher";
-import { IOtlpSendResult, OtlpHttpSender, getEndpointUrl } from "./OtlpHttpSender";
+import { IOtlpBatch, IOtlpStoredRecord, OtlpBatcher, buildPayload } from "./OtlpBatcher";
+import { IOtlpSendResult, OtlpHttpSender } from "./OtlpHttpSender";
 import { createOtlpSampler } from "./OtlpSampler";
+import { OtlpSessionStorageBuffer } from "./OtlpSessionStorageBuffer";
 import { IAttrOptions } from "./convert/AttributeBuilder";
-import { IConvertCtx, IKeyMap, IOtlpRecord, convertItem, getSignal } from "./convert/ItemConverter";
+import { IConvertCtx, IKeyMap, IOtlpRecord, convertItem } from "./convert/ItemConverter";
 import { IOtlpResourceInfo, buildResourceInfo, getResourceKey, getResourceTagKeys } from "./convert/ResourceBuilder";
 import { hrTimeToUnixNanoStr } from "./convert/TimeUtils";
 
@@ -68,19 +68,23 @@ const defaultOtlpChannelConfig: IConfigDefaults<IOtlpChannelConfig> = objDeepFre
     scopeVersion: undefValue,
     preSerialize: true,
     pageViewAs: "span",
-    metricsAsLogs: false,
+    metricsAsLogs: true,
     samplingPercentage: { isVal: _isValidSamplingPercentage, v: 100 },
     piiMode: "drop",
     maxBatchSizeInBytes: { isVal: isGreaterThanZero, v: DEFAULT_MAX_BATCH_BYTES },
     maxRecordsPerBatch: { isVal: isGreaterThanZero, v: DEFAULT_MAX_RECORDS },
     maxBatchInterval: { isVal: isGreaterThanZero, v: DEFAULT_BATCH_INTERVAL },
     eventsLimitInMem: { isVal: isGreaterThanZero, v: DEFAULT_EVENTS_LIMIT },
+    enableSessionStorageBuffer: true,
+    namePrefix: undefValue,
+    bufferOverride: false,
     transports: undefValue,
     unloadTransports: undefValue,
     httpXHROverride: undefValue,
     fetchCredentials: undefValue,
     disableXhrSync: false,
     disableFetchKeepAlive: false,
+    disableSendBeaconSplit: true,
     xhrTimeout: undefValue,
     maxRetryAttempts: { isVal: _isValidRetryCount, v: DEFAULT_MAX_RETRIES },
     isRetryDisabled: false,
@@ -140,6 +144,16 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
         let _sender: OtlpHttpSender;
         let _convertCtx: IConvertCtx;
         let _sample: ISample;
+        let _persistentBuffer: OtlpSessionStorageBuffer;
+        let _pendingPersistentBuffer: OtlpSessionStorageBuffer;
+        let _offlineListener: IOfflineListener;
+        let _storageEnabled: boolean;
+        let _storagePrefix: string;
+        let _storageOverride: any;
+        let _storageConfigPending: boolean;
+        let _pendingStorageEnabled: boolean;
+        let _pendingStoragePrefix: string;
+        let _pendingStorageOverride: any;
         let _resourceTagKeys: IKeyMap;
         let _resourceCache: { [key: string]: IOtlpResourceInfo };
         let _paused: boolean;
@@ -160,6 +174,12 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
 
                 _evtNamespace = mergeEvtNamespace(createUniqueNamespace("OtlpChannel"), core.evtNamespace && core.evtNamespace());
                 _sender = new OtlpHttpSender(_self.diagLog());
+                _offlineListener = createOfflineListener(_evtNamespace);
+                _self._addHook(_offlineListener.addListener((state) => {
+                    if (state.isOnline && !_paused) {
+                        _checkLimits();
+                    }
+                }));
 
                 _self._addHook(onConfigChange(coreConfig, () => {
                     let ctx = createProcessTelemetryContext(null, coreConfig, core);
@@ -178,6 +198,10 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                     _sample = createOtlpSampler(_config.samplingPercentage);
                     _sender.setConfig(_config, _config.enablePayloadCompression ||
                         isFeatureEnabled("zipPayload", coreConfig, false));
+                    _configurePersistentBuffer();
+                    if (!_config.disableTelemetry && !_paused && (!_offlineListener || _offlineListener.isOnline())) {
+                        _checkLimits();
+                    }
                 }));
 
                 _addUnloadListeners();
@@ -252,34 +276,18 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
             };
 
             _self.getOfflineSupport = (): IInternalOfflineSupport => {
-                return {
-                    getUrl: () => {
-                        return getEndpointUrl(_config, eOtlpSignal.Span);
-                    },
-                    createPayload: (data: string | Uint8Array): IPayloadData => {
-                        return {
-                            urlString: getEndpointUrl(_config, eOtlpSignal.Span),
-                            data: data,
-                            headers: { "Content-Type": "application/json" }
-                        };
-                    },
-                    serialize: (input: ITelemetryItem): string => {
-                        // The records are already serialized during conversion, so this is only a
-                        // conversion of a single item rather than a second serialization layer.
-                        let record = convertItem(input, _convertCtx, _observedNow());
-                        return record ? (record.json || JSON.stringify(record.record)) : null;
-                    },
-                    batch: (arr: string[]): string => {
-                        return "[" + (arr || []).join(",") + "]";
-                    },
-                    shouldProcess: (evt: ITelemetryItem): boolean => {
-                        return !_config.disableTelemetry && !!evt && getSignal(evt.baseType, _config) !== null;
-                    }
-                };
+                // OfflineChannel's generic contract supports one endpoint per payload and therefore
+                // cannot safely replay OTLP's separate trace and log signals. This channel provides
+                // integrated persistent storage instead.
+                return null;
             };
 
             _self.isCompletelyIdle = (): boolean => {
                 return _inFlight === 0 && _batcher.count() === 0 && !_retryTimer;
+            };
+
+            _self.getOfflineListener = (): IOfflineListener => {
+                return _offlineListener;
             };
 
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
@@ -295,6 +303,7 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                 }
 
                 _sender && _sender.teardown();
+                _offlineListener && _offlineListener.unload();
                 _initDefaults();
             };
 
@@ -330,29 +339,118 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                 return info;
             }
 
+            function _configurePersistentBuffer(): void {
+                let enabled = !!_config.enableSessionStorageBuffer;
+                let prefix = _config.namePrefix || "";
+                let override = _config.bufferOverride;
+                if (_persistentBuffer && _storageEnabled === enabled && _storagePrefix === prefix && _storageOverride === override) {
+                    _storageConfigPending = false;
+                    return;
+                }
+                if (_inFlight > 0) {
+                    let pending = _pendingPersistentBuffer;
+                    if (!pending || _pendingStorageEnabled !== enabled || _pendingStoragePrefix !== prefix ||
+                            _pendingStorageOverride !== override) {
+                        pending = new OtlpSessionStorageBuffer(_self.diagLog(), _config);
+                    }
+                    let records = _batcher.getRecords();
+                    if (_persistentBuffer) {
+                        records = _dedupeRecords(_persistentBuffer.getAllItems().concat(records));
+                    }
+                    records = _dedupeRecords(pending.getAllItems().concat(records));
+                    if (pending.replace(records)) {
+                        _pendingPersistentBuffer = pending;
+                        _pendingStorageEnabled = enabled;
+                        _pendingStoragePrefix = prefix;
+                        _pendingStorageOverride = override;
+                    }
+                    _storageConfigPending = true;
+                    return;
+                }
+
+                let previous = _persistentBuffer;
+                let current = _batcher.getRecords();
+                if (previous) {
+                    current = _dedupeRecords(previous.getAllItems().concat(current));
+                }
+
+                let next = _pendingPersistentBuffer;
+                if (!next || _pendingStorageEnabled !== enabled || _pendingStoragePrefix !== prefix ||
+                        _pendingStorageOverride !== override) {
+                    next = new OtlpSessionStorageBuffer(_self.diagLog(), _config);
+                }
+                let merged = _dedupeRecords(next.getAllItems().concat(current));
+                if (!next.replace(merged)) {
+                    _storageConfigPending = true;
+                    return;
+                }
+
+                _persistentBuffer = next;
+                _storageEnabled = enabled;
+                _storagePrefix = prefix;
+                _storageOverride = override;
+                _storageConfigPending = false;
+                _pendingPersistentBuffer = null;
+                _pendingStorageEnabled = false;
+                _pendingStoragePrefix = null;
+                _pendingStorageOverride = null;
+
+                _batcher = new OtlpBatcher();
+                arrForEach(merged, (record) => {
+                    _batcher.addStored(record);
+                });
+                if (previous && previous !== _persistentBuffer) {
+                    previous.clear();
+                }
+                _checkLimits();
+            }
+
+            function _dedupeRecords(records: IOtlpStoredRecord[]): IOtlpStoredRecord[] {
+                let seen: { [id: string]: boolean } = {};
+                return records.filter((record) => {
+                    if (!record || !record.id || seen[record.id]) {
+                        return false;
+                    }
+                    seen[record.id] = true;
+                    return true;
+                });
+            }
+
             function _addItem(item: ITelemetryItem): void {
                 let record: IOtlpRecord = convertItem(item, _convertCtx, _observedNow());
                 if (!record) {
                     return;
                 }
 
-                _batcher.add(_getResourceInfo(item), record, {
+                let notificationItem = {
                     name: item.name,
                     baseType: item.baseType
-                } as ITelemetryItem);
+                } as ITelemetryItem;
+                if ((_persistentBuffer && !_persistentBuffer.canAdd()) ||
+                        (_pendingPersistentBuffer && !_pendingPersistentBuffer.canAdd())) {
+                    _notifyDiscarded([notificationItem], eEventsDiscardedReason.QueueFull);
+                    return;
+                }
+
+                let stored = _batcher.add(_getResourceInfo(item), record, notificationItem, newId(22));
+                _persistentBuffer && _persistentBuffer.add(stored);
+                _pendingPersistentBuffer && _pendingPersistentBuffer.add(stored);
                 _checkLimits();
             }
 
             function _checkLimits(): void {
-                let limit = _config.eventsLimitInMem;
+                let limit = _persistentBuffer && _persistentBuffer.isEnabled()
+                    ? Math.min(_config.eventsLimitInMem, OtlpSessionStorageBuffer.MAX_BUFFER_SIZE)
+                    : _config.eventsLimitInMem;
                 if (_batcher.count() > limit) {
                     let dropped = _batcher.dropOldest(DROP_BLOCK);
-                    if (dropped.length) {
-                        _notifyDiscarded(dropped, eEventsDiscardedReason.QueueFull);
+                    if (dropped.items.length) {
+                        _removePersistent(dropped.ids);
+                        _notifyDiscarded(dropped.items, eEventsDiscardedReason.QueueFull);
                     }
                 }
 
-                if (_paused) {
+                if (_paused || (_offlineListener && !_offlineListener.isOnline())) {
                     return;
                 }
 
@@ -386,12 +484,17 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                     _checkFlushComplete();
                     return;
                 }
+                if (_offlineListener && !_offlineListener.isOnline()) {
+                    return;
+                }
 
-                let batches = _batcher.takeBatches(_config.maxRecordsPerBatch, _config.maxBatchSizeInBytes);
+                let maxRecords = !isAsync && !_config.disableSendBeaconSplit ? 1 : _config.maxRecordsPerBatch;
+                let batches = _batcher.takeBatches(maxRecords, _config.maxBatchSizeInBytes);
                 if (batches.length) {
                     _notifySendRequest(sendReason, isAsync);
                 }
                 arrForEach(batches, (batch) => {
+                    _markPersistentAsSent(batch);
                     _sendBatch(batch, isAsync, sendReason);
                 });
             }
@@ -406,7 +509,10 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                     }
 
                     _inFlight--;
-                    _onSendComplete(batch, result);
+                    _onSendComplete(batch, result, sendReason);
+                    if (_inFlight === 0 && _storageConfigPending) {
+                        _configurePersistentBuffer();
+                    }
                     _checkFlushComplete();
                 }, sendReason);
 
@@ -414,13 +520,24 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                     _inFlight--;
                     // Without a usable transport or endpoint the records cannot be exported, drop them
                     // rather than letting the buffer grow without bound.
+                    _clearPersistentSent(batch);
                     _notifyDiscarded(batch.items, eEventsDiscardedReason.NonRetryableStatus);
                     _checkFlushComplete();
                 }
             }
 
-            function _onSendComplete(batch: IOtlpBatch, result: IOtlpSendResult): void {
+            function _onSendComplete(batch: IOtlpBatch, result: IOtlpSendResult, sendReason: SendRequestReason): void {
                 if (result.success) {
+                    let isUnload = _isPageUnloading || sendReason === SendRequestReason.Unload ||
+                        sendReason === SendRequestReason.SdkUnload;
+                    if (isUnload && _hasPersistentStorage()) {
+                        // Fetch keepalive reports success once queued, before the collector responds.
+                        // Keep a durable copy for at-least-once replay rather than risk silent loss.
+                        _requeuePersistent(batch);
+                        return;
+                    }
+
+                    _clearPersistentSent(batch);
                     let rejected = result.rejected || 0;
                     if (rejected) {
                         _notifyDiscarded(_createUnknownItems(rejected), eEventsDiscardedReason.NonRetryableStatus, result.status);
@@ -433,6 +550,13 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
 
                 let maxAttempts = _isPageUnloading ? _config.maxUnloadRetryAttempts : _config.maxRetryAttempts;
                 if (!result.retry || batch.attempts >= maxAttempts) {
+                    if (result.retry && _isPageUnloading && _hasPersistentStorage()) {
+                        _requeuePersistent(batch);
+                        _batcher.requeue(batch);
+                        return;
+                    }
+
+                    _clearPersistentSent(batch);
                     _notifyDiscarded(batch.items, eEventsDiscardedReason.NonRetryableStatus, result.status);
                     _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed,
                         "Failed to export " + batch.fragments.length + " OTLP record(s), status: " + result.status);
@@ -445,6 +569,7 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                     return;
                 }
 
+                _requeuePersistent(batch);
                 _batcher.requeue(batch);
                 _scheduleRetry(result.retryAfterMs);
             }
@@ -494,6 +619,31 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                     items.push({ name: STR_OTLP_CHANNEL, baseType: "Unknown" } as ITelemetryItem);
                 }
                 return items;
+            }
+
+            function _hasPersistentStorage(): boolean {
+                return !!((_persistentBuffer && _persistentBuffer.isEnabled()) ||
+                    (_pendingPersistentBuffer && _pendingPersistentBuffer.isEnabled()));
+            }
+
+            function _markPersistentAsSent(batch: IOtlpBatch): void {
+                _persistentBuffer && _persistentBuffer.markAsSent(batch);
+                _pendingPersistentBuffer && _pendingPersistentBuffer.markAsSent(batch);
+            }
+
+            function _clearPersistentSent(batch: IOtlpBatch): void {
+                _persistentBuffer && _persistentBuffer.clearSent(batch);
+                _pendingPersistentBuffer && _pendingPersistentBuffer.clearSent(batch);
+            }
+
+            function _requeuePersistent(batch: IOtlpBatch): void {
+                _persistentBuffer && _persistentBuffer.requeue(batch);
+                _pendingPersistentBuffer && _pendingPersistentBuffer.requeue(batch);
+            }
+
+            function _removePersistent(ids: string[]): void {
+                _persistentBuffer && _persistentBuffer.remove(ids);
+                _pendingPersistentBuffer && _pendingPersistentBuffer.remove(ids);
             }
 
             function _notifyDiscarded(items: ITelemetryItem[], reason: eEventsDiscardedReason, status?: number): void {
@@ -546,6 +696,14 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
             function _onPageShow(): void {
                 // The page has been restored from the back / forward cache so it is alive again
                 _isPageUnloading = false;
+                if (_persistentBuffer) {
+                    let merged = _dedupeRecords(_persistentBuffer.getItems().concat(_batcher.getRecords()));
+                    _batcher = new OtlpBatcher();
+                    arrForEach(merged, (record) => {
+                        _batcher.addStored(record);
+                    });
+                    _checkLimits();
+                }
             }
 
             function _initDefaults(): void {
@@ -555,6 +713,16 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                 _sender = null;
                 _convertCtx = null;
                 _sample = null;
+                _persistentBuffer = null;
+                _pendingPersistentBuffer = null;
+                _offlineListener = null;
+                _storageEnabled = false;
+                _storagePrefix = null;
+                _storageOverride = null;
+                _storageConfigPending = false;
+                _pendingStorageEnabled = false;
+                _pendingStoragePrefix = null;
+                _pendingStorageOverride = null;
                 _resourceTagKeys = {};
                 _resourceCache = {};
                 _paused = false;
@@ -620,6 +788,14 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
     public isCompletelyIdle(): boolean {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return false;
+    }
+
+    /**
+     * Returns the browser online/offline listener used by the channel.
+     */
+    public getOfflineListener(): IOfflineListener {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]): void {
