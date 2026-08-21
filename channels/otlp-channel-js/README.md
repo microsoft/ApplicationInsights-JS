@@ -72,7 +72,8 @@ const appInsights = new ApplicationInsights({
 The channel converts each telemetry item into its **final OTLP representation as the item is
 received**, not when a batch is sent. Converted records are serialized immediately and appended to
 buffers that are already grouped by resource and signal, with the payload size tracked
-incrementally.
+incrementally. The original telemetry items are retained alongside the serialized fragments until
+the batch completes so notification listeners and SDK stats receive item-accurate callbacks.
 
 Sending a batch is therefore only a string join and an HTTP POST -- no mapping, no attribute
 building and no serialization. This matters most during page unload, where the browser gives the
@@ -117,6 +118,7 @@ runtime.
 | `preSerialize` | `true` | Serialize each record as it is received rather than when it is sent. |
 | `pageViewAs` | `"span"` | Whether a page view is exported as a `span` or a `log`. |
 | `metricsAsLogs` | `false` | Export `MetricData` as log records instead of ignoring it. |
+| `samplingPercentage` | `100` | Percentage of telemetry to retain; MetricData is never sampled out. |
 | `piiMode` | `"drop"` | How Common Schema PII / customer content values are handled: `drop`, `keep` or `hash`. |
 | `maxBatchSizeInBytes` | `65536` | Send once this many bytes have been buffered. |
 | `maxRecordsPerBatch` | `512` | Send once this many records have been buffered. |
@@ -130,7 +132,10 @@ runtime.
 | `disableFetchKeepAlive` | `false` | Disable `fetch` with `keepalive` during unload. |
 | `xhrTimeout` | | The timeout (ms) applied to `XMLHttpRequest` based requests. |
 | `maxRetryAttempts` | `6` | The maximum retries before a failed batch is discarded. |
-| `maxUnloadRetryAttempts` | `2` | The maximum retries while the page is unloading. |
+| `isRetryDisabled` | `false` | Disable retrying failed export requests. |
+| `retryCodes` | | Override the HTTP status codes that trigger a retry. |
+| `enablePayloadCompression` | `false` | Gzip asynchronous payloads when `CompressionStream` is available. |
+| `maxUnloadRetryAttempts` | `2` | The maximum retries while the page is unloading (maximum `10`). |
 | `disableTelemetry` | `false` | Stop exporting, items still flow down the plugin chain. |
 | `consumeEvents` | `false` | Stop passing items to the next plugin once converted. |
 | `includeIKeyInResource` | `false` | Include the instrumentation key as a resource attribute. |
@@ -194,12 +199,18 @@ allow the CORS preflight that `application/json` with custom headers requires.
 
 ## Retries and partial success
 
-Requests that fail with `408`, `429`, `500`, `502`, `503`, `504`, or that do not complete at all, are
-retried with an exponential backoff (honouring any `Retry-After` header) up to `maxRetryAttempts`.
+Requests that fail with `401`, `403`, `408`, `429`, `500`, `502`, `503`, `504`, or that do not
+complete at all, are retried with an exponential backoff (honouring any `Retry-After` header) up to
+`maxRetryAttempts`. Use `retryCodes` to replace the HTTP status list or `isRetryDisabled` to disable
+retries.
 
 A `200` response whose body reports `partialSuccess` means the collector permanently rejected some
 records; those are **not** retried. The rejection is logged and reported through the
 `eventsDiscarded` notification.
+
+The channel emits the same send lifecycle notifications used by the classic Sender:
+`eventsSendRequest`, `eventsSent`, `eventsRetry`, and `eventsDiscarded`. `isCompletelyIdle()` reports
+whether the channel has buffered, in-flight, or pending retry work.
 
 ## Offline support
 

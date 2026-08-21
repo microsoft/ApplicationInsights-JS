@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { arrForEach, isNullOrUndefined } from "@nevware21/ts-utils";
 import { eOtlpSignal } from "./Enums";
 import { safeStringify } from "./convert/AttributeBuilder";
@@ -21,6 +22,11 @@ export interface IOtlpBatch {
     fragments: string[];
 
     /**
+     * The original telemetry items represented by the fragments.
+     */
+    items: ITelemetryItem[];
+
+    /**
      * The total number of bytes of the serialized records, maintained incrementally.
      */
     bytes: number;
@@ -38,6 +44,10 @@ interface IOtlpBucket {
     resourceInfo: IOtlpResourceInfo;
     spans: string[];
     logs: string[];
+    spanItems: ITelemetryItem[];
+    logItems: ITelemetryItem[];
+    spanAttempts: number[];
+    logAttempts: number[];
     spanBytes: number;
     logBytes: number;
 }
@@ -72,7 +82,7 @@ export class OtlpBatcher {
      * @param record - The converted record.
      * @returns The number of bytes that the record added to the buffer.
      */
-    public add(resourceInfo: IOtlpResourceInfo, record: IOtlpRecord): number {
+    public add(resourceInfo: IOtlpResourceInfo, record: IOtlpRecord, item?: ITelemetryItem): number {
         let key = resourceInfo.key;
         let bucket = this._buckets[key];
         if (!bucket) {
@@ -80,6 +90,10 @@ export class OtlpBatcher {
                 resourceInfo: resourceInfo,
                 spans: [],
                 logs: [],
+                spanItems: [],
+                logItems: [],
+                spanAttempts: [],
+                logAttempts: [],
                 spanBytes: 0,
                 logBytes: 0
             };
@@ -94,9 +108,13 @@ export class OtlpBatcher {
 
         if (record.signal === eOtlpSignal.Span) {
             bucket.spans.push(json);
+            bucket.spanItems.push(item);
+            bucket.spanAttempts.push(0);
             bucket.spanBytes += bytes;
         } else {
             bucket.logs.push(json);
+            bucket.logItems.push(item);
+            bucket.logAttempts.push(0);
             bucket.logBytes += bytes;
         }
 
@@ -137,8 +155,10 @@ export class OtlpBatcher {
                 return;
             }
 
-            _split(batches, bucket.resourceInfo, eOtlpSignal.Span, bucket.spans, maxRecords, maxBytes);
-            _split(batches, bucket.resourceInfo, eOtlpSignal.Log, bucket.logs, maxRecords, maxBytes);
+            _split(batches, bucket.resourceInfo, eOtlpSignal.Span, bucket.spans, bucket.spanItems, bucket.spanAttempts,
+                maxRecords, maxBytes);
+            _split(batches, bucket.resourceInfo, eOtlpSignal.Log, bucket.logs, bucket.logItems, bucket.logAttempts,
+                maxRecords, maxBytes);
         });
 
         this._buckets = {};
@@ -167,6 +187,10 @@ export class OtlpBatcher {
                 resourceInfo: batch.resourceInfo,
                 spans: [],
                 logs: [],
+                spanItems: [],
+                logItems: [],
+                spanAttempts: [],
+                logAttempts: [],
                 spanBytes: 0,
                 logBytes: 0
             };
@@ -175,9 +199,13 @@ export class OtlpBatcher {
         }
 
         let target = batch.signal === eOtlpSignal.Span ? bucket.spans : bucket.logs;
+        let targetItems = batch.signal === eOtlpSignal.Span ? bucket.spanItems : bucket.logItems;
+        let targetAttempts = batch.signal === eOtlpSignal.Span ? bucket.spanAttempts : bucket.logAttempts;
         // unshift the whole batch back to the front, preserving the original ordering
         for (let lp = batch.fragments.length - 1; lp >= 0; lp--) {
             target.unshift(batch.fragments[lp]);
+            targetItems.unshift(batch.items[lp]);
+            targetAttempts.unshift(batch.attempts);
         }
 
         if (batch.signal === eOtlpSignal.Span) {
@@ -195,32 +223,36 @@ export class OtlpBatcher {
      * @param dropCount - The number of records to drop.
      * @returns The number of records that were actually dropped.
      */
-    public dropOldest(dropCount: number): number {
-        let dropped = 0;
+    public dropOldest(dropCount: number): ITelemetryItem[] {
+        let dropped: ITelemetryItem[] = [];
         let buckets = this._buckets;
         let order = this._order;
 
-        for (let idx = 0; idx < order.length && dropped < dropCount; idx++) {
+        for (let idx = 0; idx < order.length && dropped.length < dropCount; idx++) {
             let bucket = buckets[order[idx]];
             if (!bucket) {
                 continue;
             }
 
-            dropped += this._dropFrom(bucket, true, dropCount - dropped);
-            if (dropped < dropCount) {
-                dropped += this._dropFrom(bucket, false, dropCount - dropped);
+            dropped = dropped.concat(this._dropFrom(bucket, true, dropCount - dropped.length));
+            if (dropped.length < dropCount) {
+                dropped = dropped.concat(this._dropFrom(bucket, false, dropCount - dropped.length));
             }
         }
 
         return dropped;
     }
 
-    private _dropFrom(bucket: IOtlpBucket, isSpan: boolean, dropCount: number): number {
+    private _dropFrom(bucket: IOtlpBucket, isSpan: boolean, dropCount: number): ITelemetryItem[] {
         let target = isSpan ? bucket.spans : bucket.logs;
-        let dropped = 0;
+        let targetItems = isSpan ? bucket.spanItems : bucket.logItems;
+        let targetAttempts = isSpan ? bucket.spanAttempts : bucket.logAttempts;
+        let dropped: ITelemetryItem[] = [];
 
-        while (dropped < dropCount && target.length) {
+        while (dropped.length < dropCount && target.length) {
             let removed = target.shift();
+            dropped.push(targetItems.shift());
+            targetAttempts.shift();
             let bytes = removed.length;
             if (isSpan) {
                 bucket.spanBytes -= bytes;
@@ -230,7 +262,6 @@ export class OtlpBatcher {
 
             this._count--;
             this._bytes -= bytes;
-            dropped++;
         }
 
         return dropped;
@@ -238,31 +269,53 @@ export class OtlpBatcher {
 }
 
 function _split(batches: IOtlpBatch[], resourceInfo: IOtlpResourceInfo, signal: eOtlpSignal, fragments: string[],
-        maxRecords: number, maxBytes: number): void {
+    items: ITelemetryItem[], attempts: number[], maxRecords: number, maxBytes: number): void {
     if (!fragments.length) {
         return;
     }
 
     let current: string[] = [];
+    let currentItems: ITelemetryItem[] = [];
     let currentBytes = 0;
+    let currentAttempts = 0;
 
-    arrForEach(fragments, (fragment) => {
+    arrForEach(fragments, (fragment, idx) => {
         let bytes = fragment.length;
         let wouldExceed = (maxRecords > 0 && current.length >= maxRecords) ||
-            (maxBytes > 0 && current.length > 0 && (currentBytes + bytes) > maxBytes);
+            (maxBytes > 0 && current.length > 0 && (currentBytes + bytes) > maxBytes) ||
+            (current.length > 0 && currentAttempts !== attempts[idx]);
 
         if (wouldExceed) {
-            batches.push({ signal: signal, resourceInfo: resourceInfo, fragments: current, bytes: currentBytes, attempts: 0 });
+            batches.push({
+                signal: signal,
+                resourceInfo: resourceInfo,
+                fragments: current,
+                items: currentItems,
+                bytes: currentBytes,
+                attempts: currentAttempts
+            });
             current = [];
+            currentItems = [];
             currentBytes = 0;
         }
 
+        if (!current.length) {
+            currentAttempts = attempts[idx] || 0;
+        }
         current.push(fragment);
+        currentItems.push(items[idx]);
         currentBytes += bytes;
     });
 
     if (current.length) {
-        batches.push({ signal: signal, resourceInfo: resourceInfo, fragments: current, bytes: currentBytes, attempts: 0 });
+        batches.push({
+            signal: signal,
+            resourceInfo: resourceInfo,
+            fragments: current,
+            items: currentItems,
+            bytes: currentBytes,
+            attempts: currentAttempts
+        });
     }
 }
 

@@ -155,6 +155,8 @@ export class OtlpHttpSender {
     private _syncSender: IXHROverride;
     private _config: IOtlpChannelConfig;
     private _logger: IDiagnosticLogger;
+    private _enableCompression: boolean;
+    private _isTeardown: boolean;
 
     constructor(logger: IDiagnosticLogger) {
         this._logger = logger;
@@ -162,14 +164,18 @@ export class OtlpHttpSender {
         this._asyncSender = null;
         this._syncSender = null;
         this._config = null;
+        this._enableCompression = false;
+        this._isTeardown = false;
     }
 
     /**
      * Applies (or re-applies) the channel configuration, re-resolving the transports to use.
      * @param config - The channel configuration.
      */
-    public setConfig(config: IOtlpChannelConfig): void {
+    public setConfig(config: IOtlpChannelConfig, enableCompression?: boolean): void {
         this._config = config;
+        this._enableCompression = !!enableCompression;
+        this._isTeardown = false;
 
         let postConfig: _ISendPostMgrConfig = {
             enableSendPromise: false,
@@ -258,7 +264,7 @@ export class OtlpHttpSender {
      * @returns `true` when the request was started.
      */
     public send(batch: IOtlpBatch, isAsync: boolean, onComplete: (result: IOtlpSendResult) => void,
-            sendReason?: SendRequestReason): boolean {
+        sendReason?: SendRequestReason): boolean {
         let sender = isAsync ? this._asyncSender : this._syncSender;
         if (!sender || !sender.sendPOST) {
             return false;
@@ -278,9 +284,31 @@ export class OtlpHttpSender {
         };
 
         try {
-            sender.sendPOST(payload, completeCallback, !isAsync);
+            this._postMgr.preparePayload((processedPayload) => {
+                if (this._isTeardown) {
+                    return;
+                }
+
+                try {
+                    sender.sendPOST(processedPayload, completeCallback, !isAsync);
+                } catch (e) {
+                    let canRetry = !this._config.isRetryDisabled;
+                    onComplete({
+                        success: false,
+                        retry: canRetry,
+                        retryAfterMs: canRetry ? getRetryDelay(batch.attempts) : 0,
+                        status: 0
+                    });
+                }
+            }, this._enableCompression, payload, !isAsync);
         } catch (e) {
-            onComplete({ success: false, retry: true, retryAfterMs: getRetryDelay(batch.attempts), status: 0 });
+            let canRetry = !this._config.isRetryDisabled;
+            onComplete({
+                success: false,
+                retry: canRetry,
+                retryAfterMs: canRetry ? getRetryDelay(batch.attempts) : 0,
+                status: 0
+            });
         }
 
         return true;
@@ -290,13 +318,14 @@ export class OtlpHttpSender {
      * Releases any resources held by the sender.
      */
     public teardown(): void {
+        this._isTeardown = true;
         this._asyncSender = null;
         this._syncSender = null;
         this._postMgr = null;
     }
 
     private _getResult(batch: IOtlpBatch, status: number, headers: { [name: string]: string },
-            response: string): IOtlpSendResult {
+        response: string): IOtlpSendResult {
         let config = this._config;
 
         if (status >= 200 && status < 300) {
@@ -318,7 +347,9 @@ export class OtlpHttpSender {
 
         // A status of 0 indicates the request never completed (offline, DNS failure, CORS), which is
         // worth retrying.
-        let canRetry = status === 0 || !!RETRYABLE_STATUS[status];
+        let retryCodes = config.retryCodes;
+        let canRetry = !config.isRetryDisabled && (status === 0 ||
+            (retryCodes ? retryCodes.indexOf(status) !== -1 : !!RETRYABLE_STATUS[status]));
         let maxAttempts = config.maxRetryAttempts;
         if (batch.attempts >= maxAttempts) {
             canRetry = false;

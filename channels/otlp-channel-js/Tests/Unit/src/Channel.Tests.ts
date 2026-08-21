@@ -1,6 +1,6 @@
 import { AITestClass, Assert } from "@microsoft/ai-test-framework";
 import {
-    AppInsightsCore, IPayloadData, IXHROverride, ITelemetryItem, OnCompleteCallback, RequestDataType, TraceDataType
+    AppInsightsCore, IPayloadData, IXHROverride, ITelemetryItem, MetricDataType, OnCompleteCallback, RequestDataType, TraceDataType
 } from "@microsoft/applicationinsights-core-js";
 import { OtlpChannel } from "../../../src/OtlpChannel";
 import { getEndpointUrl, getRetryDelay, parsePartialSuccess } from "../../../src/OtlpHttpSender";
@@ -23,10 +23,14 @@ class TestSender implements IXHROverride {
     public response = "{}";
     public headers: { [key: string]: string } = {};
     public autoComplete = true;
+    public throwOnSend = false;
     public pending: OnCompleteCallback[] = [];
 
     public sendPOST = (payload: IPayloadData, oncomplete: OnCompleteCallback, sync?: boolean) => {
         this.requests.push({ payload: payload, sync: !!sync });
+        if (this.throwOnSend) {
+            throw new Error("Test transport failure");
+        }
 
         if (this.autoComplete) {
             oncomplete(this.status, this.headers, this.response, payload);
@@ -47,6 +51,7 @@ class TestSender implements IXHROverride {
     public reset() {
         this.requests = [];
         this.pending = [];
+        this.throwOnSend = false;
     }
 
     /**
@@ -87,6 +92,15 @@ function requestItem(name: string): ITelemetryItem {
         iKey: IKEY,
         baseType: RequestDataType,
         baseData: { id: "051581bf3cb55c13", name: name, duration: 10, success: true }
+    };
+}
+
+function metricItem(name: string): ITelemetryItem {
+    return {
+        name: "Microsoft.ApplicationInsights.Metric",
+        iKey: IKEY,
+        baseType: MetricDataType,
+        baseData: { metrics: [{ name: name, value: 1 }] }
     };
 }
 
@@ -183,6 +197,26 @@ export class OtlpChannelTests extends AITestClass {
                 let records = this._sender.allRecords();
                 Assert.equal(1, records.length, "One record was exported");
                 Assert.deepEqual({ stringValue: "hello" }, records[0].body, "The message survived the conversion");
+            }
+        });
+
+        this.testCase({
+            name: "Sampling matches Sender semantics and never samples out metrics",
+            useFakeTimers: true,
+            test: () => {
+                this._init({
+                    samplingPercentage: 0,
+                    metricsAsLogs: true,
+                    maxBatchInterval: 1000
+                });
+
+                let trace = traceItem("sampled out");
+                trace.ext = { user: { id: "sampling-test-user" } };
+                this._core.track(trace);
+                this._core.track(metricItem("always retained"));
+                this.clock.tick(1001);
+
+                Assert.equal(1, this._sender.allRecords().length, "Only the metric was retained");
             }
         });
 
@@ -316,6 +350,35 @@ export class OtlpChannelTests extends AITestClass {
         });
 
         this.testCase({
+            name: "The channel reports send notifications and idle state",
+            useFakeTimers: true,
+            test: () => {
+                let sent = 0;
+                let sendRequests = 0;
+                this._init({ maxBatchInterval: 60000 });
+                this._core.addNotificationListener({
+                    eventsSent: (items: ITelemetryItem[]) => {
+                        sent += items.length;
+                    },
+                    eventsSendRequest: () => {
+                        sendRequests++;
+                    }
+                });
+
+                Assert.ok(this._channel.isCompletelyIdle(), "The initialized channel is idle");
+                this._core.track(traceItem("hello"));
+                Assert.ok(!this._channel.isCompletelyIdle(), "A buffered item makes the channel busy");
+
+                this._channel.flush(false);
+                this.clock.tick(1);
+
+                Assert.equal(1, sent, "The original item was reported as sent");
+                Assert.equal(1, sendRequests, "The send request was reported");
+                Assert.ok(this._channel.isCompletelyIdle(), "The channel is idle after the flush");
+            }
+        });
+
+        this.testCase({
             name: "flush returns a promise when no callback is supplied",
             test: () => {
                 this._init({ maxBatchInterval: 60000 });
@@ -396,6 +459,81 @@ export class OtlpChannelTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Custom retry codes and retry notifications are honored",
+            useFakeTimers: true,
+            test: () => {
+                let retried = 0;
+                this._init({ maxBatchInterval: 1000, maxRetryAttempts: 3, retryCodes: [418] });
+                this._sender.status = 418;
+                this._core.addNotificationListener({
+                    eventsRetry: (items: ITelemetryItem[], status: number) => {
+                        retried += status === 418 ? items.length : 0;
+                    }
+                });
+
+                this.testCase({
+                    name: "Retry attempts survive requeue and stop at the configured limit",
+                    useFakeTimers: true,
+                    test: () => {
+                        let discarded = 0;
+                        let completed = false;
+                        this._init({ maxBatchInterval: 60000, maxRetryAttempts: 3 });
+                        this._sender.status = 503;
+                        this._core.addNotificationListener({
+                            eventsDiscarded: (items: ITelemetryItem[]) => {
+                                discarded += items.length;
+                            }
+                        });
+
+                        this._core.track(traceItem("always fails"));
+                        this._channel.flush(true, () => {
+                            completed = true;
+                        });
+
+                        Assert.equal(1, this._sender.requests.length, "The initial attempt was made");
+                        Assert.ok(!completed, "Flush waits while the batch is retryable");
+
+                        this.clock.tick(180000);
+
+                        Assert.equal(3, this._sender.requests.length, "The batch stopped at the configured attempt limit");
+                        Assert.equal(1, discarded, "The exhausted batch was discarded");
+                        Assert.ok(completed, "Flush completed after the final discard");
+                    }
+                });
+
+                this._core.track(traceItem("hello"));
+                this.clock.tick(1001);
+                this._sender.status = 200;
+                this.clock.tick(30000);
+
+                Assert.ok(this._sender.requests.length > 1, "The configured status was retried");
+                Assert.equal(1, retried, "The original item was reported as retried");
+            }
+        });
+
+        this.testCase({
+            name: "Unload retry attempts are honored",
+            useFakeTimers: true,
+            test: () => {
+                let discarded = 0;
+                this._init({ maxBatchInterval: 60000, maxUnloadRetryAttempts: 2 });
+                this._sender.status = 503;
+                this._core.addNotificationListener({
+                    eventsDiscarded: (items: ITelemetryItem[]) => {
+                        discarded += items.length;
+                    }
+                });
+
+                this._core.track(traceItem("hello"));
+                this._channel.onunloadFlush();
+                this.clock.tick(1);
+
+                Assert.equal(2, this._sender.requests.length, "The unload send used the configured attempt limit");
+                Assert.equal(1, discarded, "The item was discarded after the retry limit");
+            }
+        });
+
+        this.testCase({
             name: "A non retryable failure discards the batch",
             useFakeTimers: true,
             test: () => {
@@ -424,9 +562,15 @@ export class OtlpChannelTests extends AITestClass {
             name: "A partial success is not retried",
             useFakeTimers: true,
             test: () => {
+                let discarded: ITelemetryItem[] = [];
                 this._init({ maxBatchInterval: 1000 });
                 this._sender.status = 200;
                 this._sender.response = "{\"partialSuccess\":{\"rejectedLogRecords\":1,\"errorMessage\":\"bad\"}}";
+                this._core.addNotificationListener({
+                    eventsDiscarded: (items: ITelemetryItem[]) => {
+                        discarded = discarded.concat(items);
+                    }
+                });
 
                 this._core.track(traceItem("hello"));
                 this.clock.tick(1001);
@@ -435,6 +579,44 @@ export class OtlpChannelTests extends AITestClass {
 
                 this.clock.tick(60000);
                 Assert.equal(1, this._sender.requests.length, "A partial success is a success and must not be retried");
+                Assert.equal(1, discarded.length, "The rejected count was reported as discarded");
+                Assert.equal("Unknown", discarded[0].baseType, "No specific telemetry type is falsely attributed");
+            }
+        });
+
+        this.testCase({
+            name: "Asynchronous payload compression uses gzip when supported",
+            test: () => {
+                this._init({ maxBatchInterval: 60000, enablePayloadCompression: true });
+                this._core.track(traceItem("hello"));
+
+                let result = this._channel.flush(true) as any;
+                return result.then(() => {
+                    let compressionSupported = typeof (window as any).CompressionStream === "function";
+                    Assert.equal(compressionSupported ? "gzip" : undefined,
+                        this._sender.requests[0].payload.headers["Content-Encoding"],
+                        "The payload compression matches platform support");
+                });
+            }
+        });
+
+        this.testCase({
+            name: "A throwing compressed transport still completes the flush",
+            test: () => {
+                this._init({
+                    maxBatchInterval: 60000,
+                    maxRetryAttempts: 3,
+                    isRetryDisabled: true,
+                    enablePayloadCompression: true
+                });
+                this._sender.throwOnSend = true;
+                this._core.track(traceItem("hello"));
+
+                let result = this._channel.flush(true) as any;
+                return result.then(() => {
+                    Assert.equal(1, this._sender.requests.length, "The failed transport was called once");
+                    Assert.ok(this._channel.isCompletelyIdle(), "The failed send did not strand in-flight work");
+                });
             }
         });
 

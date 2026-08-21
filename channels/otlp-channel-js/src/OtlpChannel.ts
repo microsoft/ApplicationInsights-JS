@@ -3,11 +3,12 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IInternalOfflineSupport, IPayloadData, IPlugin,
-    IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryUnloadState, SendRequestReason, _eInternalMessageId,
-    _throwInternal, addPageHideEventListener, addPageShowEventListener, addPageUnloadEventListener, arrForEach,
-    createProcessTelemetryContext, createUniqueNamespace, eEventsDiscardedReason, eLoggingSeverity, hrTime, isGreaterThanZero,
-    mergeEvtNamespace, onConfigChange, removePageHideEventListener, removePageShowEventListener, removePageUnloadEventListener
+    BaseTelemetryPlugin, IAppInsightsCore, IChannelControls, IConfigDefaults, IConfiguration, IInternalOfflineSupport, INotificationManager,
+    IPayloadData, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ISample, ITelemetryItem, ITelemetryUnloadState,
+    SampleRate, SendRequestReason, _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageShowEventListener,
+    addPageUnloadEventListener, arrForEach, createProcessTelemetryContext, createUniqueNamespace, eEventsDiscardedReason, eLoggingSeverity,
+    hrTime, isFeatureEnabled, isGreaterThanZero, isNullOrUndefined, mergeEvtNamespace, onConfigChange, removePageHideEventListener,
+    removePageShowEventListener, removePageUnloadEventListener
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise } from "@nevware21/ts-async";
 import { ITimerHandler, isNumber, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
@@ -16,6 +17,7 @@ import { IOtlpChannelConfig } from "./Interfaces/IOtlpChannelConfig";
 import { STR_OTLP_CHANNEL } from "./InternalConstants";
 import { IOtlpBatch, OtlpBatcher, buildPayload } from "./OtlpBatcher";
 import { IOtlpSendResult, OtlpHttpSender, getEndpointUrl } from "./OtlpHttpSender";
+import { createOtlpSampler } from "./OtlpSampler";
 import { IAttrOptions } from "./convert/AttributeBuilder";
 import { IConvertCtx, IKeyMap, IOtlpRecord, convertItem, getSignal } from "./convert/ItemConverter";
 import { IOtlpResourceInfo, buildResourceInfo, getResourceKey, getResourceTagKeys } from "./convert/ResourceBuilder";
@@ -27,7 +29,10 @@ const DEFAULT_BATCH_INTERVAL = 15000;
 const DEFAULT_EVENTS_LIMIT = 10000;
 const DEFAULT_MAX_RETRIES = 6;
 const DEFAULT_MAX_UNLOAD_RETRIES = 2;
+const EVENTS_SENT = "eventsSent";
 const EVENTS_DISCARDED = "eventsDiscarded";
+const EVENTS_SEND_REQUEST = "eventsSendRequest";
+const EVENTS_RETRY = "eventsRetry";
 
 /**
  * The number of records that are dropped at a time once the in memory limit is reached, dropping a
@@ -36,6 +41,18 @@ const EVENTS_DISCARDED = "eventsDiscarded";
 const DROP_BLOCK = 20;
 
 let undefValue: undefined = undefined;
+
+function _isValidSamplingPercentage(value: number): boolean {
+    return isNumber(value) && value >= 0 && value <= 100;
+}
+
+function _isValidRetryCount(value: number): boolean {
+    return isNumber(value) && isFinite(value) && value >= 0 && value <= 100;
+}
+
+function _isValidUnloadRetryCount(value: number): boolean {
+    return _isValidRetryCount(value) && value <= 10;
+}
 
 /**
  * The default configuration. Every value must be present so that the dynamic configuration system
@@ -52,6 +69,7 @@ const defaultOtlpChannelConfig: IConfigDefaults<IOtlpChannelConfig> = objDeepFre
     preSerialize: true,
     pageViewAs: "span",
     metricsAsLogs: false,
+    samplingPercentage: { isVal: _isValidSamplingPercentage, v: 100 },
     piiMode: "drop",
     maxBatchSizeInBytes: { isVal: isGreaterThanZero, v: DEFAULT_MAX_BATCH_BYTES },
     maxRecordsPerBatch: { isVal: isGreaterThanZero, v: DEFAULT_MAX_RECORDS },
@@ -64,8 +82,11 @@ const defaultOtlpChannelConfig: IConfigDefaults<IOtlpChannelConfig> = objDeepFre
     disableXhrSync: false,
     disableFetchKeepAlive: false,
     xhrTimeout: undefValue,
-    maxRetryAttempts: { isVal: isNumber, v: DEFAULT_MAX_RETRIES },
-    maxUnloadRetryAttempts: { isVal: isNumber, v: DEFAULT_MAX_UNLOAD_RETRIES },
+    maxRetryAttempts: { isVal: _isValidRetryCount, v: DEFAULT_MAX_RETRIES },
+    isRetryDisabled: false,
+    retryCodes: undefValue,
+    enablePayloadCompression: false,
+    maxUnloadRetryAttempts: { isVal: _isValidUnloadRetryCount, v: DEFAULT_MAX_UNLOAD_RETRIES },
     disableTelemetry: false,
     consumeEvents: false,
     includeIKeyInResource: false
@@ -118,6 +139,7 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
         let _batcher: OtlpBatcher;
         let _sender: OtlpHttpSender;
         let _convertCtx: IConvertCtx;
+        let _sample: ISample;
         let _resourceTagKeys: IKeyMap;
         let _resourceCache: { [key: string]: IOtlpResourceInfo };
         let _paused: boolean;
@@ -126,6 +148,7 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
         let _evtNamespace: string | string[];
         let _isPageUnloading: boolean;
         let _inFlight: number;
+        let _generation = 0;
         let _pendingFlushCallbacks: Array<(flushComplete?: boolean) => void>;
 
         dynamicProto(OtlpChannel, this, (_self, _base) => {
@@ -152,7 +175,9 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                         attrOptions: { piiMode: _config.piiMode } as IAttrOptions
                     };
 
-                    _sender.setConfig(_config);
+                    _sample = createOtlpSampler(_config.samplingPercentage);
+                    _sender.setConfig(_config, _config.enablePayloadCompression ||
+                        isFeatureEnabled("zipPayload", coreConfig, false));
                 }));
 
                 _addUnloadListeners();
@@ -162,7 +187,7 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                 itemCtx = _self._getTelCtx(itemCtx);
 
                 try {
-                    if (!_config.disableTelemetry && item) {
+                    if (!_config.disableTelemetry && item && _isSampledIn(item)) {
                         _addItem(item);
                     }
                 } catch (e) {
@@ -188,7 +213,7 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
             };
 
             _self.flush = (isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void,
-                    sendReason?: SendRequestReason): boolean | void | IPromise<boolean> => {
+                sendReason?: SendRequestReason): boolean | void | IPromise<boolean> => {
 
                 if (_paused) {
                     callBack && callBack(false);
@@ -253,6 +278,10 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                 };
             };
 
+            _self.isCompletelyIdle = (): boolean => {
+                return _inFlight === 0 && _batcher.count() === 0 && !_retryTimer;
+            };
+
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
                 // Make a best effort attempt to export anything still buffered before we go away
                 _sendBatches(false, SendRequestReason.SdkUnload);
@@ -273,6 +302,22 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                 return hrTimeToUnixNanoStr(hrTime());
             }
 
+            function _isSampledIn(item: ITelemetryItem): boolean {
+                let sampleRate = (item as any)[SampleRate];
+                if (!isNullOrUndefined(sampleRate) && isNumber(sampleRate) && sampleRate >= 0 && sampleRate <= 100) {
+                    return true;
+                }
+
+                if (!_sample.isSampledIn(item)) {
+                    _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TelemetrySampledAndNotSent,
+                        "Telemetry item was sampled out and not sent", { SampleRate: _sample.sampleRate });
+                    return false;
+                }
+
+                (item as any)[SampleRate] = _sample.sampleRate;
+                return true;
+            }
+
             function _getResourceInfo(item: ITelemetryItem): IOtlpResourceInfo {
                 let key = getResourceKey(item);
                 let info = _resourceCache[key];
@@ -291,7 +336,10 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                     return;
                 }
 
-                _batcher.add(_getResourceInfo(item), record);
+                _batcher.add(_getResourceInfo(item), record, {
+                    name: item.name,
+                    baseType: item.baseType
+                } as ITelemetryItem);
                 _checkLimits();
             }
 
@@ -299,7 +347,7 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                 let limit = _config.eventsLimitInMem;
                 if (_batcher.count() > limit) {
                     let dropped = _batcher.dropOldest(DROP_BLOCK);
-                    if (dropped) {
+                    if (dropped.length) {
                         _notifyDiscarded(dropped, eEventsDiscardedReason.QueueFull);
                     }
                 }
@@ -340,15 +388,23 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                 }
 
                 let batches = _batcher.takeBatches(_config.maxRecordsPerBatch, _config.maxBatchSizeInBytes);
+                if (batches.length) {
+                    _notifySendRequest(sendReason, isAsync);
+                }
                 arrForEach(batches, (batch) => {
                     _sendBatch(batch, isAsync, sendReason);
                 });
             }
 
             function _sendBatch(batch: IOtlpBatch, isAsync: boolean, sendReason: SendRequestReason): void {
+                let generation = _generation;
                 _inFlight++;
 
                 let started = _sender.send(batch, isAsync, (result: IOtlpSendResult) => {
+                    if (generation !== _generation) {
+                        return;
+                    }
+
                     _inFlight--;
                     _onSendComplete(batch, result);
                     _checkFlushComplete();
@@ -358,21 +414,34 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                     _inFlight--;
                     // Without a usable transport or endpoint the records cannot be exported, drop them
                     // rather than letting the buffer grow without bound.
-                    _notifyDiscarded(batch.fragments.length, eEventsDiscardedReason.NonRetryableStatus);
+                    _notifyDiscarded(batch.items, eEventsDiscardedReason.NonRetryableStatus);
                     _checkFlushComplete();
                 }
             }
 
             function _onSendComplete(batch: IOtlpBatch, result: IOtlpSendResult): void {
                 if (result.success) {
+                    let rejected = result.rejected || 0;
+                    if (rejected) {
+                        _notifyDiscarded(_createUnknownItems(rejected), eEventsDiscardedReason.NonRetryableStatus, result.status);
+                        _notifySent(_createUnknownItems(batch.items.length - rejected));
+                    } else {
+                        _notifySent(batch.items);
+                    }
                     return;
                 }
 
                 let maxAttempts = _isPageUnloading ? _config.maxUnloadRetryAttempts : _config.maxRetryAttempts;
-                if (!result.retry || _isPageUnloading || batch.attempts >= maxAttempts) {
-                    _notifyDiscarded(batch.fragments.length, eEventsDiscardedReason.NonRetryableStatus);
+                if (!result.retry || batch.attempts >= maxAttempts) {
+                    _notifyDiscarded(batch.items, eEventsDiscardedReason.NonRetryableStatus, result.status);
                     _throwInternal(_self.diagLog(), eLoggingSeverity.WARNING, _eInternalMessageId.TransmissionFailed,
                         "Failed to export " + batch.fragments.length + " OTLP record(s), status: " + result.status);
+                    return;
+                }
+
+                _notifyRetry(batch.items, result.status);
+                if (_isPageUnloading) {
+                    _sendBatch(batch, false, SendRequestReason.Retry);
                     return;
                 }
 
@@ -392,7 +461,7 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
             }
 
             function _checkFlushComplete(): void {
-                if (_inFlight > 0 || !_pendingFlushCallbacks.length) {
+                if (_inFlight > 0 || _batcher.count() > 0 || _retryTimer || !_pendingFlushCallbacks.length) {
                     return;
                 }
 
@@ -407,18 +476,49 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
                 });
             }
 
-            function _notifyDiscarded(count: number, reason: eEventsDiscardedReason): void {
+            function _getNotifyMgr(): INotificationManager {
                 let core = _self.core;
-                let manager = core && core.getNotifyMgr && core.getNotifyMgr();
-                if (manager && manager[EVENTS_DISCARDED]) {
-                    // The records have already been converted so the original items are no longer
-                    // available, report the count using an empty placeholder set.
-                    let items: ITelemetryItem[] = [];
-                    for (let lp = 0; lp < count; lp++) {
-                        items.push({ name: STR_OTLP_CHANNEL } as ITelemetryItem);
-                    }
+                return core && core.getNotifyMgr && core.getNotifyMgr();
+            }
 
-                    manager[EVENTS_DISCARDED](items, reason);
+            function _notifySent(items: ITelemetryItem[]): void {
+                let manager = _getNotifyMgr();
+                if (items.length && manager && manager[EVENTS_SENT]) {
+                    manager[EVENTS_SENT](items);
+                }
+            }
+
+            function _createUnknownItems(count: number): ITelemetryItem[] {
+                let items: ITelemetryItem[] = [];
+                for (let lp = 0; lp < count; lp++) {
+                    items.push({ name: STR_OTLP_CHANNEL, baseType: "Unknown" } as ITelemetryItem);
+                }
+                return items;
+            }
+
+            function _notifyDiscarded(items: ITelemetryItem[], reason: eEventsDiscardedReason, status?: number): void {
+                let manager = _getNotifyMgr();
+                if (items.length && manager && manager[EVENTS_DISCARDED]) {
+                    manager[EVENTS_DISCARDED](items, reason, status);
+                }
+            }
+
+            function _notifyRetry(items: ITelemetryItem[], status: number): void {
+                let manager = _getNotifyMgr();
+                if (items.length && manager && manager[EVENTS_RETRY]) {
+                    manager[EVENTS_RETRY](items, status);
+                }
+            }
+
+            function _notifySendRequest(sendReason: SendRequestReason, isAsync: boolean): void {
+                let manager = _getNotifyMgr();
+                if (manager && manager[EVENTS_SEND_REQUEST]) {
+                    try {
+                        manager[EVENTS_SEND_REQUEST](sendReason, isAsync);
+                    } catch (e) {
+                        _throwInternal(_self.diagLog(), eLoggingSeverity.CRITICAL, _eInternalMessageId.NotificationException,
+                            "Send request notification failed");
+                    }
                 }
             }
 
@@ -449,10 +549,12 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
             }
 
             function _initDefaults(): void {
+                _generation++;
                 _config = null;
                 _batcher = new OtlpBatcher();
                 _sender = null;
                 _convertCtx = null;
+                _sample = null;
                 _resourceTagKeys = {};
                 _resourceCache = {};
                 _paused = false;
@@ -491,7 +593,7 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
      * once the export is complete.
      */
     public flush(isAsync: boolean = true, callBack?: (flushComplete?: boolean) => void,
-            sendReason?: SendRequestReason): boolean | void | IPromise<boolean> {
+        sendReason?: SendRequestReason): boolean | void | IPromise<boolean> {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
@@ -510,6 +612,14 @@ export class OtlpChannel extends BaseTelemetryPlugin implements IChannelControls
     public getOfflineSupport(): IInternalOfflineSupport {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
+    }
+
+    /**
+     * Returns whether the channel has no buffered, in-flight, or pending retry work.
+     */
+    public isCompletelyIdle(): boolean {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return false;
     }
 
     public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]): void {

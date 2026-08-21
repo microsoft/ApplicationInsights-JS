@@ -104,6 +104,13 @@ export interface IOtlpChannelConfig {
     metricsAsLogs?: boolean;
 
     /**
+     * The percentage of telemetry to retain. Sampling is deterministic when a user or operation id is
+     * available. MetricData is never sampled out, matching the classic Sender.
+     * Defaults to `100`.
+     */
+    samplingPercentage?: number;
+
+    /**
      * How values marked as PII or customer content should be handled.
      * Defaults to `drop`.
      */
@@ -178,7 +185,28 @@ export interface IOtlpChannelConfig {
     maxRetryAttempts?: number;
 
     /**
+     * Disable retrying failed export requests.
+     * Defaults to `false`.
+     */
+    isRetryDisabled?: boolean;
+
+    /**
+     * The HTTP status codes that should be retried. When omitted the channel uses its standard
+     * retryable status set.
+     */
+    retryCodes?: number[];
+
+    /**
+     * Compress asynchronous request bodies with gzip when CompressionStream is available.
+     * The root SDK `zipPayload` feature flag also enables this behavior.
+     * Defaults to `false`.
+     */
+    enablePayloadCompression?: boolean;
+
+    /**
      * The maximum number of times a failed batch is retried while the page is unloading.
+     * Values are limited to `0` through `10` so a synchronous unload transport cannot recurse
+     * without bound.
      * Defaults to `2`.
      */
     maxUnloadRetryAttempts?: number;
