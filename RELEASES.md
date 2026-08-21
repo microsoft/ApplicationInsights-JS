@@ -4,6 +4,22 @@
 
 <!-- ## Unreleased Changes -->
 
+## 3.4.4 (August 13th, 2026)
+
+This is a maintenance release for the 3.4.x version line containing build tooling and dependency security hardening plus a test reliability fix. There are no runtime changes to the published packages. The `@microsoft/1ds-post-js` channel is numbered 4.4.4 and requires v3.4.4.
+
+### Significant Changes (since 3.4.3)
+
+- **Dependency Security Hardening**: Upgraded the Rush engine to 5.178.1 and pnpm to 10.34.5 to pull in patched transitive build dependencies (`tar`, `brace-expansion`, `ip-address`), and resolved the remaining `npm audit` findings. These are build/tooling changes and do not affect the published runtime packages.
+
+### Changelog
+
+- #2755 Bump Rush 5.178.1 and pnpm 10.34.5
+- #2754 fix(test): stabilize flaky SpanLifeCycle custom endTime test
+- #2753 fix(deps): remediate npm audit vulnerabilities and add local Puppeteer Edge fallback
+
+**Full Changelog**: https://github.com/microsoft/ApplicationInsights-JS/compare/3.4.3...3.4.4
+
 ## 3.4.3 (July 2nd, 2026)
 
 This is a maintenance release for the 3.4.x version line adding a new SDK statistics feature, a PostChannel reliability fix, and dependency security hardening. The `@microsoft/1ds-post-js` channel is numbered 4.4.3 and requires v3.4.3.
