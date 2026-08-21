@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>OTLP Channel Example - Checkout</title>
+    <link rel="stylesheet" href="/site.css">
+</head>
+<body data-page="checkout">
+    <header>
+        <h1>Application Insights OTLP Channel &mdash; Checkout</h1>
+        <nav>
+            <a href="/index.html">Home</a>
+            <a href="/products.html">Products</a>
+            <a href="/checkout.html" class="current">Checkout</a>
+            <a href="/inspect.html">Inspector</a>
+            <a href="/__collected" target="_blank">Raw collected</a>
+            <a href="/__validate" target="_blank">Validation report</a>
+        </nav>
+    </header>
+
+
+    <div id="endpoint" class="endpoint"></div>
+    <p>
+        This page additionally lets you unload only the <em>first</em> instance, to confirm that
+        tearing one instance down leaves the second instance fully operational.
+    </p>
+
+    <button id="generate">Generate telemetry</button>
+    <button id="unloadFirst">Unload first instance only</button>
+    <button id="validate">Validate collected</button>
+    <button id="reset">Reset collector</button>
+
+    <div class="cols">
+        <div class="col">
+            <h2>Instance isolation</h2>
+            <ul id="isolation"></ul>
+            <h2>Activity</h2>
+            <pre id="log"></pre>
+        </div>
+        <div class="col">
+            <h2>Validation report</h2>
+            <pre id="validation"></pre>
+            <h2>Diagnostics</h2>
+            <pre id="diagnostics"></pre>
+        </div>
+    </div>
+
+    <script src="/dist/otlp-example.js"></script>
+    <script src="/page.js"></script>
+</body>
+</html>

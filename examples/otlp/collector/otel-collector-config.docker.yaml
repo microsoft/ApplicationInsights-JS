@@ -1,0 +1,59 @@
+# OpenTelemetry Collector configuration for validating the Application Insights OTLP channel.
+#
+# The browser posts OTLP/JSON straight to this collector. Because the collector parses the payload
+# with the real protocol implementation, anything malformed is rejected with a 400 rather than being
+# quietly accepted -- which is the point of running it.
+#
+# What the collector receives is then:
+#   1. printed to the console by the debug exporter, and
+#   2. re-exported as canonical OTLP/JSON back to the example's mock collector on port 8099, so the
+#      example's validator can assert on the collector's own re-serialization of the data.
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+        # The example site is served from a different origin, so the browser needs CORS
+        cors:
+          allowed_origins:
+            - http://localhost:8099
+            - http://127.0.0.1:8099
+            - http://localhost:8098
+            - http://localhost:8097
+            - http://localhost:8096
+          allowed_headers:
+            - "*"
+
+processors:
+  batch:
+    timeout: 1s
+
+exporters:
+  # Prints every span and log record the collector successfully parsed
+  debug:
+    verbosity: detailed
+
+  # Sends the collector's own canonical re-serialization back to the example's mock collector, where
+  # `/__validate` can be run over it
+  otlphttp/roundtrip:
+    endpoint: http://host.docker.internal:8099
+    encoding: json
+    # The example's mock collector reads the body as text, so it must not be compressed
+    compression: none
+    tls:
+      insecure: true
+
+service:
+  telemetry:
+    logs:
+      level: info
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlphttp/roundtrip]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlphttp/roundtrip]

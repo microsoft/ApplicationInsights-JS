@@ -4,6 +4,17 @@
 
 <!-- ## Unreleased Changes -->
 
+## Unreleased Changes
+
+### New: OTLP/JSON Channel (`@microsoft/applicationinsights-otlpchannel-js` 0.1.0)
+
+- Added a new preview channel that converts telemetry to [OTLP/JSON](https://github.com/open-telemetry/opentelemetry-proto/blob/main/docs/specification.md) in memory and exports it to an OpenTelemetry Protocol (OTLP) HTTP endpoint (`/v1/traces` and `/v1/logs`). It requires no `@opentelemetry/*` dependency and can be used on its own or alongside the existing sender, which forwards every item along the chain (the tee channel is only needed when the channels must be in separate queues).
+- Conversion and serialization happen on the `processTelemetry` path as each item is received, and records are buffered pre-grouped by resource and signal with incremental byte accounting, so sending a batch performs no conversion work. This keeps the page unload path as fast as possible.
+- `RequestData` / `RemoteDependencyData` / `PageviewData` are exported as spans and `MessageData` / `ExceptionData` / `EventData` / `PageviewPerformanceData` as log records. Native Common Schema spans (`OTelSpan`) are exported as spans directly, preserving their kind, parent, trace state and status. Context tags are promoted onto the OTLP `Resource`; everything else becomes record attributes, with Application Insights specific values namespaced under `microsoft.`.
+- Values that the Common Schema marks as PII or customer content are dropped by default (configurable via `piiMode`), since OTLP has no equivalent marker.
+- Includes Sender-equivalent session-storage buffering for unsent and unacknowledged records, plus browser online/offline recovery. The generic `OfflineChannel` adapter is intentionally disabled because its single-endpoint payload contract cannot safely replay OTLP's separate trace and log signals.
+- Added `examples/otlp`, a multi page test site that runs two independent SDK instances per page against a local mock OTLP collector. It can be driven manually or run headlessly (`npm test`), and validates the OTLP envelope, resource attributes, span/log field validity, nanosecond timestamp precision, attribute well-formedness, and that the two instances stay fully isolated from each other.
+
 ## 3.4.3 (July 2nd, 2026)
 
 This is a maintenance release for the 3.4.x version line adding a new SDK statistics feature, a PostChannel reliability fix, and dependency security hardening. The `@microsoft/1ds-post-js` channel is numbered 4.4.3 and requires v3.4.3.
