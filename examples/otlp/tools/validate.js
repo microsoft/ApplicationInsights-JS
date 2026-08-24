@@ -36,6 +36,14 @@ function isPlainObject(value) {
     return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
+function incrementCount(counts, key) {
+    counts.set(key, (counts.get(key) || 0) + 1);
+}
+
+function mapToObject(map) {
+    return Object.fromEntries(map);
+}
+
 /**
  * Validates a single OTLP `AnyValue`, which is a `oneof` so exactly one member must be set.
  */
@@ -81,15 +89,15 @@ function validateAnyValue(results, value, path) {
  */
 function validateAttributes(results, attributes, path) {
     if (typeof attributes === "undefined") {
-        return {};
+        return new Map();
     }
 
     if (!results.check(Array.isArray(attributes), path + " is an array", attributes)) {
-        return {};
+        return new Map();
     }
 
-    const seen = {};
-    const map = {};
+    const seen = new Set();
+    const map = new Map();
 
     attributes.forEach((attr, idx) => {
         const attrPath = path + "[" + idx + "]";
@@ -98,11 +106,11 @@ function validateAttributes(results, attributes, path) {
             return;
         }
 
-        results.check(!seen[attr.key], path + " does not repeat the key '" + attr.key + "'");
-        seen[attr.key] = true;
+        results.check(!seen.has(attr.key), path + " does not repeat the key '" + attr.key + "'");
+        seen.add(attr.key);
 
         validateAnyValue(results, attr.value, attrPath + "(" + attr.key + ").value");
-        map[attr.key] = attr.value;
+        map.set(attr.key, attr.value);
     });
 
     return map;
@@ -151,19 +159,20 @@ function compareUnixNano(a, b) {
 
 function validateResource(results, resource, path) {
     if (!results.check(isPlainObject(resource), path + " is present", resource)) {
-        return {};
+        return new Map();
     }
 
     const attrs = validateAttributes(results, resource.attributes, path + ".attributes");
 
-    results.check(!!attrs["service.name"], path + " declares service.name");
-    results.check(!!attrs["telemetry.sdk.name"], path + " declares telemetry.sdk.name");
-    results.check(attrs["telemetry.sdk.language"] && attrs["telemetry.sdk.language"].stringValue === "webjs",
-        path + " declares telemetry.sdk.language of webjs", attrs["telemetry.sdk.language"]);
-    results.check(!!attrs["telemetry.sdk.version"], path + " declares telemetry.sdk.version");
+    results.check(attrs.has("service.name"), path + " declares service.name");
+    results.check(attrs.has("telemetry.sdk.name"), path + " declares telemetry.sdk.name");
+    const sdkLanguage = attrs.get("telemetry.sdk.language");
+    results.check(sdkLanguage && sdkLanguage.stringValue === "webjs",
+        path + " declares telemetry.sdk.language of webjs", sdkLanguage);
+    results.check(attrs.has("telemetry.sdk.version"), path + " declares telemetry.sdk.version");
 
     // The instrumentation key must never leak into the resource unless it was explicitly opted into
-    results.check(!attrs["microsoft.instrumentation_key"],
+    results.check(!attrs.has("microsoft.instrumentation_key"),
         path + " does not include the instrumentation key by default");
 
     return attrs;
@@ -216,7 +225,8 @@ function validateSpan(results, span, path) {
 
     // Semantic convention correctness. These cannot be caught by shape checks alone, and are exactly
     // the kind of thing that looks well formed while being wrong.
-    const serverAddress = attrs["server.address"] && attrs["server.address"].stringValue;
+    const serverAddressAttr = attrs.get("server.address");
+    const serverAddress = serverAddressAttr && serverAddressAttr.stringValue;
     if (serverAddress) {
         results.check(serverAddress.indexOf("://") === -1 && serverAddress.indexOf("/") === -1,
             path + ".server.address is a host rather than a url", serverAddress);
@@ -224,26 +234,30 @@ function validateSpan(results, span, path) {
             path + ".server.address does not embed the port (server.port is used for that)", serverAddress);
     }
 
-    const peerService = attrs["peer.service"] && attrs["peer.service"].stringValue;
+    const peerServiceAttr = attrs.get("peer.service");
+    const peerService = peerServiceAttr && peerServiceAttr.stringValue;
     if (peerService) {
         results.check(peerService.indexOf("://") === -1, path + ".peer.service is a host rather than a url",
             peerService);
     }
 
-    const urlFull = attrs["url.full"] && attrs["url.full"].stringValue;
+    const urlFullAttr = attrs.get("url.full");
+    const urlFull = urlFullAttr && urlFullAttr.stringValue;
     if (urlFull) {
         results.check(/^[a-z][a-z0-9+.-]*:\/\//i.test(urlFull), path + ".url.full is an absolute url", urlFull);
     }
 
-    if (attrs["server.port"]) {
-        results.check(typeof attrs["server.port"].intValue === "string",
-            path + ".server.port is an integer", attrs["server.port"]);
+    const serverPort = attrs.get("server.port");
+    if (serverPort) {
+        results.check(typeof serverPort.intValue === "string",
+            path + ".server.port is an integer", serverPort);
     }
 
     // A hierarchical Application Insights id of the form "|<traceId>.<spanId>" carries a recoverable
     // span id, so seeing one preserved as a fallback attribute means the real span id was discarded
     // and the parent/child relationships in the trace are broken.
-    const preservedId = attrs["microsoft.telemetry_id"] && attrs["microsoft.telemetry_id"].stringValue;
+    const telemetryIdAttr = attrs.get("microsoft.telemetry_id");
+    const preservedId = telemetryIdAttr && telemetryIdAttr.stringValue;
     if (preservedId) {
         results.check(!/^\|[0-9a-f]{32}\.[0-9a-f]{16}/.test(preservedId),
             path + " did not discard a recoverable span id", preservedId);
@@ -292,14 +306,14 @@ function validatePayloads(requests) {
         requests: requests.length,
         spans: 0,
         logs: 0,
-        services: {},
-        spanNames: {},
-        spanKinds: {},
-        spanStatuses: {},
+        services: new Map(),
+        spanNames: new Map(),
+        spanKinds: new Map(),
+        spanStatuses: new Map(),
         spansWithHttpMethod: 0,
         spansWithUrl: 0,
-        telemetryTypes: {},
-        markersByService: {}
+        telemetryTypes: new Map(),
+        markersByService: new Map()
     };
 
     results.check(requests.length > 0, "The collector received at least one OTLP request");
@@ -335,10 +349,12 @@ function validatePayloads(requests) {
             const resourcePath = path + "." + resourceKey + "[" + resourceIdx + "]";
             const resourceAttrs = validateResource(results, resourceEntry.resource, resourcePath + ".resource");
 
-            const serviceName = resourceAttrs["service.name"] && resourceAttrs["service.name"].stringValue;
-            const marker = resourceAttrs["test.instance.marker"] && resourceAttrs["test.instance.marker"].stringValue;
+            const serviceNameAttr = resourceAttrs.get("service.name");
+            const markerAttr = resourceAttrs.get("test.instance.marker");
+            const serviceName = serviceNameAttr && serviceNameAttr.stringValue;
+            const marker = markerAttr && markerAttr.stringValue;
             if (serviceName) {
-                summary.services[serviceName] = (summary.services[serviceName] || 0) + 1;
+                incrementCount(summary.services, serviceName);
             }
 
             if (!Array.isArray(resourceEntry[scopeKey])) {
@@ -364,7 +380,7 @@ function validatePayloads(requests) {
 
                     if (isTrace) {
                         summary.spans++;
-                        summary.spanNames[record.name] = (summary.spanNames[record.name] || 0) + 1;
+                        incrementCount(summary.spanNames, record.name);
 
                         // Normalize the omitted-default encoding so the counts are comparable whether
                         // the payload came from the channel or from a collector's re-serialization
@@ -372,28 +388,29 @@ function validatePayloads(requests) {
                         const statusCode = record.status && typeof record.status.code !== "undefined"
                             ? record.status.code : 0;
 
-                        summary.spanKinds[kind] = (summary.spanKinds[kind] || 0) + 1;
-                        summary.spanStatuses[statusCode] = (summary.spanStatuses[statusCode] || 0) + 1;
+                        incrementCount(summary.spanKinds, kind);
+                        incrementCount(summary.spanStatuses, statusCode);
 
-                        if (attrs["http.request.method"]) {
+                        if (attrs.has("http.request.method")) {
                             summary.spansWithHttpMethod++;
                         }
-                        if (attrs["url.full"]) {
+                        if (attrs.has("url.full")) {
                             summary.spansWithUrl++;
                         }
                     } else {
                         summary.logs++;
                     }
 
-                    const telemetryType = attrs["microsoft.telemetry_type"] &&
-                        attrs["microsoft.telemetry_type"].stringValue;
+                    const telemetryTypeAttr = attrs.get("microsoft.telemetry_type");
+                    const telemetryType = telemetryTypeAttr && telemetryTypeAttr.stringValue;
                     if (telemetryType) {
-                        summary.telemetryTypes[telemetryType] = (summary.telemetryTypes[telemetryType] || 0) + 1;
+                        incrementCount(summary.telemetryTypes, telemetryType);
                     }
 
                     // Cross instance isolation: a record must never carry a marker belonging to a
                     // different instance than the resource it was exported under.
-                    const recordMarker = attrs["test.marker"] && attrs["test.marker"].stringValue;
+                    const recordMarkerAttr = attrs.get("test.marker");
+                    const recordMarker = recordMarkerAttr && recordMarkerAttr.stringValue;
                     if (marker && recordMarker) {
                         results.check(recordMarker === marker,
                             recordPath + " carries the marker of its own instance",
@@ -401,14 +418,26 @@ function validatePayloads(requests) {
                     }
 
                     if (serviceName && recordMarker) {
-                        const bucket = summary.markersByService[serviceName] ||
-                            (summary.markersByService[serviceName] = {});
-                        bucket[recordMarker] = (bucket[recordMarker] || 0) + 1;
+                        let bucket = summary.markersByService.get(serviceName);
+                        if (!bucket) {
+                            bucket = new Map();
+                            summary.markersByService.set(serviceName, bucket);
+                        }
+                        incrementCount(bucket, recordMarker);
                     }
                 });
             });
         });
     });
+
+    summary.services = mapToObject(summary.services);
+    summary.spanNames = mapToObject(summary.spanNames);
+    summary.spanKinds = mapToObject(summary.spanKinds);
+    summary.spanStatuses = mapToObject(summary.spanStatuses);
+    summary.telemetryTypes = mapToObject(summary.telemetryTypes);
+    summary.markersByService = Object.fromEntries(Array.from(summary.markersByService, ([service, markers]) => {
+        return [service, mapToObject(markers)];
+    }));
 
     return { results, summary };
 }

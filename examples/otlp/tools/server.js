@@ -339,7 +339,9 @@ const server = http.createServer(async (req, res) => {
 
         return serveStatic(req, res, pathname);
     } catch (e) {
-        sendJson(res, 500, { error: e.message, stack: e.stack });
+        // eslint-disable-next-line no-console
+        console.error(e);
+        sendJson(res, 500, { error: "Internal server error" });
     }
 });
 
