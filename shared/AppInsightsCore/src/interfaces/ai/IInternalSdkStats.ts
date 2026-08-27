@@ -93,6 +93,16 @@ export type InternalSdkStatsCfgFetchFn = (cfgUrl: string, oncomplete: (result: I
  */
 export interface IInternalSdkStatsConfig {
     /**
+     * Percentage of generated SDK Stats telemetry that is sent. Each generated SDK Stats item is
+     * sampled independently using the current dynamic value. Included telemetry is stamped with this
+     * value so the ingestion service can account for the sampling rate.
+     *
+     * Values must be between 0 and 100. Invalid values use the default.
+     * @default 100
+     */
+    samplingPercentage?: number;
+
+    /**
      * Collection interval in seconds. Counters persist in session storage across page loads.
      * Non-positive values are ignored and the default is used instead.
      * @default 3600 (1 hour)

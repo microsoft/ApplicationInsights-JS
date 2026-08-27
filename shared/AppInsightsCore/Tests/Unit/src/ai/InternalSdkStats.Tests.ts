@@ -521,6 +521,71 @@ export class InternalSdkStatsTests extends AITestClass {
         });
 
         this.testCase({
+            name: "SDK Stats: sampling percentage dynamically controls generated telemetry",
+            useFakeTimers: true,
+            test: () => {
+                this._core.config.stats.samplingPercentage = 0;
+                this.clock.tick(1);
+                this._initStatsMgr();
+
+                let state = {
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                };
+
+                Assert.equal(true, this._statsMgr.enabled, "A zero sampling percentage should not disable collection");
+                let internalSdkStats = this._statsMgr.newInst(state);
+                Assert.ok(internalSdkStats, "SDK Stats should still be collected at zero percent");
+                internalSdkStats.countException(state.endpoint, "NetworkError");
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.equal(0, this._trackSpy.callCount, "A zero sampling percentage should drop generated SDK Stats");
+                Assert.equal(0, this._statsCoreConfigs.length, "No isolated core should be needed when every item is sampled out");
+
+                this._core.config.stats.samplingPercentage = 100;
+                this.clock.tick(1);
+
+                internalSdkStats.countException(state.endpoint, "NetworkError");
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.ok(this._trackSpy.called, "A dynamic sampling change should allow generated SDK Stats");
+                Assert.equal(100, this._trackSpy.firstCall.args[0].sampleRate,
+                    "SDK Stats should include the configured sampling percentage");
+
+                let trackCount = this._trackSpy.callCount;
+                this._core.config.stats.samplingPercentage = 0;
+                this.clock.tick(1);
+                internalSdkStats.countException(state.endpoint, "NetworkError");
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.equal(true, this._statsMgr.enabled, "Sampling changes should not disable collection");
+                Assert.equal(trackCount, this._trackSpy.callCount, "A dynamic zero sampling percentage should drop generated SDK Stats");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: invalid sampling percentage defaults to 100 percent",
+            useFakeTimers: true,
+            test: () => {
+                this._core.config.stats.samplingPercentage = 101;
+                this.clock.tick(1);
+                this._initStatsMgr();
+
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.equal(100, this._trackSpy.firstCall.args[0].sampleRate,
+                    "Invalid sampling percentages should use the default");
+            }
+        });
+
+        this.testCase({
             name: "SDK Stats: recreates the isolated core when its configuration changes",
             useFakeTimers: true,
             test: () => {

@@ -3,11 +3,11 @@
 
 import { doAwaitResponse } from "@nevware21/ts-async";
 import {
-    ITimerHandler, arrIndexOf, isNumber, isString, objCreate, objDefineProps, objForEachKey, scheduleTimeout, strEndsWith, strIndexOf,
-    strLower, strStartsWith, strSubstring, utcNow
+    ITimerHandler, arrIndexOf, isNumber, isString, mathRandom, objCreate, objDefineProps, objForEachKey, scheduleTimeout, strEndsWith,
+    strIndexOf, strLower, strStartsWith, strSubstring, utcNow
 } from "@nevware21/ts-utils";
 import { onConfigChange } from "../config/DynamicConfig";
-import { DEFAULT_BREEZE_PATH, DisabledPropertyName } from "../constants/Constants";
+import { DEFAULT_BREEZE_PATH, DisabledPropertyName, SampleRate } from "../constants/Constants";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { _throwInternal, safeGetLogger } from "../diagnostics/DiagnosticLogger";
 import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
@@ -531,6 +531,7 @@ export function createStatsMgr(): IStatsMgr {
     let _core: IAppInsightsCore; // The customer core observed for configuration and endpoint changes
     let _createStatsCore: CreateStatsCoreFn;
     let _statsCore: IAppInsightsCore;
+    let _sampleRate = 100;
     let _shortInterval = STATS_COLLECTION_INTERVAL_SECONDS * 1000;
     let _statsCfgFetchFn: InternalSdkStatsCfgFetchFn;
     let _statsIKey: string;
@@ -589,6 +590,7 @@ export function createStatsMgr(): IStatsMgr {
             _statsCfgFetchFn = null;
             _statsIKey = null;
             _statsCfgUrl = null;
+            _sampleRate = 100;
             if (isFeatureEnabled(featureName || STATS_SDK_FEATURE, details.cfg, true) === true) {
                 // Seed the SDK Stats defaults into the single global config so they remain dynamic and
                 // can be overridden via the CDN / dynamic config or by the SKU.
@@ -598,7 +600,6 @@ export function createStatsMgr(): IStatsMgr {
                 // instead of holding the config object and repeatedly reading its properties.
                 let statsCfg = details.cfg.stats;
                 if (statsCfg) {
-                    _isMgrEnabled = true;
                     // Make the override fetch fn a dynamic property before snapshotting it so a later
                     // merged (CDN / updateCfg) change to it re-runs this handler and refreshes the local.
                     _statsCfgFetchFn = details.set(statsCfg, "overrideCfgFn", statsCfg.overrideCfgFn);
@@ -606,6 +607,11 @@ export function createStatsMgr(): IStatsMgr {
                     // Same for the config url, it is normally delivered by the CDN configuration after
                     // initialization has completed, so this handler must re-run when it arrives.
                     _statsCfgUrl = details.set(statsCfg, "cfgUrl", statsCfg.cfgUrl);
+                    let sampleRate = details.set(statsCfg, "samplingPercentage", statsCfg.samplingPercentage);
+                    if (isNumber(sampleRate) && sampleRate >= 0 && sampleRate <= 100) {
+                        _sampleRate = sampleRate;
+                    }
+                    _isMgrEnabled = true;
                     _shortInterval = STATS_COLLECTION_INTERVAL_SECONDS * 1000; // Reset to the default in-case the config is removed / changed
                     if (isNumber(statsCfg.shrtInt) && statsCfg.shrtInt > 0) {
                         _shortInterval = statsCfg.shrtInt * 1000; // Convert to milliseconds
@@ -696,13 +702,21 @@ export function createStatsMgr(): IStatsMgr {
                 return false;
             }
 
-            let url = _buildStatsEndpoint(cfgResult.url);
-            let statsCore = _getStatsCore(url);
-            if (!statsCore) {
-                return null;
-            }
+            let statsCore: IAppInsightsCore;
+            if (!internalSdkStatsEvent && _sampleRate > 0) {
+                // Validate the pipeline before the counters are reset. At 0% no pipeline is required.
+                statsCore = _getStatsCore(_buildStatsEndpoint(cfgResult.url));
+                if (!statsCore) {
+                    return null;
+                }
+            } else if (internalSdkStatsEvent &&
+                    (_sampleRate >= 100 || (_sampleRate > 0 && mathRandom() * 100 < _sampleRate))) {
+                statsCore = _getStatsCore(_buildStatsEndpoint(cfgResult.url));
+                if (!statsCore) {
+                    return null;
+                }
 
-            if (internalSdkStatsEvent) {
+                internalSdkStatsEvent[SampleRate] = _sampleRate;
                 statsCore.track(internalSdkStatsEvent);
             }
             return true;
