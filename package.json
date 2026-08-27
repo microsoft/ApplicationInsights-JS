@@ -85,6 +85,8 @@
             ".": "^3.1.5",
             "brace-expansion": "^1.1.18"
         },
+        "brace-expansion": "^5.0.9",
+        "extract-zip": "npm:@electron-internal/extract-zip@^1.0.5",
         "linkify-it": "^5.0.2",
         "markdown-it": "^14.2.0",
         "yaml": "^2.9.0",
