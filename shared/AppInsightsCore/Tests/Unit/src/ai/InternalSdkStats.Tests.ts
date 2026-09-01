@@ -521,6 +521,29 @@ export class InternalSdkStatsTests extends AITestClass {
         });
 
         this.testCase({
+            name: "SDK Stats: sampling percentage defaults to 100 percent",
+            useFakeTimers: true,
+            test: () => {
+                this._initStatsMgr();
+
+                Assert.equal(100, this._core.config.stats.samplingPercentage,
+                    "The default should be applied to the dynamic SDK Stats config");
+
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.equal(1, this._trackSpy.callCount, "The default should send every generated SDK Stats item");
+                Assert.equal(100, this._trackSpy.firstCall.args[0].sampleRate,
+                    "SDK Stats should include the default sampling percentage");
+            }
+        });
+
+        this.testCase({
             name: "SDK Stats: sampling percentage dynamically controls generated telemetry",
             useFakeTimers: true,
             test: () => {

@@ -15,7 +15,7 @@ import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
 import {
-    IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsState, InternalSdkStatsCfgFetchFn
+    IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsConfig, IInternalSdkStatsState, InternalSdkStatsCfgFetchFn
 } from "../interfaces/ai/IInternalSdkStats";
 import { IInternalSdkStatsNetwork } from "../interfaces/ai/IInternalSdkStatsNetwork";
 import { CreateStatsCoreFn, IStatsMgr } from "../interfaces/ai/IStatsMgr";
@@ -30,6 +30,7 @@ import { utlGetSessionStorage, utlSetSessionStorage } from "../utils/StorageHelp
 /** Default collection interval in seconds; override with `stats.shrtInt`. */
 const STATS_COLLECTION_INTERVAL_SECONDS = 3600; // 1 hour
 const STATS_LANGUAGE = "JavaScript";
+const STATS_SAMPLING_PERCENTAGE = 100;
 const STATS_TYPE = "Browser";
 
 /** The host prefix added to the configured SDK Stats config url for EU data-boundary regions. */
@@ -531,7 +532,7 @@ export function createStatsMgr(): IStatsMgr {
     let _core: IAppInsightsCore; // The customer core observed for configuration and endpoint changes
     let _createStatsCore: CreateStatsCoreFn;
     let _statsCore: IAppInsightsCore;
-    let _sampleRate = 100;
+    let _sampleRate = STATS_SAMPLING_PERCENTAGE;
     let _shortInterval = STATS_COLLECTION_INTERVAL_SECONDS * 1000;
     let _statsCfgFetchFn: InternalSdkStatsCfgFetchFn;
     let _statsIKey: string;
@@ -590,7 +591,7 @@ export function createStatsMgr(): IStatsMgr {
             _statsCfgFetchFn = null;
             _statsIKey = null;
             _statsCfgUrl = null;
-            _sampleRate = 100;
+            _sampleRate = STATS_SAMPLING_PERCENTAGE;
             if (isFeatureEnabled(featureName || STATS_SDK_FEATURE, details.cfg, true) === true) {
                 // Seed the SDK Stats defaults into the single global config so they remain dynamic and
                 // can be overridden via the CDN / dynamic config or by the SKU.
@@ -600,6 +601,7 @@ export function createStatsMgr(): IStatsMgr {
                 // instead of holding the config object and repeatedly reading its properties.
                 let statsCfg = details.cfg.stats;
                 if (statsCfg) {
+                    details.setDf(statsCfg, _sdkStatsConfigDefaults);
                     // Make the override fetch fn a dynamic property before snapshotting it so a later
                     // merged (CDN / updateCfg) change to it re-runs this handler and refreshes the local.
                     _statsCfgFetchFn = details.set(statsCfg, "overrideCfgFn", statsCfg.overrideCfgFn);
@@ -781,9 +783,13 @@ export function createStatsMgr(): IStatsMgr {
  * opted-out using the `featureOptIn` configuration with the {@link STATS_SDK_FEATURE} name.
  */
 const _sdkStatsDefaults: IConfigDefaults<IConfiguration> = {
-    // Seeding an (empty) stats object allows the manager to run; the config url, destination and
+    // Seeding a stats object allows the manager to apply its nested defaults; the config url, destination and
     // enabled state are all resolved from the dynamic / remote SDK Stats configuration. A plain
     // object (rather than cfgDfMerge) is used so setDf seeds and makes the stats property dynamic
     // without marking it as a reference (avoiding the in-place reference side effect).
     stats: {}
+};
+
+const _sdkStatsConfigDefaults: IConfigDefaults<IInternalSdkStatsConfig> = {
+    samplingPercentage: STATS_SAMPLING_PERCENTAGE
 };
