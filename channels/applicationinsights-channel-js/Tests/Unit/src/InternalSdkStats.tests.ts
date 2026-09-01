@@ -157,7 +157,6 @@ export class InternalSdkStatsTests extends AITestClass {
         } catch (e) {
             QUnit.assert.ok(false, "Unexpected error during telemetry processing");
         }
-        this.clock.tick(900000); // Simulate time passing for internalSdkStats to be sent
     }
 
     private assertInternalSdkStatsCall(statusCode: number) {
