@@ -12,7 +12,8 @@ import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore
 import { FeatureOptInMode } from "../../../../src/enums/ai/FeatureOptInEnums";
 
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900; // 15 minutes
-const STATS_TEST_CFG_URL = "https://data.stats.monitor.azure.com/cfg/v1.json";
+const STATS_TEST_CFG_URL = "https://tst-data.stats.monitor.azure.com/cfg/v1.json";
+const STATS_TEST_HOST = "tst-data.stats.monitor.azure.com";
 const STATS_TEST_IKEY = "Stats-Test-iKey";
 function _clearStatsStorage() {
     try {
@@ -80,7 +81,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 // Resolve the remote SDK Stats configuration synchronously (as enabled) so the tests
                 // do not attempt a real network fetch of the cfg/v1.json endpoint.
                 overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
-                    oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
+                    oncomplete({ enabled: true, url: STATS_TEST_HOST });
                 }
             }
         };
@@ -372,7 +373,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 Assert.equal(0, this._rootTrackSpy.callCount, "SDK Stats should not use the customer core");
                 Assert.equal(STATS_TEST_IKEY, this._statsCoreConfigs[0].instrumentationKey,
                     "The isolated core should use the SDK Stats instrumentation key");
-                Assert.equal("https://data.stats.monitor.azure.com/v2/track", this._statsCoreConfigs[0].endpointUrl,
+                Assert.equal("https://" + STATS_TEST_HOST + "/v2/track", this._statsCoreConfigs[0].endpointUrl,
                     "The isolated core should use the remote configured endpoint");
                 Assert.equal(1, this._statsCoreConfigs.length, "One isolated core should handle the SDK Stats batch");
 
@@ -389,7 +390,7 @@ export class InternalSdkStatsTests extends AITestClass {
             test: () => {
                 // Override the remote SDK Stats configuration to report collection as disabled
                 this._core.config.stats.overrideCfgFn = (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
-                    oncomplete({ enabled: false, url: "data.stats.monitor.azure.com" });
+                    oncomplete({ enabled: false, url: STATS_TEST_HOST });
                 };
                 this.clock.tick(1); // Allow the config change to propagate
 
@@ -473,7 +474,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 let fetchedUrls: string[] = [];
                 this._core.config.stats.overrideCfgFn = (cfgUrl, oncomplete) => {
                     fetchedUrls.push(cfgUrl);
-                    oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
+                    oncomplete({ enabled: true, url: STATS_TEST_HOST });
                 };
                 this.clock.tick(1);
 
@@ -485,7 +486,7 @@ export class InternalSdkStatsTests extends AITestClass {
                     sdkVer: "1.0.0"
                 });
 
-                Assert.equal("https://eu-data.stats.monitor.azure.com/cfg/v1.json", fetchedUrls[0],
+                Assert.equal("https://eu-tst-data.stats.monitor.azure.com/cfg/v1.json", fetchedUrls[0],
                     "The initial endpoint should use the configured EU url");
 
                 this._core.config.stats.cfgUrl = "https://next.stats.monitor.azure.com/cfg/v1.json";
@@ -745,7 +746,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 Assert.equal(1, _readStatsStorage("Test-iKey", "https://example.endpoint.com").cnt.exception["NetworkError"],
                     "Unsent counters should remain persisted");
 
-                completeFetch({ enabled: true, url: "data.stats.monitor.azure.com" });
+                completeFetch({ enabled: true, url: STATS_TEST_HOST });
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
 
                 Assert.ok(this._trackSpy.called, "Persisted counters should be sent on the next interval");
@@ -765,10 +766,10 @@ export class InternalSdkStatsTests extends AITestClass {
 
                 Assert.equal(STATS_TEST_CFG_URL, getStatsCfgUrl("https://eastus.in.applicationinsights.azure.com/", STATS_TEST_CFG_URL),
                     "A non-EU endpoint should use the configured url as-is");
-                Assert.equal("https://eu-data.stats.monitor.azure.com/cfg/v1.json",
+                Assert.equal("https://eu-tst-data.stats.monitor.azure.com/cfg/v1.json",
                     getStatsCfgUrl("https://westeurope.in.applicationinsights.azure.com/", STATS_TEST_CFG_URL),
                     "An EU endpoint should have the eu- prefix inserted in front of the host");
-                Assert.equal("https://eu-data.stats.monitor.azure.com/cfg/v1.json",
+                Assert.equal("https://eu-tst-data.stats.monitor.azure.com/cfg/v1.json",
                     getStatsCfgUrl("https://westeurope-5.in.applicationinsights.azure.com/", STATS_TEST_CFG_URL),
                     "An EU region replica endpoint should also resolve to the EU url");
 
@@ -777,13 +778,13 @@ export class InternalSdkStatsTests extends AITestClass {
                     "norwaywest", "swedencentral", "switzerlandnorth", "switzerlandwest", "uksouth", "ukwest"
                 ];
                 for (let lp = 0; lp < euRegions.length; lp++) {
-                    Assert.equal("https://eu-data.stats.monitor.azure.com/cfg/v1.json",
+                    Assert.equal("https://eu-tst-data.stats.monitor.azure.com/cfg/v1.json",
                         getStatsCfgUrl("https://" + euRegions[lp] + ".in.applicationinsights.azure.com/", STATS_TEST_CFG_URL),
                         euRegions[lp] + " should resolve to the EU url");
                 }
 
-                Assert.equal("eu-data.stats.monitor.azure.com/cfg/v1.json",
-                    getStatsCfgUrl("https://northeurope.in.applicationinsights.azure.com/", "data.stats.monitor.azure.com/cfg/v1.json"),
+                Assert.equal("eu-tst-data.stats.monitor.azure.com/cfg/v1.json",
+                    getStatsCfgUrl("https://northeurope.in.applicationinsights.azure.com/", "tst-data.stats.monitor.azure.com/cfg/v1.json"),
                     "A configured url without a scheme should still get the eu- prefix");
             }
         });
@@ -950,7 +951,7 @@ export class InternalSdkStatsTests extends AITestClass {
                         cfgUrl: STATS_TEST_CFG_URL,
                         iKey: STATS_TEST_IKEY,
                         overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
-                            oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
+                            oncomplete({ enabled: true, url: STATS_TEST_HOST });
                         }
                     }
                 } as IConfiguration, [new ChannelPlugin()]);
