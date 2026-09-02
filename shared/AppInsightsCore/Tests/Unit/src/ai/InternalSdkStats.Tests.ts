@@ -819,6 +819,38 @@ export class InternalSdkStatsTests extends AITestClass {
         });
 
         this.testCase({
+            name: "SDK Stats: serialization failures do not break counter updates",
+            useFakeTimers: true,
+            test: () => {
+                this._initStatsMgr();
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                let stringifyStub = this.sandbox.stub(JSON, "stringify").callsFake(() => {
+                    throw new Error("Serialization failed");
+                });
+                let didThrow = false;
+
+                try {
+                    internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+                } catch (e) {
+                    didThrow = true;
+                }
+                stringifyStub.restore();
+
+                Assert.equal(false, didThrow, "A serialization failure should not escape SDK Stats");
+                Assert.equal(1, stringifyStub.callCount, "SDK Stats should attempt to persist the updated counters");
+
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+                let stored = _readStatsStorage("Test-iKey", "https://example.endpoint.com");
+                Assert.equal(2, stored.cnt.exception["NetworkError"],
+                    "Counters updated before the serialization failure should be persisted by the next update");
+            }
+        });
+
+        this.testCase({
             name: "SDK Stats: a new instance resumes the persisted counters and collection window",
             useFakeTimers: true,
             test: () => {

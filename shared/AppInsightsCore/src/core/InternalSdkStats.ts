@@ -289,9 +289,13 @@ function _loadStore(logger: IDiagnosticLogger, key: string): _IStatsStore {
 }
 
 function _saveStore(logger: IDiagnosticLogger, key: string, store: _IStatsStore) {
-    let json = getJSON();
-    if (json) {
-        utlSetSessionStorage(logger, key, json.stringify(store));
+    try {
+        let json = getJSON();
+        if (json) {
+            utlSetSessionStorage(logger, key, json.stringify(store));
+        }
+    } catch (e) {
+        // Persistence is best-effort; serialization can fail when built-in prototypes are modified.
     }
 }
 
