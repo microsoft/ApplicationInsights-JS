@@ -13,13 +13,12 @@ import {
     IMetricTelemetry, INotificationManager, IOTelApi, IOTelSpanOptions, IPageViewPerformanceTelemetry, IPageViewTelemetry, IPlugin,
     IReadableSpan, IRequestHeaders, ISdkStatsNotifCbk, ISpanScope, ITelemetryContext as Common_ITelemetryContext,
     ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IThrottleInterval, IThrottleLimit,
-    IThrottleMgrConfig, ITraceApi, ITraceProvider, ITraceTelemetry, IUnloadHook, OTelTimeInput,
-    PropertiesPluginIdentifier, STATS_SDK_FEATURE, ThrottleMgr, UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal,
-    addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate, createDynamicConfig, createOTelApi,
-    createProcessTelemetryContext, createSdkStatsNotifCbk, createStatsMgr,
-    createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction,
-    isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, parseConnectionString, proxyAssign, proxyFunctions,
-    removePageHideEventListener, removePageUnloadEventListener, useSpan
+    IThrottleMgrConfig, ITraceApi, ITraceProvider, ITraceTelemetry, IUnloadHook, OTelTimeInput, PropertiesPluginIdentifier,
+    STATS_SDK_FEATURE, ThrottleMgr, UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal, addPageHideEventListener,
+    addPageUnloadEventListener, cfgDfMerge, cfgDfValidate, createDynamicConfig, createOTelApi, createProcessTelemetryContext,
+    createSdkStatsNotifCbk, createStatsMgr, createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow,
+    isArray, isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange,
+    parseConnectionString, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener, useSpan
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
@@ -431,7 +430,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                                     _eInternalMessageId.InternalSdkStatsManagerException, "Failed to create SDK Stats core");
                                 return null;
                             }
-                        }, STATS_SDK_FEATURE, _throttleMgr.canUseFeature);
+                        }, STATS_SDK_FEATURE, _throttleMgr.useFeature);
                         if (statsHook) {
                             _core.addUnloadHook(statsHook);
                         }

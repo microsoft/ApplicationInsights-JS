@@ -360,7 +360,7 @@ export {
 
 // Throttle manager interfaces
 export {
-    CanUseFeatureFn, IThrottleLimit, IThrottleInterval, IThrottleMgrConfig,
+    UseFeatureFn, IThrottleLimit, IThrottleInterval, IThrottleMgrConfig,
     IThrottleLocalStorageObj, IThrottleResult
 } from "./interfaces/ai/IThrottleMgr";
 

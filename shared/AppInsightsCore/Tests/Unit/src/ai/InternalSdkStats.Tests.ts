@@ -10,6 +10,7 @@ import { ITelemetryItem } from "../../../../src/interfaces/ai/ITelemetryItem";
 import { IPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
 import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
 import { FeatureOptInMode } from "../../../../src/enums/ai/FeatureOptInEnums";
+import { UseFeatureFn } from "../../../../src/interfaces/ai/IThrottleMgr";
 
 const STATS_COLLECTION_SHORT_INTERVAL: number = 900; // 15 minutes
 const STATS_TEST_CFG_URL = "https://tst-data.stats.monitor.azure.com/cfg/v1.json";
@@ -129,9 +130,9 @@ export class InternalSdkStatsTests extends AITestClass {
     private _initStatsMgr(
         core: IAppInsightsCore = this._core,
         featureName: string = "InternalSdkStats",
-        canUseFeature?: (feature: string, sdkDefaultState?: boolean) => boolean
+        useFeature?: UseFeatureFn
     ) {
-        return this._statsMgr.init(core, (config) => this._createStatsCore(config), featureName, canUseFeature);
+        return this._statsMgr.init(core, (config) => this._createStatsCore(config), featureName, useFeature);
     }
 
     public registerTests() {
@@ -526,18 +527,62 @@ export class InternalSdkStatsTests extends AITestClass {
         });
 
         this.testCase({
-            name: "SDK Stats: manager honors the SKU feature throttle",
+            name: "SDK Stats: manager delegates generated events to the SKU feature throttle",
+            useFakeTimers: true,
             test: () => {
-                let featureChecks = 0;
-                this._initStatsMgr(this._core, "InternalSdkStats", (feature, sdkDefaultState) => {
-                    featureChecks++;
+                let featureUses = 0;
+                this._initStatsMgr(this._core, "InternalSdkStats", (feature, callback, sdkDefaultState) => {
+                    featureUses++;
                     Assert.equal("InternalSdkStats", feature, "The configured feature name should be checked");
                     Assert.equal(true, sdkDefaultState, "SDK Stats should remain enabled by default");
-                    return false;
+                    callback();
+                    return {
+                        isThrottled: true,
+                        throttleNum: 1
+                    };
                 });
 
-                Assert.equal(false, this._statsMgr.enabled, "The manager should be disabled when the SKU throttles the feature");
-                Assert.equal(1, featureChecks, "The SKU feature throttle should be checked during initialization");
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+
+                Assert.equal(true, this._statsMgr.enabled, "The feature throttle should not disable dynamic manager configuration");
+                Assert.ok(featureUses > 0, "Generated SDK Stats events should use the feature throttle");
+                Assert.ok(this._trackSpy.called, "The feature callback should perform the SDK Stats operation");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: queued feature operations retain their sampling percentage",
+            useFakeTimers: true,
+            test: () => {
+                let featureCallback: () => void;
+                this._initStatsMgr(this._core, "InternalSdkStats", (_feature, callback) => {
+                    featureCallback = callback;
+                    return null;
+                });
+
+                let internalSdkStats = this._statsMgr.newInst({
+                    cKey: "Test-iKey",
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                });
+                internalSdkStats.countException("https://example.endpoint.com", "NetworkError");
+                this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
+                Assert.ok(featureCallback, "The generated event should be queued by the feature throttle");
+                Assert.equal(0, this._trackSpy.callCount, "The queued SDK Stats event should not be sent early");
+
+                this._core.config.stats.samplingPercentage = 1;
+                this.clock.tick(1);
+                featureCallback();
+
+                Assert.equal(1, this._trackSpy.callCount, "The feature callback should send the queued event");
+                Assert.equal(100, this._trackSpy.firstCall.args[0].sampleRate,
+                    "The queued event should retain the sampling percentage used for its sampling decision");
             }
         });
 

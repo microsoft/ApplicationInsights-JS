@@ -87,12 +87,13 @@ throttleMgr.sendMessage(instrumentationKeyDeprecation, "Instrumentation Key Depr
 
 ### Throttle Feature Rollout
 
-`canUseFeature()` combines `featureOptIn` with an optional throttle configuration that uses the same
-string key. It does not send an internal message. The sampling decision remains stable until the
-configured sampling rate changes.
+`useFeature()` combines `featureOptIn` with an optional throttle configuration that uses the same
+string key. It runs the supplied callback when the persisted sampling, interval, and send-count
+limits allow the feature operation.
 
-When the named throttle configuration is missing or has `disabled: true`, only the `featureOptIn`
-state is used. Set `disabled: false` to apply `limit.samplingRate`, where `1000000` is 100%.
+Feature throttle state is persisted separately from numeric internal-message state. When the named
+throttle configuration is missing, only the `featureOptIn` state is used. A configuration with
+`disabled: true` suppresses the callback.
 
 ```javascript
 let coreCfg = {
@@ -112,7 +113,7 @@ let coreCfg = {
 core.initialize(coreCfg, [sender]);
 const throttleMgr = new ThrottleMgr(core);
 
-if (throttleMgr.canUseFeature("sdkStats", true)) {
-    // Initialize the feature.
-}
+throttleMgr.useFeature("sdkStats", () => {
+    // Perform the feature operation.
+}, true);
 ```

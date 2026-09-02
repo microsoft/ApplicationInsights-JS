@@ -153,11 +153,11 @@ export class SdkStatsFeatureTests extends AITestClass {
 
                 Assert.ok(this._findSdkStatsListener(ai),
                     "Customer SDK Stats should remain enabled when dedicated SDK Stats are throttled");
-                Assert.equal(null, ai["core"].getSdkStats({
+                Assert.ok(ai["core"].getSdkStats({
                     cKey: TestInstrumentationKey,
                     endpoint: "https://example.endpoint.com",
                     sdkVer: "1.0.0"
-                }), "Dedicated SDK Stats should be disabled by its throttle");
+                }), "The throttle should apply to SDK Stats operations without disabling the manager");
             }
         });
     }

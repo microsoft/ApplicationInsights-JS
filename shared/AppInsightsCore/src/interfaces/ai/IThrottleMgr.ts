@@ -52,7 +52,7 @@ export interface IThrottleMgrConfig {
 
     /**
      * Identifies if throttling is disabled.
-     * For messages, no messages are sent. For feature checks, the featureOptIn state is used without sampling.
+     * When true, no messages are sent and no feature callbacks are invoked.
      * Default: false
     */
     disabled?: boolean;
@@ -108,7 +108,7 @@ export interface IThrottleResult {
 }
 
 /**
- * Determines whether a dynamically configured feature may be used.
+ * Runs a dynamically configured feature operation when its throttle allows it.
  * @since 3.4.4
  */
-export type CanUseFeatureFn = (feature: string, sdkDefaultState?: boolean) => boolean;
+export type UseFeatureFn = (feature: string, callback: () => void, sdkDefaultState?: boolean) => IThrottleResult | null;

@@ -19,8 +19,8 @@ import {
 } from "../interfaces/ai/IInternalSdkStats";
 import { IInternalSdkStatsNetwork } from "../interfaces/ai/IInternalSdkStatsNetwork";
 import { CreateStatsCoreFn, IStatsMgr } from "../interfaces/ai/IStatsMgr";
-import { CanUseFeatureFn } from "../interfaces/ai/IThrottleMgr";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { UseFeatureFn } from "../interfaces/ai/IThrottleMgr";
 import { IPayloadData } from "../interfaces/ai/IXHROverride";
 import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
 import { MetricDataType } from "../telemetry/ai/DataTypes";
@@ -536,7 +536,9 @@ export function createStatsMgr(): IStatsMgr {
     let _isMgrEnabled: boolean = false; // Flag to check if internalSdkStats is enabled or not
     let _core: IAppInsightsCore; // The customer core observed for configuration and endpoint changes
     let _createStatsCore: CreateStatsCoreFn;
+    let _featureName: string;
     let _statsCore: IAppInsightsCore;
+    let _useFeature: UseFeatureFn;
     let _sampleRate = STATS_SAMPLING_PERCENTAGE;
     let _shortInterval = STATS_COLLECTION_INTERVAL_SECONDS * 1000;
     let _statsCfgFetchFn: InternalSdkStatsCfgFetchFn;
@@ -574,7 +576,7 @@ export function createStatsMgr(): IStatsMgr {
     // Lazily initialize the manager and start listening for configuration changes
     // This is also required to handle "unloading" and then re-initializing again
     function _init<CfgType extends IConfiguration = IConfiguration>(
-        core: IAppInsightsCore<CfgType>, createStatsCore: CreateStatsCoreFn, featureName?: string, canUseFeature?: CanUseFeatureFn
+        core: IAppInsightsCore<CfgType>, createStatsCore: CreateStatsCoreFn, featureName?: string, useFeature?: UseFeatureFn
     ) {
         if (_core) {
             // If the core is already set, then just return with an empty unload hook
@@ -584,6 +586,8 @@ export function createStatsMgr(): IStatsMgr {
 
         _core = core;
         _createStatsCore = createStatsCore;
+        _featureName = featureName || STATS_SDK_FEATURE;
+        _useFeature = useFeature;
         // Start listening for configuration changes from the single global config, within a config
         // change handler. This supports the scenario where the config is changed after the manager
         // has been created (including CDN / dynamic config updates).
@@ -597,9 +601,7 @@ export function createStatsMgr(): IStatsMgr {
             _statsIKey = null;
             _statsCfgUrl = null;
             _sampleRate = STATS_SAMPLING_PERCENTAGE;
-            let statsFeature = featureName || STATS_SDK_FEATURE;
-            let isEnabled = canUseFeature ? canUseFeature(statsFeature, true) : isFeatureEnabled(statsFeature, details.cfg, true) === true;
-            if (isEnabled) {
+            if (isFeatureEnabled(_featureName, details.cfg, true) === true) {
                 // Seed the SDK Stats defaults into the single global config so they remain dynamic and
                 // can be overridden via the CDN / dynamic config or by the SKU.
                 details.setDf(details.cfg, _sdkStatsDefaults);
@@ -648,6 +650,8 @@ export function createStatsMgr(): IStatsMgr {
                 configHook.rm();
                 _unloadStatsCore();
                 _createStatsCore = null;
+                _featureName = null;
+                _useFeature = null;
                 _core = null;
             }
         };
@@ -711,22 +715,30 @@ export function createStatsMgr(): IStatsMgr {
                 return false;
             }
 
-            let statsCore: IAppInsightsCore;
-            if (!internalSdkStatsEvent && _sampleRate > 0) {
+            let sampleRate = _sampleRate;
+            if (!internalSdkStatsEvent && sampleRate > 0) {
                 // Validate the pipeline before the counters are reset. At 0% no pipeline is required.
-                statsCore = _getStatsCore(_buildStatsEndpoint(cfgResult.url));
+                let statsCore = _getStatsCore(_buildStatsEndpoint(cfgResult.url));
                 if (!statsCore) {
                     return null;
                 }
             } else if (internalSdkStatsEvent &&
-                    (_sampleRate >= 100 || (_sampleRate > 0 && mathRandom() * 100 < _sampleRate))) {
-                statsCore = _getStatsCore(_buildStatsEndpoint(cfgResult.url));
-                if (!statsCore) {
-                    return null;
+                    (sampleRate >= 100 || (sampleRate > 0 && mathRandom() * 100 < sampleRate))) {
+                let trackStats = () => {
+                    let currentCfg = _resolveStatsCfg(internalSdkStats.endpoint);
+                    if (currentCfg && currentCfg.enabled) {
+                        let statsCore = _getStatsCore(_buildStatsEndpoint(currentCfg.url));
+                        if (statsCore) {
+                            internalSdkStatsEvent[SampleRate] = sampleRate;
+                            statsCore.track(internalSdkStatsEvent);
+                        }
+                    }
+                };
+                if (_useFeature) {
+                    _useFeature(_featureName, trackStats, true);
+                } else {
+                    trackStats();
                 }
-
-                internalSdkStatsEvent[SampleRate] = _sampleRate;
-                statsCore.track(internalSdkStatsEvent);
             }
             return true;
         }
