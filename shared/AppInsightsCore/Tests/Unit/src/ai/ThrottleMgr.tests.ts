@@ -3,6 +3,7 @@ import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
 import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
 import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
 import { IPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
+import { FeatureOptInMode } from "../../../../src/enums/ai/FeatureOptInEnums";
 import { _eInternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
 import { ThrottleMgr } from "../../../../src/diagnostics/ThrottleMgr";
 import { SinonSpy } from "sinon";
@@ -109,6 +110,49 @@ export class ThrottleMgrTest extends AITestClass {
     }
 
     public registerTests() {
+
+        this.testCase({
+            name: "ThrottleMgrTest: canUseFeature combines feature opt-in with stable dynamic throttling",
+            useFakeTimers: true,
+            test: () => {
+                let feature = this._msgId + "Feature";
+                let coreCfg = {
+                    instrumentationKey: "test",
+                    featureOptIn: {
+                        [feature]: { mode: FeatureOptInMode.enable }
+                    },
+                    throttleMgrCfg: {
+                        [feature]: {
+                            disabled: false,
+                            limit: {
+                                samplingRate: 0
+                            }
+                        }
+                    }
+                } as IConfiguration & IConfig;
+                this._core.initialize(coreCfg, [this._channel]);
+
+                let throttleMgr = new ThrottleMgr(this._core);
+                Assert.equal(undefined, throttleMgr.getConfig()[this._msgId],
+                    "A feature key that begins with digits should not configure an internal message");
+                Assert.equal(false, throttleMgr.canUseFeature(feature, true), "A zero sampling rate should throttle the feature");
+                Assert.equal(false, throttleMgr.canUseFeature(feature, true), "Repeated checks should retain the sampling decision");
+
+                this._core.config.throttleMgrCfg[feature].limit.samplingRate = 1000000;
+                this.clock.tick(1);
+                Assert.equal(true, throttleMgr.canUseFeature(feature, true), "A 100 percent sampling rate should allow the feature");
+
+                this._core.config.featureOptIn[feature].mode = FeatureOptInMode.disable;
+                this.clock.tick(1);
+                Assert.equal(false, throttleMgr.canUseFeature(feature, true), "Feature opt-out should take precedence over throttling");
+
+                this._core.config.featureOptIn[feature].mode = FeatureOptInMode.enable;
+                this._core.config.throttleMgrCfg[feature].disabled = true;
+                this.clock.tick(1);
+                Assert.equal(true, throttleMgr.canUseFeature(feature, true), "A disabled throttle should leave the feature enabled");
+                Assert.equal(0, this.loggingSpy.callCount, "Feature checks should not emit internal messages");
+            }
+        });
 
         this.testCase({
             name: "ThrottleMgrTest: Default config should be set from root",

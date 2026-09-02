@@ -4,6 +4,7 @@
 import { IAppInsightsCore } from "./IAppInsightsCore";
 import { IConfiguration } from "./IConfiguration";
 import { IInternalSdkStats, IInternalSdkStatsState } from "./IInternalSdkStats";
+import { CanUseFeatureFn } from "./IThrottleMgr";
 import { IUnloadHook } from "./IUnloadHook";
 
 /**
@@ -38,6 +39,7 @@ export interface IStatsMgr {
      * @param featureName - The optional featureOptIn name used to gate the manager. Defaults to the
      * SDK Stats feature (`STATS_SDK_FEATURE`) which is enabled by default and can be opted-out via the
      * `featureOptIn` configuration.
+     * @param canUseFeature - Optional combined feature opt-in and throttling check supplied by the SKU.
      * @returns The unload hook for the stats beat manager, which can be used to unload
      * and disable the manager. This may return null if the manager cannot be initialized.
      * @remarks This method should be called only once, and it may throw an error if called multiple times.
@@ -45,7 +47,8 @@ export interface IStatsMgr {
     init: <CfgType extends IConfiguration = IConfiguration>(
         core: IAppInsightsCore<CfgType>,
         createStatsCore: CreateStatsCoreFn,
-        featureName?: string
+        featureName?: string,
+        canUseFeature?: CanUseFeatureFn
     ) => IUnloadHook | null;
     
     /**

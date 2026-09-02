@@ -13,9 +13,10 @@ import {
     IMetricTelemetry, INotificationManager, IOTelApi, IOTelSpanOptions, IPageViewPerformanceTelemetry, IPageViewTelemetry, IPlugin,
     IReadableSpan, IRequestHeaders, ISdkStatsNotifCbk, ISpanScope, ITelemetryContext as Common_ITelemetryContext,
     ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IThrottleInterval, IThrottleLimit,
-    IThrottleMgrConfig, ITraceApi, ITraceProvider, ITraceTelemetry, IUnloadHook, OTelTimeInput, PropertiesPluginIdentifier, ThrottleMgr,
-    UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge,
-    cfgDfValidate, createDynamicConfig, createOTelApi, createProcessTelemetryContext, createSdkStatsNotifCbk, createStatsMgr,
+    IThrottleMgrConfig, ITraceApi, ITraceProvider, ITraceTelemetry, IUnloadHook, OTelTimeInput,
+    PropertiesPluginIdentifier, STATS_SDK_FEATURE, ThrottleMgr, UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal,
+    addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate, createDynamicConfig, createOTelApi,
+    createProcessTelemetryContext, createSdkStatsNotifCbk, createStatsMgr,
     createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction,
     isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange, parseConnectionString, proxyAssign, proxyFunctions,
     removePageHideEventListener, removePageUnloadEventListener, useSpan
@@ -84,6 +85,14 @@ const default_throttle_config = {
     interval: cfgDfMerge<IThrottleInterval>(default_interval)
 } as IThrottleMgrConfig;
 
+const sdk_stats_throttle_config = {
+    disabled: false,
+    limit: cfgDfMerge<IThrottleLimit>({
+        samplingRate: 100,
+        maxSendNumber: 1
+    })
+} as IThrottleMgrConfig;
+
 // We need to include all properties that we only reference that we want to be dynamically updatable here
 // So they are converted even when not specified in the passed configuration
 const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
@@ -102,12 +111,13 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
     sdkStats: cfgDfMerge({
         int: 900000
     }),
-    throttleMgrCfg: cfgDfMerge<{[key:number]: IThrottleMgrConfig}>(
+    throttleMgrCfg: cfgDfMerge<{[key: string]: IThrottleMgrConfig}>(
         {
             [_eInternalMessageId.DefaultThrottleMsgKey]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config),
             [_eInternalMessageId.InstrumentationKeyDeprecation]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config),
             [_eInternalMessageId.SdkLdrUpdate]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config),
-            [_eInternalMessageId.CdnDeprecation]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config)
+            [_eInternalMessageId.CdnDeprecation]:cfgDfMerge<IThrottleMgrConfig>(default_throttle_config),
+            [STATS_SDK_FEATURE]: cfgDfMerge<IThrottleMgrConfig>(sdk_stats_throttle_config)
         }
     ),
     extensionConfig: cfgDfMerge<{[key: string]: any}>({
@@ -398,6 +408,10 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                     // initialize core
                     _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin], logger, notificationManager);
 
+                    if (!_throttleMgr){
+                        _throttleMgr = new ThrottleMgr(_core);
+                    }
+
                     // Enable SDK Stats collection. The manager reads its configuration directly from the
                     // single global config (config.stats) and gates itself behind the SDK Stats feature
                     // flag, routing the resulting events to the distro-owned SDK Stats ingestion endpoint.
@@ -417,7 +431,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                                     _eInternalMessageId.InternalSdkStatsManagerException, "Failed to create SDK Stats core");
                                 return null;
                             }
-                        });
+                        }, STATS_SDK_FEATURE, _throttleMgr.canUseFeature);
                         if (statsHook) {
                             _core.addUnloadHook(statsHook);
                         }
@@ -430,9 +444,6 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                         g: () => properties.context
                     });
 
-                    if (!_throttleMgr){
-                        _throttleMgr = new ThrottleMgr(_core);
-                    }
                     let sdkSrc = _findSdkSourceFile();
                     if (sdkSrc && _self.context) {
                         _self.context.internal.sdkSrc = sdkSrc;

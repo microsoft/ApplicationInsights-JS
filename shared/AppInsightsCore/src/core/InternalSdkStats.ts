@@ -19,6 +19,7 @@ import {
 } from "../interfaces/ai/IInternalSdkStats";
 import { IInternalSdkStatsNetwork } from "../interfaces/ai/IInternalSdkStatsNetwork";
 import { CreateStatsCoreFn, IStatsMgr } from "../interfaces/ai/IStatsMgr";
+import { CanUseFeatureFn } from "../interfaces/ai/IThrottleMgr";
 import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
 import { IPayloadData } from "../interfaces/ai/IXHROverride";
 import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
@@ -573,7 +574,7 @@ export function createStatsMgr(): IStatsMgr {
     // Lazily initialize the manager and start listening for configuration changes
     // This is also required to handle "unloading" and then re-initializing again
     function _init<CfgType extends IConfiguration = IConfiguration>(
-        core: IAppInsightsCore<CfgType>, createStatsCore: CreateStatsCoreFn, featureName?: string
+        core: IAppInsightsCore<CfgType>, createStatsCore: CreateStatsCoreFn, featureName?: string, canUseFeature?: CanUseFeatureFn
     ) {
         if (_core) {
             // If the core is already set, then just return with an empty unload hook
@@ -596,7 +597,9 @@ export function createStatsMgr(): IStatsMgr {
             _statsIKey = null;
             _statsCfgUrl = null;
             _sampleRate = STATS_SAMPLING_PERCENTAGE;
-            if (isFeatureEnabled(featureName || STATS_SDK_FEATURE, details.cfg, true) === true) {
+            let statsFeature = featureName || STATS_SDK_FEATURE;
+            let isEnabled = canUseFeature ? canUseFeature(statsFeature, true) : isFeatureEnabled(statsFeature, details.cfg, true) === true;
+            if (isEnabled) {
                 // Seed the SDK Stats defaults into the single global config so they remain dynamic and
                 // can be overridden via the CDN / dynamic config or by the SKU.
                 details.setDf(details.cfg, _sdkStatsDefaults);

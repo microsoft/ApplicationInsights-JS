@@ -126,8 +126,12 @@ export class InternalSdkStatsTests extends AITestClass {
         return core;
     }
 
-    private _initStatsMgr(core: IAppInsightsCore = this._core, featureName: string = "InternalSdkStats") {
-        return this._statsMgr.init(core, (config) => this._createStatsCore(config), featureName);
+    private _initStatsMgr(
+        core: IAppInsightsCore = this._core,
+        featureName: string = "InternalSdkStats",
+        canUseFeature?: (feature: string, sdkDefaultState?: boolean) => boolean
+    ) {
+        return this._statsMgr.init(core, (config) => this._createStatsCore(config), featureName, canUseFeature);
     }
 
     public registerTests() {
@@ -518,6 +522,22 @@ export class InternalSdkStatsTests extends AITestClass {
 
                 hook && hook.rm();
                 core.unload(false);
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats: manager honors the SKU feature throttle",
+            test: () => {
+                let featureChecks = 0;
+                this._initStatsMgr(this._core, "InternalSdkStats", (feature, sdkDefaultState) => {
+                    featureChecks++;
+                    Assert.equal("InternalSdkStats", feature, "The configured feature name should be checked");
+                    Assert.equal(true, sdkDefaultState, "SDK Stats should remain enabled by default");
+                    return false;
+                });
+
+                Assert.equal(false, this._statsMgr.enabled, "The manager should be disabled when the SKU throttles the feature");
+                Assert.equal(1, featureChecks, "The SKU feature throttle should be checked during initialization");
             }
         });
 

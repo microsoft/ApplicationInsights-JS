@@ -10,6 +10,7 @@ import { IConfig } from "../interfaces/ai/IConfig";
 import { IConfiguration } from "../interfaces/ai/IConfiguration";
 import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
 import { IThrottleInterval, IThrottleLocalStorageObj, IThrottleMgrConfig, IThrottleResult } from "../interfaces/ai/IThrottleMgr";
+import { isFeatureEnabled } from "../utils/HelperFuncs";
 import { randomValue } from "../utils/RandomHelper";
 import { utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from "../utils/StorageHelperFuncs";
 
@@ -23,6 +24,7 @@ interface SendMsgParameter {
 
 export class ThrottleMgr {
     public canThrottle: (msgId: _eInternalMessageId | number) => boolean;
+    public canUseFeature: (feature: string, sdkDefaultState?: boolean) => boolean;
     public sendMessage: (msgId: _eInternalMessageId, message: string, severity?: eLoggingSeverity) => IThrottleResult | null;
     public getConfig: () => IThrottleMgrConfig;
     public isTriggered: (msgId: _eInternalMessageId | number) => boolean; // this function is to get previous triggered status
@@ -39,6 +41,8 @@ export class ThrottleMgr {
         let _config: {[msgKey: number]: IThrottleMgrConfig};
         let _localStorageObj: {[msgKey: number]: IThrottleLocalStorageObj | null | undefined};
         let _isTriggered: {[msgKey: number]: boolean}; //_isTriggered is to make sure that we only trigger throttle once a day
+        let _featureSampleRates: {[feature: string]: number};
+        let _featureSamples: {[feature: string]: boolean};
         let _namePrefix: string;
         let _queue: {[msgKey: number]: Array<SendMsgParameter>};
         let _isReady: boolean = false;
@@ -65,6 +69,39 @@ export class ThrottleMgr {
             let localObj = _getLocalStorageObjByKey(msgId);
             let cfg = _getCfgByKey(msgId);
             return _canThrottle(cfg, _canUseLocalStorage, localObj);
+        }
+
+        /**
+         * Check whether a feature is enabled and sampled in by its named throttle configuration.
+         * A missing or disabled throttle configuration leaves the feature opt-in decision unchanged.
+         * The sampling decision is cached until the configured sampling rate changes.
+         * @param feature - The featureOptIn and throttleMgrCfg key.
+         * @param sdkDefaultState - The default state when featureOptIn does not define the feature.
+         * @returns true when the feature is enabled and allowed by its throttle configuration.
+         */
+        _self.canUseFeature = (feature: string, sdkDefaultState?: boolean): boolean => {
+            if (!feature || isFeatureEnabled(feature, core.config, sdkDefaultState) !== true) {
+                return false;
+            }
+
+            let coreConfig = core.config as IConfiguration & IConfig;
+            let throttleConfig = coreConfig.throttleMgrCfg && coreConfig.throttleMgrCfg[feature];
+            if (!throttleConfig || throttleConfig.disabled) {
+                return true;
+            }
+
+            let limit = throttleConfig.limit;
+            let samplingRate = limit && limit.samplingRate;
+            if (isNullOrUndefined(samplingRate)) {
+                samplingRate = 100;
+            }
+
+            if (_featureSampleRates[feature] !== samplingRate) {
+                _featureSampleRates[feature] = samplingRate;
+                _featureSamples[feature] = _isSampledIn(samplingRate);
+            }
+
+            return _featureSamples[feature];
         }
 
         /**
@@ -199,6 +236,8 @@ export class ThrottleMgr {
         function _initConfig() {
             _logger = safeGetLogger(core);
             _isTriggered = {};
+            _featureSampleRates = {};
+            _featureSamples = {};
             _localStorageObj = {};
             _queue = {};
             _config = {};
@@ -211,7 +250,10 @@ export class ThrottleMgr {
                 
                 let configMgr = coreConfig.throttleMgrCfg || {};
                 objForEachKey(configMgr, (key, cfg) => {
-                    _setCfgByKey(parseInt(key), cfg)
+                    let msgId = parseInt(key);
+                    if (msgId + "" === key) {
+                        _setCfgByKey(msgId, cfg);
+                    }
                 });
         
             }));
@@ -391,6 +433,10 @@ export class ThrottleMgr {
                 // eslint-disable-next-line no-empty
             }
             return false;
+        }
+
+        function _isSampledIn(samplingRate: number) {
+            return samplingRate >= 1000000 || (samplingRate > 0 && randomValue(999999) < samplingRate);
         }
 
         function _getLocalStorageObjByKey(key: _eInternalMessageId | number) {
