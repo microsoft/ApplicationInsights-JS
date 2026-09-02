@@ -11,7 +11,7 @@ import { IUnloadHook } from "./IUnloadHook";
  * @param config - The SDK Stats configuration containing the resolved iKey and endpoint.
  * Implementations must handle creation errors and return null rather than throw.
  * @returns The initialized core instance, or null when an SDK Stats pipeline cannot be created.
- * @since 3.3.7
+ * @since 3.4.4
  */
 export type CreateStatsCoreFn = (config: IConfiguration) => IAppInsightsCore | null;
 

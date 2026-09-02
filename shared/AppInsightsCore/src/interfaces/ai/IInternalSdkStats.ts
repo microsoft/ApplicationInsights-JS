@@ -6,7 +6,7 @@ import { IPayloadData } from "./IXHROverride";
 /**
  * The interface for the stats beat plugin, which is responsible for collecting and sending statistics about the SDK.
  * It is used to track the performance and usage of the SDK, and to identify any issues or errors that may occur.
- * @since 3.3.7
+ * @since 3.4.4
  */
 export interface IInternalSdkStats {
     /**
@@ -39,7 +39,7 @@ export interface IInternalSdkStats {
 
 /**
  * The configuration passed to the stats beat plugin to record statistics about the SDK
- * @since 3.3.7
+ * @since 3.4.4
  */
 export interface IInternalSdkStatsState {
     /**
@@ -61,7 +61,7 @@ export interface IInternalSdkStatsState {
 /**
  * The parsed result of the remote SDK Stats configuration (`cfg/v1.json`). It identifies whether
  * SDK Stats collection is currently enabled and the host that matching events should be sent to.
- * @since 3.3.7
+ * @since 3.4.4
  */
 export interface IInternalSdkStatsCfgResult {
     /**
@@ -83,13 +83,13 @@ export interface IInternalSdkStatsCfgResult {
  * scenarios) via {@link IInternalSdkStatsConfig.overrideCfgFn}.
  * @param cfgUrl - The SDK Stats configuration URL (`cfg/v1.json`) to fetch.
  * @param oncomplete - The callback to invoke with the parsed configuration, or null on any failure.
- * @since 3.3.7
+ * @since 3.4.4
  */
 export type InternalSdkStatsCfgFetchFn = (cfgUrl: string, oncomplete: (result: IInternalSdkStatsCfgResult | null) => void) => void;
 
 /**
  * The configuration for the stats beat definition
- * @since 3.3.7
+ * @since 3.4.4
  */
 export interface IInternalSdkStatsConfig {
     /**
