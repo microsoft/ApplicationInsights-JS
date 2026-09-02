@@ -118,6 +118,15 @@
         },
         "@microsoft/applicationinsights-osplugin-js": {
             "constEnums": []
+        },
+        "@microsoft/applicationinsights-otlpchannel-js": {
+            "constEnums": [
+                "eOtlpSignal",
+                "eOtlpSpanKind",
+                "eOtlpStatusCode",
+                "eOtlpSeverityNumber",
+                "ePropertyType"
+            ]
         }
     }
 }

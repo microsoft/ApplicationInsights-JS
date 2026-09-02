@@ -20,7 +20,8 @@
         "./channels/tee-channel-js",
         "./shared/1ds-core-js",
         "./channels/1ds-post-js",
-        "./channels/offline-channel-js"
+        "./channels/offline-channel-js",
+        "./channels/otlp-channel-js"
     ],
     "1ds": [
         "./shared/1ds-core-js",
@@ -41,7 +42,8 @@
         "./extensions/applicationinsights-debugplugin-js",
         "./extensions/applicationinsights-cfgsync-js",
         "./channels/tee-channel-js",
-        "./channels/offline-channel-js"
+        "./channels/offline-channel-js",
+        "./channels/otlp-channel-js"
     ],
     "cfgSync": [
         "./extensions/applicationinsights-cfgsync-js"

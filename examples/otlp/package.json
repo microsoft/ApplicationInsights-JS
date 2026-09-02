@@ -1,0 +1,17 @@
+{
+    "name": "@microsoft/applicationinsights-example-otlp",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Multi page / multi instance manual and automated test harness for the Application Insights OTLP channel",
+    "author": "Microsoft Application Insights Team",
+    "license": "MIT",
+    "scripts": {
+        "build": "rollup -c rollup.config.js --bundleConfigAsCjs",
+        "serve": "node tools/server.js",
+        "test": "node tools/automated-test.js",
+        "test:collector": "node tools/verify-with-collector.js",
+        "get-collector": "powershell -ExecutionPolicy Bypass -File collector/get-collector.ps1",
+        "dump": "node tools/dump-samples.js",
+        "start": "npm run build && npm run serve"
+    }
+}

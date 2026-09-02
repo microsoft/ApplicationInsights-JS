@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+    "noImplicitAny": false,
+    "module": "amd",
+    "moduleResolution": "Node",
+    "target": "es5",
+    "alwaysStrict": true,
+    "declaration": true
+  },
+  "include": [
+  ],
+  "exclude": [
+      "node_modules/"
+  ]
+}

@@ -1,0 +1,17 @@
+# Runs a real OpenTelemetry Collector for validating the OTLP channel output.
+#
+#   docker compose up
+#
+# The collector listens for OTLP/HTTP on 4318 and re-exports what it parsed back to the example's
+# mock collector on the host (port 8099).
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector:0.157.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel-collector-config.docker.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4318:4318"
+    extra_hosts:
+      # Allows the collector inside the container to reach the example server on the host
+      - "host.docker.internal:host-gateway"

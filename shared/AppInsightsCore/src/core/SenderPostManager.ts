@@ -550,12 +550,15 @@ export class SenderPostManager {
                                      */
                                     if (!_isOneDs && !response.ok) {
                                         // this is for appInsights only
-                                        if (response.status){
-                                            _handleError(response.statusText, response.status);
-                                        } else {
+                                        if (!response.status) {
                                             _handleError(response.statusText, 499);
+                                            resolveFunc && resolveFunc(false);
+                                        } else {
+                                            doAwaitResponse(response.text(), (resp) => {
+                                                _onFetchComplete(response, payload, resp.value);
+                                                resolveFunc && resolveFunc(false);
+                                            });
                                         }
-                                        resolveFunc && resolveFunc(false);
                                     } else {
                                         if (_isOneDs && !response.body) {
                                             _onFetchComplete(response, null, STR_EMPTY);

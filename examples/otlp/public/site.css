@@ -1,0 +1,127 @@
+body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    margin: 0;
+    padding: 0 24px 48px;
+    color: #1b1b1b;
+    background: #fafafa;
+}
+
+header {
+    padding: 16px 0;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 16px;
+}
+
+h1 {
+    font-size: 20px;
+    margin: 0 0 8px;
+}
+
+nav a {
+    margin-right: 12px;
+    color: #0067b8;
+}
+
+nav a.current {
+    font-weight: 600;
+    text-decoration: none;
+    color: #1b1b1b;
+}
+
+button {
+    font: inherit;
+    padding: 6px 14px;
+    margin-right: 8px;
+    border: 1px solid #8a8886;
+    border-radius: 2px;
+    background: #fff;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #f3f2f1;
+}
+
+.cols {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.col {
+    flex: 1 1 380px;
+    min-width: 320px;
+}
+
+h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #605e5c;
+    margin: 16px 0 6px;
+}
+
+pre {
+    background: #fff;
+    border: 1px solid #e1dfdd;
+    padding: 10px;
+    max-height: 320px;
+    overflow: auto;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 13px;
+}
+
+li {
+    padding: 3px 0;
+    font-family: Consolas, monospace;
+}
+
+li.pass {
+    color: #107c10;
+}
+
+li.fail {
+    color: #a4262c;
+    font-weight: 600;
+}
+
+.endpoint {
+    padding: 10px 14px;
+    margin: 0 0 14px;
+    border-left: 4px solid #8a8886;
+    background: #fff;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.endpoint code {
+    background: #f3f2f1;
+    padding: 2px 6px;
+    font-size: 12px;
+}
+
+.endpoint button {
+    margin: 0;
+}
+
+.endpoint.via-tap {
+    border-left-color: #107c10;
+    background: #f3f9f1;
+}
+
+.endpoint.via-mock {
+    border-left-color: #ca5010;
+    background: #fdf6f3;
+}
