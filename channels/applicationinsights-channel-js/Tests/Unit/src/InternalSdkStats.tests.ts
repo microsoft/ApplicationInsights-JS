@@ -8,6 +8,9 @@ import { SinonSpy, SinonStub } from "sinon";
 import { ISenderConfig } from "../../../types/applicationinsights-channel-js";
 import { isBeaconsSupported } from "@microsoft/applicationinsights-core-js";
 
+const STATS_TEST_CFG_URL = "https://tst-data.stats.monitor.azure.com/cfg/v1.json";
+const STATS_TEST_HOST = "tst-data.stats.monitor.azure.com";
+
 function _clearStatsStorage() {
     try {
         let storage = typeof sessionStorage !== "undefined" ? sessionStorage : null;
@@ -94,13 +97,13 @@ export class InternalSdkStatsTests extends AITestClass {
             stats: {
                 shrtInt: 900,
                 // The config url gates collection, without it nothing is collected or sent
-                cfgUrl: "https://data.stats.monitor.azure.com/cfg/v1.json",
+                cfgUrl: STATS_TEST_CFG_URL,
                 iKey: "Stats-Test-iKey",
                 snp: "6",
                 // Resolve the remote SDK Stats configuration synchronously (as enabled) so the tests
                 // do not depend on a network fetch of the cfg/v1.json endpoint.
                 overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
-                    oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
+                    oncomplete({ enabled: true, url: STATS_TEST_HOST });
                 }
             },
             extensionConfig: { [sender.identifier]: config }
@@ -179,10 +182,10 @@ export class InternalSdkStatsTests extends AITestClass {
                     },
                     stats: {
                         shrtInt: 900,
-                        cfgUrl: "https://data.stats.monitor.azure.com/cfg/v1.json",
+                        cfgUrl: STATS_TEST_CFG_URL,
                         iKey: "Stats-Test-iKey",
                         overrideCfgFn: (_cfgUrl: string, oncomplete: (result: { enabled: boolean, url: string } | null) => void) => {
-                            oncomplete({ enabled: true, url: "data.stats.monitor.azure.com" });
+                            oncomplete({ enabled: true, url: STATS_TEST_HOST });
                         }
                     }
 
