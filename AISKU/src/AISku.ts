@@ -66,7 +66,7 @@ const CDN_USAGE = "CdnUsage";
 const SDK_LOADER_VER = "SdkLoaderVer";
 const ZIP_PAYLOAD = "zipPayload";
 const SDK_STATS = "SdkStats";
-var _sdkVersion = '3.4.3';
+var _sdkVersion = "#version#";
 
 const default_limit = {
     samplingRate: 100,
