@@ -384,7 +384,7 @@ export interface IConfig {
     /**
      * [Optional] Sets throttle manager configuration by numeric message ID or string feature name.
      */
-    throttleMgrCfg?: {[key: string]: IThrottleMgrConfig};
+    throttleMgrCfg?: {[key: number | string]: IThrottleMgrConfig};
 
     /**
      * [Optional] Specifies a Highest Priority custom endpoint URL where telemetry data will be sent.
