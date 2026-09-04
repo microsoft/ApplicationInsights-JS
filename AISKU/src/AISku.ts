@@ -416,25 +416,20 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                     // flag, routing the resulting events to the distro-owned SDK Stats ingestion endpoint.
                     // The config url and iKey are supplied by config.stats, until both are present no
                     // SDK Stats are sent. Opt-out via featureOptIn "sdkStats".
-                    if (_core.setStatsMgr) {
-                        let statsMgr = createStatsMgr();
-                        _core.setStatsMgr(statsMgr);
-                        let statsHook = statsMgr.init<IConfiguration & IConfig>(_core, (statsConfig) => {
-                            try {
-                                let statsCore = new AppInsightsCore();
-                                (statsConfig as IConfiguration & IConfig).maxBatchInterval = 1;
-                                statsCore.initialize(statsConfig as IConfiguration & IConfig, [new Sender()]);
-                                return statsCore;
-                            } catch (e) {
-                                _throwInternal(_core.logger, eLoggingSeverity.WARNING,
-                                    _eInternalMessageId.InternalSdkStatsManagerException, "Failed to create SDK Stats core");
-                                return null;
-                            }
-                        }, STATS_SDK_FEATURE, _throttleMgr.useFeature);
-                        if (statsHook) {
-                            _core.addUnloadHook(statsHook);
+                    let statsMgr = createStatsMgr();
+                    _core.setStatsMgr(statsMgr);
+                    _core.addUnloadHook(statsMgr.init<IConfiguration & IConfig>(_core, (statsConfig) => {
+                        try {
+                            let statsCore = new AppInsightsCore();
+                            (statsConfig as IConfiguration & IConfig).maxBatchInterval = 1;
+                            statsCore.initialize(statsConfig as IConfiguration & IConfig, [new Sender()]);
+                            return statsCore;
+                        } catch (e) {
+                            _throwInternal(_core.logger, eLoggingSeverity.WARNING,
+                                _eInternalMessageId.InternalSdkStatsManagerException, "Failed to create SDK Stats core");
+                            return null;
                         }
-                    }
+                    }, STATS_SDK_FEATURE, _throttleMgr.useFeature));
 
                     // Initialize the initial OTel API
                     _otelApi = _initOTel(_self, "aisku", _onEnd, _onException);

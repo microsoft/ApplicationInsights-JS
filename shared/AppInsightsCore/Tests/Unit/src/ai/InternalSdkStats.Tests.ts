@@ -837,6 +837,18 @@ export class InternalSdkStatsTests extends AITestClass {
                 Assert.equal("https://eu-tst-data.stats.monitor.azure.com/cfg/v1.json",
                     getStatsCfgUrl("https://westeurope-5.in.applicationinsights.azure.com/", STATS_TEST_CFG_URL),
                     "An EU region replica endpoint should also resolve to the EU url");
+                Assert.equal("https://eu-tst-data.stats.monitor.azure.com/cfg/v1.json",
+                    getStatsCfgUrl("HTTPS://WESTEUROPE.in.applicationinsights.azure.com/", STATS_TEST_CFG_URL),
+                    "EU endpoint matching should be case insensitive");
+                Assert.equal("https://eu-tst-data.stats.monitor.azure.com/cfg/v1.json",
+                    getStatsCfgUrl("westeurope.in.applicationinsights.azure.com/", STATS_TEST_CFG_URL),
+                    "An EU endpoint without a scheme should resolve to the EU url");
+                Assert.equal("https://eu-tst-data.stats.monitor.azure.com/cfg/v1.json",
+                    getStatsCfgUrl("custom://westeurope.in.applicationinsights.azure.com/", STATS_TEST_CFG_URL),
+                    "An EU endpoint with a custom scheme should resolve to the EU url");
+                Assert.equal(STATS_TEST_CFG_URL,
+                    getStatsCfgUrl("https://eastus.in.applicationinsights.azure.com/westeurope", STATS_TEST_CFG_URL),
+                    "An EU region outside the host prefix should not resolve to the EU url");
 
                 let euRegions = [
                     "francecentral", "francesouth", "germanywestcentral", "norwayeast",

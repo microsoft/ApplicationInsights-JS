@@ -4,7 +4,7 @@
 import { doAwaitResponse } from "@nevware21/ts-async";
 import {
     ITimerHandler, arrIndexOf, isNumber, isString, mathRandom, objCreate, objDefineProps, objForEachKey, scheduleTimeout, strEndsWith,
-    strIndexOf, strLower, strStartsWith, strSubstring, utcNow
+    strLower, strStartsWith, strSubstring, utcNow
 } from "@nevware21/ts-utils";
 import { onConfigChange } from "../config/DynamicConfig";
 import { DEFAULT_BREEZE_PATH, DisabledPropertyName, SampleRate } from "../constants/Constants";
@@ -34,9 +34,6 @@ const STATS_LANGUAGE = "JavaScript";
 const STATS_SAMPLING_PERCENTAGE = 100;
 const STATS_TYPE = "Browser";
 
-/** The host prefix added to the configured SDK Stats config url for EU data-boundary regions. */
-const STATS_EU_HOST_PREFIX = "eu-";
-
 /** Ingestion path for future 1DS (OneCollector) SDK Stats; the AI SKU uses {@link DEFAULT_BREEZE_PATH}. */
 export const STATS_SDK_ONECOLLECTOR_PATH = "/OneCollector/1.0";
 
@@ -47,42 +44,11 @@ export const STATS_SDK_ONECOLLECTOR_PATH = "/OneCollector/1.0";
 export const STATS_SDK_FEATURE = "sdkStats";
 
 // Prefixes for EU data-boundary regions used by the Azure Monitor OpenTelemetry exporter
-const STATS_EU_REGION_PATTERN = /^(france|germany|northeurope|norway|sweden|switzerland|uk|westeurope)/;
-
-/**
- * Determine whether the provided customer endpoint maps to an EU data-boundary region. The region
- * is extracted from the host (the leading host label, with any region replica suffix removed) and
- * matched against the known EU data-boundary regions.
- * @param endpoint - The customer breeze endpoint that the SDK Stats are being collected for.
- * @returns true when the endpoint maps to an EU region, false otherwise (including unknown regions).
- */
-function _isEuEndpoint(endpoint: string): boolean {
-    let isEU = false;
-    if (endpoint) {
-        let host = strLower(endpoint);
-        // Strip the scheme
-        let schemeIdx = strIndexOf(host, "://");
-        if (schemeIdx !== -1) {
-            host = strSubstring(host, schemeIdx + 3);
-        }
-
-        // Extract the leading host label, e.g. "westeurope-5" from "westeurope-5.in.applicationinsights.azure.com/"
-        let label = host.split("/")[0].split(".")[0];
-        // Remove any trailing region replica suffix, e.g. "westeurope-5" => "westeurope"
-        let dashIdx = strIndexOf(label, "-");
-        if (dashIdx !== -1) {
-            label = strSubstring(label, 0, dashIdx);
-        }
-
-        isEU = STATS_EU_REGION_PATTERN.test(label);
-    }
-
-    return isEU;
-}
+const STATS_EU_REGION_PATTERN = /^(?:[^:]+:\/\/)?(?:france|germany|northeurope|norway|sweden|switzerland|uk|westeurope)/i;
 
 /**
  * Returns the SDK Stats config URL (`cfg/v1.json`) for the endpoint, derived from the configured
- * base url. For EU data-boundary endpoints the {@link STATS_EU_HOST_PREFIX} is inserted in front of
+ * base url. For EU data-boundary endpoints an `eu-` prefix is inserted in front of
  * the host, e.g. `https://data.stats...` => `https://eu-data.stats...`.
  * @param endpoint - The customer breeze endpoint that the SDK Stats are being collected for.
  * @param cfgUrl - The configured (non-EU) SDK Stats config url, when not supplied null is returned.
@@ -92,11 +58,8 @@ export function getStatsCfgUrl(endpoint: string, cfgUrl: string): string {
     let result: string = null;
     if (cfgUrl) {
         result = cfgUrl;
-        if (_isEuEndpoint(endpoint)) {
-            // Insert the EU prefix in front of the host (after any scheme)
-            let schemeIdx = strIndexOf(cfgUrl, "://");
-            let hostIdx = schemeIdx !== -1 ? schemeIdx + 3 : 0;
-            result = strSubstring(cfgUrl, 0, hostIdx) + STATS_EU_HOST_PREFIX + strSubstring(cfgUrl, hostIdx);
+        if (STATS_EU_REGION_PATTERN.test(endpoint)) {
+            result = cfgUrl.replace(/^([^:]+:\/\/)?/, "$1eu-");
         }
     }
 
