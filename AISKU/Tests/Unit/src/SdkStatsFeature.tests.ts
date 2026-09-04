@@ -1,6 +1,6 @@
 import { ApplicationInsights, IConfig, IConfiguration } from '../../../src/applicationinsights-web';
 import { AITestClass, Assert } from '@microsoft/ai-test-framework';
-import { FeatureOptInMode, ISdkStatsNotifCbk, onConfigChange } from '@microsoft/applicationinsights-core-js';
+import { FeatureOptInMode, ISdkStatsNotifCbk, onConfigChange, STATS_SDK_FEATURE } from '@microsoft/applicationinsights-core-js';
 import { AppInsightsSku } from '../../../src/AISku';
 import { ICfgSyncMode } from '@microsoft/applicationinsights-cfgsync-js';
 
@@ -37,9 +37,11 @@ export class SdkStatsFeatureTests extends AITestClass {
     public registerTests() {
         this._testSdkStatsEnabledByDefault();
         this._testSdkStatsDisabledViaFeatureOptIn();
+        this._testCustomerSdkStatsIgnoresInternalThrottle();
         this._testSdkStatsDynamicEnableDisable();
         this._testSdkStatsConfigDefaults();
         this._testSdkStatsDynamicConfigChanges();
+        this._testSnippetSdkVersion();
     }
 
     private _createAi(configOverrides?: Partial<IConfiguration & IConfig>): AppInsightsSku {
@@ -132,6 +134,34 @@ export class SdkStatsFeatureTests extends AITestClass {
         });
     }
 
+    private _testCustomerSdkStatsIgnoresInternalThrottle() {
+        this.testCase({
+            name: "SdkStatsFeature: dedicated SDK Stats throttle does not disable customer SDK Stats",
+            useFakeTimers: true,
+            test: () => {
+                let ai = this._createAi({
+                    throttleMgrCfg: {
+                        [STATS_SDK_FEATURE]: {
+                            disabled: false,
+                            limit: {
+                                samplingRate: 0
+                            }
+                        }
+                    }
+                });
+                this.clock.tick(1);
+
+                Assert.ok(this._findSdkStatsListener(ai),
+                    "Customer SDK Stats should remain enabled when dedicated SDK Stats are throttled");
+                Assert.ok(ai["core"].getSdkStats({
+                    cKey: TestInstrumentationKey,
+                    endpoint: "https://example.endpoint.com",
+                    sdkVer: "1.0.0"
+                }), "The throttle should apply to SDK Stats operations without disabling the manager");
+            }
+        });
+    }
+
     private _testSdkStatsDynamicEnableDisable() {
         this.testCase({
             name: "SdkStatsFeature: disabling SdkStats feature dynamically removes the listener",
@@ -220,6 +250,8 @@ export class SdkStatsFeatureTests extends AITestClass {
                 let config = ai.config;
                 Assert.ok(config.sdkStats, "sdkStats config should exist after initialization");
                 Assert.equal(900000, config.sdkStats!.int, "int should default to 900000 (15 minutes)");
+                Assert.equal(100, config.throttleMgrCfg![STATS_SDK_FEATURE].limit!.samplingRate,
+                    "Dedicated SDK Stats throttle should use the legacy default sampling rate");
             }
         });
 
@@ -303,4 +335,30 @@ export class SdkStatsFeatureTests extends AITestClass {
             }
         });
     }
+
+    private _testSnippetSdkVersion() {
+        this.testCase({
+            name: "SdkStatsFeature: snippet version is included in the SDK Stats version",
+            useFakeTimers: true,
+            test: () => {
+                let config = {
+                    connectionString: TestConnectionString,
+                    stats: {},
+                    extensionConfig: {
+                        ["AppInsightsCfgSyncPlugin"]: {
+                            syncMode: ICfgSyncMode.Receive,
+                            cfgUrl: ""
+                        }
+                    }
+                } as IConfiguration & IConfig;
+                let ai = new AppInsightsSku({ config: config, sv: "6", queue: [] } as any);
+                ai.loadAppInsights();
+                this._ai = ai;
+                this.clock.tick(1);
+
+                Assert.equal("6", ai.config.stats.snp, "SDK Stats config should contain snippet version 6");
+            }
+        });
+    }
+
 }

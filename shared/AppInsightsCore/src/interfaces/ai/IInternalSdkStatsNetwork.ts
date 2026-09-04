@@ -6,7 +6,7 @@
  * and sending statistics about network requests. It is used to track the performance
  * and usage of network requests, and to identify any issues or errors that may occur.
  */
-export interface INetworkStatsbeat {
+export interface IInternalSdkStatsNetwork {
     host: string;
     totalRequest: number;
     success: number;

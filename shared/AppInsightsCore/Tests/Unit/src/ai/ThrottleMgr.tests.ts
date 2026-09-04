@@ -3,6 +3,7 @@ import { AppInsightsCore } from "../../../../src/core/AppInsightsCore";
 import { IAppInsightsCore } from "../../../../src/interfaces/ai/IAppInsightsCore";
 import { IConfiguration } from "../../../../src/interfaces/ai/IConfiguration";
 import { IPlugin } from "../../../../src/interfaces/ai/ITelemetryPlugin";
+import { FeatureOptInMode } from "../../../../src/enums/ai/FeatureOptInEnums";
 import { _eInternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
 import { ThrottleMgr } from "../../../../src/diagnostics/ThrottleMgr";
 import { SinonSpy } from "sinon";
@@ -109,6 +110,125 @@ export class ThrottleMgrTest extends AITestClass {
     }
 
     public registerTests() {
+
+        this.testCase({
+            name: "ThrottleMgrTest: useFeature queues callbacks and uses persisted feature throttling",
+            useFakeTimers: true,
+            test: () => {
+                let feature = this._msgId + "Feature";
+                let featureStorageName = "appInsightsThrottle-feature-" + feature;
+                let date = new Date();
+                window.localStorage[featureStorageName] = JSON.stringify({
+                    date: date,
+                    count: 5
+                });
+                let coreCfg = {
+                    instrumentationKey: "test",
+                    featureOptIn: {
+                        [feature]: { mode: FeatureOptInMode.enable }
+                    },
+                    throttleMgrCfg: {
+                        [feature]: {
+                            disabled: false,
+                            limit: {
+                                samplingRate: 1000000,
+                                maxSendNumber: 2
+                            },
+                            interval: {
+                                dayInterval: 1
+                            }
+                        }
+                    }
+                } as IConfiguration & IConfig;
+                this._core.initialize(coreCfg, [this._channel]);
+
+                let throttleMgr = new ThrottleMgr(this._core);
+                Assert.equal(undefined, throttleMgr.getConfig()[this._msgId],
+                    "A feature key that begins with digits should not configure an internal message");
+                let featureUses = 0;
+                Assert.equal(null, throttleMgr.useFeature(feature, () => {
+                    featureUses++;
+                }, true), "The feature operation should be queued until the throttle manager is ready");
+                Assert.equal(0, featureUses, "The queued callback should not run early");
+
+                Assert.equal(true, throttleMgr.onReadyState(true), "The queued feature operation should be flushed");
+                Assert.equal(2, featureUses, "The persisted count and maxSendNumber should control callback invocations");
+                let storedFeature = JSON.parse(window.localStorage[featureStorageName]);
+                Assert.equal(0, storedFeature.count, "The persisted feature count should reset after triggering");
+                compareDates(date, storedFeature.date);
+                compareDates(date, storedFeature.preTriggerDate);
+                Assert.equal(undefined, window.localStorage["appInsightsThrottle-" + feature],
+                    "Feature state should use a separate storage key from numeric messages");
+
+                let result = throttleMgr.useFeature(feature, () => {
+                    featureUses++;
+                }, true);
+                Assert.deepEqual({
+                    isThrottled: false,
+                    throttleNum: 0
+                }, result, "The feature operation should only trigger once per day");
+                Assert.equal(2, featureUses, "A second feature callback should not run on the same day");
+                storedFeature = JSON.parse(window.localStorage[featureStorageName]);
+                Assert.equal(1, storedFeature.count, "Suppressed feature operations should be persisted");
+
+                this._core.config.featureOptIn[feature].mode = FeatureOptInMode.disable;
+                this.clock.tick(1);
+                Assert.equal(null, throttleMgr.useFeature(feature, () => {
+                    featureUses++;
+                }, true), "Feature opt-out should take precedence over throttling");
+
+                this._core.config.featureOptIn[feature].mode = FeatureOptInMode.enable;
+                this._core.config.throttleMgrCfg[feature].disabled = true;
+                this.clock.tick(1);
+                result = throttleMgr.useFeature(feature, () => {
+                    featureUses++;
+                }, true);
+                Assert.deepEqual({
+                    isThrottled: false,
+                    throttleNum: 0
+                }, result, "A disabled throttle should not invoke the feature operation");
+                Assert.equal(2, featureUses, "A disabled throttle should suppress feature callbacks");
+                Assert.equal(0, this.loggingSpy.callCount, "Feature checks should not emit internal messages");
+            }
+        });
+
+        this.testCase({
+            name: "ThrottleMgrTest: queued feature callbacks use the latest dynamic throttle config",
+            useFakeTimers: true,
+            test: () => {
+                let feature = "dynamicFeature";
+                this._core.initialize({
+                    instrumentationKey: "test",
+                    featureOptIn: {
+                        [feature]: { mode: FeatureOptInMode.enable }
+                    },
+                    throttleMgrCfg: {}
+                } as IConfiguration & IConfig, [this._channel]);
+
+                let throttleMgr = new ThrottleMgr(this._core);
+                let featureUses = 0;
+                throttleMgr.useFeature(feature, () => {
+                    featureUses++;
+                }, true);
+
+                this._core.updateCfg({
+                    throttleMgrCfg: {
+                        [feature]: {
+                            disabled: false,
+                            limit: {
+                                samplingRate: 0
+                            },
+                            interval: {
+                                dayInterval: 1
+                            }
+                        }
+                    }
+                });
+                this.clock.tick(1);
+                Assert.equal(true, throttleMgr.onReadyState(true), "The feature callback should be removed from the queue");
+                Assert.equal(0, featureUses, "The latest zero sampling rate should suppress the queued callback");
+            }
+        });
 
         this.testCase({
             name: "ThrottleMgrTest: Default config should be set from root",
@@ -400,7 +520,8 @@ export class ThrottleMgrTest extends AITestClass {
                 Assert.ok(target && target.length === 1, "target should contain queue");
                 let queue = target[0][this._msgKey];
                 Assert.deepEqual(queue.length,1, "should have 1 item");
-                Assert.equal(queue[0].msgID, this._msgId, "should be correct msgId");
+                Assert.equal(queue[0].key, this._msgId, "should be correct msgId");
+                Assert.equal("function", typeof queue[0].callback, "should queue a callback");
 
                 throttleMgr.onReadyState(true);
                 target = throttleMgr["_getDbgPlgTargets"]();
@@ -463,10 +584,12 @@ export class ThrottleMgrTest extends AITestClass {
                 Assert.ok(target && target.length === 1, "target should contain queue");
                 let queue = target[0][this._msgKey];
                 Assert.deepEqual(queue.length,1, "should have 1 item");
-                Assert.equal(queue[0].msgID, this._msgId, "should be correct msgId");
+                Assert.equal(queue[0].key, this._msgId, "should be correct msgId");
+                Assert.equal("function", typeof queue[0].callback, "should queue a callback");
                 queue = target[0][msgId];
                 Assert.deepEqual(queue.length,1, "should have 1 item test1");
-                Assert.equal(queue[0].msgID, msgId, "should be correct msgId test1");
+                Assert.equal(queue[0].key, msgId, "should be correct msgId test1");
+                Assert.equal("function", typeof queue[0].callback, "should queue a callback test1");
 
                 throttleMgr.onReadyState(true);
                 target = throttleMgr["_getDbgPlgTargets"]();

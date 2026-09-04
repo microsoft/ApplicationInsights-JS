@@ -1,0 +1,777 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { doAwaitResponse } from "@nevware21/ts-async";
+import {
+    ITimerHandler, arrIndexOf, isNumber, isString, mathRandom, objCreate, objDefineProps, objForEachKey, scheduleTimeout, strEndsWith,
+    strLower, strStartsWith, strSubstring, utcNow
+} from "@nevware21/ts-utils";
+import { onConfigChange } from "../config/DynamicConfig";
+import { DEFAULT_BREEZE_PATH, DisabledPropertyName, SampleRate } from "../constants/Constants";
+import { STR_EMPTY } from "../constants/InternalConstants";
+import { _throwInternal, safeGetLogger } from "../diagnostics/DiagnosticLogger";
+import { _eInternalMessageId, eLoggingSeverity } from "../enums/ai/LoggingEnums";
+import { IAppInsightsCore } from "../interfaces/ai/IAppInsightsCore";
+import { IConfiguration } from "../interfaces/ai/IConfiguration";
+import { IDiagnosticLogger } from "../interfaces/ai/IDiagnosticLogger";
+import {
+    IInternalSdkStats, IInternalSdkStatsCfgResult, IInternalSdkStatsConfig, IInternalSdkStatsState, InternalSdkStatsCfgFetchFn
+} from "../interfaces/ai/IInternalSdkStats";
+import { IInternalSdkStatsNetwork } from "../interfaces/ai/IInternalSdkStatsNetwork";
+import { CreateStatsCoreFn, IStatsMgr } from "../interfaces/ai/IStatsMgr";
+import { ITelemetryItem } from "../interfaces/ai/ITelemetryItem";
+import { UseFeatureFn } from "../interfaces/ai/IThrottleMgr";
+import { IPayloadData } from "../interfaces/ai/IXHROverride";
+import { IConfigDefaults } from "../interfaces/config/IConfigDefaults";
+import { MetricDataType } from "../telemetry/ai/DataTypes";
+import { getJSON, isFetchSupported, isXhrSupported } from "../utils/EnvUtils";
+import { getResponseText, isFeatureEnabled, openXhr } from "../utils/HelperFuncs";
+import { utlGetSessionStorage, utlSetSessionStorage } from "../utils/StorageHelperFuncs";
+
+/** Default collection interval in seconds; override with `stats.shrtInt`. */
+const STATS_COLLECTION_INTERVAL_SECONDS = 3600; // 1 hour
+const STATS_LANGUAGE = "JavaScript";
+const STATS_SAMPLING_PERCENTAGE = 100;
+const STATS_TYPE = "Browser";
+
+/** Ingestion path for future 1DS (OneCollector) SDK Stats; the AI SKU uses {@link DEFAULT_BREEZE_PATH}. */
+export const STATS_SDK_ONECOLLECTOR_PATH = "/OneCollector/1.0";
+
+/**
+ * The default feature name used to gate the SDK Stats manager. SDK Stats is enabled by default
+ * and can be opted-out via the featureOptIn configuration using this name.
+ */
+export const STATS_SDK_FEATURE = "sdkStats";
+
+// Prefixes for EU data-boundary regions used by the Azure Monitor OpenTelemetry exporter
+const STATS_EU_REGION_PATTERN = /^(?:[^:]+:\/\/)?(?:france|germany|northeurope|norway|sweden|switzerland|uk|westeurope)/i;
+
+/**
+ * Returns the SDK Stats config URL (`cfg/v1.json`) for the endpoint, derived from the configured
+ * base url. For EU data-boundary endpoints an `eu-` prefix is inserted in front of
+ * the host, e.g. `https://data.stats...` => `https://eu-data.stats...`.
+ * @param endpoint - The customer breeze endpoint that the SDK Stats are being collected for.
+ * @param cfgUrl - The configured (non-EU) SDK Stats config url, when not supplied null is returned.
+ * @returns The config url to fetch, or null when no url has been configured.
+ */
+export function getStatsCfgUrl(endpoint: string, cfgUrl: string): string {
+    let result: string = null;
+    if (cfgUrl) {
+        result = cfgUrl;
+        if (STATS_EU_REGION_PATTERN.test(endpoint)) {
+            result = cfgUrl.replace(/^([^:]+:\/\/)?/, "$1eu-");
+        }
+    }
+
+    return result;
+}
+
+/** Parse the SDK Stats config JSON (`{ ver, enabled, url }`); null if empty or unparseable. */
+function _parseStatsCfg(response: string): IInternalSdkStatsCfgResult | null {
+    let result: IInternalSdkStatsCfgResult = null;
+    let json = getJSON();
+    if (response && json) {
+        try {
+            let cfg = json.parse(response);
+            if (cfg) {
+                result = {
+                    // Fail-closed: only treat as enabled when explicitly true
+                    enabled: cfg.enabled === true,
+                    url: isString(cfg.url) ? cfg.url : null
+                };
+            }
+        } catch (e) {
+            // Unparseable -> no config available
+        }
+    }
+
+    return result;
+}
+
+/** Default SDK Stats config fetch (fetch, else XHR); calls oncomplete with the parsed config or null. */
+function _defaultStatsCfgFetch(cfgUrl: string, oncomplete: (result: IInternalSdkStatsCfgResult | null) => void): void {
+    function _complete(response?: string) {
+        try {
+            oncomplete(response ? _parseStatsCfg(response) : null);
+        } catch (e) {
+            // Ignore callback errors
+        }
+    }
+
+    try {
+        if (isFetchSupported()) {
+            let init: RequestInit = { method: "GET" };
+            init[DisabledPropertyName] = true;
+
+            doAwaitResponse(fetch(cfgUrl, init), (result) => {
+                let response = result.value;
+                if (!result.rejected && response && response.ok) {
+                    doAwaitResponse(response.text(), (res) => {
+                        _complete(res.rejected ? null : res.value);
+                    });
+                } else {
+                    _complete();
+                }
+            });
+        } else if (isXhrSupported()) {
+            // openXhr marks the request disabled so it isn't self-tracked
+            let xhr = openXhr("GET", cfgUrl, false, true, false, 10000);
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4) {
+                    _complete(xhr.status >= 200 && xhr.status < 400 ? getResponseText(xhr) : null);
+                }
+            };
+            xhr.onerror = () => {
+                _complete();
+            };
+            xhr.ontimeout = () => {
+                _complete();
+            };
+            xhr.send();
+        } else {
+            _complete();
+        }
+    } catch (e) {
+        _complete();
+    }
+}
+
+/** Build the ingestion endpoint from the config host: `https://<host>` + {@link DEFAULT_BREEZE_PATH}. */
+function _buildStatsEndpoint(host: string): string {
+    let endpoint: string = null;
+    if (host) {
+        let base = strStartsWith(strLower(host), "http") ? host : "https://" + host;
+        if (strEndsWith(base, "/")) {
+            base = strSubstring(base, 0, base.length - 1);
+        }
+
+        endpoint = base + DEFAULT_BREEZE_PATH;
+    }
+
+    return endpoint;
+}
+
+
+/**
+ * An internal interface to allow the IInternalSdkStats instance to call back to the manager for
+ * critical tasks, like starting the timer, sending the events and to inform the manager
+ * that this instance is stopping. This is used to ensure that the manager is able to
+ * track and control the lifecycle of the instance.
+ * @internal
+ */
+interface _IMgrCallbacks {
+    /**
+     * Provides a callback to the manager to start a timer for the internalSdkStats instance.
+     * This is used to ensure that the manager is able to control the lifecycle of the instance
+     * @param cb - The callback to call when the timer is started
+     * @param delay - The delay (in milliseconds) before the callback should be called
+     * @returns A handle to the timer that was started, this can be used to cancel the timer if needed
+     */
+    start: (cb: () => void, delay: number) => ITimerHandler;
+
+    /** Returns the current collection interval in milliseconds. */
+    interval: () => number;
+
+    /** Registers for collection interval changes. */
+    watchInterval: (cb: () => void) => () => void;
+
+    /**
+     * Provides a callback to the manager to send the internalSdkStats event to the core.
+     * This is used to ensure that the manager is able to control the lifecycle of the instance
+     * @param internalSdkStatsEvent - The internalSdkStats event to send to the core
+     * @param endpoint - The endpoint to send the event to
+     */
+    track: (internalSdkStats: IInternalSdkStats, internalSdkStatsEvent?: ITelemetryItem) => boolean | null;
+}
+
+/**
+ * Creates a new IInternalSdkStatsNetwork instance with the specified host.
+ * @param host - The host for the IInternalSdkStatsNetwork instance.
+ * @returns A new IInternalSdkStatsNetwork instance.
+ */
+function _createInternalSdkStatsNetwork(host: string): IInternalSdkStatsNetwork {
+    return {
+        host,
+        totalRequest: 0,
+        success: 0,
+        // Untrusted keys must not reach Object.prototype.
+        throttle: objCreate(null),
+        failure: objCreate(null),
+        retry: objCreate(null),
+        exception: objCreate(null),
+        requestDuration: 0
+    };
+}
+
+/** SDK Stats state persisted as `[windowStart, counters]`. */
+type _IStatsStore = [number, IInternalSdkStatsNetwork];
+
+/** Validates persisted counts and restores them to a null-prototype object. */
+function _reviveCounts(src: any): { [key: string]: number } {
+    let result: { [key: string]: number } = objCreate(null);
+    objForEachKey(src, (key, value) => {
+        value = +value;
+        if (value > 0) {
+            result[key] = value;
+        }
+    });
+
+    return result;
+}
+
+/** Restores validated counters from session storage. */
+function _reviveCounters(host: string, cnt: any): IInternalSdkStatsNetwork {
+    let counter = _createInternalSdkStatsNetwork(host);
+    if (cnt) {
+        counter.totalRequest = +cnt.totalRequest || 0;
+        counter.success = +cnt.success || 0;
+        counter.requestDuration = +cnt.requestDuration || 0;
+        counter.throttle = _reviveCounts(cnt.throttle);
+        counter.failure = _reviveCounts(cnt.failure);
+        counter.retry = _reviveCounts(cnt.retry);
+        counter.exception = _reviveCounts(cnt.exception);
+    }
+
+    return counter;
+}
+
+function _loadStore(logger: IDiagnosticLogger, key: string): _IStatsStore {
+    try {
+        let json = getJSON();
+        let raw = json && utlGetSessionStorage(logger, key);
+        if (raw) {
+            let parsed = json.parse(raw);
+            if (parsed[0] >= 0) {
+                return parsed;
+            }
+        }
+    } catch (e) {
+        // Start a new window.
+    }
+
+    return null;
+}
+
+function _saveStore(logger: IDiagnosticLogger, key: string, store: _IStatsStore) {
+    try {
+        let json = getJSON();
+        if (json) {
+            utlSetSessionStorage(logger, key, json.stringify(store));
+        }
+    } catch (e) {
+        // Persistence is best-effort; serialization can fail when built-in prototypes are modified.
+    }
+}
+
+/**
+ * Creates a new IInternalSdkStats instance with the specified manager callbacks and internalSdkStats state.
+ * @param mgr - The manager callbacks to use for the IInternalSdkStats instance.
+ * @param internalSdkStatsStats - The internalSdkStats state to use for the IInternalSdkStats instance.
+ * @returns A new IInternalSdkStats instance.
+ */
+function _createInternalSdkStats(
+    mgr: _IMgrCallbacks, internalSdkStatsStats: IInternalSdkStatsState, logger: IDiagnosticLogger
+): IInternalSdkStats {
+    // Isolate counters by customer key and endpoint.
+    let _storeKey = (internalSdkStatsStats.cKey || STR_EMPTY) + ":" + internalSdkStatsStats.endpoint;
+    let _store = _loadStore(logger, _storeKey);
+    // Start a new window only when the first value is recorded.
+    let _windowStart = _store ? _store[0] : -1;
+    let _networkCounter: IInternalSdkStatsNetwork = _reviveCounters(internalSdkStatsStats.endpoint, _store && _store[1]);
+    let _timeoutHandle: ITimerHandler;      // Handle to the timer for sending telemetry. This way, we would not send telemetry when system sleep.
+    let _isEnabled: boolean = true;         // Flag to check if internalSdkStats is enabled or not
+    let _removeIntervalListener: () => void;
+
+    function _startWindow() {
+        if (_windowStart < 0) {
+            _windowStart = utcNow();
+        }
+    }
+
+    function _persist() {
+        _saveStore(logger, _storeKey, [_windowStart, _networkCounter]);
+    }
+
+    /** Returns the remaining time in the current window. */
+    function _remaining() {
+        let interval = mgr.interval();
+        let elapsed = utcNow() - _windowStart;
+        let remaining = interval;
+        if (elapsed >= 0) {
+            remaining = interval - elapsed;
+        }
+
+        return remaining > 0 ? remaining : 0;
+    }
+
+    function _setupTimer() {
+        if (_isEnabled && _windowStart >= 0 && !_timeoutHandle) {
+            _timeoutHandle = mgr.start(() => {
+                _timeoutHandle = null;
+                trackInternalSdkStats();
+            }, _remaining());
+        }
+    }
+
+    function trackInternalSdkStats() {
+        if (_isEnabled) {
+            let ready = mgr.track(internalSdkStats);
+            if (ready !== null) {
+                if (ready) {
+                    _trackSendRequestDuration();
+                    _trackSendRequestsCount();
+                }
+                _networkCounter = _createInternalSdkStatsNetwork(_networkCounter.host);
+                // Persist the reset state; restart the window on the next value.
+                _windowStart = -1;
+                _persist();
+            } else {
+                // Keep the counters and retry during the next interval.
+                _windowStart = utcNow();
+                _persist();
+                _setupTimer();
+            }
+        }
+    }
+
+    /**
+     * This is a simple helper that checks if the currently reporting endpoint is the same as this instance was
+     * created with. This is used to ensure that we only send internalSdkStats events to the endpoint that was used
+     * when the instance was created. This is important as the endpoint can change during the lifetime of the
+     * instance and we don't want to send internalSdkStats events to the wrong endpoint.
+     * @param endpoint
+     * @returns true if the endpoint is the same as the one used to create the instance, false otherwise
+     */
+    function _checkEndpoint(endpoint: string) {
+        return _networkCounter.host === endpoint;
+    }
+
+    function _inc(counter: { [key: string]: number }, key: string | number) {
+        counter[key] = (counter[key] || 0) + 1;
+    }
+
+    /**
+     * Attempt to send internalSdkStats events to the server. This is done by creating a new event and sending it to the core.
+     * The event is created with the name and value passed in, and any additional properties are added to the event as well.
+     * This will only send the event when
+     * - the internalSdkStats is enabled
+     * - the internalSdkStats key is set for the current endpoint
+     * - the value is greater than 0
+     * @param name - The name of the event to send
+     * @param val - The value of the event to send
+     * @param properties - Optional additional properties to add to the event
+     */
+    function _sendInternalSdkStatss(name: string, val: number, properties?: { [name: string]: any }) {
+        if (_isEnabled && val && val > 0){
+            // Add extra properties
+            let baseProperties = {
+                "rp": "unknown",
+                "attach": "Manual",
+                "cikey": internalSdkStatsStats.cKey,
+                "os": STATS_TYPE,
+                "language": STATS_LANGUAGE,
+                "version": internalSdkStatsStats.sdkVer || "unknown",
+                "endpoint": "breeze",
+                "host": _networkCounter.host
+            } as { [key: string]: any };
+
+            let combinedProps: { [key: string]: any } = {};
+            objForEachKey(properties, (key, value) => {
+                combinedProps[key] = value;
+            });
+            objForEachKey(baseProperties, (key, value) => {
+                combinedProps[key] = value;
+            });
+
+            let internalSdkStatsEvent: ITelemetryItem = {
+                name: name,
+                baseData: {
+                    name: name,
+                    average: val,
+                    properties: combinedProps
+                },
+                baseType: MetricDataType
+            };
+
+            // The destination iKey and (optional) SDK Stats ingestion endpoint are resolved and
+            // stamped by the manager (see _track) based on the current (dynamic) configuration.
+            mgr.track(internalSdkStats, internalSdkStatsEvent);
+        }
+    }
+
+    function _trackSendRequestDuration() {
+        var totalRequest = _networkCounter.totalRequest;
+
+        if (totalRequest > 0 ) {
+            _sendInternalSdkStatss("Request_Duration", _networkCounter.requestDuration / totalRequest);
+        }
+    }
+
+    function _sendCounts(counts: { [code: string]: number }, name: string, codeKey: string) {
+        for (const code in counts) {
+            let props: { [key: string]: any } = {};
+            props[codeKey] = code;
+            _sendInternalSdkStatss(name, counts[code], props);
+        }
+    }
+
+    function _trackSendRequestsCount() {
+        var currentCounter = _networkCounter;
+        _sendInternalSdkStatss("Request_Success_Count", currentCounter.success);
+        _sendCounts(currentCounter.failure, "failure", "statusCode");
+        _sendCounts(currentCounter.retry, "retry", "statusCode");
+        _sendCounts(currentCounter.exception, "exception", "exceptionType");
+        _sendCounts(currentCounter.throttle, "Throttle_Count", "statusCode");
+    }
+
+    function _setEnabled(isEnabled: boolean) {
+        _isEnabled = isEnabled;
+        if (!_isEnabled) {
+            if (_timeoutHandle) {
+                _timeoutHandle.cancel();
+                _timeoutHandle = null;
+            }
+            if (_removeIntervalListener) {
+                _removeIntervalListener();
+                _removeIntervalListener = null;
+            }
+        }
+    }
+
+    _removeIntervalListener = mgr.watchInterval(() => {
+        if (_timeoutHandle) {
+            _timeoutHandle.cancel();
+            _timeoutHandle = null;
+        }
+        _setupTimer();
+    });
+
+    // THE internalSdkStats instance being created and returned
+    let internalSdkStats: IInternalSdkStats = {
+        enabled: !!_isEnabled,
+        endpoint: STR_EMPTY,
+        count: (status: number, payloadData: IPayloadData, endpoint: string) => {
+            if (_isEnabled && _checkEndpoint(endpoint)) {
+                let statsData = payloadData && (payloadData as any)["statsData"];
+                let startTime = statsData && statsData["startTime"];
+                if (startTime) {
+                    _networkCounter.totalRequest++;
+                    _networkCounter.requestDuration += utcNow() - startTime;
+                }
+
+                let retryArray = [401, 403, 408, 429, 500, 502, 503, 504];
+                let throttleArray = [402, 439];
+
+                if (status >= 200 && status < 300) {
+                    _networkCounter.success++;
+                } else if (retryArray.indexOf(status) !== -1) {
+                    _inc(_networkCounter.retry, status);
+                } else if (throttleArray.indexOf(status) !== -1) {
+                    _inc(_networkCounter.throttle, status);
+                } else if (status !== 307 && status !== 308) {
+                    _inc(_networkCounter.failure, status);
+                }
+
+                // Persist in case the page unloads before the interval ends.
+                _startWindow();
+                _persist();
+                _setupTimer();
+            }
+        },
+        countException: (endpoint: string, exceptionType: string) => {
+            if (_isEnabled && _checkEndpoint(endpoint)) {
+                _inc(_networkCounter.exception, exceptionType);
+                _startWindow();
+                _persist();
+                _setupTimer();
+            }
+        }
+    };
+
+    // Make the properties readonly / reactive to changes
+    return objDefineProps(internalSdkStats, {
+        enabled: { g: () => _isEnabled, s: _setEnabled },
+        endpoint: { g: () => _networkCounter.host }
+    });
+}
+
+export function createStatsMgr(): IStatsMgr {
+    let _isMgrEnabled: boolean = false; // Flag to check if internalSdkStats is enabled or not
+    let _core: IAppInsightsCore; // The customer core observed for configuration and endpoint changes
+    let _createStatsCore: CreateStatsCoreFn;
+    let _featureName: string;
+    let _statsCore: IAppInsightsCore;
+    let _useFeature: UseFeatureFn;
+    let _sampleRate = STATS_SAMPLING_PERCENTAGE;
+    let _shortInterval = STATS_COLLECTION_INTERVAL_SECONDS * 1000;
+    let _statsCfgFetchFn: InternalSdkStatsCfgFetchFn;
+    let _statsIKey: string;
+    // The configured SDK Stats config url (cfg/v1.json), sourced from the dynamic config. When it is
+    // not supplied (no CDN / host configuration) SDK Stats are not collected or sent.
+    let _statsCfgUrl: string;
+    // Resolved remote config cached per cfg URL (EU / non-EU); tracks in-flight fetch and last result.
+    // Null-prototype so the config supplied url can never be used to pollute Object.prototype.
+    let _cfgCache: { [cfgUrl: string]: { pending: boolean, result: IInternalSdkStatsCfgResult } } = objCreate(null);
+    let _endpointCfgCache: { [endpoint: string]: string } = objCreate(null);
+    let _intervalListeners: Array<() => void> = [];
+
+    function _unloadStatsCore() {
+        let statsCore = _statsCore;
+        _statsCore = null;
+        statsCore && statsCore.unload(false);
+    }
+
+    function _getStatsCore(endpoint: string): IAppInsightsCore {
+        if (_statsCore && _statsCore.config.endpointUrl !== endpoint) {
+            _unloadStatsCore();
+        }
+
+        if (!_statsCore) {
+            _statsCore = _createStatsCore({
+                instrumentationKey: _statsIKey,
+                endpointUrl: endpoint
+            });
+        }
+
+        return _statsCore;
+    }
+
+    // Lazily initialize the manager and start listening for configuration changes
+    // This is also required to handle "unloading" and then re-initializing again
+    function _init<CfgType extends IConfiguration = IConfiguration>(
+        core: IAppInsightsCore<CfgType>, createStatsCore: CreateStatsCoreFn, featureName?: string, useFeature?: UseFeatureFn
+    ) {
+        if (_core) {
+            // If the core is already set, then just return with an empty unload hook
+            _throwInternal(safeGetLogger(core), eLoggingSeverity.WARNING, _eInternalMessageId.InternalSdkStatsManagerException, "InternalSdkStats manager is already initialized");
+            return null;
+        }
+
+        _core = core;
+        _createStatsCore = createStatsCore;
+        _featureName = featureName || STATS_SDK_FEATURE;
+        _useFeature = useFeature;
+        // Start listening for configuration changes from the single global config, within a config
+        // change handler. This supports the scenario where the config is changed after the manager
+        // has been created (including CDN / dynamic config updates).
+        let configHook = onConfigChange<IConfiguration>(core.config, (details) => {
+            let previousInterval = _shortInterval;
+            let previousCfgUrl = _statsCfgUrl;
+            let previousIKey = _statsIKey;
+            // Re-evaluate the feature flag on every config change (enabled by default, opt-out via featureOptIn)
+            _isMgrEnabled = false;
+            _statsCfgFetchFn = null;
+            _statsIKey = null;
+            _statsCfgUrl = null;
+            _sampleRate = STATS_SAMPLING_PERCENTAGE;
+            if (isFeatureEnabled(_featureName, details.cfg, true) === true) {
+                // Seed the SDK Stats defaults into the single global config so they remain dynamic and
+                // can be overridden via the CDN / dynamic config or by the SKU.
+                details.setDf(details.cfg, _sdkStatsDefaults);
+                // Read the nested stats config directly (registers the dynamic dependency on the
+                // stats object) and copy the individual values into local (minifiable) variables
+                // instead of holding the config object and repeatedly reading its properties.
+                let statsCfg = details.cfg.stats;
+                if (statsCfg) {
+                    details.setDf(statsCfg, _sdkStatsConfigDefaults);
+                    // Make the override fetch fn a dynamic property before snapshotting it so a later
+                    // merged (CDN / updateCfg) change to it re-runs this handler and refreshes the local.
+                    _statsCfgFetchFn = details.set(statsCfg, "overrideCfgFn", statsCfg.overrideCfgFn);
+                    _statsIKey = details.set(statsCfg, "iKey", statsCfg.iKey);
+                    // Same for the config url, it is normally delivered by the CDN configuration after
+                    // initialization has completed, so this handler must re-run when it arrives.
+                    _statsCfgUrl = details.set(statsCfg, "cfgUrl", statsCfg.cfgUrl);
+                    let sampleRate = details.set(statsCfg, "samplingPercentage", statsCfg.samplingPercentage);
+                    if (isNumber(sampleRate) && sampleRate >= 0 && sampleRate <= 100) {
+                        _sampleRate = sampleRate;
+                    }
+                    _isMgrEnabled = true;
+                    _shortInterval = STATS_COLLECTION_INTERVAL_SECONDS * 1000; // Reset to the default in-case the config is removed / changed
+                    if (isNumber(statsCfg.shrtInt) && statsCfg.shrtInt > 0) {
+                        _shortInterval = statsCfg.shrtInt * 1000; // Convert to milliseconds
+                    }
+                }
+            }
+
+            if (!_isMgrEnabled || _statsCfgUrl !== previousCfgUrl || _statsIKey !== previousIKey) {
+                _unloadStatsCore();
+            }
+
+            if (_statsCfgUrl !== previousCfgUrl) {
+                _endpointCfgCache = objCreate(null);
+            }
+
+            if (_shortInterval !== previousInterval) {
+                for (let lp = 0; lp < _intervalListeners.length; lp++) {
+                    _intervalListeners[lp]();
+                }
+            }
+        });
+
+        return {
+            rm: () => {
+                configHook.rm();
+                _unloadStatsCore();
+                _createStatsCore = null;
+                _featureName = null;
+                _useFeature = null;
+                _core = null;
+            }
+        };
+    }
+
+    /**
+     * Resolve the remote SDK Stats config for the endpoint, starting a fetch on first use. Returns
+     * null until resolved (or on failure, or when no config url has been configured) so the caller
+     * skips sending.
+     */
+    function _resolveStatsCfg(endpoint: string): IInternalSdkStatsCfgResult {
+        let cfgUrl = _endpointCfgCache[endpoint];
+        if (!cfgUrl) {
+            cfgUrl = getStatsCfgUrl(endpoint, _statsCfgUrl);
+            if (cfgUrl) {
+                _endpointCfgCache[endpoint] = cfgUrl;
+            }
+        }
+        if (!cfgUrl) {
+            // No configured SDK Stats config url -> nothing to resolve and nothing is sent
+            return null;
+        }
+
+        let entry = _cfgCache[cfgUrl];
+        if (!entry) {
+            entry = _cfgCache[cfgUrl] = { pending: false, result: null };
+        }
+
+        if (!entry.result && !entry.pending) {
+            entry.pending = true;
+            let fetchFn = _statsCfgFetchFn || _defaultStatsCfgFetch;
+            try {
+                fetchFn(cfgUrl, (result) => {
+                    entry.pending = false;
+                    // null on failure so a later interval retries
+                    entry.result = result;
+                });
+            } catch (e) {
+                // Reset so a later interval retries
+                entry.pending = false;
+            }
+        }
+
+        return entry.result;
+    }
+
+    function _track(internalSdkStats: IInternalSdkStats, internalSdkStatsEvent?: ITelemetryItem): boolean | null {
+        if (_isMgrEnabled) {
+            if (!_statsIKey) {
+                return null;
+            }
+
+            // The remote cfg file is the sole authority for whether collection is enabled and where
+            // to send the events. Re-resolved here (rather than cached on the instance) to support the
+            // endpoint changing after the instance was created.
+            let cfgResult = _resolveStatsCfg(internalSdkStats.endpoint);
+            if (!cfgResult) {
+                return null;
+            }
+            if (!cfgResult.enabled) {
+                return false;
+            }
+
+            let sampleRate = _sampleRate;
+            if (!internalSdkStatsEvent && sampleRate > 0) {
+                // Validate the pipeline before the counters are reset. At 0% no pipeline is required.
+                let statsCore = _getStatsCore(_buildStatsEndpoint(cfgResult.url));
+                if (!statsCore) {
+                    return null;
+                }
+            } else if (internalSdkStatsEvent &&
+                    (sampleRate >= 100 || (sampleRate > 0 && mathRandom() * 100 < sampleRate))) {
+                let trackStats = () => {
+                    let currentCfg = _resolveStatsCfg(internalSdkStats.endpoint);
+                    if (currentCfg && currentCfg.enabled) {
+                        let statsCore = _getStatsCore(_buildStatsEndpoint(currentCfg.url));
+                        if (statsCore) {
+                            internalSdkStatsEvent[SampleRate] = sampleRate;
+                            statsCore.track(internalSdkStatsEvent);
+                        }
+                    }
+                };
+                if (_useFeature) {
+                    _useFeature(_featureName, trackStats, true);
+                } else {
+                    trackStats();
+                }
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    function _watchInterval(cb: () => void): () => void {
+        _intervalListeners.push(cb);
+        return () => {
+            let idx = arrIndexOf(_intervalListeners, cb);
+            if (idx !== -1) {
+                _intervalListeners.splice(idx, 1);
+            }
+        };
+    }
+
+    function _createInstance(state: IInternalSdkStatsState): IInternalSdkStats {
+        let instance: IInternalSdkStats = null;
+
+        if (_isMgrEnabled) {
+            // Prefetch the remote config so it's ready by the first interval
+            if (state && state.endpoint) {
+                _resolveStatsCfg(state.endpoint);
+            }
+
+            let callbacks: _IMgrCallbacks = {
+                start: (cb: () => void, delay: number) => {
+                    return scheduleTimeout(cb, delay);
+                },
+                interval: () => _shortInterval,
+                watchInterval: _watchInterval,
+                track: _track
+            };
+
+            instance = _createInternalSdkStats(callbacks, state, safeGetLogger(_core));
+        }
+
+        return instance;
+    }
+
+    let theMgr = {
+        enabled: false,
+        newInst: _createInstance,
+        init: _init
+    };
+
+    return objDefineProps(theMgr, {
+        "enabled": { g: () => _isMgrEnabled }
+    });
+}
+
+/**
+ * The default {@link IInternalSdkStatsConfig} values for SDK Stats collection. These are seeded into the
+ * single global config (via {@link IWatchDetails.setDf}) by the manager so they remain dynamic and
+ * can be overridden at runtime via the CDN / dynamic config or by the SKU (AISKU / 1DS). No config
+ * url is defaulted, the `stats.cfgUrl` value is expected to be delivered by the CDN / dynamic
+ * configuration, and until it is, no SDK Stats are collected or sent. The events are routed to the
+ * distro-owned SDK Stats ingestion endpoint, whose host (and whether collection is enabled) is read
+ * at runtime from the SDK Stats configuration identified by that url. SDK Stats can also be
+ * opted-out using the `featureOptIn` configuration with the {@link STATS_SDK_FEATURE} name.
+ */
+const _sdkStatsDefaults: IConfigDefaults<IConfiguration> = {
+    // Seeding a stats object allows the manager to apply its nested defaults; the config url, destination and
+    // enabled state are all resolved from the dynamic / remote SDK Stats configuration. A plain
+    // object (rather than cfgDfMerge) is used so setDf seeds and makes the stats property dynamic
+    // without marking it as a reference (avoiding the in-place reference side effect).
+    stats: {}
+};
+
+const _sdkStatsConfigDefaults: IConfigDefaults<IInternalSdkStatsConfig> = {
+    samplingPercentage: STATS_SAMPLING_PERCENTAGE
+};
