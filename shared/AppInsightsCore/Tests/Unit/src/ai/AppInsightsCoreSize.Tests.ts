@@ -92,7 +92,7 @@ export class AppInsightsCoreSizeCheck extends AITestClass {
 
     private _checkPureAnnotations(filePath: string, label: string): void {
         this.testCase({
-            name: `Test ${label} canonicalizes PURE annotation spacing`,
+            name: `Test ${label} contains valid PURE annotations`,
             test: () => {
                 let request = new Request(filePath, { method: "GET" });
                 return fetch(request).then((response) => {
@@ -106,6 +106,10 @@ export class AppInsightsCoreSizeCheck extends AITestClass {
                         let nonCanonicalPurePattern = /\(\s+\/\*\s*[#@]__PURE__\s*\*\/|\(\s*\/\*\s*[#@]__PURE__\s*\*\/\s+/g;
                         let matches = text.match(nonCanonicalPurePattern) || [];
                         Assert.equal(0, matches.length, `Found ${matches.length} non-canonical PURE annotations in ${label}`);
+
+                        let pureLiteralPattern = /\/\*\s*[#@]__PURE__\s*\*\/\s*(?:null|true|false|["']|[-+]?\d)/g;
+                        matches = text.match(pureLiteralPattern) || [];
+                        Assert.equal(0, matches.length, `Found ${matches.length} PURE annotations on literals in ${label}`);
                     }, (error) => {
                         Assert.ok(false, `${label} PURE annotation check response error: ${error}`);
                     });

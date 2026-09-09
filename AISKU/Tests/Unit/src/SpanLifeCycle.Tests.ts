@@ -570,7 +570,16 @@ export class SpanLifeCycleTests extends AITestClass {
             test: () => {
                 // Arrange
                 const span = this._ai.startSpan("endtime-custom");
-                const customEndTime = Date.now();
+
+                // Derive the custom end time from the span's own start time so the
+                // round-trip comparison stays within the same time domain the SDK
+                // uses internally (perf timeOrigin based). Using Date.now() directly
+                // is unreliable on some CI hosts where the system wall clock can drift
+                // slightly behind the span start time, which causes end() to clamp the
+                // duration to zero (endTime === startTime) and fail the tolerance check.
+                const startTime = span?.startTime;
+                const startMs = startTime ? (startTime[0] * 1000 + startTime[1] / 1000000) : Date.now();
+                const customEndTime = startMs + 1000; // 1 second after the span start
 
                 // Act
                 span?.end(customEndTime);

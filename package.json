@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-web",
     "description": "Microsoft Application Insights JavaScript SDK",
-    "version": "3.4.3",
+    "version": "3.4.4",
     "keywords": [
         "browser performance monitoring",
         "script errors",
@@ -14,7 +14,8 @@
         "build": "node common/scripts/install-run-rush.js rebuild --verbose",
         "rebuild": "npm run build && npm run api-docs",
         "testx": "rush test --verbose",
-        "test": "node common/scripts/install-run-rush.js test --verbose",
+        "test": "npm run test:pure-annotations && node common/scripts/install-run-rush.js test --verbose",
+        "test:pure-annotations": "node tools/pureAnnotations.test.mjs",
         "mintest": "node common/scripts/install-run-rush.js mintest --verbose",
         "lint": "node common/scripts/install-run-rush.js lint --verbose",
         "lint-fix": "npm run ai-restore && grunt lint-fix",
@@ -48,7 +49,7 @@
     },
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "devDependencies": {
-        "@microsoft/rush": "5.175.1",
+        "@microsoft/rush": "5.178.1",
         "@nevware21/grunt-eslint-ts": "^0.5.2",
         "@nevware21/grunt-ts-plugin": "^0.5.2",
         "@rollup/plugin-commonjs": "^24.0.0",
@@ -56,6 +57,7 @@
         "@rollup/plugin-replace": "^5.0.2",
         "@typescript-eslint/eslint-plugin": "^7.14.1",
         "@typescript-eslint/parser": "^7.14.1",
+        "acorn": "^8.18.0",
         "archiver": "^5.3.0",
         "connect": "^3.7.0",
         "eslint": "^8.56.0",
@@ -78,16 +80,27 @@
     "overrides": {
         "basic-ftp": ">=5.2.0",
         "form-data": "^2.5.5",
-        "tar": ">=7.5.16",
+        "tar": ">=7.5.22",
         "glob": "^7.2.3",
         "lodash": "^4.18.1",
-        "minimatch": "^3.1.5",
-        "linkify-it": "^5.0.1",
+        "minimatch": {
+            ".": "^3.1.5",
+            "brace-expansion": "^1.1.18"
+        },
+        "@microsoft/api-extractor": "7.58.7",
+        "decode-uri-component": ">=0.5.0",
+        "brace-expansion": "^5.0.9",
+        "extract-zip": "npm:@electron-internal/extract-zip@^1.0.5",
+        "linkify-it": "^5.0.2",
         "markdown-it": "^14.2.0",
         "yaml": "^2.9.0",
-        "js-yaml": "^4.2.0",
+        "js-yaml": "^4.3.1",
+        "fast-xml-parser": ">=5.10.1",
+        "fast-uri": ">=3.1.5",
+        "ip-address": ">=10.4.0",
+        "morgan": "^1.11.0",
         "grunt": {
-            "js-yaml": "^3.15.0"
+            "js-yaml": "^3.15.1"
         }
     }
 }

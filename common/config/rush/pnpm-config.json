@@ -2,16 +2,28 @@
   "$schema": "https://developer.microsoft.com/json-schemas/rush/v5/pnpm-config.schema.json",
   "globalOverrides": {
     "minimatch": ">=3.1.5",
-    "tar": ">=7.5.16",
+    "minimatch@3.1.5>brace-expansion": "1.1.18",
+    "tar": ">=7.5.22",
     "glob": ">=7.2.3",
     "lodash": ">=4.18.1",
     "postcss": ">=8.5.14",
     "ws": ">=8.21.0",
     "form-data": ">=2.5.6 <3.0.0",
-    "js-yaml": ">=4.2.0",
-    "markdown-it": ">=14.2.0"
+    "js-yaml": ">=4.3.1 <5.0.0",
+    "markdown-it": ">=14.2.0",
+    "decode-uri-component": ">=0.5.0",
+    "@microsoft/api-extractor": "7.58.7",
+    "brace-expansion": ">=5.0.9 <6.0.0",
+    "extract-zip": "npm:@electron-internal/extract-zip@^1.0.5",
+    "fast-uri": ">=3.1.5",
+    "ip-address": ">=10.4.0",
+    "linkify-it": ">=5.0.2",
+    "morgan": ">=1.11.0"
   },
   "globalPeerDependencyRules": {
     "allowAny": ["*"]
+  },
+  "globalPatchedDependencies": {
+    "decode-uri-component@0.5.0": "../config/rush/patches/decode-uri-component@0.5.0.patch"
   }
 }

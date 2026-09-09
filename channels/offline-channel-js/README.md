@@ -49,6 +49,7 @@ The Offline Channel supports the saving of events when your application is offli
 ### NPM Setup
 
 ```js
+import { ApplicationInsights } from "@microsoft/applicationinsights-web";
 import { OfflineChannel, eStorageProviders } from "@microsoft/applicationinsights-offlinechannel-js";
 
 let offlineChannel = new OfflineChannel();
@@ -57,30 +58,31 @@ let coreConfig = {
     extensionConfig: {
         [offlineChannel.identifier]: {
             providers: [eStorageProviders.LocalStorage, eStorageProviders.IndexedDb],
-            minPersistenceLevel:  2, // only events with PersistenceLevel >=2 will be saved/sent
+            minPersistenceLevel: 1 // events without an explicit persistence level are Normal (1)
         } // Add config for offline support channel
-    }
+    },
+    extensions: [offlineChannel]
 };
-let appInsights = new ApplicationInsights({config: coreConfig});
+let appInsights = new ApplicationInsights({ config: coreConfig });
 appInsights.loadAppInsights();
-// this is to make sure offline channel is initialized after sender channel
-appInsights.addPlugin(offlineChannel);
 
 // get offlineListener to set online/offline status
 let offlineListener = offlineChannel.getOfflineListener();
 
+// Offline Channel configuration completes asynchronously after the SDK loads.
+// Wait until the next event-loop turn before tracking events that it must process.
+setTimeout(function () {
+    // set application status to online
+    offlineListener.setOnlineState(1);
+    // offline channel will not process events when the status is online
+    appInsights.trackEvent({ name: "onlineEvent" }); // sender channel will send this event
 
-// set application status to online 
-offlineListener.setOnlineState(1);
-// offline channel will not process events when the status is online
-appInsights.track({ name:"onlineEvent" }); // sender channel will send this event
-
-// set application status to offline
-offlineListener.setOnlineState(2);
-// offline channel will process and save this event to the configured persistent storage
-// the event will be sent when the application status is online again
-appInsights.track({ name:"offlineEvent" });
-
+    // set application status to offline
+    offlineListener.setOnlineState(2);
+    // offline channel will process and save this event to the configured persistent storage
+    // the event will be sent when the application status is online again
+    appInsights.trackEvent({ name: "offlineEvent" });
+}, 0);
 ```
 
 ## Contributing

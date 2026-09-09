@@ -117,7 +117,7 @@ export class SampleTests extends AITestClass {
 
                 // setup
                 const errorRange = 5;
-                const totalItems = 1000;
+                const totalItems = 10000;
                 const ids = [];
                 for (let i = 0; i < totalItems; ++i) {
                     ids.push(newId());
@@ -136,7 +136,7 @@ export class SampleTests extends AITestClass {
                     // Assert
                     const actualSampleRate = 100 * countOfSampledItems / totalItems;
                     QUnit.assert.ok(Math.abs(actualSampleRate - sampleRate) < errorRange,
-                        "Actual sampling (" + actualSampleRate + ") does not fall into +-2% range from expected rate (" + sampleRate + ")");
+                        "Actual sampling (" + actualSampleRate + ") does not fall into +-" + errorRange + "% range from expected rate (" + sampleRate + ")");
                 });
             }
         });

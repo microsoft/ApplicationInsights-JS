@@ -44,6 +44,7 @@ This is the **Microsoft Application Insights JavaScript SDK** - a browser-based 
 - Maximum line length: 140 characters
 
 ### Naming Conventions
+- **Branches**: Use concise, intent-first kebab-case names that describe the change (e.g., `fix-vite8-pure-annotations`). Avoid generic activity names such as `investigate-issue-2764` unless the user explicitly requests them.
 - **Classes**: PascalCase (e.g., `PageViewManager`, `TelemetryContext`)
 - **Interfaces**: PascalCase with `I` prefix (e.g., `ITelemetryItem`, `IPageViewTelemetry`)
 - **Methods/Functions**: camelCase (e.g., `trackPageView`, `sendTelemetry`)

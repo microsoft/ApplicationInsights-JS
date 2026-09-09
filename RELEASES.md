@@ -4,6 +4,31 @@
 
 <!-- ## Unreleased Changes -->
 
+## 3.4.4 (September 8th, 2026)
+
+This is a maintenance release for the 3.4.x version line containing runtime reliability and bundler compatibility fixes, build tooling and dependency security hardening, documentation corrections, and a test reliability fix. There are no SDK API changes. The `@microsoft/1ds-post-js` channel is numbered 4.4.4 and requires v3.4.4.
+
+### Significant Changes (since 3.4.3)
+
+- **ESM XHR Instrumentation**: Fixed tree shaking of the XHR capability check so automatic XHR instrumentation is preserved in ESM bundles.
+- **Vite 8 and Rolldown Compatibility**: Normalized generated PURE annotations by expression so invalid annotations on primitive literals no longer produce warnings, while valid call and `new` expression annotations remain tree-shakable.
+- **OpenTelemetry Async Error Propagation**: Fixed `startActiveSpan()` so promise rejections from asynchronous callbacks propagate to callers instead of being swallowed.
+- **Dependency Security Hardening**: Resolved the repository's npm audit and Component Governance findings by updating vulnerable transitive build dependencies and replacing Puppeteer's vulnerable `extract-zip` dependency with a maintained compatible package. Rush was upgraded to 5.178.1 and pnpm to 10.34.5, while API Extractor remains on the latest Node.js 18-compatible release. These are build/tooling changes and do not affect the published runtime code.
+- **GitHub Actions Supply-Chain Hardening**: Pinned third-party GitHub Actions to full-length commit SHAs and added grouped weekly Dependabot updates with a seven-day cooldown.
+
+### Changelog
+
+- [#2768](https://github.com/microsoft/ApplicationInsights-JS/pull/2768) Fix ESM XHR instrumentation tree shaking
+- [#2767](https://github.com/microsoft/ApplicationInsights-JS/pull/2767) docs: fix Offline Channel setup example
+- [#2766](https://github.com/microsoft/ApplicationInsights-JS/pull/2766) fix: normalize PURE annotations for Vite 8 and Rolldown
+- [#2761](https://github.com/microsoft/ApplicationInsights-JS/pull/2761) fix(deps): remediate Component Governance vulnerabilities
+- [#2758](https://github.com/microsoft/ApplicationInsights-JS/pull/2758) Pin GitHub Actions to full-length commit SHAs
+- [#2757](https://github.com/microsoft/ApplicationInsights-JS/pull/2757) fix(otel): propagate promise rejection from startActiveSpan async callback
+- [#2754](https://github.com/microsoft/ApplicationInsights-JS/pull/2754) fix(test): stabilize flaky SpanLifeCycle custom endTime test
+- [#2753](https://github.com/microsoft/ApplicationInsights-JS/pull/2753) fix(deps): remediate npm audit vulnerabilities and add local Puppeteer Edge fallback
+
+**Full Changelog**: https://github.com/microsoft/ApplicationInsights-JS/compare/3.4.3...3.4.4
+
 ## 3.4.3 (July 2nd, 2026)
 
 This is a maintenance release for the 3.4.x version line adding a new SDK statistics feature, a PostChannel reliability fix, and dependency security hardening. The `@microsoft/1ds-post-js` channel is numbered 4.4.3 and requires v3.4.3.

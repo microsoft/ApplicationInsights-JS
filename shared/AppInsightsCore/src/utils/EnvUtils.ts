@@ -290,7 +290,8 @@ export function useXDomainRequest(): boolean | undefined {
  * Checks if XMLHttpRequest is supported
  * @returns True if supported, otherwise false
  */
-/*#__NO_SIDE_EFFECTS__*/
+// Do not mark this function as side-effect-free. Rollup can remove capability checks
+// guarded by this return value, which prevents XHR instrumentation from being installed.
 export function isXhrSupported(): boolean {
     let isSupported = false;
     try {

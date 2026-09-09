@@ -60,7 +60,7 @@ export class AISKUSizeCheck extends AITestClass {
     private readonly MAX_BUNDLE_DEFLATE_SIZE = 74;
     private readonly rawFilePath = "../dist/es5/applicationinsights-web.min.js";
     // Automatically updated by version scripts
-    private readonly currentVer = "3.4.3";
+    private readonly currentVer = "3.4.4";
     private readonly prodFilePath = `../browser/es5/ai.${this.currentVer[0]}.min.js`;
 
     public testInitialize() {
@@ -117,7 +117,7 @@ export class AISKUSizeCheck extends AITestClass {
 
     private _checkPureAnnotations(filePath: string, label: string): void {
         this.testCase({
-            name: `Test ${label} canonicalizes PURE annotation spacing`,
+            name: `Test ${label} contains valid PURE annotations`,
             test: () => {
                 let request = new Request(filePath, { method: "GET" });
                 return fetch(request).then((response) => {
@@ -131,6 +131,10 @@ export class AISKUSizeCheck extends AITestClass {
                         let nonCanonicalPurePattern = /\(\s+\/\*\s*[#@]__PURE__\s*\*\/|\(\s*\/\*\s*[#@]__PURE__\s*\*\/\s+/g;
                         let matches = text.match(nonCanonicalPurePattern) || [];
                         Assert.equal(0, matches.length, `Found ${matches.length} non-canonical PURE annotations in ${label}`);
+
+                        let pureLiteralPattern = /\/\*\s*[#@]__PURE__\s*\*\/\s*(?:null|true|false|["']|[-+]?\d)/g;
+                        matches = text.match(pureLiteralPattern) || [];
+                        Assert.equal(0, matches.length, `Found ${matches.length} PURE annotations on literals in ${label}`);
                     }, (error: Error) => {
                         Assert.ok(false, `${label} PURE annotation check response error: ${error}`);
                     });
