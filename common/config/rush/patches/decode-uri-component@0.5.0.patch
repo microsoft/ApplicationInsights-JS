@@ -1,0 +1,15 @@
+diff --git a/index.js b/index.js
+--- a/index.js
++++ b/index.js
+@@ -160 +160 @@
+-export default function decodeUriComponent(encodedURI) {
++module.exports = function decodeUriComponent(encodedURI) {
+@@ -172 +172 @@
+-}
++};
+diff --git a/package.json b/package.json
+--- a/package.json
++++ b/package.json
+@@ -13 +13 @@
+-	"type": "module",
++	"type": "commonjs",
