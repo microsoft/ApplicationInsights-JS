@@ -1,7 +1,7 @@
 import { ApplicationInsights, IConfig, IConfiguration } from '../../../src/applicationinsights-web';
 import { AITestClass, Assert } from '@microsoft/ai-test-framework';
 import {
-    _eInternalMessageId, FeatureOptInMode, ISdkStatsNotifCbk, onConfigChange, STATS_SDK_FEATURE
+    _eInternalMessageId, FeatureOptInMode, ISdkStatsNotifCbk, onConfigChange, STATS_SDK_FEATURE, ThrottleMgr
 } from '@microsoft/applicationinsights-core-js';
 import { AppInsightsSku } from '../../../src/AISku';
 import { ICfgSyncMode } from '@microsoft/applicationinsights-cfgsync-js';
@@ -42,6 +42,7 @@ export class SdkStatsFeatureTests extends AITestClass {
         this._testCustomerSdkStatsIgnoresInternalThrottle();
         this._testSdkStatsDynamicEnableDisable();
         this._testSdkStatsConfigDefaults();
+        this._testSdkStatsDailyThrottle();
         this._testSdkStatsDynamicConfigChanges();
         this._testInternalSdkStatsDynamicConfigInitialization();
         this._testSnippetSdkVersion();
@@ -251,13 +252,19 @@ export class SdkStatsFeatureTests extends AITestClass {
                 this.clock.tick(1);
 
                 let config = ai.config;
+                let statsThrottle = config.throttleMgrCfg[STATS_SDK_FEATURE];
                 Assert.ok(config.sdkStats, "sdkStats config should exist after initialization");
-                Assert.equal(900000, config.sdkStats!.int, "int should default to 900000 (15 minutes)");
-                Assert.equal(100, config.throttleMgrCfg![STATS_SDK_FEATURE].limit!.samplingRate,
+                Assert.equal(900000, config.sdkStats.int, "int should default to 900000 (15 minutes)");
+                Assert.equal(100, statsThrottle.limit.samplingRate,
                     "Dedicated SDK Stats throttle should use the legacy default sampling rate");
-                Assert.equal(92 * 24 * 60 * 60 * 1000 / config.sdkStats!.int,
-                    config.throttleMgrCfg![STATS_SDK_FEATURE].limit!.maxSendNumber,
-                    "Dedicated SDK Stats throttle should cover 15-minute intervals across the longest three-month window");
+                Assert.equal(24 * 60 * 60 * 1000 / config.sdkStats.int,
+                    statsThrottle.limit.maxSendNumber,
+                    "Dedicated SDK Stats throttle should cover 96 reports at 15-minute intervals in one day");
+                Assert.deepEqual({ dayInterval: 1 }, statsThrottle.interval,
+                    "Dedicated SDK Stats should use a daily interval without quarterly date restrictions");
+                Assert.deepEqual({ monthInterval: 3, daysOfMonth: [28] },
+                    config.throttleMgrCfg[_eInternalMessageId.DefaultThrottleMsgKey].interval,
+                    "Diagnostic messages should retain the quarterly interval");
             }
         });
 
@@ -273,6 +280,9 @@ export class SdkStatsFeatureTests extends AITestClass {
                         [STATS_SDK_FEATURE]: {
                             limit: {
                                 maxSendNumber: 48
+                            },
+                            interval: {
+                                dayInterval: 2
                             }
                         }
                     }
@@ -280,15 +290,75 @@ export class SdkStatsFeatureTests extends AITestClass {
                 this.clock.tick(1);
 
                 let config = ai.config;
+                let statsThrottle = config.throttleMgrCfg[STATS_SDK_FEATURE];
                 Assert.ok(config.sdkStats, "sdkStats config should exist");
-                Assert.equal(60000, config.sdkStats!.int, "User-provided int should be preserved");
-                Assert.equal(48, config.throttleMgrCfg![STATS_SDK_FEATURE].limit!.maxSendNumber,
+                Assert.equal(60000, config.sdkStats.int, "User-provided int should be preserved");
+                Assert.equal(48, statsThrottle.limit.maxSendNumber,
                     "User-provided maxSendNumber should be preserved");
+                Assert.equal(2, statsThrottle.interval.dayInterval,
+                    "User-provided dayInterval should be preserved");
 
-                config.throttleMgrCfg![STATS_SDK_FEATURE].limit!.maxSendNumber = 192;
+                statsThrottle.limit.maxSendNumber = 192;
+                statsThrottle.interval.dayInterval = 3;
                 this.clock.tick(1);
-                Assert.equal(192, config.throttleMgrCfg![STATS_SDK_FEATURE].limit!.maxSendNumber,
+                Assert.equal(192, statsThrottle.limit.maxSendNumber,
                     "maxSendNumber should support runtime updates");
+                Assert.equal(3, statsThrottle.interval.dayInterval,
+                    "dayInterval should support runtime updates");
+            }
+        });
+    }
+
+    private _testSdkStatsDailyThrottle() {
+        this.testCase({
+            name: "SdkStatsFeature: default throttle caps SDK Stats at 96 callbacks and permits sending the next day",
+            useFakeTimers: true,
+            test: () => {
+                this.clock.setSystemTime(Date.UTC(2026, 8, 24, 12));
+                localStorage.setItem("appInsightsThrottle-feature-" + STATS_SDK_FEATURE, JSON.stringify({
+                    date: new Date(Date.UTC(2026, 8, 23, 12)),
+                    count: 8832
+                }));
+                let ai = this._createAi({
+                    throttleMgrCfg: {
+                        [STATS_SDK_FEATURE]: {
+                            limit: { samplingRate: 1000000 }
+                        }
+                    }
+                });
+                let throttleMgr = new ThrottleMgr(ai.core);
+                throttleMgr.onReadyState(true);
+                let calls = 0;
+                const callback = () => {
+                    calls++;
+                };
+
+                let result = throttleMgr.useFeature(STATS_SDK_FEATURE, callback, true);
+                Assert.equal(true, result.isThrottled, "SDK Stats should be eligible on the 24th, not just the 28th");
+                Assert.equal(96, result.throttleNum, "A quarterly backlog should be capped at the daily limit");
+                Assert.equal(96, calls, "Only 96 callbacks should run");
+
+                for (let lp = 0; lp < 100; lp++) {
+                    throttleMgr.useFeature(STATS_SDK_FEATURE, callback, true);
+                }
+                Assert.equal(96, calls, "Subsequent attempts on the same UTC day should not run callbacks");
+
+                this.clock.setSystemTime(Date.UTC(2026, 8, 25, 12));
+                result = throttleMgr.useFeature(STATS_SDK_FEATURE, callback, true);
+                Assert.equal(96, result.throttleNum, "The next UTC day should permit another capped flush");
+                Assert.equal(192, calls, "Both daily flushes should respect the 96-callback limit");
+
+                ai.config.throttleMgrCfg[STATS_SDK_FEATURE].interval.dayInterval = 2;
+                this.clock.tick(1);
+                this.clock.setSystemTime(Date.UTC(2026, 8, 26, 12));
+                result = throttleMgr.useFeature(STATS_SDK_FEATURE, callback, true);
+                Assert.equal(0, result.throttleNum, "The updated two-day interval should skip the next day");
+                Assert.equal(192, calls, "An ineligible day should not run callbacks");
+
+                this.clock.setSystemTime(Date.UTC(2026, 8, 27, 12));
+                result = throttleMgr.useFeature(STATS_SDK_FEATURE, callback, true);
+                Assert.equal(2, result.throttleNum, "The next eligible day should flush the accumulated attempts");
+                Assert.equal(194, calls, "Runtime interval changes should affect callback eligibility");
             }
         });
     }
@@ -403,8 +473,7 @@ export class SdkStatsFeatureTests extends AITestClass {
                     throttleMgrCfg: {
                         [_eInternalMessageId.DefaultThrottleMsgKey]: { disabled: false },
                         [STATS_SDK_FEATURE]: {
-                            limit: { samplingRate: 1000000 },
-                            interval: { dayInterval: 1 }
+                            limit: { samplingRate: 1000000 }
                         }
                     }
                 });

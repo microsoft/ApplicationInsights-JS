@@ -88,7 +88,10 @@ const sdk_stats_throttle_config = {
     disabled: false,
     limit: cfgDfMerge<IThrottleLimit>({
         samplingRate: 100,
-        maxSendNumber: 8832 // Longest three-month window: 92 days * 24 hours * 4 reports per hour
+        maxSendNumber: 96 // 24 hours * 4 reports per hour
+    }),
+    interval: cfgDfMerge<IThrottleInterval>({
+        dayInterval: 1
     })
 } as IThrottleMgrConfig;
 
