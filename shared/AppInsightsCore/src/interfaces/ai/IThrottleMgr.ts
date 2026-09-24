@@ -51,8 +51,9 @@ export interface IThrottleInterval {
 export interface IThrottleMgrConfig {
 
     /**
-    * Identifies if throttle is disabled
-    * Default: false
+     * Identifies if throttling is disabled.
+     * When true, no messages are sent and no feature callbacks are invoked.
+     * Default: false
     */
     disabled?: boolean;
 
@@ -105,3 +106,9 @@ export interface IThrottleResult {
     */
     throttleNum: number;
 }
+
+/**
+ * Runs a dynamically configured feature operation when its throttle allows it.
+ * @since 3.4.4
+ */
+export type UseFeatureFn = (feature: string, callback: () => void, sdkDefaultState?: boolean) => IThrottleResult | null;

@@ -84,3 +84,36 @@ throttleMgr.isTriggered(instrumentationKeyDeprecation);
 throttleMgr.sendMessage(instrumentationKeyDeprecation, "Instrumentation Key Deprecation Message");
 
 ```
+
+### Throttle Feature Rollout
+
+`useFeature()` combines `featureOptIn` with an optional throttle configuration that uses the same
+string key. It runs the supplied callback when the persisted sampling, interval, and send-count
+limits allow the feature operation.
+
+Feature throttle state is persisted separately from numeric internal-message state. When the named
+throttle configuration is missing, only the `featureOptIn` state is used. A configuration with
+`disabled: true` suppresses the callback.
+
+```javascript
+let coreCfg = {
+    featureOptIn: {
+        sdkStats: { mode: 3 }
+    },
+    throttleMgrCfg: {
+        sdkStats: {
+            disabled: false,
+            limit: {
+                samplingRate: 1000000
+            }
+        }
+    }
+};
+
+core.initialize(coreCfg, [sender]);
+const throttleMgr = new ThrottleMgr(core);
+
+throttleMgr.useFeature("sdkStats", () => {
+    // Perform the feature operation.
+}, true);
+```

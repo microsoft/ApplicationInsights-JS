@@ -22,7 +22,6 @@
                 "eLoggingSeverity",
                 "_eInternalMessageId",
                 "SendRequestReason",
-                "eStatsType",
                 "TelemetryUnloadReason",
                 "TelemetryUpdateReason",
                 "eTraceHeadersMode",

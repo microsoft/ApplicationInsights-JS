@@ -10,6 +10,7 @@ import { IChannelControls } from "./IChannelControls";
 import { ICookieMgrConfig } from "./ICookieMgr";
 import { IExceptionConfig } from "./IExceptionConfig";
 import { IFeatureOptIn } from "./IFeatureOptIn";
+import { IInternalSdkStatsConfig } from "./IInternalSdkStats";
 import { INotificationManager } from "./INotificationManager";
 import { IPerfManager } from "./IPerfManager";
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
@@ -248,11 +249,13 @@ export interface IConfiguration extends IOTelConfig {
      */
     redactQueryParams?: string[];
 
-    ///**
-    // * [Optional] Internal SDK configuration for developers
-    // * @internal
-    // */
-    //_sdk?: IInternalSdkConfiguration;
+    /**
+     * [Optional] Configuration for the SDK Stats (internal SDK statistics) collection. This may be
+     * supplied / overridden via the CDN / dynamic config to change the SDK Stats behaviour at runtime.
+     * Whether collection is enabled and the destination host are read at runtime from the SDK Stats
+     * configuration (`cfg/v1.json`).
+     */
+    stats?: IInternalSdkStatsConfig;
 
     /**
      * [Optional] Controls if the SDK should look for the `traceparent` and/or `tracestate` values from
@@ -267,15 +270,3 @@ export interface IConfiguration extends IOTelConfig {
      */
     sdkStats?: ISdkStatsConfig;
 }
-
-///**
-// * Internal SDK configuration options
-// * @internal
-// */
-//export interface IInternalSdkConfiguration {
-//    /**
-//     * [Optional] Enable Internal StatsBeat
-//     * @internal
-//     */
-//    stats?: IStatsBeatConfig;
-//}

@@ -11,23 +11,15 @@ var MET_SUCCESS = "Item_Success_Count";
 var MET_DROPPED = "Item_Dropped_Count";
 var MET_RETRY = "Item_Retry_Count";
 var DROP_CLIENT_EXCEPTION = "CLIENT_EXCEPTION";
+var DEFAULT_TEL_TYPE = "CUSTOM_EVENT";
 // Top-level event name for AI stats. Matches the standard AI event naming
 // (Microsoft.ApplicationInsights.<iKey>.<Type>).
 var AI_STATS_PREFIX = "Microsoft.ApplicationInsights.";
 var AI_STATS_SUFFIX = "SdkStats";
 
-// Removes all own keys from an object in place (used to reset accumulators without re-allocating).
-function _clearObj(obj: { [key: string]: any }): void {
-    for (var key in obj) {
-        if (objHasOwn(obj, key)) {
-            delete obj[key];
-        }
-    }
-}
-
 // Map baseType to spec telemetryType values
 var _typeMap: { [key: string]: string } = {
-    "EventData": "CUSTOM_EVENT",
+    "EventData": DEFAULT_TEL_TYPE,
     "MetricData": "CUSTOM_METRIC",
     "RemoteDependencyData": "DEPENDENCY",
     "ExceptionData": "EXCEPTION",
@@ -36,9 +28,9 @@ var _typeMap: { [key: string]: string } = {
     "MessageData": "TRACE",
     "RequestData": "REQUEST",
     "AvailabilityData": "AVAILABILITY",
-    "PageActionData": "CUSTOM_EVENT",
-    "ContentUpdateData": "CUSTOM_EVENT",
-    "PageUnloadData": "CUSTOM_EVENT"
+    "PageActionData": DEFAULT_TEL_TYPE,
+    "ContentUpdateData": DEFAULT_TEL_TYPE,
+    "PageUnloadData": DEFAULT_TEL_TYPE
 };
 
 /**
@@ -109,7 +101,7 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
 
     function _getTelType(item: ITelemetryItem): string {
         var bt = item.baseType;
-        return (bt && objHasOwn(_typeMap, bt) && _typeMap[bt]) || "CUSTOM_EVENT";
+        return (bt && objHasOwn(_typeMap, bt) && _typeMap[bt]) || DEFAULT_TEL_TYPE;
     }
 
     function _isSdkStatsMetric(item: ITelemetryItem): boolean {
@@ -126,6 +118,7 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
             if (!_isSdkStatsMetric(items[i])) {
                 var t = _getTelType(items[i]);
                 if (!isUnsafePropKey(t)) {
+                    // _successCounts is a null-prototype object (objCreate(null)) so this cannot pollute Object.prototype
                     _successCounts[t] = (_successCounts[t] || 0) + 1;
                     changed = true;
                 }
@@ -152,6 +145,7 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
             if (!_isSdkStatsMetric(items[i])) {
                 var t = _getTelType(items[i]);
                 if (!isUnsafePropKey(t)) {
+                    // bucket is a null-prototype object (objCreate(null)) so this cannot pollute Object.prototype
                     bucket[t] = (bucket[t] || 0) + 1;
                     changed = true;
                 }
@@ -244,10 +238,10 @@ export function createSdkStatsNotifCbk(core: IAppInsightsCore, sdkVersion: strin
         _flushBucketed(_droppedCounts, MET_DROPPED, "dropCode");
         _flushBucketed(_retryCounts, MET_RETRY, "retryCode");
 
-        // Reset accumulators in place to avoid allocating new null-prototype objects each flush
-        _clearObj(_successCounts);
-        _clearObj(_droppedCounts);
-        _clearObj(_retryCounts);
+        // Reset accumulators for the next interval
+        _successCounts = objCreate(null);
+        _droppedCounts = objCreate(null);
+        _retryCounts = objCreate(null);
     }
 
     return {
