@@ -90,9 +90,9 @@ const sdk_stats_throttle_config = {
         samplingRate: 100,
         maxSendNumber: 96 // 24 hours * 4 reports per hour
     }),
-    interval: cfgDfMerge<IThrottleInterval>({
+    interval: {
         dayInterval: 1
-    })
+    }
 } as IThrottleMgrConfig;
 
 // We need to include all properties that we only reference that we want to be dynamically updatable here
