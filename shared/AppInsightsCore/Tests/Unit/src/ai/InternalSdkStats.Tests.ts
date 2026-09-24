@@ -16,27 +16,6 @@ const STATS_COLLECTION_SHORT_INTERVAL: number = 900; // 15 minutes
 const STATS_TEST_CFG_URL = "https://tst-data.stats.monitor.azure.com/cfg/v1.json";
 const STATS_TEST_HOST = "tst-data.stats.monitor.azure.com";
 const STATS_TEST_IKEY = "Stats-Test-iKey";
-function _clearStatsStorage() {
-    try {
-        let storage = typeof sessionStorage !== "undefined" ? sessionStorage : null;
-        if (storage) {
-            let keys: string[] = [];
-            for (let lp = 0; lp < storage.length; lp++) {
-                let key = storage.key(lp);
-                if (key && key.indexOf("Test-iKey:") === 0) {
-                    keys.push(key);
-                }
-            }
-
-            for (let lp = 0; lp < keys.length; lp++) {
-                storage.removeItem(keys[lp]);
-            }
-        }
-    } catch (e) {
-        // Session storage may be unavailable.
-    }
-}
-
 function _readStatsStorage(cKey: string, endpoint: string): any {
     try {
         let raw = sessionStorage.getItem(cKey + ":" + endpoint);
@@ -63,8 +42,6 @@ export class InternalSdkStatsTests extends AITestClass {
     public testInitialize() {
         let _self = this;
         super.testInitialize();
-
-        _clearStatsStorage();
 
         _self._config = {
             instrumentationKey: "Test-iKey",
@@ -100,8 +77,7 @@ export class InternalSdkStatsTests extends AITestClass {
         _self._rootTrackSpy = this.sandbox.spy(_self._core, "track");
     }
 
-    public testCleanup() {
-        super.testCleanup();
+    public testFinishedCleanup() {
         if (this._core && this._core.isInitialized()) {
             this._core.unload(false);
         }
@@ -111,7 +87,6 @@ export class InternalSdkStatsTests extends AITestClass {
         this._core = null as any;
         this._statsMgr = null as any;
         this._statsCores = [];
-        _clearStatsStorage();
     }
 
     private _createStatsCore(config: IConfiguration): IAppInsightsCore {
@@ -132,7 +107,9 @@ export class InternalSdkStatsTests extends AITestClass {
         featureName: string = "InternalSdkStats",
         useFeature?: UseFeatureFn
     ) {
-        return this._statsMgr.init(core, (config) => this._createStatsCore(config), featureName, useFeature);
+        let hook = this._statsMgr.init(core, (config) => this._createStatsCore(config), featureName, useFeature);
+        core.addUnloadHook(hook);
+        return hook;
     }
 
     public registerTests() {
