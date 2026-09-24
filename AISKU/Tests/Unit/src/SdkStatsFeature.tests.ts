@@ -252,6 +252,9 @@ export class SdkStatsFeatureTests extends AITestClass {
                 Assert.equal(900000, config.sdkStats!.int, "int should default to 900000 (15 minutes)");
                 Assert.equal(100, config.throttleMgrCfg![STATS_SDK_FEATURE].limit!.samplingRate,
                     "Dedicated SDK Stats throttle should use the legacy default sampling rate");
+                Assert.equal(92 * 24 * 60 * 60 * 1000 / config.sdkStats!.int,
+                    config.throttleMgrCfg![STATS_SDK_FEATURE].limit!.maxSendNumber,
+                    "Dedicated SDK Stats throttle should cover 15-minute intervals across the longest three-month window");
             }
         });
 
@@ -262,6 +265,13 @@ export class SdkStatsFeatureTests extends AITestClass {
                 let ai = this._createAi({
                     sdkStats: {
                         int: 60000
+                    },
+                    throttleMgrCfg: {
+                        [STATS_SDK_FEATURE]: {
+                            limit: {
+                                maxSendNumber: 48
+                            }
+                        }
                     }
                 });
                 this.clock.tick(1);
@@ -269,6 +279,13 @@ export class SdkStatsFeatureTests extends AITestClass {
                 let config = ai.config;
                 Assert.ok(config.sdkStats, "sdkStats config should exist");
                 Assert.equal(60000, config.sdkStats!.int, "User-provided int should be preserved");
+                Assert.equal(48, config.throttleMgrCfg![STATS_SDK_FEATURE].limit!.maxSendNumber,
+                    "User-provided maxSendNumber should be preserved");
+
+                config.throttleMgrCfg![STATS_SDK_FEATURE].limit!.maxSendNumber = 192;
+                this.clock.tick(1);
+                Assert.equal(192, config.throttleMgrCfg![STATS_SDK_FEATURE].limit!.maxSendNumber,
+                    "maxSendNumber should support runtime updates");
             }
         });
     }
