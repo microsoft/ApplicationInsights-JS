@@ -1,6 +1,8 @@
 import { ApplicationInsights, IConfig, IConfiguration } from '../../../src/applicationinsights-web';
 import { AITestClass, Assert } from '@microsoft/ai-test-framework';
-import { FeatureOptInMode, ISdkStatsNotifCbk, onConfigChange, STATS_SDK_FEATURE } from '@microsoft/applicationinsights-core-js';
+import {
+    _eInternalMessageId, FeatureOptInMode, ISdkStatsNotifCbk, onConfigChange, STATS_SDK_FEATURE
+} from '@microsoft/applicationinsights-core-js';
 import { AppInsightsSku } from '../../../src/AISku';
 import { ICfgSyncMode } from '@microsoft/applicationinsights-cfgsync-js';
 
@@ -41,6 +43,7 @@ export class SdkStatsFeatureTests extends AITestClass {
         this._testSdkStatsDynamicEnableDisable();
         this._testSdkStatsConfigDefaults();
         this._testSdkStatsDynamicConfigChanges();
+        this._testInternalSdkStatsDynamicConfigInitialization();
         this._testSnippetSdkVersion();
     }
 
@@ -349,6 +352,89 @@ export class SdkStatsFeatureTests extends AITestClass {
                 Assert.equal(30000, observedInt, "int should be 30000 in callback");
 
                 handler.rm();
+            }
+        });
+    }
+
+    private _testInternalSdkStatsDynamicConfigInitialization() {
+        this.testCase({
+            name: "SdkStatsFeature: internal SDK Stats initializes when dynamic configuration arrives after loadAppInsights",
+            useFakeTimers: true,
+            useFakeServer: true,
+            test: () => {
+                const cfgUrl = "https://tst-data.stats.monitor.azure.com/cfg/v1.json";
+                const statsHost = "tst-data.stats.monitor.azure.com";
+                const statsIKey = "000e0000-e000-0000-a000-000000000000";
+                const state = {
+                    cKey: TestInstrumentationKey,
+                    endpoint: "https://dynamic-config.example.com/v2/track",
+                    sdkVer: "1.0.0"
+                };
+                const storageKey = state.cKey + ":" + state.endpoint;
+                sessionStorage.removeItem(storageKey);
+                this.onDone(() => sessionStorage.removeItem(storageKey));
+                this.hookSendBeacon(() => {});
+                this.hookFetch((resolve) => resolve(new Response("{}", { status: 200 })));
+                let xhrSendSpy = this.sandbox.spy(XMLHttpRequest.prototype, "send");
+
+                let ai = this._createAi();
+                this.clock.tick(1);
+
+                Assert.ok(ai.config.stats, "loadAppInsights should seed the dynamic stats configuration");
+                Assert.equal(undefined, ai.config.stats.cfgUrl, "The SDK Stats config URL should not be supplied initially");
+                Assert.equal(undefined, ai.config.stats.iKey, "The SDK Stats instrumentation key should not be supplied initially");
+                let stats = ai.core.getSdkStats(state);
+                Assert.ok(stats && stats.enabled, "loadAppInsights should initialize the internal SDK Stats manager");
+                stats.countException(state.endpoint, "NetworkError");
+                this.clock.tick(1000);
+                Assert.equal(0, this.activeXhrRequests.length, "SDK Stats should not send before configuration arrives");
+
+                let fetchedUrls: string[] = [];
+                ai.updateCfg({
+                    stats: {
+                        shrtInt: 1,
+                        cfgUrl: cfgUrl,
+                        iKey: statsIKey,
+                        overrideCfgFn: (url, oncomplete) => {
+                            fetchedUrls.push(url);
+                            oncomplete({ enabled: true, url: statsHost });
+                        }
+                    },
+                    throttleMgrCfg: {
+                        [_eInternalMessageId.DefaultThrottleMsgKey]: { disabled: false },
+                        [STATS_SDK_FEATURE]: {
+                            limit: { samplingRate: 1000000 },
+                            interval: { dayInterval: 1 }
+                        }
+                    }
+                });
+                this.clock.tick(1002);
+
+                Assert.deepEqual([cfgUrl], fetchedUrls,
+                    "The existing manager should use the dynamically supplied config fetcher and URL");
+                Assert.strictEqual(stats, ai.core.getSdkStats(state),
+                    "Configuration should initialize sending without replacing the stats instance");
+                let requests = this.activeXhrRequests;
+                Assert.equal(1, requests.length, "The isolated SDK Stats sender should send the buffered counter");
+                Assert.equal("https://" + statsHost + "/v2/track", requests[0].url, "SDK Stats should use the remote-configured endpoint");
+                let payload = JSON.parse(xhrSendSpy.firstCall.args[0]);
+                Assert.equal(statsIKey, payload[0].iKey, "SDK Stats should use the dynamically supplied instrumentation key");
+                Assert.equal("exception", payload[0].data.baseData.metrics[0].name, "The buffered exception should be reported");
+                Assert.equal(1, payload[0].data.baseData.metrics[0].value, "The buffered exception count should be preserved");
+                requests[0].respond(200, {}, "");
+
+                ai.config.featureOptIn = {
+                    [STATS_SDK_FEATURE]: { mode: FeatureOptInMode.disable }
+                };
+                this.clock.tick(1);
+                Assert.equal(null, ai.core.getSdkStats(state),
+                    "Disabling the internal feature dynamically should remove its stats instance");
+                Assert.equal(false, stats.enabled, "The previous stats instance should be stopped");
+
+                ai.config.featureOptIn[STATS_SDK_FEATURE].mode = FeatureOptInMode.enable;
+                this.clock.tick(1);
+                let reenabledStats = ai.core.getSdkStats(state);
+                Assert.ok(reenabledStats && reenabledStats.enabled, "Re-enabling the internal feature should initialize stats again");
             }
         });
     }
