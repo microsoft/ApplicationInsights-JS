@@ -78,7 +78,7 @@
         "@types/node": "18.19.121"
     },
     "overrides": {
-        "basic-ftp": ">=5.2.0",
+        "basic-ftp": ">=6.2.1",
         "form-data": "^2.5.5",
         "tar": ">=7.5.22",
         "glob": "^7.2.3",
@@ -89,16 +89,16 @@
         },
         "@microsoft/api-extractor": "7.58.7",
         "decode-uri-component": ">=0.5.0",
-        "brace-expansion": "^5.0.9",
+        "brace-expansion": "^5.0.12",
         "extract-zip": "npm:@electron-internal/extract-zip@^1.0.5",
         "linkify-it": "^5.0.2",
         "markdown-it": "^14.2.0",
         "yaml": "^2.9.0",
         "js-yaml": "^4.3.1",
         "fast-xml-parser": ">=5.10.1",
-        "fast-uri": ">=3.1.5",
-        "ip-address": ">=10.4.0",
-        "morgan": "^1.11.0",
+        "fast-uri": ">=4.1.5",
+        "ip-address": ">=10.7.1",
+        "morgan": "^1.12.1",
         "grunt": {
             "js-yaml": "^3.15.1"
         }
