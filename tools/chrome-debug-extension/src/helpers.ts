@@ -68,6 +68,16 @@ export function traverseAndReplace(target: Object, maxDepth: number, currentDept
     return out;
 }
 
+function _sanitizeText(value: string) {
+    if (value) {
+        value = value.replace(/&/g, "&amp;");
+        value = value.replace(/>/g, "&gt;");
+        value = value.replace(/</g, "&lt;");
+    }
+
+    return value;
+}
+
 function _setInnerText(elm: HTMLElement, theText: string, textFilter: string): boolean {
     let innerText = theText;
     let matchPos = -1;
@@ -82,14 +92,14 @@ function _setInnerText(elm: HTMLElement, theText: string, textFilter: string): b
     }
 
     if (matchPos !== -1) {
-        let matchSpan = document.createElement("span");
-        matchSpan.className = "matched-text-filter";
-        matchSpan.innerText = theText.substring(matchPos, matchPos + matchLen);
+        let innerHtml =
+            _sanitizeText(theText.substring(0, matchPos)) +
+            "<span class=\"matched-text-filter\">" +
+            _sanitizeText(theText.substring(matchPos, matchPos + matchLen)) +
+            "</span>" +
+            theText.substring(matchPos + matchLen);
 
-        elm.innerText = "";
-        elm.appendChild(document.createTextNode(theText.substring(0, matchPos)));
-        elm.appendChild(matchSpan);
-        elm.appendChild(document.createTextNode(theText.substring(matchPos + matchLen)));
+        elm.innerHTML = innerHtml;
         return true;
     }
 
