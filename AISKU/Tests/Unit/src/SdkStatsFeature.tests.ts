@@ -488,7 +488,7 @@ export class SdkStatsFeatureTests extends AITestClass {
                 Assert.equal("https://" + statsHost + "/v2/track", requests[0].url, "SDK Stats should use the remote-configured endpoint");
                 let payload = JSON.parse(xhrSendSpy.firstCall.args[0]);
                 Assert.equal(statsIKey, payload[0].iKey, "SDK Stats should use the dynamically supplied instrumentation key");
-                Assert.equal("exception", payload[0].data.baseData.metrics[0].name, "The buffered exception should be reported");
+                Assert.equal("Exception_Count", payload[0].data.baseData.metrics[0].name, "The buffered exception should be reported");
                 Assert.equal(1, payload[0].data.baseData.metrics[0].value, "The buffered exception count should be preserved");
                 requests[0].respond(200, {}, "");
 
