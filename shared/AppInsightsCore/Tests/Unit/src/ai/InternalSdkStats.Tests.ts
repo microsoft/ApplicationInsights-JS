@@ -185,7 +185,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 const expectedMetrics = [
                     { name: "Request_Duration", average: 20, statusCode: undefined },
                     { name: "Request_Success_Count", average: 1, statusCode: undefined },
-                    { name: "Requests_Failure_Count", average: 2, statusCode: "400" },
+                    { name: "Request_Failure_Count", average: 2, statusCode: "400" },
                     { name: "Retry_Count", average: 1, statusCode: "429" },
                     { name: "Retry_Count", average: 2, statusCode: "500" },
                     { name: "Throttle_Count", average: 1, statusCode: "402" }
