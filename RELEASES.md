@@ -13,6 +13,7 @@ This release enables internal SDK network statistics and routes them to a dedica
 - **Internal SDK Stats**: The full SDK now records request successes, failures, retries, throttling, and request duration. Counters are persisted in session storage by customer instrumentation key and endpoint, with a default collection interval of one hour (`stats.shrtInt`, in seconds).
 - **Dedicated Ingestion and Dynamic Configuration**: Internal SDK Stats use a separate core and sender, rather than the customer's telemetry pipeline. Sending requires `stats.cfgUrl`, `stats.iKey`, and an enabled remote configuration that supplies the destination host. EU customer endpoints use the EU-prefixed configuration host. Configuration and sampling can be updated at runtime, and counters are retained while remote configuration is unavailable.
 - **Feature Throttling**: Added `ThrottleMgr.useFeature()` and string-keyed `throttleMgrCfg` entries for feature operations. Internal SDK Stats have a dedicated daily throttle, separate from internal diagnostic messages. Throttle sampling now honors a zero rate, interval rules are evaluated per configuration, and long-lived instances can send again on the next eligible UTC day.
+- **Sender Unload Reliability**: Late network responses no longer access the cleared core configuration when looking up internal SDK Stats after unload.
 
 ### Potential behavioral changes
 
