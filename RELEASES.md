@@ -4,6 +4,28 @@
 
 <!-- ## Unreleased Changes -->
 
+## 3.4.5 (October 5th, 2026)
+
+This release enables internal SDK network statistics and routes them to a dedicated SDK Stats ingestion endpoint. The `@microsoft/1ds-post-js` channel is numbered 4.4.5 and requires v3.4.5.
+
+### Significant Changes (since 3.4.4)
+
+- **Internal SDK Stats**: The full SDK now records request successes, failures, retries, throttling, and request duration. Counters are persisted in session storage by customer instrumentation key and endpoint, with a default collection interval of one hour (`stats.shrtInt`, in seconds).
+- **Dedicated Ingestion and Dynamic Configuration**: Internal SDK Stats use a separate core and sender, rather than the customer's telemetry pipeline. Sending requires `stats.cfgUrl`, `stats.iKey`, and an enabled remote configuration that supplies the destination host. EU customer endpoints use the EU-prefixed configuration host. Configuration and sampling can be updated at runtime, and counters are retained while remote configuration is unavailable.
+- **Feature Throttling**: Added `ThrottleMgr.useFeature()` and string-keyed `throttleMgrCfg` entries for feature operations. Internal SDK Stats have a dedicated daily throttle, separate from internal diagnostic messages. Throttle sampling now honors a zero rate, interval rules are evaluated per configuration, and long-lived instances can send again on the next eligible UTC day.
+
+### Potential behavioral changes
+
+The internal SDK Stats manager is enabled by default, but it does not send statistics until the required local or CDN-delivered configuration is available and the remote configuration enables sending. Disable this feature with `featureOptIn: { sdkStats: { mode: FeatureOptInMode.disable } }`. The lowercase `sdkStats` feature is separate from the existing customer-facing `SdkStats` feature and its `sdkStats.int` collection interval.
+
+Internal SDK Stats bypass customer telemetry initializers and plugins. Applications that use those hooks to inspect, modify, or filter customer telemetry should use the internal SDK Stats feature flag to opt out instead.
+
+### Changelog
+
+- [#2741](https://github.com/microsoft/ApplicationInsights-JS/pull/2741) Enable SDK Stats and route to the SDK Stats ingestion endpoint
+
+**Full Changelog**: https://github.com/microsoft/ApplicationInsights-JS/compare/3.4.4...3.4.5
+
 ## 3.4.4 (September 8th, 2026)
 
 This is a maintenance release for the 3.4.x version line containing runtime reliability and bundler compatibility fixes, build tooling and dependency security hardening, documentation corrections, and a test reliability fix. There are no SDK API changes. The `@microsoft/1ds-post-js` channel is numbered 4.4.4 and requires v3.4.4.
