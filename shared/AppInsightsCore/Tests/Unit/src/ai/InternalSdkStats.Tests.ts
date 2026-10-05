@@ -153,7 +153,7 @@ export class InternalSdkStatsTests extends AITestClass {
                     timeout: 0,
                     disableXhrSync: false,
                     statsData: {
-                        startTime: Date.now() // Simulated start time (numeric, used in duration arithmetic)
+                        startTime: Date.now() - 20 // Simulated request duration in milliseconds
                     }
                 } as IPayloadData;
                 
@@ -168,19 +168,38 @@ export class InternalSdkStatsTests extends AITestClass {
                 internalSdkStats.count(200, payloadData, "https://example.endpoint.com");
                 
                 // Test failed request
+                internalSdkStats.count(400, payloadData, "https://example.endpoint.com");
+                internalSdkStats.count(400, payloadData, "https://example.endpoint.com");
+
+                // Test retried requests
                 internalSdkStats.count(500, payloadData, "https://example.endpoint.com");
-                
-                // Test throttled request
+                internalSdkStats.count(500, payloadData, "https://example.endpoint.com");
                 internalSdkStats.count(429, payloadData, "https://example.endpoint.com");
+
+                // Test throttled request
+                internalSdkStats.count(402, payloadData, "https://example.endpoint.com");
                 
                 // Verify that track is called when the collection timer fires
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
                 
-                // Verify that track was called
-                Assert.ok(this._trackSpy.called, "track should be called when SDK Stats timer fires");
-                
-                // When the timer fires, multiple metrics should be sent
-                Assert.ok(this._trackSpy.callCount >= 3, "Multiple metrics should be tracked");
+                const expectedMetrics = [
+                    { name: "Request_Duration", average: 20, statusCode: undefined },
+                    { name: "Request_Success_Count", average: 1, statusCode: undefined },
+                    { name: "Request_Failure_Count", average: 2, statusCode: "400" },
+                    { name: "Retry_Count", average: 1, statusCode: "429" },
+                    { name: "Retry_Count", average: 2, statusCode: "500" },
+                    { name: "Throttle_Count", average: 1, statusCode: "402" }
+                ];
+                Assert.equal(expectedMetrics.length, this._trackSpy.callCount, "Only the expected network metrics should be tracked");
+                for (let i = 0; i < expectedMetrics.length; i++) {
+                    const expected = expectedMetrics[i];
+                    const item: ITelemetryItem = this._trackSpy.getCall(i).args[0];
+                    Assert.equal(expected.name, item.name, "The telemetry name should match the network metric name");
+                    Assert.equal(expected.name, item.baseData.name, "The metric name should match the Statsbeat specification");
+                    Assert.equal(expected.average, item.baseData.average, "The metric value should preserve aggregation");
+                    Assert.equal(expected.statusCode, item.baseData.properties.statusCode, "The statusCode dimension should be preserved");
+                    Assert.equal(undefined, item.baseData.properties.exceptionType, "Request metrics should not have an exceptionType");
+                }
             }
         });
 
@@ -204,23 +223,13 @@ export class InternalSdkStatsTests extends AITestClass {
                 // Verify that track is called when the collection timer fires
                 this.clock.tick(STATS_COLLECTION_SHORT_INTERVAL * 1000 + 1);
                 
-                // Verify that track was called
-                Assert.ok(this._trackSpy.called, "track should be called when SDK Stats timer fires");
-                
-                // Check that exception metrics are tracked
-                let foundExceptionMetric = false;
-                for (let i = 0; i < this._trackSpy.callCount; i++) {
-                    const call = this._trackSpy.getCall(i);
-                    const item: ITelemetryItem = call.args[0];
-                    if (item.baseData &&
-                        item.baseData.properties &&
-                        item.baseData.properties.exceptionType === "NetworkError") {
-                        foundExceptionMetric = true;
-                        break;
-                    }
-                }
-                
-                Assert.ok(foundExceptionMetric, "Exception metrics should be tracked");
+                Assert.equal(1, this._trackSpy.callCount, "Only the exception metric should be tracked");
+                const item: ITelemetryItem = this._trackSpy.firstCall.args[0];
+                Assert.equal("Exception_Count", item.name, "The telemetry name should match the network metric name");
+                Assert.equal("Exception_Count", item.baseData.name, "The metric name should match the Statsbeat specification");
+                Assert.equal(1, item.baseData.average, "The exception count should be preserved");
+                Assert.equal("NetworkError", item.baseData.properties.exceptionType, "The exceptionType dimension should be preserved");
+                Assert.equal(undefined, item.baseData.properties.statusCode, "Exception metrics should not have a statusCode");
             }
         });
 
@@ -940,7 +949,7 @@ export class InternalSdkStatsTests extends AITestClass {
                 let exceptionCount = 0;
                 for (let i = 0; i < this._trackSpy.callCount; i++) {
                     const item: ITelemetryItem = this._trackSpy.getCall(i).args[0];
-                    if (item.name === "exception") {
+                    if (item.name === "Exception_Count") {
                         exceptionCount = item.baseData.average;
                     }
                 }

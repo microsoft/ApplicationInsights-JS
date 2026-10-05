@@ -418,9 +418,9 @@ function _createInternalSdkStats(
     function _trackSendRequestsCount() {
         var currentCounter = _networkCounter;
         _sendInternalSdkStatss("Request_Success_Count", currentCounter.success);
-        _sendCounts(currentCounter.failure, "failure", "statusCode");
-        _sendCounts(currentCounter.retry, "retry", "statusCode");
-        _sendCounts(currentCounter.exception, "exception", "exceptionType");
+        _sendCounts(currentCounter.failure, "Request_Failure_Count", "statusCode");
+        _sendCounts(currentCounter.retry, "Retry_Count", "statusCode");
+        _sendCounts(currentCounter.exception, "Exception_Count", "exceptionType");
         _sendCounts(currentCounter.throttle, "Throttle_Count", "statusCode");
     }
 
