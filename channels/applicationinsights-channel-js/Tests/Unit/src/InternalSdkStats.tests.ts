@@ -1,12 +1,12 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import {
     AppInsightsCore, createStatsMgr, FeatureOptInMode, IAppInsightsCore, IConfiguration, IInternalSdkStatsState,
-    IStatsMgr, ITelemetryItem, TransportType
+    isBeaconsSupported, IStatsMgr, ITelemetryItem, TransportType
 } from "@microsoft/applicationinsights-core-js";
-import { Sender } from "../../../src/Sender";
+import { objDefine } from "@nevware21/ts-utils";
 import { SinonSpy } from "sinon";
+import { Sender } from "../../../src/Sender";
 import { ISenderConfig } from "../../../types/applicationinsights-channel-js";
-import { isBeaconsSupported } from "@microsoft/applicationinsights-core-js";
 
 const STATS_TEST_CFG_URL = "https://tst-data.stats.monitor.azure.com/cfg/v1.json";
 const STATS_TEST_HOST = "tst-data.stats.monitor.azure.com";
@@ -242,6 +242,44 @@ export class InternalSdkStatsTests extends AITestClass {
             }
         });
     
+
+        this.testCase({
+            name: "SDK Stats ignores pending XHR responses after core unload",
+            useFakeTimers: true,
+            useFakeServer: true,
+            fakeServerAutoRespond: false,
+            test: () => {
+                const config = this.createSenderConfig(TransportType.Xhr);
+                const { core, sender } = this.initializeCoreAndSender(config, "000e0000-e000-0000-a000-000000000000");
+                const getStatsSpy = this.sandbox.spy(core, "getSdkStats");
+                const successSpy = this.sandbox.spy(sender, "_onSuccess");
+                const telemetryItem: ITelemetryItem = {
+                    name: "pending item",
+                    baseType: "EventData",
+                    baseData: { name: "pending item" }
+                };
+
+                this.processTelemetryAndFlush(sender, telemetryItem);
+                this.processTelemetryAndFlush(sender, telemetryItem);
+                const requests = this.activeXhrRequests;
+                Assert.equal(2, requests.length, "Two XHR requests should be pending");
+                for (let lp = 0; lp < requests.length; lp++) {
+                    objDefine(requests[lp], "responseURL", { v: config.endpointUrl });
+                }
+
+                sender.pause();
+                sender._buffer.clear();
+                core.unload(false);
+                Assert.equal(null, sender.core, "The sender core should be cleared during unload");
+
+                // The first late response restores the endpoint, so the second reaches the SDK Stats lookup.
+                requests[0].respond(200, {}, "");
+                requests[1].respond(200, {}, "");
+                Assert.equal(2, successSpy.callCount, "Both late responses should complete without throwing");
+                Assert.equal(0, getStatsSpy.callCount, "Late responses should not access the unloaded stats manager");
+                Assert.equal(0, this.internalSdkStatsCountSpy.callCount, "Late responses should not record SDK Stats");
+            }
+        });
 
         this.testCase({
             name: "SDK Stats increments success count for xhr sender",

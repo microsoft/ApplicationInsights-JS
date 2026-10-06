@@ -675,19 +675,22 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             }
 
             function _getSdkStats() {
-                let statsCfg = _self.core.config.stats;
-                let snp = statsCfg && statsCfg.snp;
-                let internalSdkStatsConfig: IInternalSdkStatsState = {
-                    cKey: _self._senderConfig.instrumentationKey,
-                    endpoint: _endpointUrl,
-                    sdkVer: "javascript:" + EnvelopeCreator.Version + (snp ? ":snp" + snp : "")
-                };
-
                 let core = _self.core;
 
-                // During page unload the core may have been cleared and some async events may not have been sent yet
-                // resulting in the core being null. In this case we don't want to create a SDK Stats instance
-                return core && core.getSdkStats ? core.getSdkStats(internalSdkStatsConfig) : null;
+                // Async send responses can arrive after teardown has cleared the core.
+                if (core && core.getSdkStats) {
+                    let statsCfg = core.config.stats;
+                    let snp = statsCfg && statsCfg.snp;
+                    let internalSdkStatsConfig: IInternalSdkStatsState = {
+                        cKey: _self._senderConfig.instrumentationKey,
+                        endpoint: _endpointUrl,
+                        sdkVer: "javascript:" + EnvelopeCreator.Version + (snp ? ":snp" + snp : "")
+                    };
+
+                    return core.getSdkStats(internalSdkStatsConfig);
+                }
+
+                return null;
             }
 
             /**
