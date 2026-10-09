@@ -2811,8 +2811,8 @@ export class PostChannelTest extends AITestClass {
                 QUnit.assert.equal(xhrRequests.length, 1, '1 request should have been sent because of requeue and sync resend');
                 QUnit.assert.equal(discardNotifications.length, 0, 'We should have at least no discard events');
 
-                // Simulate an unload event which will cause the event triggering the internal unload logic
-                document.dispatchEvent(new Event("unload"));
+                // Simulate a pagehide (unload) event which will cause the event triggering the internal unload logic
+                document.dispatchEvent(new Event("pagehide"));
                 QUnit.assert.equal(sendNotifications.length, 2, 'We should now have attempted to send the events');
                 QUnit.assert.equal(sentNotifications.length, 0, 'No Sent events yet as they are sent');
                 QUnit.assert.equal(xhrRequests.length, 2, "2 requests should be sent");
@@ -2933,8 +2933,8 @@ export class PostChannelTest extends AITestClass {
                 QUnit.assert.equal(xhrRequests.length, 1, '1 request should have been sent because of requeue and sync resend');
                 QUnit.assert.equal(discardNotifications.length, 0, 'We should have at least no discard events');
 
-                // Simulate an unload event which will cause the event triggering the internal unload logic
-                document.dispatchEvent(new Event("unload"));
+                // Simulate a pagehide (unload) event which will cause the event triggering the internal unload logic
+                document.dispatchEvent(new Event("pagehide"));
                 QUnit.assert.equal(sendNotifications.length, 5, 'We should now have attempted to send the events');
                 QUnit.assert.equal(sentNotifications.length, 0, 'No Sent events yet as they are sent');
                 QUnit.assert.equal(xhrRequests.length, 5, "5 requests should be sent");
@@ -3038,8 +3038,8 @@ export class PostChannelTest extends AITestClass {
                 QUnit.assert.equal(fetchCalls.length, 0, "No Fetch requests");
                 QUnit.assert.equal(beaconCalls.length, 0, "No Beacon requests");
 
-                // Simulate an unload event
-                document.dispatchEvent(new Event("unload"));
+                // Simulate a pagehide (unload) event
+                document.dispatchEvent(new Event("pagehide"));
                 QUnit.assert.equal(sendNotifications.length, 2, 'We should now have attempted to send the events');
                 QUnit.assert.equal(sentNotifications.length, 0, 'No Sent events yet as they are sent');
                 QUnit.assert.equal(xhrRequests.length, 2, "2 attempts requeue events should be sent");
@@ -3144,8 +3144,8 @@ export class PostChannelTest extends AITestClass {
                 QUnit.assert.equal(fetchCalls.length, 0, "No Fetch requests");
                 QUnit.assert.equal(beaconCalls.length, 0, "No Beacon requests");
 
-                // Simulate an unload event
-                document.dispatchEvent(new Event("unload"));
+                // Simulate a pagehide (unload) event
+                document.dispatchEvent(new Event("pagehide"));
                 QUnit.assert.equal(sendNotifications.length, 5, 'We should now have attempted to send the events');
                 QUnit.assert.equal(sentNotifications.length, 0, 'No Sent events yet as they are sent');
                 QUnit.assert.equal(xhrRequests.length, 5, "5 attempts requeue events should be sent");

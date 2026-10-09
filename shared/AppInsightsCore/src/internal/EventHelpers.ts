@@ -458,8 +458,9 @@ export function removeEventListeners(events: string[], listener: any, evtNamespa
 }
 
 /**
- * Listen to the 'beforeunload', 'unload' and 'pagehide' events which indicates a page unload is occurring,
- * this does NOT listen to the 'visibilitychange' event as while it does indicate that the page is being hidden
+ * Listen to the 'beforeunload' and 'pagehide' events which indicates a page unload is occurring, the deprecated
+ * 'unload' event is only hooked as a fallback when neither of these events could be hooked (or they have been excluded).
+ * This does NOT listen to the 'visibilitychange' event as while it does indicate that the page is being hidden
  * it does not *necessarily* mean that the page is being completely unloaded, it can mean that the user is
  * just navigating to a different Tab and may come back (without unloading the page). As such you may also
  * need to listen to the 'addPageHideEventListener' and 'addPageShowEventListener' events.
@@ -469,9 +470,25 @@ export function removeEventListeners(events: string[], listener: any, evtNamespa
  * @returns true - when at least one of the events was registered otherwise false
  */
 export function addPageUnloadEventListener(listener: any, excludeEvents?: string[], evtNamespace?: string | string[]): boolean {
-    // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
-    // As just hooking the window does not always fire (on chrome) for page navigation's.
-    return addEventListeners([strBeforeUnload, strUnload, strPageHide], listener, excludeEvents, evtNamespace);
+    let added = false;
+    if (listener) {
+        // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
+        // As just hooking the window does not always fire (on chrome) for page navigation's.
+        added = _addEventListeners([strBeforeUnload, strPageHide], listener, excludeEvents, evtNamespace);
+
+        if (!added) {
+            // Only fallback to the deprecated 'unload' event when none of the preferred events could be hooked
+            added = _addEventListeners([strUnload], listener, excludeEvents, evtNamespace);
+        }
+
+        if (!added && excludeEvents && excludeEvents.length > 0) {
+            // Failed to add any listeners and we excluded some, so ignore the exclusions (still preferring the non-deprecated events)
+            added = _addEventListeners([strBeforeUnload, strPageHide], listener, null, evtNamespace) ||
+                _addEventListeners([strUnload], listener, null, evtNamespace);
+        }
+    }
+
+    return added;
 }
 
 /**
