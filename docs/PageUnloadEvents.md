@@ -9,7 +9,7 @@ Application Insights Web SDK tracks several page lifecycle events to ensure that
 The SDK listens to the following events to detect when a page is being unloaded:
 
 1. **beforeunload** - Fired when the window, document, and its resources are about to be unloaded
-2. **unload** - Fired when the document or a child resource is being unloaded. This deprecated event is only used as a fallback when the runtime does not support `pagehide` (or `pagehide` has been disabled via `disablePageUnloadEvents`).
+2. **unload** - Fired when the document or a child resource is being unloaded. This deprecated event is only used as a fallback when neither `beforeunload` nor `pagehide` could be hooked (or both have been disabled via `disablePageUnloadEvents`).
 3. **pagehide** - Fired when the browser hides the current page in the process of navigating to another page
 4. **visibilitychange** (with 'hidden' state) - Fired when the content of a tab has become visible or hidden
 
@@ -22,7 +22,7 @@ Modern browsers and frameworks are deprecating or changing how some page unload 
 - Some modern browsers are changing the behavior of `beforeunload` event for better performance and reduced tracking potential.
 - The `pagehide` event and `visibilitychange` events are becoming the recommended alternatives.
 - The SDK is designed to handle cases where certain events are unavailable or behave differently across browsers, gracefully adapting to the environment to ensure telemetry is sent.
-- **By default the SDK no longer hooks the `unload` event when the browser supports `pagehide`**, as `pagehide` always fires before `unload`. Older runtimes without `pagehide` support continue to use `unload`, so no telemetry is lost.
+- **By default the SDK no longer hooks the `unload` event**, it is only used as a fallback when neither `beforeunload` nor `pagehide` could be hooked.
 
 ## Configuration Options
 
