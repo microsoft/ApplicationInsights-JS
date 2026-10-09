@@ -458,20 +458,37 @@ export function removeEventListeners(events: string[], listener: any, evtNamespa
 }
 
 /**
+ * Identifies whether the current runtime supports the 'pagehide' event
+ * @returns true if the 'pagehide' event is supported
+ */
+function _isPageHideSupported(): boolean {
+    let win = getWindow();
+    return !!win && (strOnPrefix + strPageHide) in win;
+}
+
+/**
  * Listen to the 'beforeunload', 'unload' and 'pagehide' events which indicates a page unload is occurring,
  * this does NOT listen to the 'visibilitychange' event as while it does indicate that the page is being hidden
  * it does not *necessarily* mean that the page is being completely unloaded, it can mean that the user is
  * just navigating to a different Tab and may come back (without unloading the page). As such you may also
  * need to listen to the 'addPageHideEventListener' and 'addPageShowEventListener' events.
+ * The deprecated 'unload' event is only hooked when the runtime does not support the 'pagehide' event (or
+ * 'pagehide' has been excluded), as 'pagehide' always fires before 'unload' and hooking 'unload' causes
+ * browser deprecation violations and prevents the page from using the back/forward cache.
  * @param listener - The event callback to call when a page unload event is triggered
  * @param excludeEvents - [Optional] An array of events that should not be hooked, unless no other events can be.
  * @param evtNamespace - [Optional] Namespace(s) to append to the event listeners so they can be uniquely identified and removed based on this namespace.
  * @returns true - when at least one of the events was registered otherwise false
  */
 export function addPageUnloadEventListener(listener: any, excludeEvents?: string[], evtNamespace?: string | string[]): boolean {
+    let events = [strBeforeUnload, strUnload, strPageHide];
+    if (_isPageHideSupported() && (!excludeEvents || arrIndexOf(excludeEvents, strPageHide) === -1)) {
+        events = [strBeforeUnload, strPageHide];
+    }
+
     // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
     // As just hooking the window does not always fire (on chrome) for page navigation's.
-    return addEventListeners([strBeforeUnload, strUnload, strPageHide], listener, excludeEvents, evtNamespace);
+    return addEventListeners(events, listener, excludeEvents, evtNamespace);
 }
 
 /**

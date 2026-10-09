@@ -1,5 +1,7 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { addEventHandler, createUniqueNamespace, removeEventHandler } from "../../../../src/index";
+import {
+    addEventHandler, addPageUnloadEventListener, createUniqueNamespace, removeEventHandler, removePageUnloadEventListener
+} from "../../../../src/index";
 import { _eInternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
 import { _InternalLogMessage } from "../../../../src/diagnostics/DiagnosticLogger";
 import { mergeEvtNamespace, __getRegisteredEvents } from "../../../../src/internal/EventHelpers";
@@ -257,6 +259,97 @@ export class EventHelperTests extends AITestClass {
 
 
         this.testCase({
+            name: "addPageUnloadEventListener: does not hook 'unload' when 'pagehide' is supported",
+            test: () => {
+                function _handler() {
+                    // Do nothing
+                }
+
+                let testNamespace = createUniqueNamespace("evtHelperUnloadTests");
+
+                Assert.ok("onpagehide" in window, "The test runtime supports 'pagehide'");
+                Assert.ok(addPageUnloadEventListener(_handler, null, testNamespace), "Events added");
+                _checkRegisteredAddEventHandler("beforeunload", 1);
+                _checkRegisteredAddEventHandler("pagehide", 1);
+                _checkRegisteredAddEventHandler("unload", 0);
+
+                removePageUnloadEventListener(_handler, testNamespace);
+                _checkRegisteredAddEventHandler("beforeunload", 0);
+                _checkRegisteredAddEventHandler("pagehide", 0);
+                _checkRegisteredAddEventHandler("unload", 0);
+            }
+        });
+
+        this.testCase({
+            name: "addPageUnloadEventListener: hooks 'unload' when 'pagehide' is excluded",
+            test: () => {
+                function _handler() {
+                    // Do nothing
+                }
+
+                let testNamespace = createUniqueNamespace("evtHelperUnloadTests");
+
+                Assert.ok(addPageUnloadEventListener(_handler, ["pagehide"], testNamespace), "Events added");
+                _checkRegisteredAddEventHandler("beforeunload", 1);
+                _checkRegisteredAddEventHandler("pagehide", 0);
+                _checkRegisteredAddEventHandler("unload", 1);
+
+                removePageUnloadEventListener(_handler, testNamespace);
+                _checkRegisteredAddEventHandler("beforeunload", 0);
+                _checkRegisteredAddEventHandler("unload", 0);
+            }
+        });
+
+        this.testCase({
+            name: "addPageUnloadEventListener: falls back to all events when everything is excluded",
+            test: () => {
+                function _handler() {
+                    // Do nothing
+                }
+
+                let testNamespace = createUniqueNamespace("evtHelperUnloadTests");
+
+                Assert.ok(addPageUnloadEventListener(_handler, ["beforeunload", "unload", "pagehide"], testNamespace), "Events added");
+                _checkRegisteredAddEventHandler("beforeunload", 1);
+                _checkRegisteredAddEventHandler("pagehide", 1);
+                _checkRegisteredAddEventHandler("unload", 1);
+
+                removePageUnloadEventListener(_handler, testNamespace);
+                _checkRegisteredAddEventHandler("beforeunload", 0);
+                _checkRegisteredAddEventHandler("pagehide", 0);
+                _checkRegisteredAddEventHandler("unload", 0);
+            }
+        });
+
+        this.testCase({
+            name: "addPageUnloadEventListener: hooks 'unload' when 'pagehide' is not supported",
+            test: () => {
+                function _handler() {
+                    // Do nothing
+                }
+
+                let testNamespace = createUniqueNamespace("evtHelperUnloadTests");
+                let restore = _hidePageHideSupport();
+
+                try {
+                    Assert.ok(!("onpagehide" in window), "'pagehide' support has been hidden");
+                    Assert.ok(addPageUnloadEventListener(_handler, null, testNamespace), "Events added");
+                } finally {
+                    restore();
+                }
+
+                _checkRegisteredAddEventHandler("beforeunload", 1);
+                _checkRegisteredAddEventHandler("pagehide", 1);
+                _checkRegisteredAddEventHandler("unload", 1);
+
+                removePageUnloadEventListener(_handler, testNamespace);
+                _checkRegisteredAddEventHandler("beforeunload", 0);
+                _checkRegisteredAddEventHandler("pagehide", 0);
+                _checkRegisteredAddEventHandler("unload", 0);
+            }
+        });
+
+        this.testCase({
             name: "mergeEventNamespaces: Initializing different values",
             test: () => {
                 Assert.equal(null, mergeEvtNamespace(null, null), "All null");
@@ -282,6 +375,26 @@ export class EventHelperTests extends AITestClass {
                 Assert.equal(JSON.stringify(["ab", "b", "f", "g", "x", "z"]), JSON.stringify(mergeEvtNamespace("z.b.", "x.f..g.ab")));
             }
         });
+
+        function _hidePageHideSupport(): () => void {
+            // 'onpagehide' may be defined on the window instance or anywhere on its prototype chain
+            let removed: { target: any, desc: PropertyDescriptor }[] = [];
+            let target: any = window;
+            while (target) {
+                let desc = Object.getOwnPropertyDescriptor(target, "onpagehide");
+                if (desc && desc.configurable) {
+                    removed.push({ target: target, desc: desc });
+                    delete target["onpagehide"];
+                }
+                target = Object.getPrototypeOf(target);
+            }
+
+            return () => {
+                for (let lp = 0; lp < removed.length; lp++) {
+                    Object.defineProperty(removed[lp].target, "onpagehide", removed[lp].desc);
+                }
+            };
+        }
 
         function _checkRegisteredAddEventHandler(name: string, expected: number) {
             let registered = __getRegisteredEvents(window, name);

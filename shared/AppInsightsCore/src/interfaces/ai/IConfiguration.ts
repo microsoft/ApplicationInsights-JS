@@ -160,6 +160,9 @@ export interface IConfiguration extends IOTelConfig {
      * event hooked, if you list all or the runtime environment only supports a listed "disabled" event it will still be hooked, if required by the SDK.
      * Unload events include "beforeunload", "unload", "visibilitychange" (with 'hidden' state) and "pagehide".
      *
+     * Note: The deprecated "unload" event is no longer hooked by default when the runtime supports the "pagehide" event
+     * (and "pagehide" has not been disabled), it is only used as a fallback for older runtimes.
+     *
      * This can be used to avoid jQuery 3.7.1+ deprecation warnings and Chrome warnings about the unload event:
      * @example
      * ```javascript
