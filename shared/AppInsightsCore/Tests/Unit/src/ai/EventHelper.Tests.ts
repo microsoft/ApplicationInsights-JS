@@ -266,9 +266,15 @@ export class EventHelperTests extends AITestClass {
                 }
 
                 let testNamespace = createUniqueNamespace("evtHelperUnloadTests");
+                let restore = _ensurePageHideSupport();
 
-                Assert.ok("onpagehide" in window, "The test runtime supports 'pagehide'");
-                Assert.ok(addPageUnloadEventListener(_handler, null, testNamespace), "Events added");
+                try {
+                    Assert.ok("onpagehide" in window, "The test runtime supports 'pagehide'");
+                    Assert.ok(addPageUnloadEventListener(_handler, null, testNamespace), "Events added");
+                } finally {
+                    restore();
+                }
+
                 _checkRegisteredAddEventHandler("beforeunload", 1);
                 _checkRegisteredAddEventHandler("pagehide", 1);
                 _checkRegisteredAddEventHandler("unload", 0);
@@ -375,6 +381,20 @@ export class EventHelperTests extends AITestClass {
                 Assert.equal(JSON.stringify(["ab", "b", "f", "g", "x", "z"]), JSON.stringify(mergeEvtNamespace("z.b.", "x.f..g.ab")));
             }
         });
+
+        function _ensurePageHideSupport(): () => void {
+            if ("onpagehide" in window) {
+                return () => {
+                    // Natively supported, nothing to restore
+                };
+            }
+
+            Object.defineProperty(window, "onpagehide", { configurable: true, writable: true, value: null });
+
+            return () => {
+                delete (window as any)["onpagehide"];
+            };
+        }
 
         function _hidePageHideSupport(): () => void {
             // 'onpagehide' may be defined on the window instance or anywhere on its prototype chain
