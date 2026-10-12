@@ -296,7 +296,7 @@ As the sendBeacon() API does not provide any response handling, any events sent 
 
 Events that cause a page navigation can cause a race condition that could result in either event loss or duplication. This happens when any previously batched events have been sent (the request is in-flight) and the browser subsequently cancels the request before a response is processed AND it also triggers the JavaScript "cancel" or "abort" event, normally only during the unload process.
 
-The SDK listens to all supported "unload" events (```unload```, ```beforeunload``` and ```pagehide```) and when any one of these are detected it will immediately send all (unsent) batched events via the "SendBeacon" (and fallback) methods above. This successfully mitigates the event loss case above, but it can compound the event duplication case for some scenarios as the SDK works to ensure that all events are sent and acknowledged.
+The SDK listens to all supported "unload" events (```beforeunload```, ```pagehide``` and ```visibilitychange``` (hidden), with the deprecated ```unload``` event only used as a fallback when neither ```beforeunload``` nor ```pagehide``` could be hooked) and when any one of these are detected it will immediately send all (unsent) batched events via the "SendBeacon" (and fallback) methods above. This successfully mitigates the event loss case above, but it can compound the event duplication case for some scenarios as the SDK works to ensure that all events are sent and acknowledged.
 
 This situation has become more prevalent with the enforcement by modern browsers to disallow, cancel or abort the usage of synchronous Xhr requests during page "unload" event.
 

@@ -9,7 +9,7 @@ Application Insights Web SDK tracks several page lifecycle events to ensure that
 The SDK listens to the following events to detect when a page is being unloaded:
 
 1. **beforeunload** - Fired when the window, document, and its resources are about to be unloaded
-2. **unload** - Fired when the document or a child resource is being unloaded
+2. **unload** - Fired when the document or a child resource is being unloaded. This deprecated event is only used as a fallback when neither `beforeunload` nor `pagehide` could be hooked (or both have been disabled via `disablePageUnloadEvents`).
 3. **pagehide** - Fired when the browser hides the current page in the process of navigating to another page
 4. **visibilitychange** (with 'hidden' state) - Fired when the content of a tab has become visible or hidden
 
@@ -17,10 +17,12 @@ The SDK listens to the following events to detect when a page is being unloaded:
 
 Modern browsers and frameworks are deprecating or changing how some page unload events work:
 
+- **Chrome** is deprecating the `unload` event and no longer runs `unload` handlers by default; adding one logs a "Permissions policy violation: unload is not allowed in this document" console error and prevents the page from using the back/forward cache. See [Deprecating the unload event](https://developer.chrome.com/docs/web-platform/deprecating-unload).
 - **jQuery 3.7.1+** has deprecated the use of the `unload` event, showing warning messages when it's used.
 - Some modern browsers are changing the behavior of `beforeunload` event for better performance and reduced tracking potential.
 - The `pagehide` event and `visibilitychange` events are becoming the recommended alternatives.
 - The SDK is designed to handle cases where certain events are unavailable or behave differently across browsers, gracefully adapting to the environment to ensure telemetry is sent.
+- **By default the SDK no longer hooks the `unload` event**, it is only used as a fallback when neither `beforeunload` nor `pagehide` could be hooked.
 
 ## Configuration Options
 

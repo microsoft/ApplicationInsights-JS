@@ -123,7 +123,7 @@ export class ApplicationInsightsTests extends AITestClass {
             });
 
             Assert.ok(!beforeUnloadPresent, "The beforeunload event should not be present");
-            Assert.ok(unloadPresent, "The unload event should be present");
+            Assert.ok(!unloadPresent, "The deprecated unload event should not be present when pagehide is hooked");
             Assert.ok(visibilityChangePresent, "The visibilitychange event should be present");
 
             // Setup Sinon stuff

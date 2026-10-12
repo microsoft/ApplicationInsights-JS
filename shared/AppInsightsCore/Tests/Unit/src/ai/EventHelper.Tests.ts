@@ -1,5 +1,7 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { addEventHandler, createUniqueNamespace, removeEventHandler } from "../../../../src/index";
+import {
+    addEventHandler, addPageUnloadEventListener, createUniqueNamespace, removeEventHandler, removePageUnloadEventListener
+} from "../../../../src/index";
 import { _eInternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
 import { _InternalLogMessage } from "../../../../src/diagnostics/DiagnosticLogger";
 import { mergeEvtNamespace, __getRegisteredEvents } from "../../../../src/internal/EventHelpers";
@@ -255,6 +257,111 @@ export class EventHelperTests extends AITestClass {
             }
         });
 
+
+        this.testCase({
+            name: "addPageUnloadEventListener: does not hook 'unload' when 'beforeunload' and 'pagehide' are hooked",
+            test: () => {
+                function _handler() {
+                    // Do nothing
+                }
+
+                let testNamespace = createUniqueNamespace("evtHelperUnloadTests");
+
+                Assert.ok(addPageUnloadEventListener(_handler, null, testNamespace), "Events added");
+                _checkRegisteredAddEventHandler("beforeunload", 1);
+                _checkRegisteredAddEventHandler("pagehide", 1);
+                _checkRegisteredAddEventHandler("unload", 0);
+
+                removePageUnloadEventListener(_handler, testNamespace);
+                _checkRegisteredAddEventHandler("beforeunload", 0);
+                _checkRegisteredAddEventHandler("pagehide", 0);
+                _checkRegisteredAddEventHandler("unload", 0);
+            }
+        });
+
+        this.testCase({
+            name: "addPageUnloadEventListener: does not hook 'unload' when only 'pagehide' is excluded",
+            test: () => {
+                function _handler() {
+                    // Do nothing
+                }
+
+                let testNamespace = createUniqueNamespace("evtHelperUnloadTests");
+
+                Assert.ok(addPageUnloadEventListener(_handler, ["pagehide"], testNamespace), "Events added");
+                _checkRegisteredAddEventHandler("beforeunload", 1);
+                _checkRegisteredAddEventHandler("pagehide", 0);
+                _checkRegisteredAddEventHandler("unload", 0);
+
+                removePageUnloadEventListener(_handler, testNamespace);
+                _checkRegisteredAddEventHandler("beforeunload", 0);
+                _checkRegisteredAddEventHandler("pagehide", 0);
+                _checkRegisteredAddEventHandler("unload", 0);
+            }
+        });
+
+        this.testCase({
+            name: "addPageUnloadEventListener: does not hook 'unload' when only 'beforeunload' is excluded",
+            test: () => {
+                function _handler() {
+                    // Do nothing
+                }
+
+                let testNamespace = createUniqueNamespace("evtHelperUnloadTests");
+
+                Assert.ok(addPageUnloadEventListener(_handler, ["beforeunload"], testNamespace), "Events added");
+                _checkRegisteredAddEventHandler("beforeunload", 0);
+                _checkRegisteredAddEventHandler("pagehide", 1);
+                _checkRegisteredAddEventHandler("unload", 0);
+
+                removePageUnloadEventListener(_handler, testNamespace);
+                _checkRegisteredAddEventHandler("beforeunload", 0);
+                _checkRegisteredAddEventHandler("pagehide", 0);
+                _checkRegisteredAddEventHandler("unload", 0);
+            }
+        });
+
+        this.testCase({
+            name: "addPageUnloadEventListener: falls back to 'unload' when 'beforeunload' and 'pagehide' are excluded",
+            test: () => {
+                function _handler() {
+                    // Do nothing
+                }
+
+                let testNamespace = createUniqueNamespace("evtHelperUnloadTests");
+
+                Assert.ok(addPageUnloadEventListener(_handler, ["beforeunload", "pagehide"], testNamespace), "Events added");
+                _checkRegisteredAddEventHandler("beforeunload", 0);
+                _checkRegisteredAddEventHandler("pagehide", 0);
+                _checkRegisteredAddEventHandler("unload", 1);
+
+                removePageUnloadEventListener(_handler, testNamespace);
+                _checkRegisteredAddEventHandler("beforeunload", 0);
+                _checkRegisteredAddEventHandler("pagehide", 0);
+                _checkRegisteredAddEventHandler("unload", 0);
+            }
+        });
+
+        this.testCase({
+            name: "addPageUnloadEventListener: prefers the non-deprecated events when everything is excluded",
+            test: () => {
+                function _handler() {
+                    // Do nothing
+                }
+
+                let testNamespace = createUniqueNamespace("evtHelperUnloadTests");
+
+                Assert.ok(addPageUnloadEventListener(_handler, ["beforeunload", "unload", "pagehide"], testNamespace), "Events added");
+                _checkRegisteredAddEventHandler("beforeunload", 1);
+                _checkRegisteredAddEventHandler("pagehide", 1);
+                _checkRegisteredAddEventHandler("unload", 0);
+
+                removePageUnloadEventListener(_handler, testNamespace);
+                _checkRegisteredAddEventHandler("beforeunload", 0);
+                _checkRegisteredAddEventHandler("pagehide", 0);
+                _checkRegisteredAddEventHandler("unload", 0);
+            }
+        });
 
         this.testCase({
             name: "mergeEventNamespaces: Initializing different values",
