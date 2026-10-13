@@ -80,7 +80,8 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     transports: UNDEFINED_VALUE,
     retryCodes: UNDEFINED_VALUE,
     corsPolicy: UNDEFINED_VALUE,
-    maxRetryCnt: {isVal: isNumber, v:10}
+    maxRetryCnt: {isVal: isNumber, v:10},
+    enableCompressionForCustomEndpoint: cfgDfBoolean()
 });
 
 const CrossOriginResourcePolicyHeader: string = "X-Set-Cross-Origin-Resource-Policy";
@@ -189,6 +190,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _sendPostMgr: SenderPostManager;
         let _retryCodes: number[];
         let _zipPayload: boolean;
+        let _enableCompressionForCustomEndpoint: boolean;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -363,6 +365,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     _alwaysUseCustomSend = senderConfig.alwaysUseXhrOverride;
                     _disableXhr = !!senderConfig.disableXhr;
                     _retryCodes = senderConfig.retryCodes;
+                    _enableCompressionForCustomEndpoint = !!senderConfig.enableCompressionForCustomEndpoint;
                     
                     let bufferOverride = senderConfig.bufferOverride;
                     let canUseSessionStorage = !!senderConfig.enableSessionStorageBuffer &&
@@ -1071,7 +1074,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         if (resolveFn) {
                             doAwait(result as any, resolveFn, rejectFn);
                         }
-                    }, _zipPayload, payloadData, !isAsync);
+                    }, _zipPayload && (isInternalApplicationInsightsEndpoint(_endpointUrl) || _enableCompressionForCustomEndpoint),
+                    payloadData, !isAsync);
                     
                     if (callbackExecuted) {
                         return result;
@@ -1106,7 +1110,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             function _getHeaders() {
                 try {
-                    let headers = _headers || {};
+                    let headers = objExtend({}, _headers || {});
                     if (isInternalApplicationInsightsEndpoint(_endpointUrl)) {
                         headers[RequestHeaders[eRequestHeaders.sdkContextHeader]] = RequestHeaders[eRequestHeaders.sdkContextHeaderAppIdRequest];
                     }
@@ -1512,6 +1516,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 _xhrSend = null;
                 _fallbackSend = null;
                 _sendPostMgr = null;
+                _zipPayload = false;
+                _enableCompressionForCustomEndpoint = false;
 
                 objDefine(_self, "_senderConfig", {
                     g: function() {

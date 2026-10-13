@@ -3,7 +3,7 @@ import { setBypassLazyCache, strStartsWith } from "@nevware21/ts-utils";
 import { ICorrelationConfig } from "../../../../src/interfaces/ai/ICorrelationConfig";
 import { getIEVersion } from "../../../../src/utils/EnvUtils";
 import { uaDisallowsSameSiteNone } from "../../../../src/core/CookieMgr";
-import { correlationIdCanIncludeCorrelationHeader } from "../../../../src/utils/Util";
+import { correlationIdCanIncludeCorrelationHeader, isInternalApplicationInsightsEndpoint } from "../../../../src/utils/Util";
 import { createDomEvent } from "../../../../src/utils/DomHelperFuncs";
 import { urlParseFullHost, urlParseHost, urlParseUrl } from "../../../../src/utils/UrlHelperFuncs";
 
@@ -26,6 +26,36 @@ export class UtilTests extends AITestClass {
     }
 
     public registerTests() {
+        this.testCase({
+            name: "isInternalApplicationInsightsEndpoint recognizes only supported ingestion hosts",
+            test: () => {
+                const firstPartyEndpoints = [
+                    "https://dc.services.visualstudio.com/v2/track",
+                    "HTTPS://DC.SERVICES.VISUALSTUDIO.COM:443/v2/track",
+                    "https://eastus-8.in.applicationinsights.azure.com/v2/track",
+                    "https://westus2.dc.applicationinsights.azure.com/v2/track",
+                    "https://dc.applicationinsights.azure.cn/v2/track",
+                    "https://chinaeast2.dc.applicationinsights.azure.cn:443/v2/track",
+                    "https://dc.applicationinsights.us/v2/track",
+                    "https://usgovvirginia.dc.applicationinsights.us/v2/track"
+                ];
+                const customEndpoints = [
+                    "https://proxy.contoso.com/v2/track",
+                    "https://eastus-8.in.applicationinsights.azure.com.evil.example/v2/track",
+                    "https://applicationinsights.azure.com.evil.example/v2/track",
+                    "http://dc.services.visualstudio.com/v2/track",
+                    "https://dc.services.visualstudio.com/not-track"
+                ];
+
+                firstPartyEndpoints.forEach((endpoint) => {
+                    Assert.equal(true, isInternalApplicationInsightsEndpoint(endpoint), endpoint);
+                });
+                customEndpoints.forEach((endpoint) => {
+                    Assert.equal(false, isInternalApplicationInsightsEndpoint(endpoint), endpoint);
+                });
+            }
+        });
+
         this.testCase({
             name: 'createDomEvent: creates new event if constructor is undefined',
             test: () => {
