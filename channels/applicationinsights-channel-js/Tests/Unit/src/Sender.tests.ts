@@ -6,9 +6,10 @@ import {
     Exception, CtxTagKeys, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage,
     ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, safeGetLogger,
     isString, isArray, arrForEach, isBeaconsSupported, isFeatureEnabled, IXHROverride, IPayloadData,TransportType, getWindow, ActiveStatus,
-    FeatureOptInMode, STR_ZIP_PAYLOAD, STR_ZIP_PAYLOAD_V2
+    FeatureOptInMode
 } from "@microsoft/applicationinsights-core-js";
 import { ArraySendBuffer, SessionStorageSendBuffer } from "../../../src/SendBuffer";
+import { STR_ZIP_PAYLOAD, STR_ZIP_PAYLOAD_V2 } from "../../../src/Constants";
 import { IInternalStorageItem, ISenderConfig } from "../../../src/Interfaces";
 import { createAsyncResolvedPromise, createPromise } from "@nevware21/ts-async";
 import { isPromiseLike, isUndefined } from "@nevware21/ts-utils";

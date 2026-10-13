@@ -5,7 +5,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode } from "@microsoft/applicationinsights-cfgsync-js";
-import { Sender } from "@microsoft/applicationinsights-channel-js";
+import { STR_ZIP_PAYLOAD, STR_ZIP_PAYLOAD_V2, Sender } from "@microsoft/applicationinsights-channel-js";
 import {
     AnalyticsPluginIdentifier, AppInsightsCore, ConnectionString, DEFAULT_BREEZE_PATH, FeatureOptInMode, IAppInsightsCore,
     IAutoExceptionTelemetry, IChannelControls, IConfig, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDependencyTelemetry,
@@ -14,12 +14,11 @@ import {
     IReadableSpan, IRequestHeaders, ISdkStatsNotifCbk, ISpanScope, ITelemetryContext as Common_ITelemetryContext,
     ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState, IThrottleInterval, IThrottleLimit,
     IThrottleMgrConfig, ITraceApi, ITraceProvider, ITraceTelemetry, IUnloadHook, OTelTimeInput, PropertiesPluginIdentifier,
-    STATS_SDK_FEATURE, STR_ZIP_PAYLOAD, STR_ZIP_PAYLOAD_V2, ThrottleMgr, UnloadHandler, WatcherFunction, _eInternalMessageId,
-    _throwInternal, addPageHideEventListener, addPageUnloadEventListener, cfgDfMerge, cfgDfValidate, createDynamicConfig, createOTelApi,
-    createProcessTelemetryContext, createSdkStatsNotifCbk, createStatsMgr, createTraceProvider, createUniqueNamespace, doPerf,
-    eLoggingSeverity, hasDocument, hasWindow, isArray, isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString,
-    mergeEvtNamespace, onConfigChange, parseConnectionString, proxyAssign, proxyFunctions, removePageHideEventListener,
-    removePageUnloadEventListener, useSpan
+    STATS_SDK_FEATURE, ThrottleMgr, UnloadHandler, WatcherFunction, _eInternalMessageId, _throwInternal, addPageHideEventListener,
+    addPageUnloadEventListener, cfgDfMerge, cfgDfValidate, createDynamicConfig, createOTelApi, createProcessTelemetryContext,
+    createSdkStatsNotifCbk, createStatsMgr, createTraceProvider, createUniqueNamespace, doPerf, eLoggingSeverity, hasDocument, hasWindow,
+    isArray, isFeatureEnabled, isFunction, isNullOrUndefined, isReactNative, isString, mergeEvtNamespace, onConfigChange,
+    parseConnectionString, proxyAssign, proxyFunctions, removePageHideEventListener, removePageUnloadEventListener, useSpan
 } from "@microsoft/applicationinsights-core-js";
 import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,

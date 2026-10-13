@@ -5,11 +5,10 @@ import {
     IEnvelope, IInternalOfflineSupport, IInternalSdkStatsState, INotificationManager, IOfflineListener, IPayloadData, IPlugin,
     IProcessTelemetryContext, IProcessTelemetryUnloadContext, ISample, IStatsEventData, IStorageBuffer, ITelemetryItem,
     ITelemetryPluginChain, ITelemetryUnloadState, IXDomainRequest, IXHROverride, MetricDataType, OnCompleteCallback, PageViewDataType,
-    PageViewPerformanceDataType, ProcessLegacy, RemoteDependencyDataType, RequestDataType, RequestHeaders, STR_ZIP_PAYLOAD,
-    STR_ZIP_PAYLOAD_V2, SampleRate, SendPOSTFunction, SendRequestReason, SenderPostManager, TraceDataType, TransportType,
-    _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId, _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate,
-    createOfflineListener, createProcessTelemetryContext, createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, eRequestHeaders,
-    formatErrorMessageXdr, formatErrorMessageXhr,
+    PageViewPerformanceDataType, ProcessLegacy, RemoteDependencyDataType, RequestDataType, RequestHeaders, SampleRate, SendPOSTFunction,
+    SendRequestReason, SenderPostManager, TraceDataType, TransportType, _ISendPostMgrConfig, _ISenderOnComplete, _eInternalMessageId,
+    _throwInternal, _warnToConsole, arrForEach, cfgDfBoolean, cfgDfValidate, createOfflineListener, createProcessTelemetryContext,
+    createUniqueNamespace, dateNow, dumpObj, eLoggingSeverity, eRequestHeaders, formatErrorMessageXdr, formatErrorMessageXhr,
     getExceptionName, getIEVersion, isArray, isBeaconsSupported, isFeatureEnabled, isFetchSupported, isInternalApplicationInsightsEndpoint,
     isNullOrUndefined, mergeEvtNamespace, objExtend, onConfigChange, parseResponse, prependTransports, runTargetUnload,
     utlCanUseSessionStorage, utlSetStoragePrefix
@@ -19,6 +18,7 @@ import {
     ITimerHandler, getInst, isFunction, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine,
     scheduleTimeout
 } from "@nevware21/ts-utils";
+import { STR_ZIP_PAYLOAD, STR_ZIP_PAYLOAD_V2 } from "./Constants";
 import {
     DependencyEnvelopeCreator, EnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator,
     PageViewEnvelopeCreator, PageViewPerformanceEnvelopeCreator, RequestEnvelopeCreator, TraceEnvelopeCreator
