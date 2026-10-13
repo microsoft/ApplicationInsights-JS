@@ -31,6 +31,17 @@ Add a new row for `X.Y.Z` immediately after the nightly row and before the previ
 
 Remove the oldest version row from the v3.x section to keep the table from growing unbounded (keep the last ~25 v3.x entries). Do NOT remove any v2.x entries.
 
+### Update the size badges in README.md and docs/README.md
+
+The size badges at the top of [README.md](../../README.md) and [docs/README.md](../../docs/README.md), and the gzip badge in the `## Performance` summary of [README.md](../../README.md), point at version-specific CDN images (the `ai.3.min.js.svg` alias images are static and are not regenerated). Replace the previous version in these URLs with `X.Y.Z`:
+
+```
+[![minified size size](https://js.monitor.azure.com/scripts/b/ai.X.Y.Z.min.js.svg)](https://js.monitor.azure.com/scripts/b/ai.X.Y.Z.min.js)
+[![gzip size](https://js.monitor.azure.com/scripts/b/ai.X.Y.Z.min.js.gzip.svg)](https://js.monitor.azure.com/scripts/b/ai.X.Y.Z.min.js)
+```
+
+Only update these to a full release version (not beta/alpha/dev).
+
 ## Step 3: Update RELEASES.md
 
 In [RELEASES.md](../RELEASES.md):
