@@ -681,6 +681,84 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCase({
+            name: "zip test: legacy feature mode dynamically controls V2 precedence",
+            timeout: 10000,
+            test: () => {
+                const expectedCompression = [true, false, true, false, true, false];
+                const expectedStates = [
+                    "legacy none delegates to enabled V2",
+                    "legacy disable overrides enabled V2",
+                    "legacy none delegates to enabled V2 again",
+                    "legacy none delegates to disabled V2",
+                    "legacy enable overrides disabled V2",
+                    "legacy none delegates to disabled V2 again"
+                ];
+
+                return createPromise<void>((resolve, reject) => {
+                    let sender = new Sender();
+                    let core = new AppInsightsCore();
+                    this.onDone(() => {
+                        core.unload(false);
+                    });
+                    let call = 0;
+                    let override: IXHROverride = {
+                        sendPOST: (payload, oncomplete) => {
+                            try {
+                                let shouldCompress = expectedCompression[call];
+                                QUnit.assert.equal(payload.headers["Content-Encoding"] === "gzip", shouldCompress, expectedStates[call]);
+                                if (shouldCompress) {
+                                    QUnit.assert.equal((payload.data as Uint8Array)[0], 0x1F, "Payload has gzip magic byte 1");
+                                    QUnit.assert.equal((payload.data as Uint8Array)[1], 0x8B, "Payload has gzip magic byte 2");
+                                } else {
+                                    QUnit.assert.equal(typeof payload.data, "string", "Uncompressed payload remains JSON");
+                                }
+
+                                oncomplete(200, {});
+                                call++;
+                                if (call === expectedCompression.length) {
+                                    resolve();
+                                } else {
+                                    if (call === 1) {
+                                        core.config.featureOptIn[STR_ZIP_PAYLOAD].mode = FeatureOptInMode.disable;
+                                    } else if (call === 2 || call === 5) {
+                                        core.config.featureOptIn[STR_ZIP_PAYLOAD].mode = FeatureOptInMode.none;
+                                    } else if (call === 3) {
+                                        core.config.featureOptIn[STR_ZIP_PAYLOAD_V2].mode = FeatureOptInMode.disable;
+                                    } else if (call === 4) {
+                                        core.config.featureOptIn[STR_ZIP_PAYLOAD].mode = FeatureOptInMode.enable;
+                                    }
+
+                                    setTimeout(() => {
+                                        sender.processTelemetry(this._createCompressionTelemetryItem());
+                                        sender.flush();
+                                    }, 10);
+                                }
+                            } catch (e) {
+                                reject(e);
+                            }
+                        }
+                    };
+
+                    core.initialize({
+                        instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                        featureOptIn: {
+                            [STR_ZIP_PAYLOAD]: { mode: FeatureOptInMode.none },
+                            [STR_ZIP_PAYLOAD_V2]: { mode: FeatureOptInMode.enable }
+                        },
+                        extensionConfig: {
+                            [sender.identifier]: {
+                                httpXHROverride: override,
+                                alwaysUseXhrOverride: true
+                            }
+                        }
+                    }, [sender]);
+                    sender.processTelemetry(this._createCompressionTelemetryItem());
+                    sender.flush();
+                });
+            }
+        });
+
+        this.testCase({
             name: "zip test: compressed async headers do not leak into an unload send",
             timeout: 10000,
             test: () => {
