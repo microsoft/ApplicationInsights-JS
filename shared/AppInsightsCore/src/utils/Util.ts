@@ -35,12 +35,24 @@ const _internalEndpointSuffixes: string[] = [
 let _correlationIdPrefix: string = "cid-v1:";
 
 export function isInternalApplicationInsightsEndpoint(endpointUrl: string): boolean {
-    let endpointMatch = endpointUrl && endpointUrl.match(/^https:\/\/[^\/?#]+([^?#]*)(?:[?#]|$)/i);
-    if (!endpointMatch || (endpointMatch[1] || STR_EMPTY).toLowerCase() !== DEFAULT_BREEZE_PATH) {
-        return false;
+    let host = STR_EMPTY;
+    let parsedUrl = endpointUrl && urlParseUrl(endpointUrl);
+    if (parsedUrl && parsedUrl.protocol && parsedUrl.hostname) {
+        if (parsedUrl.protocol.toLowerCase() !== "https:" || parsedUrl.username || parsedUrl.password ||
+            (parsedUrl.pathname || STR_EMPTY).toLowerCase() !== DEFAULT_BREEZE_PATH) {
+            return false;
+        }
+        host = parsedUrl.hostname.toLowerCase();
+    } else {
+        // Legacy non-DOM environments use a strict authority parser. Userinfo is intentionally
+        // unsupported because ingestion endpoints never require credentials in the URL.
+        let endpointMatch = endpointUrl && endpointUrl.match(/^https:\/\/([^\/:?#@]+)(?::\d+)?([^?#]*)(?:[?#].*)?$/i);
+        if (!endpointMatch || (endpointMatch[2] || STR_EMPTY).toLowerCase() !== DEFAULT_BREEZE_PATH) {
+            return false;
+        }
+        host = (endpointMatch[1] || STR_EMPTY).toLowerCase();
     }
 
-    let host = (urlParseHost(endpointUrl) || STR_EMPTY).toLowerCase();
     for (let lp = 0; lp < _internalEndpointHosts.length; lp++) {
         if (host === _internalEndpointHosts[lp]) {
             return true;

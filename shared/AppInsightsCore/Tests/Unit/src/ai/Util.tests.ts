@@ -43,6 +43,8 @@ export class UtilTests extends AITestClass {
                     "https://proxy.contoso.com/v2/track",
                     "https://eastus-8.in.applicationinsights.azure.com.evil.example/v2/track",
                     "https://applicationinsights.azure.com.evil.example/v2/track",
+                    "https://dc.services.visualstudio.com:443@proxy.contoso.com/v2/track",
+                    "https://eastus-8.in.applicationinsights.azure.com:443@proxy.contoso.com/v2/track",
                     "http://dc.services.visualstudio.com/v2/track",
                     "https://dc.services.visualstudio.com/not-track"
                 ];
