@@ -5,7 +5,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode } from "@microsoft/applicationinsights-cfgsync-js";
-import { Sender } from "@microsoft/applicationinsights-channel-js";
+import { STR_ZIP_PAYLOAD, STR_ZIP_PAYLOAD_V2, Sender } from "@microsoft/applicationinsights-channel-js";
 import {
     AnalyticsPluginIdentifier, AppInsightsCore, ConnectionString, DEFAULT_BREEZE_PATH, FeatureOptInMode, IAppInsightsCore,
     IAutoExceptionTelemetry, IChannelControls, IConfig, IConfigDefaults, IConfiguration, ICookieMgr, ICustomProperties, IDependencyTelemetry,
@@ -64,7 +64,6 @@ const _ignoreProxyAssignProperties = [
 const IKEY_USAGE = "iKeyUsage";
 const CDN_USAGE = "CdnUsage";
 const SDK_LOADER_VER = "SdkLoaderVer";
-const ZIP_PAYLOAD = "zipPayload";
 const SDK_STATS = "SdkStats";
 var _sdkVersion = "#version#";
 
@@ -107,7 +106,8 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
         [IKEY_USAGE]: {mode: FeatureOptInMode.enable}, //for versions after 3.1.2 (>= 3.2.0)
         [CDN_USAGE]: {mode: FeatureOptInMode.disable},
         [SDK_LOADER_VER]: {mode: FeatureOptInMode.disable},
-        [ZIP_PAYLOAD]: {mode: FeatureOptInMode.none},
+        [STR_ZIP_PAYLOAD]: {mode: FeatureOptInMode.none},
+        [STR_ZIP_PAYLOAD_V2]: {mode: FeatureOptInMode.none},
         [SDK_STATS]: {mode: FeatureOptInMode.enable}
     },
     sdkStats: cfgDfMerge({

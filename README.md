@@ -535,6 +535,7 @@ You can use the `featureOptIn` configuration to enable or customize specific SDK
 | Name        | Default | Description                                  | Note |
 |-------------|---------|----------------------------------------------|------------|
 | `zipPayload` | `none`*(version 3.3.7)  | Enables compression using the Compression API to zip telemetry payloads. |If this feature is turned on and the CompressionStream API is available, the payload will be compressed using the CompressionStream API. Compression will only occur if the event is asynchronous. For events like unloads, compression will not be applied. Note: if user set payloadPreprocessor, this zip compression will not be applied.|
+| `zipPayloadV2` | `none` | Enables endpoint-safe compression for versioned CDN rollout. |Recognized Microsoft Application Insights ingestion endpoints may be compressed automatically. Custom endpoints remain JSON unless the Application Insights channel sets `enableCompressionForCustomEndpoint: true`. Older SDKs ignore this key.|
 
 * A default value of none means the SDK may automatically enable this feature in the future. To explicitly prevent this, set the feature to disable using FeatureOptInMode.disable.
 
@@ -557,6 +558,15 @@ const appInsights = new ApplicationInsights({
 });
 ```
 See [feature opt-in status](https://microsoft.github.io/ApplicationInsights-JS/WebConfig) for more details.
+
+The legacy `zipPayload` key remains supported for backward compatibility and uses the same endpoint safety checks in current SDKs.
+For CDN rollout, first ship and gain adoption of an SDK that supports `zipPayloadV2`, then publish a new CDN configuration using only
+`zipPayloadV2`. Keep `zipPayload` absent so older SDKs do not enable compression for custom endpoints.
+
+Legacy configuration retains precedence at runtime: `zipPayload: disable` turns compression off regardless of `zipPayloadV2`, while
+`zipPayload: enable` turns endpoint-safe compression on regardless of `zipPayloadV2`. When legacy `zipPayload` is `none` or undefined,
+the SDK delegates to `zipPayloadV2`. Changing either feature dynamically re-evaluates this precedence without copying or modifying the
+other feature's value.
 
 
 ### ExtensionConfig

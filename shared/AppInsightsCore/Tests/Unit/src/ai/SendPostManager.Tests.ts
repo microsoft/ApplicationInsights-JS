@@ -3,7 +3,7 @@ import { _eInternalMessageId } from "../../../../src/enums/ai/LoggingEnums";
 import { _InternalLogMessage } from "../../../../src/diagnostics/DiagnosticLogger";
 import { SenderPostManager } from "../../../../src/core/SenderPostManager";
 import { IPayloadData } from "../../../../src/interfaces/ai/IXHROverride";
-import { getInst, isFunction, mathRandom } from "@nevware21/ts-utils";
+import { getGlobal, getInst, isFunction, mathRandom } from "@nevware21/ts-utils";
 import { createPromise, doAwaitResponse } from "@nevware21/ts-async";
 
 export class SendPostManagerTests extends AITestClass {
@@ -102,6 +102,33 @@ export class SendPostManagerTests extends AITestClass {
                     Assert.equal(callbackPayload.data, null, "null data should remain null");
                     Assert.ok(!callbackPayload.headers["Content-Encoding"], "Content-Encoding header should not be set");
                 });
+            }
+        });
+
+        this.testCase({
+            name: "preparePayload: compression failure falls back without gzip header",
+            test: () => {
+                const globalObj = getGlobal() as any;
+                const originalCompressionStream = globalObj.CompressionStream;
+                const originalData = "fallback payload";
+                const payload: IPayloadData = {
+                    urlString: "https://dc.services.visualstudio.com/v2/track",
+                    data: originalData,
+                    headers: {}
+                };
+
+                globalObj.CompressionStream = function() {
+                    throw new Error("compression unavailable");
+                };
+
+                try {
+                    this._sender.preparePayload((processedPayload) => {
+                        Assert.equal(processedPayload.data, originalData, "Original JSON payload is retained");
+                        Assert.ok(!processedPayload.headers["Content-Encoding"], "Fallback payload has no gzip header");
+                    }, true, payload, false);
+                } finally {
+                    globalObj.CompressionStream = originalCompressionStream;
+                }
             }
         });
 

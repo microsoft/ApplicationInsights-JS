@@ -19,4 +19,3 @@ export const DEFAULT_BREEZE_ENDPOINT = "https://dc.services.visualstudio.com";
 export const DEFAULT_BREEZE_PATH = "/v2/track";
 export const strNotSpecified = "not_specified";
 export const strIkey = "iKey";
-
