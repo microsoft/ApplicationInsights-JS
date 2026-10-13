@@ -241,7 +241,7 @@ export { FieldType } from "./enums/ai/Enums";
 export { IRequestHeaders, RequestHeaders, eRequestHeaders } from "./telemetry/RequestResponseHeaders";
 export {
     DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod,
-    DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, strNotSpecified,
+    DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, STR_ZIP_PAYLOAD, STR_ZIP_PAYLOAD_V2, strNotSpecified,
     ChannelControllerPriority
 } from "./constants/Constants";
 
