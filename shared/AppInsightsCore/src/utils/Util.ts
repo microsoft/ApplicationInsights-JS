@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach, arrIndexOf, getPerformance, isNullOrUndefined, strIndexOf, utcNow as dateNow } from "@nevware21/ts-utils";
-import { DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH } from "../constants/Constants";
+import { arrForEach, getPerformance, isNullOrUndefined, strEndsWith, strIndexOf, utcNow as dateNow } from "@nevware21/ts-utils";
+import { DEFAULT_BREEZE_PATH } from "../constants/Constants";
 import { STR_EMPTY } from "../constants/InternalConstants";
 import { createDistributedTraceContext } from "../core/TelemetryHelpers";
 import { ICorrelationConfig } from "../interfaces/ai/ICorrelationConfig";
@@ -11,19 +11,49 @@ import { IDistributedTraceContext } from "../interfaces/ai/IDistributedTraceCont
 import { ITelemetryTrace } from "../interfaces/ai/context/ITelemetryTrace";
 import { RequestHeaders, eRequestHeaders } from "../telemetry/RequestResponseHeaders";
 import { dataSanitizeString } from "../telemetry/ai/Common/DataSanitizer";
-import { urlParseFullHost, urlParseUrl } from "./UrlHelperFuncs";
+import { urlParseFullHost, urlParseHost, urlParseUrl } from "./UrlHelperFuncs";
 
-// listing only non-geo specific locations
-const _internalEndpoints: string[] = [
-    DEFAULT_BREEZE_ENDPOINT + DEFAULT_BREEZE_PATH,
-    "https://breeze.aimon.applicationinsights.io" + DEFAULT_BREEZE_PATH,
-    "https://dc-int.services.visualstudio.com" + DEFAULT_BREEZE_PATH
+const _internalEndpointHosts: string[] = [
+    "dc.services.visualstudio.com",
+    "breeze.aimon.applicationinsights.io",
+    "dc-int.services.visualstudio.com",
+    "dc.applicationinsights.azure.com",
+    "dc.applicationinsights.azure.cn",
+    "dc.applicationinsights.us"
+];
+
+// Supported regional ingestion hosts use one of these first-party suffixes. The
+// leading dot is required so lookalike domains cannot match.
+const _internalEndpointSuffixes: string[] = [
+    ".dc.services.visualstudio.com",
+    ".in.applicationinsights.azure.com",
+    ".dc.applicationinsights.azure.com",
+    ".dc.applicationinsights.azure.cn",
+    ".dc.applicationinsights.us"
 ];
 
 let _correlationIdPrefix: string = "cid-v1:";
 
 export function isInternalApplicationInsightsEndpoint(endpointUrl: string): boolean {
-    return arrIndexOf(_internalEndpoints, endpointUrl.toLowerCase()) !== -1;
+    let endpointMatch = endpointUrl && endpointUrl.match(/^https:\/\/[^\/?#]+([^?#]*)(?:[?#]|$)/i);
+    if (!endpointMatch || (endpointMatch[1] || STR_EMPTY).toLowerCase() !== DEFAULT_BREEZE_PATH) {
+        return false;
+    }
+
+    let host = (urlParseHost(endpointUrl) || STR_EMPTY).toLowerCase();
+    for (let lp = 0; lp < _internalEndpointHosts.length; lp++) {
+        if (host === _internalEndpointHosts[lp]) {
+            return true;
+        }
+    }
+
+    for (let lp = 0; lp < _internalEndpointSuffixes.length; lp++) {
+        if (strEndsWith(host, _internalEndpointSuffixes[lp])) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 export function correlationIdSetPrefix(prefix: string) {
