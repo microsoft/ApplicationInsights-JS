@@ -562,6 +562,9 @@ export class SenderTests extends AITestClass {
                 return createPromise<void>((resolve, reject) => {
                     let sender = new Sender();
                     let core = new AppInsightsCore();
+                    this.onDone(() => {
+                        core.unload(false);
+                    });
                     let override: IXHROverride = {
                         sendPOST: (payload, oncomplete) => {
                             try {
@@ -572,7 +575,6 @@ export class SenderTests extends AITestClass {
                                 oncomplete(200, {});
                                 current++;
                                 if (current === endpoints.length) {
-                                    core.unload(false);
                                     resolve();
                                 } else {
                                     core.config.endpointUrl = endpoints[current];
@@ -611,6 +613,9 @@ export class SenderTests extends AITestClass {
                 return createPromise<void>((resolve, reject) => {
                     let sender = new Sender();
                     let core = new AppInsightsCore();
+                    this.onDone(() => {
+                        core.unload(false);
+                    });
                     let call = 0;
                     let override: IXHROverride = {
                         sendPOST: (payload, oncomplete) => {
@@ -635,7 +640,6 @@ export class SenderTests extends AITestClass {
                                 oncomplete(200, {});
                                 call++;
                                 if (call === 4) {
-                                    core.unload(false);
                                     resolve();
                                 } else {
                                     if (call === 1) {
@@ -676,12 +680,15 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCase({
-            name: "zip test: compressed async headers do not leak into a synchronous send",
+            name: "zip test: compressed async headers do not leak into an unload send",
             timeout: 10000,
             test: () => {
                 return createPromise<void>((resolve, reject) => {
                     let sender = new Sender();
                     let core = new AppInsightsCore();
+                    this.onDone(() => {
+                        core.unload(false);
+                    });
                     let call = 0;
                     let override: IXHROverride = {
                         sendPOST: (payload, oncomplete, sync) => {
@@ -690,19 +697,18 @@ export class SenderTests extends AITestClass {
                                     QUnit.assert.equal(payload.headers["Content-Encoding"], "gzip", "Async payload is gzip encoded");
                                     QUnit.assert.equal(false, sync, "First send is asynchronous");
                                 } else {
-                                    QUnit.assert.ok(!payload.headers["Content-Encoding"], "Synchronous payload has no gzip header");
-                                    QUnit.assert.equal(typeof payload.data, "string", "Synchronous payload remains JSON");
-                                    QUnit.assert.equal(true, sync, "Second send is synchronous");
+                                    QUnit.assert.ok(!payload.headers["Content-Encoding"], "Unload payload has no gzip header");
+                                    QUnit.assert.equal(typeof payload.data, "string", "Unload payload remains JSON");
+                                    QUnit.assert.equal(true, sync, "Second send uses the synchronous unload transport");
                                 }
                                 oncomplete(200, {});
                                 call++;
                                 if (call === 2) {
-                                    core.unload(false);
                                     resolve();
                                 } else {
                                     setTimeout(() => {
                                         sender.processTelemetry(this._createCompressionTelemetryItem());
-                                        sender.flush(false);
+                                        sender.onunloadFlush();
                                     }, 0);
                                 }
                             } catch (e) {
