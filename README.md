@@ -563,6 +563,11 @@ The legacy `zipPayload` key remains supported for backward compatibility and use
 For CDN rollout, first ship and gain adoption of an SDK that supports `zipPayloadV2`, then publish a new CDN configuration using only
 `zipPayloadV2`. Keep `zipPayload` absent so older SDKs do not enable compression for custom endpoints.
 
+Legacy configuration retains precedence at runtime: `zipPayload: disable` turns compression off regardless of `zipPayloadV2`, while
+`zipPayload: enable` turns endpoint-safe compression on regardless of `zipPayloadV2`. When legacy `zipPayload` is `none` or undefined,
+the SDK delegates to `zipPayloadV2`. Changing either feature dynamically re-evaluates this precedence without copying or modifying the
+other feature's value.
+
 
 ### ExtensionConfig
 
