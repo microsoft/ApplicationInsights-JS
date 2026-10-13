@@ -6,7 +6,8 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 import {
     AppInsightsCore, DEFAULT_BREEZE_PATH, FeatureOptInMode, IConfig, IConfigDefaults, IConfiguration, IDistributedTraceContext,
     IDynamicConfigHandler, ILoadedPlugin, IPlugin, ITelemetryInitializerHandler, ITelemetryItem, ITelemetryPlugin, ITelemetryUnloadState,
-    IUnloadHook, UnloadHandler, WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange, parseConnectionString, proxyFunctions
+    IUnloadHook, STR_ZIP_PAYLOAD, STR_ZIP_PAYLOAD_V2, UnloadHandler, WatcherFunction, cfgDfValidate, createDynamicConfig, onConfigChange,
+    parseConnectionString, proxyFunctions
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createSyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import { isNullOrUndefined, isPromiseLike, isString, objDefine, throwError } from "@nevware21/ts-utils";
@@ -18,7 +19,8 @@ const defaultConfigValues: IConfigDefaults<IConfiguration> = {
     endpointUrl: UNDEFINED_VALUE,
     instrumentationKey: UNDEFINED_VALUE,
     featureOptIn:{
-        ["zipPayload"]: {mode: FeatureOptInMode.none}
+        [STR_ZIP_PAYLOAD]: {mode: FeatureOptInMode.none},
+        [STR_ZIP_PAYLOAD_V2]: {mode: FeatureOptInMode.none}
     },
     extensionConfig: {}
 };
