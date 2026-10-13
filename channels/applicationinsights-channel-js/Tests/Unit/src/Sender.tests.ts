@@ -10,6 +10,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { ArraySendBuffer, SessionStorageSendBuffer } from "../../../src/SendBuffer";
 import { STR_ZIP_PAYLOAD, STR_ZIP_PAYLOAD_V2 } from "../../../src/Constants";
+import { isCompressionEndpoint } from "../../../src/EndpointUtils";
 import { IInternalStorageItem, ISenderConfig } from "../../../src/Interfaces";
 import { createAsyncResolvedPromise, createPromise } from "@nevware21/ts-async";
 import { isPromiseLike, isUndefined } from "@nevware21/ts-utils";
@@ -69,6 +70,38 @@ export class SenderTests extends AITestClass {
     }
 
     public registerTests() {
+
+        this.testCase({
+            name: "Compression endpoint classification recognizes only supported ingestion hosts",
+            test: () => {
+                const firstPartyEndpoints = [
+                    "https://dc.services.visualstudio.com/v2/track",
+                    "HTTPS://DC.SERVICES.VISUALSTUDIO.COM:443/v2/track",
+                    "https://eastus-8.in.applicationinsights.azure.com/v2/track",
+                    "https://westus2.dc.applicationinsights.azure.com/v2/track",
+                    "https://dc.applicationinsights.azure.cn/v2/track",
+                    "https://chinaeast2.dc.applicationinsights.azure.cn:443/v2/track",
+                    "https://dc.applicationinsights.us/v2/track",
+                    "https://usgovvirginia.dc.applicationinsights.us/v2/track"
+                ];
+                const customEndpoints = [
+                    "https://proxy.contoso.com/v2/track",
+                    "https://eastus-8.in.applicationinsights.azure.com.evil.example/v2/track",
+                    "https://applicationinsights.azure.com.evil.example/v2/track",
+                    "https://dc.services.visualstudio.com:443@proxy.contoso.com/v2/track",
+                    "https://eastus-8.in.applicationinsights.azure.com:443@proxy.contoso.com/v2/track",
+                    "http://dc.services.visualstudio.com/v2/track",
+                    "https://dc.services.visualstudio.com/not-track"
+                ];
+
+                firstPartyEndpoints.forEach((endpoint) => {
+                    QUnit.assert.equal(true, isCompressionEndpoint(endpoint), endpoint);
+                });
+                customEndpoints.forEach((endpoint) => {
+                    QUnit.assert.equal(false, isCompressionEndpoint(endpoint), endpoint);
+                });
+            }
+        });
 
         this.testCase({
             name: "Channel Config: Channel can properly take args from root config",
