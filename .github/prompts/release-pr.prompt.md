@@ -33,7 +33,7 @@ Remove the oldest version row from the v3.x section to keep the table from growi
 
 ### Update the size badges in README.md and docs/README.md
 
-The size badges at the top of [README.md](../README.md) and [docs/README.md](../docs/README.md), and the gzip badge in the `## Performance` summary of [README.md](../README.md), point at version-specific CDN images (the `ai.3.min.js.svg` alias images are static and are not regenerated). Replace the previous version in these URLs with `X.Y.Z`:
+The size badges at the top of [README.md](../../README.md) and [docs/README.md](../../docs/README.md), and the gzip badge in the `## Performance` summary of [README.md](../../README.md), point at version-specific CDN images (the `ai.3.min.js.svg` alias images are static and are not regenerated). Replace the previous version in these URLs with `X.Y.Z`:
 
 ```
 [![minified size size](https://js.monitor.azure.com/scripts/b/ai.X.Y.Z.min.js.svg)](https://js.monitor.azure.com/scripts/b/ai.X.Y.Z.min.js)
