@@ -19,6 +19,7 @@ import {
     scheduleTimeout
 } from "@nevware21/ts-utils";
 import { STR_ZIP_PAYLOAD, STR_ZIP_PAYLOAD_V2 } from "./Constants";
+import { isCompressionEndpoint } from "./EndpointUtils";
 import {
     DependencyEnvelopeCreator, EnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator,
     PageViewEnvelopeCreator, PageViewPerformanceEnvelopeCreator, RequestEnvelopeCreator, TraceEnvelopeCreator
@@ -1077,7 +1078,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         if (resolveFn) {
                             doAwait(result as any, resolveFn, rejectFn);
                         }
-                    }, _zipPayload && (isInternalApplicationInsightsEndpoint(_endpointUrl) || _enableCompressionForCustomEndpoint),
+                    }, _zipPayload && (isCompressionEndpoint(_endpointUrl) || _enableCompressionForCustomEndpoint),
                     payloadData, !isAsync);
                     
                     if (callbackExecuted) {
