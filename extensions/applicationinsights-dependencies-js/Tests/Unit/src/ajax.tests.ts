@@ -81,6 +81,34 @@ export class AjaxTests extends AITestClass {
     }
 
     public registerTests() {
+        arrForEach([DistributedTracingModes.AI, DistributedTracingModes.AI_AND_W3C, DistributedTracingModes.W3C], (mode) => {
+            this.testCase({
+                name: "Manual dependency IDs preserve backend format in tracing mode " + mode,
+                test: () => {
+                    this._ajax = new AjaxMonitor();
+                    let core = new AppInsightsCore();
+                    let config: IConfiguration & IConfig = {
+                        instrumentationKey: "instrumentation_key",
+                        distributedTracingMode: mode
+                    };
+                    core.initialize(config, [this._ajax, new TestChannelPlugin()]);
+                    let trackSpy = this.sandbox.spy(core, "track");
+                    let id = "|4bf92f3577b34da6a3ce929d0e0e4736.00f067aa0ba902b7";
+
+                    arrForEach([
+                        { input: id, w3c: id + "." },
+                        { input: id + ".", w3c: id + "." },
+                        { input: "00f067aa0ba902b7", w3c: "00f067aa0ba902b7." }
+                    ], (testCase) => {
+                        this._ajax.trackDependencyData({ id: testCase.input, responseCode: 200 });
+                        let expectedId = mode === DistributedTracingModes.AI ? testCase.input : testCase.w3c;
+                        Assert.equal(expectedId, trackSpy.lastCall.args[0].baseData.id, "ID sent to the backend");
+                    });
+                    Assert.equal(3, trackSpy.callCount, "Each manual dependency is tracked once");
+                }
+            });
+        });
+
         this.testCase({
             name: "Dependencies Configuration: Config can be set from root config",
             test: () => {

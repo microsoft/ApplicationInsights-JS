@@ -285,13 +285,15 @@ appInsights.trackPageViewPerformance({name : 'some page', url: 'some url'});
 appInsights.trackException({exception: new Error('some error')});
 appInsights.trackTrace({message: 'some trace'});
 appInsights.trackMetric({name: 'some metric', average: 42});
-appInsights.trackDependencyData({absoluteUrl: 'some url', responseCode: 200, method: 'GET', id: 'some id'});
+appInsights.trackDependencyData({absoluteUrl: 'some url', responseCode: 200, method: 'GET', id: '|4bf92f3577b34da6a3ce929d0e0e4736.00f067aa0ba902b7'});
 appInsights.startTrackPage("pageName");
 appInsights.stopTrackPage("pageName", null, {customePropertiesName: "some value"}, {customerMeasurementsName: 144});
 appInsights.startTrackEvent("event");
 appInsights.stopTrackEvent("event", null, {customePropertiesName: "some value"}, {customerMeasurementsName: 150});
 appInsights.flush();
 ```
+
+For manually tracked dependencies, see the [dependency ID format and W3C correlation notes](https://microsoft.github.io/ApplicationInsights-JS/API-reference#trackdependencydata).
 
 Custom properties can be included in your telemetry through the `properties` named argument. This can be done with *any* of the Track APIs except stopTrackPage and stopTrackEvent.
 

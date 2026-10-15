@@ -133,6 +133,34 @@ Parameter | Type | Description
 [`target?`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IDependencyTelemetry.html#target) | string | **Optional**<br>Target site of a dependency call.
 [`properties?`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IDependencyTelemetry.html#properties) | dictionary | **Optional**<br>Map of string to any: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
+When manually tracking a dependency with W3C tracing, set `id` to
+`|<traceId>.<spanId>`, using the 32-character trace ID and 16-character span ID
+from the outgoing request. A span ID alone is not the full dependency telemetry
+ID expected by Azure Monitor.
+
+In `W3C` and `AI_AND_W3C` tracing modes, the SDK appends a trailing period to
+`id` if it does not already end with one. This is the format sent to the
+backend, it does not change the outgoing request's `traceparent` header.
+In `AI` mode, `trackDependencyData` leaves the supplied ID unchanged.
+
+```js
+appInsights.trackDependencyData({
+    id: '|4bf92f3577b34da6a3ce929d0e0e4736.00f067aa0ba902b7',
+    name: 'GET /api/user',
+    responseCode: 200,
+    duration: 100,
+    success: true,
+    type: 'HTTP',
+    target: 'api.example.com'
+});
+```
+
+With W3C tracing, this example is sent with the ID
+`|4bf92f3577b34da6a3ce929d0e0e4736.00f067aa0ba902b7.`.
+`trackDependencyData` records telemetry for a call you made, it does not send
+the request or inject correlation headers. Use the trace and span IDs from
+that request when building the dependency ID.
+
 ### trackEvent
 
 ```ts
