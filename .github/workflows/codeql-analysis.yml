@@ -58,7 +58,7 @@ jobs:
     - name: Setup Node.js ${{ matrix.node-version }}
       # Only run the build for Typescript/JavaScript language match
       if: matrix.language == 'javascript-typescript' 
-      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: ${{ matrix.node-version }}
         
@@ -75,7 +75,7 @@ jobs:
         
     # Initializes the CodeQL tools for scanning
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+      uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
       with:
         languages: ${{ matrix.language }}
         config-file: ./.github/codeql/codeql-config.yml
@@ -88,7 +88,7 @@ jobs:
 
     # Perform the CodeQL Analysis
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+      uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
       with:
         category: "/language:${{matrix.language}}"
         upload-database: false
