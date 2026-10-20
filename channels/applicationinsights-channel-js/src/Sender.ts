@@ -15,8 +15,8 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, createPromise, doAwait, doAwaitResponse } from "@nevware21/ts-async";
 import {
-    ITimerHandler, getInst, isFunction, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine,
-    scheduleTimeout
+    ITimerHandler, arrSome, getInst, isFunction, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze,
+    objDefine, scheduleTimeout
 } from "@nevware21/ts-utils";
 import {
     DependencyEnvelopeCreator, EnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator,
@@ -826,9 +826,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         
                 _self._buffer && _self._buffer.clearSent(payload);
 
-                // Notify listeners of discarded events (skip extraction entirely when no listeners are registered)
+                // Only reconstruct items when a listener handles this notification.
                 let mgr = _getNotifyMgr();
-                if (mgr && mgr.listeners && mgr.listeners.length) {
+                if (mgr && mgr.listeners && mgr.listeners.length &&
+                    arrSome(mgr.listeners, (listener) => !!(listener && listener.eventsDiscarded))) {
                     let items = _extractTelemetryItems(payload);
                     if (items) {
                         mgr.eventsDiscarded(items, 1 /* NonRetryableStatus */, statusCode);
@@ -880,9 +881,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             function _onSuccess(payload: IInternalStorageItem[], countOfItemsInPayload: number) {
                 _self._buffer && _self._buffer.clearSent(payload);
 
-                // Notify listeners of successful send (skip extraction entirely when no listeners are registered)
+                // Only reconstruct items when a listener handles this notification.
                 let mgr = _getNotifyMgr();
-                if (mgr && mgr.listeners && mgr.listeners.length) {
+                if (mgr && mgr.listeners && mgr.listeners.length &&
+                    arrSome(mgr.listeners, (listener) => !!(listener && listener.eventsSent))) {
                     let items = _extractTelemetryItems(payload);
                     if (items) {
                         mgr.eventsSent(items);
@@ -1452,7 +1454,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              */
             function _notifyRetry(payload: IInternalStorageItem[], statusCode: number) {
                 let mgr = _getNotifyMgr();
-                if (mgr && mgr.eventsRetry && mgr.listeners && mgr.listeners.length) {
+                if (mgr && mgr.eventsRetry && mgr.listeners && mgr.listeners.length &&
+                    arrSome(mgr.listeners, (listener) => !!(listener && listener.eventsRetry))) {
                     let items = _extractTelemetryItems(payload);
                     if (items) {
                         mgr.eventsRetry(items, statusCode);
