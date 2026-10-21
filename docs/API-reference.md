@@ -138,10 +138,16 @@ When manually tracking a dependency with W3C tracing, set `id` to
 from the outgoing request. A span ID alone is not the full dependency telemetry
 ID expected by Azure Monitor.
 
-In `W3C` and `AI_AND_W3C` tracing modes, the SDK appends a trailing period to
-`id` if it does not already end with one. This is the format sent to the
-backend, it does not change the outgoing request's `traceparent` header.
-In `AI` mode, `trackDependencyData` leaves the supplied ID unchanged.
+For example, use the IDs from the `traceparent` header you send with the request.
+In `<version>-<trace-id>-<parent-id>-<flags>`, `trace-id` is the trace ID and
+`parent-id` is the outgoing request's span ID.
+
+The SDK appends a trailing period to `id` if it does not already end with one
+only when `distributedTracingMode` is exactly `W3C` or `AI_AND_W3C`.
+This is the format sent to the backend, it does not change the outgoing
+request's `traceparent` header.
+In `AI`, `W3C_TRACE` and `AI_AND_W3C_TRACE` modes, `trackDependencyData` leaves
+the supplied ID unchanged.
 
 ```js
 appInsights.trackDependencyData({
@@ -155,7 +161,7 @@ appInsights.trackDependencyData({
 });
 ```
 
-With W3C tracing, this example is sent with the ID
+In `W3C` and `AI_AND_W3C` modes, this example is sent with the ID
 `|4bf92f3577b34da6a3ce929d0e0e4736.00f067aa0ba902b7.`.
 `trackDependencyData` records telemetry for a call you made, it does not send
 the request or inject correlation headers. Use the trace and span IDs from
