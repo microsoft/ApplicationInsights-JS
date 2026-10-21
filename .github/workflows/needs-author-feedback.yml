@@ -103,7 +103,10 @@ jobs:
                 c.user?.type === "Bot" &&
                 c.body?.includes("<!-- needs-author-feedback:closed -->") &&
                 new Date(c.created_at) >= cycleStart &&
-                new Date(c.created_at) <= new Date(closed.created_at)
+                new Date(c.created_at) <= new Date(closed.created_at) &&
+                // The follow-up closes right after posting the marker; a marker from a failed
+                // attempt must not vouch for an unrelated later closure.
+                new Date(closed.created_at) - new Date(c.created_at) <= 5 * 60 * 1000
               );
               if (!autoClosed) return;
 
