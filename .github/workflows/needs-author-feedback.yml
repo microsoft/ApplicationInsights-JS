@@ -84,7 +84,7 @@ jobs:
               // Reopen only when the current closure is the automatic feedback closure
               // for this round, not a manual decision by a maintainer.
               const closed = latest("closed", () => true);
-              if (!closed || closed.actor?.type !== "Bot" || closed.state_reason !== "not_planned") return;
+              if (!closed || closed.actor?.type !== "Bot" || current.state_reason !== "not_planned") return;
               if (new Date(closed.created_at) < labeledAt) return;
 
               const comments = await github.paginate(github.rest.issues.listComments, {

@@ -123,10 +123,13 @@ jobs:
               }
 
               const appliedAt = new Date(latestAppliedComment.created_at);
+              // Replies count from the start of the label round, so an answer posted before a
+              // backfilled marker is not ignored. The marker still drives the 7/14-day clock.
+              const repliesSince = labeledAt && labeledAt < appliedAt ? labeledAt : appliedAt;
 
               const authorReplied = comments.some(comment =>
                 comment.user?.login === author &&
-                new Date(comment.created_at) > appliedAt
+                new Date(comment.created_at) > repliesSince
               );
 
               if (authorReplied) {
@@ -168,10 +171,10 @@ jobs:
                   owner,
                   repo,
                   issue_number,
-                  since: appliedAt.toISOString(),
+                  since: repliesSince.toISOString(),
                   per_page: 100
                 });
-                if (recentComments.some(comment => comment.user?.login === author && new Date(comment.created_at) > appliedAt)) continue;
+                if (recentComments.some(comment => comment.user?.login === author && new Date(comment.created_at) > repliesSince)) continue;
 
                 await github.rest.issues.createComment({
                   owner,
@@ -215,10 +218,10 @@ jobs:
                   owner,
                   repo,
                   issue_number,
-                  since: appliedAt.toISOString(),
+                  since: repliesSince.toISOString(),
                   per_page: 100
                 });
-                if (lateComments.some(comment => comment.user?.login === author && new Date(comment.created_at) > appliedAt)) {
+                if (lateComments.some(comment => comment.user?.login === author && new Date(comment.created_at) > repliesSince)) {
                   await github.rest.issues.update({
                     owner,
                     repo,
