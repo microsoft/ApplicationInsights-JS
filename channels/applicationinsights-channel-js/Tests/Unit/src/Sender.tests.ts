@@ -82,7 +82,9 @@ export class SenderTests extends AITestClass {
                     "https://dc.applicationinsights.azure.cn/v2/track",
                     "https://chinaeast2.dc.applicationinsights.azure.cn:443/v2/track",
                     "https://dc.applicationinsights.us/v2/track",
-                    "https://usgovvirginia.dc.applicationinsights.us/v2/track"
+                    "https://usgovvirginia.dc.applicationinsights.us/v2/track",
+                    "https://dc.services.visualstudio.com/v2/track?upstream=proxy.contoso.test",
+                    "https://dc.services.visualstudio.com/v2/track#proxy.contoso.test"
                 ];
                 const customEndpoints = [
                     "https://proxy.contoso.com/v2/track",
@@ -91,7 +93,18 @@ export class SenderTests extends AITestClass {
                     "https://dc.services.visualstudio.com:443@proxy.contoso.com/v2/track",
                     "https://eastus-8.in.applicationinsights.azure.com:443@proxy.contoso.com/v2/track",
                     "http://dc.services.visualstudio.com/v2/track",
-                    "https://dc.services.visualstudio.com/not-track"
+                    "https://dc.services.visualstudio.com/not-track",
+                    // Ingestion hosts that only appear after the real authority (query, fragment or backslash) must not match
+                    "https://proxy.contoso.test?upstream=eastus-8.in.applicationinsights.azure.com/v2/track",
+                    "https://proxy.contoso.test#eastus-8.in.applicationinsights.azure.com/v2/track",
+                    "https://proxy.contoso.test\\eastus-8.in.applicationinsights.azure.com/v2/track",
+                    "https://proxy.contoso.test\\.in.applicationinsights.azure.com/v2/track",
+                    "https://proxy.contoso.test?x=1&h=dc.services.visualstudio.com/v2/track",
+                    "https://proxy.contoso.test#dc.services.visualstudio.com/v2/track",
+                    "https://dc.services.visualstudio.com\\v2\\track",
+                    "https://dc.services.visualstudio.com?/v2/track",
+                    "https://dc.services.visualstudio.com#/v2/track",
+                    "https://dc.services.visualstudio.com"
                 ];
 
                 firstPartyEndpoints.forEach((endpoint) => {

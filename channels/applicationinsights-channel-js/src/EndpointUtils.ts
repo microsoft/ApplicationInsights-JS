@@ -18,12 +18,17 @@ const _internalEndpointSuffixes: string[] = [
 
 export function isCompressionEndpoint(endpointUrl: string): boolean {
     const scheme = "https://";
-    if (!endpointUrl || endpointUrl.slice(0, scheme.length).toLowerCase() !== scheme) {
+    // Browsers treat "\" as "/" for https URLs, so reject it rather than risk misreading the authority
+    if (!endpointUrl || endpointUrl.slice(0, scheme.length).toLowerCase() !== scheme || endpointUrl.indexOf("\\") !== -1) {
         return false;
     }
 
-    let pathStart = endpointUrl.indexOf("/", scheme.length);
-    if (pathStart === -1) {
+    // The authority ends at the first "/", "?" or "#"; only a "/" (path) delimiter is acceptable here
+    let pathStart = scheme.length;
+    while (pathStart < endpointUrl.length && "/?#".indexOf(endpointUrl.charAt(pathStart)) === -1) {
+        pathStart++;
+    }
+    if (endpointUrl.charAt(pathStart) !== "/") {
         return false;
     }
 
@@ -60,6 +65,10 @@ export function isCompressionEndpoint(endpointUrl: string): boolean {
     }
 
     let host = authority.toLowerCase();
+    if (!/^[a-z0-9.-]+$/.test(host)) {
+        return false;
+    }
+
     if (_internalEndpointHosts.indexOf("|" + host + "|") !== -1) {
         return true;
     }
