@@ -55,6 +55,7 @@ jobs:
             const comment = context.payload.comment;
 
             if (issue.pull_request) return;
+            if (issue.user?.type === "Bot") return;
             if (comment.user.login !== issue.user.login) return;
 
             const owner = context.repo.owner;
@@ -94,10 +95,15 @@ jobs:
                 since: labeledAt.toISOString(),
                 per_page: 100
               });
+              // The feedback-close marker must belong to the current open/close cycle,
+              // so a later stale.yml closure after a manual reopen is not reversed.
+              const reopened = latest("reopened", () => true);
+              const cycleStart = reopened && new Date(reopened.created_at) > labeledAt ? new Date(reopened.created_at) : labeledAt;
               const autoClosed = comments.some(c =>
                 c.user?.type === "Bot" &&
                 c.body?.includes("<!-- needs-author-feedback:closed -->") &&
-                new Date(c.created_at) >= labeledAt
+                new Date(c.created_at) >= cycleStart &&
+                new Date(c.created_at) <= new Date(closed.created_at)
               );
               if (!autoClosed) return;
 

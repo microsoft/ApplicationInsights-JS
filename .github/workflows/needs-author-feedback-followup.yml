@@ -85,6 +85,8 @@ jobs:
               if (issue.pull_request) continue;
               // `keep` opts an issue out of all automatic closure.
               if (hasLabel(issue, "keep")) continue;
+              // Bot-authored issues cannot answer, and the bot's own comments would look like replies.
+              if (issue.user?.type === "Bot") continue;
 
               const issue_number = issue.number;
               const author = issue.user.login;
