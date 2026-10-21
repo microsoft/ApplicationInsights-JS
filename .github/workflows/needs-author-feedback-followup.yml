@@ -160,6 +160,10 @@ jobs:
                 const { data: current } = await github.rest.issues.get({ owner, repo, issue_number });
                 if (current.state !== "open" || !hasLabel(current, "needs-author-feedback") || hasLabel(current, "keep")) continue;
 
+                // Skip if the label was removed and reapplied (a new feedback round) since it was inspected.
+                const currentLabeledAt = await getLatestLabeledAt(issue_number);
+                if (String(currentLabeledAt) !== String(labeledAt)) continue;
+
                 const recentComments = await github.paginate(github.rest.issues.listComments, {
                   owner,
                   repo,
@@ -203,6 +207,30 @@ jobs:
                   });
                 } catch (error) {
                   if (error.status !== 404) throw error;
+                }
+
+                // An author reply that landed between the final check and the close
+                // may have been handled while the issue was still open; reopen it.
+                const lateComments = await github.paginate(github.rest.issues.listComments, {
+                  owner,
+                  repo,
+                  issue_number,
+                  since: appliedAt.toISOString(),
+                  per_page: 100
+                });
+                if (lateComments.some(comment => comment.user?.login === author && new Date(comment.created_at) > appliedAt)) {
+                  await github.rest.issues.update({
+                    owner,
+                    repo,
+                    issue_number,
+                    state: "open"
+                  });
+                  await github.rest.issues.createComment({
+                    owner,
+                    repo,
+                    issue_number,
+                    body: "Thanks for the response. Reopening this issue."
+                  });
                 }
 
                 continue;

@@ -61,29 +61,45 @@ jobs:
             const repo = context.repo.repo;
             const issue_number = issue.number;
 
-            if (issue.state === "closed") {
-              // Reopen an issue that the follow-up workflow auto-closed for missing
-              // feedback when the author replies afterwards (including a reply that
-              // raced the close).
-              if (issue.state_reason !== "not_planned") return;
+            // Use the current state rather than the event snapshot: the job may run
+            // after the follow-up workflow closed the issue or the label was reapplied.
+            const { data: current } = await github.rest.issues.get({ owner, repo, issue_number });
+            const events = await github.paginate(github.rest.issues.listEvents, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100
+            });
+
+            const latest = (type, match) =>
+              events.filter(e => e.event === type && match(e)).sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+            const labeled = latest("labeled", e => e.label?.name === "needs-author-feedback");
+            if (!labeled) return;
+
+            const labeledAt = new Date(labeled.created_at);
+            // The reply answers an earlier feedback round; leave the newer request alone.
+            if (new Date(comment.created_at) < labeledAt) return;
+
+            if (current.state === "closed") {
+              // Reopen only when the current closure is the automatic feedback closure
+              // for this round, not a manual decision by a maintainer.
+              const closed = latest("closed", () => true);
+              if (!closed || closed.actor?.type !== "Bot" || closed.state_reason !== "not_planned") return;
+              if (new Date(closed.created_at) < labeledAt) return;
 
               const comments = await github.paginate(github.rest.issues.listComments, {
                 owner,
                 repo,
                 issue_number,
+                since: labeledAt.toISOString(),
                 per_page: 100
               });
-              const closedMarkers = comments.filter(c =>
+              const autoClosed = comments.some(c =>
                 c.user?.type === "Bot" &&
-                c.body?.includes("<!-- needs-author-feedback:closed -->")
+                c.body?.includes("<!-- needs-author-feedback:closed -->") &&
+                new Date(c.created_at) >= labeledAt
               );
-              if (closedMarkers.length === 0) return;
-
-              const closedMarker = closedMarkers[closedMarkers.length - 1];
-              const markerAt = new Date(closedMarker.created_at);
-              // Only when the current closure is the automatic one (not a later manual close).
-              if (Math.abs(new Date(issue.closed_at) - markerAt) > 10 * 60 * 1000) return;
-              if (new Date(comment.created_at) <= markerAt) return;
+              if (!autoClosed) return;
 
               await github.rest.issues.update({
                 owner,
@@ -112,7 +128,7 @@ jobs:
               return;
             }
 
-            if (!issue.labels.some(label => label.name === "needs-author-feedback")) return;
+            if (!current.labels.some(label => label.name === "needs-author-feedback")) return;
 
             try {
               await github.rest.issues.removeLabel({
