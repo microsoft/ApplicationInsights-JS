@@ -55,12 +55,64 @@ jobs:
             const comment = context.payload.comment;
 
             if (issue.pull_request) return;
-            if (!issue.labels.some(label => label.name === "needs-author-feedback")) return;
             if (comment.user.login !== issue.user.login) return;
 
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const issue_number = issue.number;
+
+            if (issue.state === "closed") {
+              // Reopen an issue that the follow-up workflow auto-closed for missing
+              // feedback when the author replies afterwards (including a reply that
+              // raced the close).
+              if (issue.state_reason !== "not_planned") return;
+
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number,
+                per_page: 100
+              });
+              const closedMarkers = comments.filter(c =>
+                c.user?.type === "Bot" &&
+                c.body?.includes("<!-- needs-author-feedback:closed -->")
+              );
+              if (closedMarkers.length === 0) return;
+
+              const closedMarker = closedMarkers[closedMarkers.length - 1];
+              const markerAt = new Date(closedMarker.created_at);
+              // Only when the current closure is the automatic one (not a later manual close).
+              if (Math.abs(new Date(issue.closed_at) - markerAt) > 10 * 60 * 1000) return;
+              if (new Date(comment.created_at) <= markerAt) return;
+
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number,
+                state: "open"
+              });
+
+              try {
+                await github.rest.issues.removeLabel({
+                  owner,
+                  repo,
+                  issue_number,
+                  name: "needs-author-feedback"
+                });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body: "Thanks for the response. Reopening this issue."
+              });
+              return;
+            }
+
+            if (!issue.labels.some(label => label.name === "needs-author-feedback")) return;
 
             try {
               await github.rest.issues.removeLabel({

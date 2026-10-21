@@ -38,6 +38,33 @@ jobs:
               return matching[0];
             }
 
+            function hasLabel(item, name) {
+              return (item.labels || []).some(label => (typeof label === "string" ? label : label.name) === name);
+            }
+
+            // Time the needs-author-feedback label was most recently applied, so a
+            // marker from an earlier feedback round is never reused for a new one.
+            async function getLatestLabeledAt(issue_number) {
+              const events = await github.paginate(github.rest.issues.listEvents, {
+                owner,
+                repo,
+                issue_number,
+                per_page: 100
+              });
+
+              let latest = null;
+              for (const event of events) {
+                if (event.event === "labeled" && event.label?.name === "needs-author-feedback") {
+                  const at = new Date(event.created_at);
+                  if (!latest || at > latest) {
+                    latest = at;
+                  }
+                }
+              }
+
+              return latest;
+            }
+
             function hasReminderSince(comments, appliedAt) {
               return comments.some(comment =>
                 comment.user?.type === "Bot" &&
@@ -57,7 +84,7 @@ jobs:
             for (const issue of issues) {
               if (issue.pull_request) continue;
               // `keep` opts an issue out of all automatic closure.
-              if (issue.labels.some(label => (typeof label === "string" ? label : label.name) === "keep")) continue;
+              if (hasLabel(issue, "keep")) continue;
 
               const issue_number = issue.number;
               const author = issue.user.login;
@@ -70,9 +97,13 @@ jobs:
               });
 
               const latestAppliedComment = getLatestAppliedMarker(comments);
-              if (!latestAppliedComment) {
+              const labeledAt = await getLatestLabeledAt(issue_number);
+              const markerIsCurrent = latestAppliedComment &&
+                (!labeledAt || new Date(latestAppliedComment.created_at) >= labeledAt);
+              if (!markerIsCurrent) {
                 // Backfill an applied marker for issues labeled before this
-                // workflow existed (or where the marker comment was deleted).
+                // workflow existed, or where the marker for the current label
+                // round is missing (notification failed or was deleted).
                 // Without this, such issues would stay labeled forever because
                 // the reminder/close logic below keys off the marker timestamp.
                 // The backfilled comment uses today's date as the start of the
@@ -123,24 +154,20 @@ jobs:
               const ageInDays = daysBetween(appliedAt, now);
 
               if (ageInDays >= 14) {
-                // Remove the label before closing so that if a maintainer later
-                // reopens the issue, this workflow does not immediately re-close
-                // it based on the stale `applied` marker.  When the label is
-                // re-applied to gather more info, a fresh `applied` marker
-                // restarts the 14-day clock.  A 404 means the label was removed
-                // after this run started (e.g. the author just replied), so the
-                // issue is left open.
-                try {
-                  await github.rest.issues.removeLabel({
-                    owner,
-                    repo,
-                    issue_number,
-                    name: "needs-author-feedback"
-                  });
-                } catch (error) {
-                  if (error.status === 404) continue;
-                  throw error;
-                }
+                // Re-check the current state right before closing: the snapshot
+                // above may be stale if the author replied or a maintainer added
+                // `keep` / removed the label since this run started.
+                const { data: current } = await github.rest.issues.get({ owner, repo, issue_number });
+                if (current.state !== "open" || !hasLabel(current, "needs-author-feedback") || hasLabel(current, "keep")) continue;
+
+                const recentComments = await github.paginate(github.rest.issues.listComments, {
+                  owner,
+                  repo,
+                  issue_number,
+                  since: appliedAt.toISOString(),
+                  per_page: 100
+                });
+                if (recentComments.some(comment => comment.user?.login === author && new Date(comment.created_at) > appliedAt)) continue;
 
                 await github.rest.issues.createComment({
                   owner,
@@ -162,6 +189,21 @@ jobs:
                   state: "closed",
                   state_reason: "not_planned"
                 });
+
+                // Remove the label only after a successful close so a failed close
+                // is retried on the next run, and a later manual reopen does not
+                // immediately re-close the issue from the old `applied` marker.
+                // A fresh label application restarts the 14-day clock.
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number,
+                    name: "needs-author-feedback"
+                  });
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
 
                 continue;
               }

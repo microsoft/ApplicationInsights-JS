@@ -41,10 +41,11 @@ jobs:
           close-issue-label: "closed"
           close-pr-label: "closed"
           close-issue-reason: "not_planned"
-          # needs-author-feedback issues are handled by needs-author-feedback-followup.yml (issues only),
-          # so PRs with that label still go through the PR inactivity policy here.
+          # PRs share the issue exemptions except `bug` (a bug label on a PR does not mean the PR should stay open)
+          # and `needs-author-feedback` (the feedback workflows handle issues only, so feedback-labeled PRs
+          # still need this inactivity policy to close).
           exempt-issue-labels: "bug,keep,needs-author-feedback,needs-team-attention,waiting-external,waiting,waiting for backend fix,waiting - CDN deployment,fixed - waiting release"
-          exempt-pr-labels: "keep,needs-team-attention,waiting-external,waiting"
+          exempt-pr-labels: "keep,needs-team-attention,waiting-external,waiting,waiting for backend fix,waiting - CDN deployment,fixed - waiting release"
           exempt-all-milestones: true
           exempt-all-assignees: false
           exempt-draft-pr: false
