@@ -1,6 +1,9 @@
 # Shared stale/auto-close policy for Azure Monitor repositories.
-# Keep this file identical across repos. Author follow-up is handled separately by
+# Keep this file identical across repos. Author follow-up for issues is handled separately by
 # needs-author-feedback.yml / needs-author-feedback-followup.yml.
+#
+# A single actions/stale invocation is used on purpose: the action persists its progress under one
+# fixed cache key, so multiple invocations in the same repo would overwrite each other's progress.
 name: "Stale issue handler"
 on:
   workflow_dispatch:
@@ -17,70 +20,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # 1. PRs with no activity for 30 days are flagged as abandoned (closed later by stale-wontfix).
-  mark-abandoned:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11.0.0
-        with:
-          days-before-issue-stale: -1
-          days-before-issue-close: -1
-          days-before-pr-stale: 30
-          days-before-pr-close: -1
-          stale-pr-message: "This PR has been inactive for 30 days and has been marked as abandoned. Comment or push changes to remove the label; otherwise it will be marked stale and closed."
-          stale-pr-label: "abandoned"
-          exempt-pr-labels: "keep,wontfix,stale,needs-author-feedback"
-          exempt-draft-pr: false
-          exempt-all-milestones: false
-          exempt-all-assignees: false
-          operations-per-run: 100
-
-  # 2. wontfix / abandoned items: stale after 14 days, closed 14 days later.
-  stale-wontfix:
-    needs: mark-abandoned
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11.0.0
-        with:
-          any-of-labels: "wontfix,abandoned"
-          days-before-stale: 14
-          days-before-close: 14
-          stale-issue-message: 'This issue will be closed in 14 days. Comment or add the "keep" label to prevent closure.'
-          stale-pr-message: 'This PR will be closed in 14 days. Comment, push changes, or add the "keep" label to prevent closure.'
-          stale-issue-label: "stale"
-          stale-pr-label: "stale"
-          close-issue-label: "closed"
-          close-pr-label: "closed"
-          close-issue-reason: "not_planned"
-          exempt-issue-labels: "keep"
-          exempt-pr-labels: "keep"
-          exempt-all-milestones: false
-          exempt-all-assignees: false
-          operations-per-run: 100
-
-  # 3. General inactivity: anything quiet for 90 days goes stale and closes 14 days later.
-  #    Throttled and oldest-first so long-standing backlogs are worked down gradually.
-  #    Bugs, items waiting on an external party, "keep", and milestoned items are exempt.
+  # Issues: stale after 90 inactive days, closed 14 days later.
+  # PRs: stale after 30 inactive days, closed 14 days later.
+  # Oldest first and throttled so existing backlogs are worked down gradually; progress carries over between runs.
   stale:
-    needs: stale-wontfix
-    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11.0.0
         with:
-          days-before-stale: 90
-          days-before-close: 14
+          days-before-issue-stale: 90
+          days-before-issue-close: 14
+          days-before-pr-stale: 30
+          days-before-pr-close: 14
           stale-issue-message: 'This issue has had no activity for 90 days and will be closed in 14 days. Comment or add the "keep" label to prevent closure.'
-          stale-pr-message: 'This PR has had no activity for 90 days and will be closed in 14 days. Comment, push changes, or add the "keep" label to prevent closure.'
+          stale-pr-message: 'This PR has had no activity for 30 days and will be closed in 14 days. Comment, push changes, or add the "keep" label to prevent closure.'
+          close-issue-message: "Closing due to inactivity. Please comment if this is still relevant and we can reopen it."
+          close-pr-message: "Closing due to inactivity. Feel free to reopen when you are ready to continue."
           stale-issue-label: "stale"
           stale-pr-label: "stale"
           close-issue-label: "closed"
           close-pr-label: "closed"
           close-issue-reason: "not_planned"
+          # needs-author-feedback issues are handled by needs-author-feedback-followup.yml (issues only),
+          # so PRs with that label still go through the PR inactivity policy here.
           exempt-issue-labels: "bug,keep,needs-author-feedback,needs-team-attention,waiting-external,waiting,waiting for backend fix,waiting - CDN deployment,fixed - waiting release"
-          exempt-pr-labels: "keep,needs-author-feedback,waiting-external,waiting"
+          exempt-pr-labels: "keep,needs-team-attention,waiting-external,waiting"
           exempt-all-milestones: true
           exempt-all-assignees: false
+          exempt-draft-pr: false
           ascending: true
-          operations-per-run: 15
+          operations-per-run: 25

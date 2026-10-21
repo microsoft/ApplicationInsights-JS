@@ -56,6 +56,8 @@ jobs:
 
             for (const issue of issues) {
               if (issue.pull_request) continue;
+              // `keep` opts an issue out of all automatic closure.
+              if (issue.labels.some(label => (typeof label === "string" ? label : label.name) === "keep")) continue;
 
               const issue_number = issue.number;
               const author = issue.user.login;
@@ -121,6 +123,25 @@ jobs:
               const ageInDays = daysBetween(appliedAt, now);
 
               if (ageInDays >= 14) {
+                // Remove the label before closing so that if a maintainer later
+                // reopens the issue, this workflow does not immediately re-close
+                // it based on the stale `applied` marker.  When the label is
+                // re-applied to gather more info, a fresh `applied` marker
+                // restarts the 14-day clock.  A 404 means the label was removed
+                // after this run started (e.g. the author just replied), so the
+                // issue is left open.
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number,
+                    name: "needs-author-feedback"
+                  });
+                } catch (error) {
+                  if (error.status === 404) continue;
+                  throw error;
+                }
+
                 await github.rest.issues.createComment({
                   owner,
                   repo,
@@ -134,27 +155,12 @@ jobs:
                   ].join("\n")
                 });
 
-                // Remove the label before closing so that if a maintainer later
-                // reopens the issue, this workflow does not immediately re-close
-                // it based on the stale `applied` marker.  When the label is
-                // re-applied to gather more info, a fresh `applied` marker
-                // restarts the 14-day clock.
-                try {
-                  await github.rest.issues.removeLabel({
-                    owner,
-                    repo,
-                    issue_number,
-                    name: "needs-author-feedback"
-                  });
-                } catch (error) {
-                  if (error.status !== 404) throw error;
-                }
-
                 await github.rest.issues.update({
                   owner,
                   repo,
                   issue_number,
-                  state: "closed"
+                  state: "closed",
+                  state_reason: "not_planned"
                 });
 
                 continue;
