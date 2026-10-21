@@ -4004,6 +4004,176 @@ export class SenderTests extends AITestClass {
             });
         });
 
+        arrForEach([
+            { status: 200, metric: "Item_Success_Count" },
+            { status: 400, metric: "Item_Dropped_Count" },
+            { status: 503, metric: "Item_Retry_Count" }
+        ], (notification) => {
+            this.testCase({
+                name: "Channel notifications: sole SDK Stats listener counts status " + notification.status,
+                useFakeTimers: true,
+                useFakeServer: true,
+                fakeServerAutoRespond: false,
+                test: () => {
+                    const core = new AppInsightsCore();
+                    const sender = this._sender;
+                    core.initialize({
+                        instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                        extensionConfig: {
+                            [sender.identifier]: {
+                                enableSessionStorageBuffer: false,
+                                transports: [TransportType.Xhr]
+                            }
+                        }
+                    }, [sender]);
+                    this.onDone(() => {
+                        sender.pause();
+                        sender._buffer.clear();
+                        core.unload(false);
+                    });
+
+                    const statsName = "Microsoft.ApplicationInsights.000e0000e0000000a000000000000000.SdkStats";
+                    const stats = createSdkStatsNotifCbk(core, "test");
+                    const trackSpy = this.sandbox.spy(core, "track");
+                    core.addNotificationListener(stats);
+                    QUnit.assert.deepEqual(core.getNotifyMgr().listeners, [stats], "SDK Stats is the only listener");
+
+                    const sendBatch = () => {
+                        sender._buffer.clear();
+                        arrForEach(["first", "second"], (name) => {
+                            sender.processTelemetry({ name, baseType: "EventData", baseData: { name } });
+                        });
+                        sender.processTelemetry({
+                            name: "trace", baseType: "MessageData", baseData: { message: "trace" }
+                        });
+                        sender.processTelemetry({
+                            name: statsName, baseType: "MetricData", baseData: { name: "Item_Success_Count", average: 1 }
+                        });
+                        sender.flush();
+                        this.sendJsonResponse(this._getXhrRequests().slice(-1)[0], {}, notification.status);
+                        stats.flush();
+                        QUnit.assert.equal(trackSpy.callCount, 0, "Stats are not delivered synchronously");
+                        this.clock.tick(1);
+
+                        if (notification.status === 503) {
+                            QUnit.assert.equal(sender._buffer.count(), 4, "Retry retains customer and stats telemetry");
+                            arrForEach(sender._buffer.getItems(), (item) => {
+                                QUnit.assert.equal(item.cnt, 1, "Each buffered item is retried once");
+                            });
+                            sender.flush();
+                            this.sendJsonResponse(this._getXhrRequests().slice(-1)[0], {}, 200);
+                            this.clock.tick(1);
+                        }
+                        QUnit.assert.equal(sender._buffer.count(), 0, "Completed items leave the buffer");
+                        stats.flush();
+                    };
+
+                    const assertCounts = () => {
+                        const actual: { metric: string, type: string, count: number, code: string }[] = [];
+                        arrForEach(trackSpy.getCalls(), (call) => {
+                            const item: ITelemetryItem = call.args[0];
+                            const data = item.baseData;
+                            QUnit.assert.equal(item.name, statsName, "Stats preserve their self-filtering name");
+                            QUnit.assert.equal(item.baseType, "MetricData", "Stats retain their telemetry shape");
+                            actual.push({
+                                metric: data.name,
+                                type: data.properties.telemetryType,
+                                count: data.average,
+                                code: data.properties.dropCode || data.properties.retryCode || ""
+                            });
+                        });
+                        const code = notification.status === 200 ? "" : "" + notification.status;
+                        const expected = [
+                            { metric: notification.metric, type: "CUSTOM_EVENT", count: 2, code },
+                            { metric: notification.metric, type: "TRACE", count: 1, code }
+                        ];
+                        if (notification.status === 503) {
+                            expected.unshift(
+                                { metric: "Item_Success_Count", type: "CUSTOM_EVENT", count: 2, code: "" },
+                                { metric: "Item_Success_Count", type: "TRACE", count: 1, code: "" }
+                            );
+                        }
+                        QUnit.assert.deepEqual(actual, expected, "Count ordinary items exactly once and exclude stats themselves");
+                        stats.flush();
+                        QUnit.assert.equal(trackSpy.callCount, expected.length, "Flushing again does not duplicate counts");
+                        trackSpy.resetHistory();
+                    };
+
+                    sendBatch();
+                    assertCounts();
+
+                    core.removeNotificationListener(stats);
+                    sendBatch();
+                    QUnit.assert.equal(trackSpy.callCount, 0, "Removed SDK Stats listener receives no counts");
+
+                    core.config.extensionConfig[sender.identifier].enableSessionStorageBuffer = true;
+                    this.clock.tick(1);
+                    QUnit.assert.ok(sender._buffer instanceof SessionStorageSendBuffer, "Switch buffer configuration dynamically");
+                    core.addNotificationListener(stats);
+                    sendBatch();
+                    assertCounts();
+                }
+            });
+        });
+
+        arrForEach([
+            { name: "eventsSent", status: 200 },
+            { name: "eventsDiscarded", status: 400 },
+            { name: "eventsRetry", status: 503 }
+        ], (notification) => {
+            this.testCase({
+                name: "Channel notifications: custom manager still receives " + notification.name,
+                useFakeTimers: true,
+                useFakeServer: true,
+                fakeServerAutoRespond: false,
+                test: () => {
+                    const core = new AppInsightsCore();
+                    const sender = this._sender;
+                    const manager = new NotificationManager();
+                    const notifySpy = this.sandbox.spy();
+                    // A custom manager may observe notifications independently of its registered listeners.
+                    manager[notification.name] = notifySpy;
+                    manager.addNotificationListener({ perfEvent: () => {} });
+                    core.initialize({
+                        instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                        disableDbgExt: true,
+                        extensionConfig: {
+                            [sender.identifier]: {
+                                enableSessionStorageBuffer: false,
+                                transports: [TransportType.Xhr]
+                            }
+                        }
+                    }, [sender], undefined, manager);
+                    QUnit.assert.equal(manager.listeners.length, 1, "Only the unrelated listener is registered");
+                    this.onDone(() => {
+                        sender.pause();
+                        sender._buffer.clear();
+                        core.unload(false);
+                    });
+                    const checkNotification = () => {
+                        sender._buffer.clear();
+                        notifySpy.resetHistory();
+                        sender.processTelemetry({ name: "event", baseType: "EventData", baseData: { name: "event" } });
+                        sender.flush();
+                        this.sendJsonResponse(this._getXhrRequests().slice(-1)[0], {}, notification.status);
+                        QUnit.assert.equal(notifySpy.callCount, 1, "Preserve calls to a caller-supplied notification manager");
+                        if (notifySpy.called) {
+                            QUnit.assert.deepEqual(notifySpy.firstCall.args[0], [{ name: "event", baseType: "EventData" }]);
+                        }
+                    };
+                    checkNotification();
+                    core.config.extensionConfig[sender.identifier].enableSessionStorageBuffer = true;
+                    this.clock.tick(1);
+                    QUnit.assert.ok(sender._buffer instanceof SessionStorageSendBuffer, "Switch buffer configuration dynamically");
+                    checkNotification();
+                    manager.canNotify = undefined;
+                    checkNotification();
+                    manager.canNotify = () => undefined;
+                    checkNotification();
+                }
+            });
+        });
+
         this.testCase({
             name: "Channel notifications: retries preserve metadata and isolate listener mutations",
             useFakeTimers: true,

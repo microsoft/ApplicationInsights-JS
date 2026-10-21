@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IPromise, createAllPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
-import { ITimerHandler, arrForEach, arrIndexOf, objDefine, safe, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, arrForEach, arrIndexOf, arrSome, objDefine, safe, scheduleTimeout } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../config/DynamicConfig";
 import {
     STR_EVENTS_DISCARDED, STR_EVENTS_RETRY, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_OFFLINE_DROP, STR_OFFLINE_SENT, STR_OFFLINE_STORE,
@@ -23,6 +23,14 @@ const defaultValues = {
 interface IAsyncNotifications {
     h: ITimerHandler;
     cb: Array<{ fn: (listener: INotificationListener) => void, arg: INotificationListener }>
+}
+
+function _getTelemetryCallbacks(manager: INotificationManager): INotificationListener {
+    return {
+        eventsSent: manager.eventsSent,
+        eventsDiscarded: manager.eventsDiscarded,
+        eventsRetry: manager.eventsRetry
+    };
 }
 
 function _runScheduledListeners(asyncNotifications: IAsyncNotifications) {
@@ -65,6 +73,8 @@ export class NotificationManager implements INotificationManager {
     constructor(config?: IConfiguration) {
         let perfEvtsSendAll: boolean;
         let unloadHandler: IUnloadHook;
+        let _telemetryCallbacks: INotificationListener;
+        let _telemetryProxies: INotificationListener;
         let _listeners: INotificationListener[] = [];
         let _asyncNotifications: IAsyncNotifications = {
             h: null,
@@ -159,6 +169,15 @@ export class NotificationManager implements INotificationManager {
                 });
             };
 
+            _telemetryCallbacks = _getTelemetryCallbacks(_self);
+            _self.canNotify = function (name) {
+                let callback = _self[name];
+                // Only this instance's built-in handlers can use the listener-only fast path.
+                // DynamicProto may expose either the prototype proxy or the instance implementation.
+                return this !== _self || (callback !== _telemetryCallbacks[name] && callback !== _telemetryProxies[name]) ||
+                    arrSome(_listeners, (listener) => !!(listener && listener[name]));
+            };
+
             _self.offlineEventsStored = (events: ITelemetryItem[]): void => {
                 if (events && events.length) {
                     _runListeners(_listeners, STR_OFFLINE_STORE, _asyncNotifications, (listener) => {
@@ -221,8 +240,20 @@ export class NotificationManager implements INotificationManager {
                 }
             };
         });
+
+        _telemetryProxies = _getTelemetryCallbacks(NotificationManager.prototype);
     }
     
+    /**
+     * Indicates whether the named notification has a matching listener or an overridden handler.
+     * @param name - The telemetry notification method to query.
+     * @returns False only for an unmodified built-in handler with no matching listeners.
+     */
+    canNotify(name: "eventsSent" | "eventsDiscarded" | "eventsRetry"): boolean {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
     /**
      * Adds a notification listener.
      * @param listener - The notification listener to be added.

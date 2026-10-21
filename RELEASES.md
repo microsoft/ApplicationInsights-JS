@@ -4,7 +4,7 @@
 
 ## Unreleased Changes
 
-- Skip channel telemetry reconstruction when registered listeners do not handle the relevant sent, discarded, or retry notification. Notifications with matching listeners, including SDK Stats, retain the existing reconstruction behavior.
+- Skip channel telemetry reconstruction when the notification manager confirms there are no consumers for the relevant sent, discarded, or retry notification. Custom managers without the optional `canNotify` hint and overridden built-in notification handlers retain the existing dispatch behavior. Notifications with matching listeners, including SDK Stats, retain the existing reconstruction behavior.
 
 ## 3.4.5 (October 5th, 2026)
 

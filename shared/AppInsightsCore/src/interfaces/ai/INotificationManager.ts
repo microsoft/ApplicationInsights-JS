@@ -13,6 +13,18 @@ export interface INotificationManager {
     listeners: INotificationListener[];
 
     /**
+     * Optional hint for avoiding telemetry reconstruction when a notification has no consumers.
+     * @param name - The telemetry notification method to query.
+     * @returns False only when calling the method would have no effect. Callers must retain their
+     * existing dispatch behavior when this hint is absent or does not return false.
+     * @remarks
+     * Implementations must account for custom notification handling as well as registered listeners.
+     * The built-in manager returns true for overridden notification methods, even without matching listeners.
+     * This method must not dispatch notifications or change listener state.
+     */
+    canNotify?(name: "eventsSent" | "eventsDiscarded" | "eventsRetry"): boolean;
+
+    /**
      * Adds a notification listener.
      * @param listener - The notification listener to be added.
      */
