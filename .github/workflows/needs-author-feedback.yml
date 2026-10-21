@@ -1,0 +1,81 @@
+name: needs-author-feedback
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+
+jobs:
+  notify-on-label:
+    if: github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'needs-author-feedback'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify issue author
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const issue = context.payload.issue;
+            if (issue.pull_request) return;
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue_number = issue.number;
+            const author = issue.user.login;
+            const today = new Date().toISOString().slice(0, 10);
+
+            const body = [
+              `@${author} we need more information before we can continue working on this issue.`,
+              "",
+              "Please reply within 14 days. If we do not hear back, this issue may be closed automatically.",
+              "",
+              "<!-- needs-author-feedback:applied -->",
+              `Marked as needs-author-feedback on ${today}.`
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body
+            });
+
+  remove-label-on-author-reply:
+    if: github.event_name == 'issue_comment' && github.event.action == 'created'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove label when issue author replies
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const comment = context.payload.comment;
+
+            if (issue.pull_request) return;
+            if (!issue.labels.some(label => label.name === "needs-author-feedback")) return;
+            if (comment.user.login !== issue.user.login) return;
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue_number = issue.number;
+
+            try {
+              await github.rest.issues.removeLabel({
+                owner,
+                repo,
+                issue_number,
+                name: "needs-author-feedback"
+              });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body: "Thanks for the response. Removing `needs-author-feedback`."
+            });

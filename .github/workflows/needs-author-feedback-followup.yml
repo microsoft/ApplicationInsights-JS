@@ -1,0 +1,177 @@
+name: needs-author-feedback followup
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  follow-up:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remind or close issues waiting for author feedback
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const now = new Date();
+
+            function daysBetween(earlier, later) {
+              return Math.floor((later - earlier) / (1000 * 60 * 60 * 24));
+            }
+
+            function getLatestAppliedMarker(comments) {
+              const matching = comments.filter(comment =>
+                comment.user?.type === "Bot" &&
+                comment.body?.includes("<!-- needs-author-feedback:applied -->")
+              );
+
+              if (matching.length === 0) {
+                return null;
+              }
+
+              matching.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+              return matching[0];
+            }
+
+            function hasReminderSince(comments, appliedAt) {
+              return comments.some(comment =>
+                comment.user?.type === "Bot" &&
+                comment.body?.includes("<!-- needs-author-feedback:reminder -->") &&
+                new Date(comment.created_at) > appliedAt
+              );
+            }
+
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: "open",
+              labels: "needs-author-feedback",
+              per_page: 100
+            });
+
+            for (const issue of issues) {
+              if (issue.pull_request) continue;
+
+              const issue_number = issue.number;
+              const author = issue.user.login;
+
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number,
+                per_page: 100
+              });
+
+              const latestAppliedComment = getLatestAppliedMarker(comments);
+              if (!latestAppliedComment) {
+                // Backfill an applied marker for issues labeled before this
+                // workflow existed (or where the marker comment was deleted).
+                // Without this, such issues would stay labeled forever because
+                // the reminder/close logic below keys off the marker timestamp.
+                // The backfilled comment uses today's date as the start of the
+                // 14-day clock and intentionally does not @-mention the author.
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number,
+                  body: [
+                    `Backfilling \`needs-author-feedback\` follow-up tracker on ${now.toISOString().slice(0, 10)}.`,
+                    "The reminder/auto-close clock starts from this comment.",
+                    "",
+                    "<!-- needs-author-feedback:applied -->"
+                  ].join("\n")
+                });
+                continue;
+              }
+
+              const appliedAt = new Date(latestAppliedComment.created_at);
+
+              const authorReplied = comments.some(comment =>
+                comment.user?.login === author &&
+                new Date(comment.created_at) > appliedAt
+              );
+
+              if (authorReplied) {
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number,
+                    name: "needs-author-feedback"
+                  });
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number,
+                  body: "Thanks for the response. Removing `needs-author-feedback`."
+                });
+
+                continue;
+              }
+
+              const ageInDays = daysBetween(appliedAt, now);
+
+              if (ageInDays >= 14) {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number,
+                  body: [
+                    `@${author} we have not received the requested information within 14 days, so we are closing this issue for now.`,
+                    "",
+                    "If you still need help, please comment with the requested details and we can reopen it.",
+                    "",
+                    "<!-- needs-author-feedback:closed -->"
+                  ].join("\n")
+                });
+
+                // Remove the label before closing so that if a maintainer later
+                // reopens the issue, this workflow does not immediately re-close
+                // it based on the stale `applied` marker.  When the label is
+                // re-applied to gather more info, a fresh `applied` marker
+                // restarts the 14-day clock.
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number,
+                    name: "needs-author-feedback"
+                  });
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+
+                await github.rest.issues.update({
+                  owner,
+                  repo,
+                  issue_number,
+                  state: "closed"
+                });
+
+                continue;
+              }
+
+              if (ageInDays >= 7 && !hasReminderSince(comments, appliedAt)) {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number,
+                  body: [
+                    `@${author} friendly reminder: we are still waiting for your feedback.`,
+                    "",
+                    "If we do not hear back within 7 more days, this issue may be closed automatically.",
+                    "",
+                    "<!-- needs-author-feedback:reminder -->"
+                  ].join("\n")
+                });
+              }
+            }
