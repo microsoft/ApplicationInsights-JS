@@ -357,6 +357,64 @@ export class ClickEventTest extends AITestClass {
         });
 
         this.testCase({
+            name: "PageAction: XHTML (lowercase tagName) inputs do not expose user entered values",
+            useFakeTimers: true,
+            test: () => {
+                const config = {
+                    dataTags: {
+                        useDefaultContentNameOrId: true
+                    }
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                core.initialize({
+                    instrumentationKey: "testIkey",
+                    extensionConfig: {
+                        [clickAnalyticsPlugin.identifier]: config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier];
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger);
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, "track");
+
+                const xhtmlNs = "http://www.w3.org/1999/xhtml";
+                const xhtmlDoc = document.implementation.createDocument(xhtmlNs, "html", null);
+
+                let textInput = xhtmlDoc.createElementNS(xhtmlNs, "input") as HTMLInputElement;
+                textInput.setAttribute("type", "text");
+                textInput.setAttribute("id", "testXhtmlInput");
+                textInput.value = "xhtml secret";
+                Assert.equal("input", textInput.tagName, "XHTML elements keep a lowercase tagName");
+
+                pageAction.capturePageAction(textInput);
+                this.clock.tick(500);
+                Assert.equal(1, spy.callCount, "XHTML text input should be captured");
+                let calledEvent: ITelemetryItem = spy.getCall(0).args[0];
+                Assert.equal("testXhtmlInput", calledEvent.baseData["name"], "XHTML text input value must not be used as the content name");
+                Assert.ok(!strContains(JSON.stringify(calledEvent), "secret"), "XHTML text input value must not be captured");
+
+                let buttonInput = xhtmlDoc.createElementNS(xhtmlNs, "input") as HTMLInputElement;
+                buttonInput.setAttribute("type", "button");
+                buttonInput.setAttribute("id", "testXhtmlButton");
+                buttonInput.value = "Save";
+
+                pageAction.capturePageAction(buttonInput);
+                this.clock.tick(500);
+                Assert.equal(2, spy.callCount, "XHTML button input should be captured");
+                calledEvent = spy.getCall(1).args[0];
+                Assert.ok(strContains(calledEvent.data["content"], "\"contentName\":\"Save\""),
+                    "XHTML button input label should still be used as the content name");
+            }
+        });
+
+        this.testCase({
             name: "trackPageView properties are correctly assigned (Empty)",
             test: () => {
                 let config = {

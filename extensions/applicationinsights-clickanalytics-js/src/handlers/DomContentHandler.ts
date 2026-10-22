@@ -262,7 +262,8 @@ export class DomContentHandler implements IContentHandler {
 
                 var doc = getDocument() || ({} as Document);
                 var contentName;
-                switch (element.tagName) {
+                // tagName is lowercase for XHTML documents
+                switch (element.tagName.toUpperCase()) {
                 case "A":
                     contentName = doc.all ? element.innerText || element.innerHTML : element.text || element.innerHTML;
                     break;
