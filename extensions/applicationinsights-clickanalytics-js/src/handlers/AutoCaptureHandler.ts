@@ -14,7 +14,9 @@ import { IAutoCaptureHandler, IClickAnalyticsConfiguration, IPageActionOverrideV
 import { isElementDnt, isKeyboardEnter, isKeyboardSpace, isLeftClick, isMiddleClick, isRightClick } from "../common/Utils";
 import { PageAction } from "../events/PageAction";
 
-const clickCaptureInputTypes = { BUTTON: true, CHECKBOX: true, RADIO: true, RESET: true, SUBMIT: true };
+function _parseTypes(value: string): string[] {
+    return arrMap((value || "").toUpperCase().split(","), tag => strTrim(tag));
+}
 
 export class AutoCaptureHandler implements IAutoCaptureHandler {
 
@@ -26,8 +28,10 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
         protected _traceLogger: IDiagnosticLogger) {
         let _evtNamespace = mergeEvtNamespace(createUniqueNamespace("AutoCaptureHandler"), (_analyticsPlugin as any)._evtNamespace);
         let _clickCaptureElements: string[];
+        let _clickCaptureInputTypes: string[];
         let unloadHandler: IUnloadHook = onConfigChange(_config, () => {
-            _clickCaptureElements =  arrMap(_config.trackElementTypes.toUpperCase().split(","), tag => strTrim(tag));
+            _clickCaptureElements = _parseTypes(_config.trackElementTypes);
+            _clickCaptureInputTypes = _parseTypes(_config.trackInputTypes);
         });
         dynamicProto(AutoCaptureHandler, this, (_self) => {
             _self.click = () => {
@@ -101,7 +105,8 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
                             continue;
                         } else {
                             // Check allowed INPUT types
-                            var sendEvent = tagNameUpperCased === "INPUT" ? clickCaptureInputTypes[element.type.toUpperCase()] : true;
+                            var sendEvent = tagNameUpperCased === "INPUT" ?
+                                arrIncludes(_clickCaptureInputTypes, (element.type || "").toUpperCase()) : true;
                             if (sendEvent) {
                                 _capturePageAction(element, overrideValues, {}, isRightClickObj);
                             }
