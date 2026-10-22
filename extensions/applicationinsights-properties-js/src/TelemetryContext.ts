@@ -122,10 +122,10 @@ function _createTelemetryTrace(core: IAppInsightsCore): ITelemetryTrace {
         let ctx = _getCtx();
         let spanId = trace["spanId"];
         if (ctx && isUndefined(spanId)) {
+            // Prefer the current context's own spanId (e.g. an active OTel span), only falling back to the
+            // parent context when the current context doesn't have one.
             let parentCtx = ctx.parentCtx;
-            if (parentCtx) {
-                spanId = parentCtx.spanId;
-            }
+            spanId = ctx.spanId || (parentCtx ? parentCtx.spanId : UNDEF_VALUE);
         }
 
         return spanId || _getTraceCtx<string>("spanId");

@@ -731,6 +731,92 @@ export class SpanPluginIntegrationTests extends AITestClass {
 
     private addDistributedTraceContextTests(): void {
         this.testCase({
+            name: "DistributedTrace: root span record does not use its own spanId as operation parentId",
+            useFakeTimers: true,
+            test: () => {
+                const rootSpan = this._ai.startSpan("root-op", { root: true });
+                Assert.ok(rootSpan, "Root span should be created");
+                if (!rootSpan) {
+                    return;
+                }
+
+                const rootSpanId = rootSpan.spanContext().spanId;
+                rootSpan.end();
+                this.clock.tick(500);
+
+                const sentItems = this.getSentTelemetry();
+                Assert.equal(sentItems.length, 1, "Root span should be sent");
+
+                const tags = sentItems[0].tags || {};
+                Assert.equal(tags["ai.operation.id"], rootSpan.spanContext().traceId, "Operation ID should match trace ID");
+                Assert.notEqual(tags["ai.operation.parentId"], rootSpanId, "Root span should not be its own parent");
+                Assert.ok(!tags["ai.operation.parentId"], "Root span should not have an operation parentId");
+            }
+        });
+
+        this.testCase({
+            name: "DistributedTrace: telemetry tracked under an active child span is parented to the child span",
+            useFakeTimers: true,
+            test: () => {
+                const parentSpan = this._ai.startSpan("parent-op", { root: true });
+                Assert.ok(parentSpan, "Parent span should be created");
+                if (!parentSpan) {
+                    return;
+                }
+
+                const childSpan = this._ai.startSpan("child-op", {}, parentSpan.spanContext());
+                Assert.ok(childSpan, "Child span should be created");
+                if (!childSpan) {
+                    return;
+                }
+
+                const parentSpanId = parentSpan.spanContext().spanId;
+                const childSpanId = childSpan.spanContext().spanId;
+                Assert.notEqual(parentSpanId, childSpanId, "Child span should have its own spanId");
+
+                const scope = this._ai.setActiveSpan(childSpan);
+                this._ai.trackEvent({ name: "child-event" });
+                this._ai.trackTrace({ message: "child-trace" });
+                scope.restore();
+
+                childSpan.recordException(new Error("child-exception"));
+                childSpan.end();
+                parentSpan.end();
+                this.clock.tick(500);
+
+                const sentItems = this.getSentTelemetry();
+                const findItem = (baseType: string, predicate?: (baseData: any) => boolean) => {
+                    for (let i = 0; i < sentItems.length; i++) {
+                        const data = sentItems[i].data || {};
+                        if (data.baseType === baseType && (!predicate || predicate(data.baseData || {}))) {
+                            return sentItems[i];
+                        }
+                    }
+                    return null;
+                };
+
+                const eventItem = findItem("EventData");
+                const traceItem = findItem("MessageData");
+                const exceptionItem = findItem("ExceptionData");
+                const childItem = findItem("RemoteDependencyData", (baseData) => baseData.name === "child-op");
+                const parentItem = findItem("RemoteDependencyData", (baseData) => baseData.name === "parent-op");
+
+                Assert.ok(eventItem, "Event should be sent");
+                Assert.ok(traceItem, "Trace should be sent");
+                Assert.ok(exceptionItem, "Exception should be sent");
+                Assert.ok(childItem, "Child span should be sent");
+                Assert.ok(parentItem, "Parent span should be sent");
+
+                Assert.equal(eventItem.tags["ai.operation.parentId"], childSpanId, "Event should be parented to the child span");
+                Assert.equal(traceItem.tags["ai.operation.parentId"], childSpanId, "Trace should be parented to the child span");
+                Assert.equal(exceptionItem.tags["ai.operation.parentId"], childSpanId,
+                    "recordException should be parented to the child span");
+                Assert.equal(childItem.tags["ai.operation.parentId"], parentSpanId, "Child span should be parented to the parent span");
+                Assert.ok(!parentItem.tags["ai.operation.parentId"], "Root parent span should not have an operation parentId");
+            }
+        });
+
+        this.testCase({
             name: "DistributedTrace: parent-child spans share trace ID",
             useFakeTimers: true,
             test: () => {
@@ -784,6 +870,7 @@ export class SpanPluginIntegrationTests extends AITestClass {
                 const spanContext = span.spanContext();
                 Assert.ok(spanContext.traceId, "Span should have trace ID");
                 Assert.ok(spanContext.spanId, "Span should have span ID");
+                const parentSpanId = span.parentSpanContext ? span.parentSpanContext.spanId : undefined;
 
                 span.end();
                 this.clock.tick(500);
@@ -797,7 +884,12 @@ export class SpanPluginIntegrationTests extends AITestClass {
                     const operationParentId = payload.tags["ai.operation.parentId"];
                     
                     Assert.equal(operationId, spanContext.traceId, "Operation ID should match trace ID");
-                    Assert.ok(operationParentId, "Operation parent ID should be set");
+                    Assert.notEqual(operationParentId, spanContext.spanId, "Span should not be its own parent");
+                    if (parentSpanId) {
+                        Assert.equal(operationParentId, parentSpanId, "Operation parent ID should be the parent spanId");
+                    } else {
+                        Assert.ok(!operationParentId, "Operation parent ID should not be set when there is no parent spanId");
+                    }
                 }
             }
         });
