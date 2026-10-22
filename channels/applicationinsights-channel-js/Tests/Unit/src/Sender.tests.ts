@@ -5,11 +5,14 @@ import { EnvelopeCreator } from '../../../src/EnvelopeCreator';
 import {
     Exception, CtxTagKeys, DEFAULT_BREEZE_ENDPOINT, DEFAULT_BREEZE_PATH, utlCanUseSessionStorage, utlGetSessionStorage, utlSetSessionStorage,
     ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _eInternalMessageId, safeGetLogger,
-    isString, isArray, arrForEach, isBeaconsSupported, IXHROverride, IPayloadData,TransportType, getWindow, ActiveStatus
+    isString, isArray, arrForEach, isBeaconsSupported, isFeatureEnabled, IXHROverride, IPayloadData,TransportType, getWindow, ActiveStatus,
+    FeatureOptInMode
 } from "@microsoft/applicationinsights-core-js";
 import { ArraySendBuffer, SessionStorageSendBuffer } from "../../../src/SendBuffer";
+import { STR_ZIP_PAYLOAD, STR_ZIP_PAYLOAD_V2 } from "../../../src/Constants";
+import { isCompressionEndpoint } from "../../../src/EndpointUtils";
 import { IInternalStorageItem, ISenderConfig } from "../../../src/Interfaces";
-import { createAsyncResolvedPromise } from "@nevware21/ts-async";
+import { createAsyncResolvedPromise, createPromise } from "@nevware21/ts-async";
 import { isPromiseLike, isUndefined } from "@nevware21/ts-utils";
 import { SinonSpy } from 'sinon';
 
@@ -67,6 +70,51 @@ export class SenderTests extends AITestClass {
     }
 
     public registerTests() {
+
+        this.testCase({
+            name: "Compression endpoint classification recognizes only supported ingestion hosts",
+            test: () => {
+                const firstPartyEndpoints = [
+                    "https://dc.services.visualstudio.com/v2/track",
+                    "HTTPS://DC.SERVICES.VISUALSTUDIO.COM:443/v2/track",
+                    "https://eastus-8.in.applicationinsights.azure.com/v2/track",
+                    "https://westus2.dc.applicationinsights.azure.com/v2/track",
+                    "https://dc.applicationinsights.azure.cn/v2/track",
+                    "https://chinaeast2.dc.applicationinsights.azure.cn:443/v2/track",
+                    "https://dc.applicationinsights.us/v2/track",
+                    "https://usgovvirginia.dc.applicationinsights.us/v2/track",
+                    "https://dc.services.visualstudio.com/v2/track?upstream=proxy.contoso.test",
+                    "https://dc.services.visualstudio.com/v2/track#proxy.contoso.test"
+                ];
+                const customEndpoints = [
+                    "https://proxy.contoso.com/v2/track",
+                    "https://eastus-8.in.applicationinsights.azure.com.evil.example/v2/track",
+                    "https://applicationinsights.azure.com.evil.example/v2/track",
+                    "https://dc.services.visualstudio.com:443@proxy.contoso.com/v2/track",
+                    "https://eastus-8.in.applicationinsights.azure.com:443@proxy.contoso.com/v2/track",
+                    "http://dc.services.visualstudio.com/v2/track",
+                    "https://dc.services.visualstudio.com/not-track",
+                    // Ingestion hosts that only appear after the real authority (query, fragment or backslash) must not match
+                    "https://proxy.contoso.test?upstream=eastus-8.in.applicationinsights.azure.com/v2/track",
+                    "https://proxy.contoso.test#eastus-8.in.applicationinsights.azure.com/v2/track",
+                    "https://proxy.contoso.test\\eastus-8.in.applicationinsights.azure.com/v2/track",
+                    "https://proxy.contoso.test\\.in.applicationinsights.azure.com/v2/track",
+                    "https://proxy.contoso.test?x=1&h=dc.services.visualstudio.com/v2/track",
+                    "https://proxy.contoso.test#dc.services.visualstudio.com/v2/track",
+                    "https://dc.services.visualstudio.com\\v2\\track",
+                    "https://dc.services.visualstudio.com?/v2/track",
+                    "https://dc.services.visualstudio.com#/v2/track",
+                    "https://dc.services.visualstudio.com"
+                ];
+
+                firstPartyEndpoints.forEach((endpoint) => {
+                    QUnit.assert.equal(true, isCompressionEndpoint(endpoint), endpoint);
+                });
+                customEndpoints.forEach((endpoint) => {
+                    QUnit.assert.equal(false, isCompressionEndpoint(endpoint), endpoint);
+                });
+            }
+        });
 
         this.testCase({
             name: "Channel Config: Channel can properly take args from root config",
@@ -135,6 +183,8 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.equal(false, defaultSenderConfig.alwaysUseXhrOverride, "Channel default alwaysUseXhrOverride config is set");
                 QUnit.assert.equal(true, defaultSenderConfig.disableSendBeaconSplit, "Channel default disableSendBeaconSplit config is set");
                 QUnit.assert.equal(10, defaultSenderConfig.maxRetryCnt, "Channel default maxRetryCnt config is set");
+                QUnit.assert.equal(false, defaultSenderConfig.enableCompressionForCustomEndpoint,
+                    "Channel default enableCompressionForCustomEndpoint config is set");
 
                 //check dynamic config
                 core.config.extensionConfig =  core.config.extensionConfig? core.config.extensionConfig : {};
@@ -151,6 +201,7 @@ export class SenderTests extends AITestClass {
                     customHeaders: [{header: "header1",value:"value1"}],
                     alwaysUseXhrOverride: true,
                     disableSendBeaconSplit: false,
+                    enableCompressionForCustomEndpoint: true
                 }
                 core.config.extensionConfig[id] = config;
                 this.clock.tick(1);
@@ -166,6 +217,8 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.deepEqual([{header: "header1",value:"value1"}], curSenderConfig.customHeaders, "Channel customHeaders config is dynamically set");
                 QUnit.assert.deepEqual(true, curSenderConfig.alwaysUseXhrOverride, "Channel alwaysUseXhrOverride config is dynamically set");
                 QUnit.assert.equal(false, curSenderConfig.disableSendBeaconSplit, "Channel disableSendBeaconSplit config is dynamically set");
+                QUnit.assert.equal(true, curSenderConfig.enableCompressionForCustomEndpoint,
+                    "Channel enableCompressionForCustomEndpoint config is dynamically set");
                 core.config.extensionConfig[this._sender.identifier].emitLineDelimitedJson = undefined;
                 core.config.extensionConfig[this._sender.identifier].endpointUrl = undefined;
                 this.clock.tick(1);
@@ -532,6 +585,276 @@ export class SenderTests extends AITestClass {
                     }
                     return false;
                 }, "Wait for promise response" + new Date().toISOString(), 60, 1000));
+            }
+        });
+
+        this.testCase({
+            name: "zip test: regional and sovereign first-party endpoints are compressed",
+            timeout: 10000,
+            test: () => {
+                const endpoints = [
+                    "https://eastus-8.in.applicationinsights.azure.com/v2/track",
+                    "https://dc.applicationinsights.azure.cn/v2/track",
+                    "https://dc.applicationinsights.us/v2/track"
+                ];
+                let current = 0;
+                let v2OnlyConfig = {
+                    featureOptIn: {
+                        [STR_ZIP_PAYLOAD_V2]: { mode: FeatureOptInMode.enable }
+                    }
+                };
+                QUnit.assert.equal(false, isFeatureEnabled(STR_ZIP_PAYLOAD, v2OnlyConfig, false),
+                    "A legacy zipPayload consumer ignores zipPayloadV2");
+
+                return createPromise<void>((resolve, reject) => {
+                    let sender = new Sender();
+                    let core = new AppInsightsCore();
+                    this.onDone(() => {
+                        core.unload(false);
+                    });
+                    let override: IXHROverride = {
+                        sendPOST: (payload, oncomplete) => {
+                            try {
+                                QUnit.assert.equal(payload.urlString, endpoints[current], "Expected endpoint is used");
+                                QUnit.assert.equal(payload.headers["Content-Encoding"], "gzip", "First-party payload is gzip encoded");
+                                QUnit.assert.equal((payload.data as Uint8Array)[0], 0x1F, "Payload has gzip magic byte 1");
+                                QUnit.assert.equal((payload.data as Uint8Array)[1], 0x8B, "Payload has gzip magic byte 2");
+                                oncomplete(200, {});
+                                current++;
+                                if (current === endpoints.length) {
+                                    resolve();
+                                } else {
+                                    core.config.endpointUrl = endpoints[current];
+                                    setTimeout(() => {
+                                        sender.processTelemetry(this._createCompressionTelemetryItem());
+                                        sender.flush();
+                                    }, 10);
+                                }
+                            } catch (e) {
+                                reject(e);
+                            }
+                        }
+                    };
+
+                    core.initialize({
+                        instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                        endpointUrl: endpoints[current],
+                        featureOptIn: { [STR_ZIP_PAYLOAD_V2]: { mode: FeatureOptInMode.enable } },
+                        extensionConfig: {
+                            [sender.identifier]: {
+                                httpXHROverride: override,
+                                alwaysUseXhrOverride: true
+                            }
+                        }
+                    }, [sender]);
+                    sender.processTelemetry(this._createCompressionTelemetryItem());
+                    sender.flush();
+                });
+            }
+        });
+
+        this.testCase({
+            name: "zip test: custom endpoints require explicit compression capability and update dynamically",
+            timeout: 10000,
+            test: () => {
+                return createPromise<void>((resolve, reject) => {
+                    let sender = new Sender();
+                    let core = new AppInsightsCore();
+                    this.onDone(() => {
+                        core.unload(false);
+                    });
+                    let call = 0;
+                    let override: IXHROverride = {
+                        sendPOST: (payload, oncomplete) => {
+                            try {
+                                if (call === 0) {
+                                    QUnit.assert.equal(payload.headers["Content-Encoding"], "gzip",
+                                        "Default first-party endpoint is compressed");
+                                } else if (call === 1) {
+                                    QUnit.assert.ok(!payload.headers["Content-Encoding"],
+                                        "Custom endpoint is not compressed by CDN feature mode");
+                                    QUnit.assert.equal(typeof payload.data, "string", "Custom endpoint receives JSON");
+                                } else if (call === 2) {
+                                    QUnit.assert.equal(payload.headers["Content-Encoding"], "gzip",
+                                        "Explicitly gzip-capable custom endpoint is compressed");
+                                    QUnit.assert.equal((payload.data as Uint8Array)[0], 0x1F, "Payload has gzip magic byte 1");
+                                    QUnit.assert.equal((payload.data as Uint8Array)[1], 0x8B, "Payload has gzip magic byte 2");
+                                } else {
+                                    QUnit.assert.ok(!payload.headers["Content-Encoding"],
+                                        "Legacy zipPayload also respects custom endpoint gating");
+                                    QUnit.assert.equal(typeof payload.data, "string", "Legacy-gated custom endpoint receives JSON");
+                                }
+                                oncomplete(200, {});
+                                call++;
+                                if (call === 4) {
+                                    resolve();
+                                } else {
+                                    if (call === 1) {
+                                        core.config.endpointUrl = "https://proxy.contoso.test/v2/track";
+                                    } else if (call === 2) {
+                                        core.config.extensionConfig[sender.identifier].enableCompressionForCustomEndpoint = true;
+                                    } else {
+                                        core.config.extensionConfig[sender.identifier].enableCompressionForCustomEndpoint = false;
+                                        core.config.featureOptIn[STR_ZIP_PAYLOAD_V2].mode = FeatureOptInMode.disable;
+                                        core.config.featureOptIn[STR_ZIP_PAYLOAD] = { mode: FeatureOptInMode.enable };
+                                    }
+                                    setTimeout(() => {
+                                        sender.processTelemetry(this._createCompressionTelemetryItem());
+                                        sender.flush();
+                                    }, 10);
+                                }
+                            } catch (e) {
+                                reject(e);
+                            }
+                        }
+                    };
+
+                    core.initialize({
+                        instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                        endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                        featureOptIn: { [STR_ZIP_PAYLOAD_V2]: { mode: FeatureOptInMode.enable } },
+                        extensionConfig: {
+                            [sender.identifier]: {
+                                httpXHROverride: override,
+                                alwaysUseXhrOverride: true
+                            }
+                        }
+                    }, [sender]);
+                    sender.processTelemetry(this._createCompressionTelemetryItem());
+                    sender.flush();
+                });
+            }
+        });
+
+        this.testCase({
+            name: "zip test: legacy feature mode dynamically controls V2 precedence",
+            timeout: 10000,
+            test: () => {
+                const expectedCompression = [true, false, true, false, true, false];
+                const expectedStates = [
+                    "legacy none delegates to enabled V2",
+                    "legacy disable overrides enabled V2",
+                    "legacy none delegates to enabled V2 again",
+                    "legacy none delegates to disabled V2",
+                    "legacy enable overrides disabled V2",
+                    "legacy none delegates to disabled V2 again"
+                ];
+
+                return createPromise<void>((resolve, reject) => {
+                    let sender = new Sender();
+                    let core = new AppInsightsCore();
+                    this.onDone(() => {
+                        core.unload(false);
+                    });
+                    let call = 0;
+                    let override: IXHROverride = {
+                        sendPOST: (payload, oncomplete) => {
+                            try {
+                                let shouldCompress = expectedCompression[call];
+                                QUnit.assert.equal(payload.headers["Content-Encoding"] === "gzip", shouldCompress, expectedStates[call]);
+                                if (shouldCompress) {
+                                    QUnit.assert.equal((payload.data as Uint8Array)[0], 0x1F, "Payload has gzip magic byte 1");
+                                    QUnit.assert.equal((payload.data as Uint8Array)[1], 0x8B, "Payload has gzip magic byte 2");
+                                } else {
+                                    QUnit.assert.equal(typeof payload.data, "string", "Uncompressed payload remains JSON");
+                                }
+
+                                oncomplete(200, {});
+                                call++;
+                                if (call === expectedCompression.length) {
+                                    resolve();
+                                } else {
+                                    if (call === 1) {
+                                        core.config.featureOptIn[STR_ZIP_PAYLOAD].mode = FeatureOptInMode.disable;
+                                    } else if (call === 2 || call === 5) {
+                                        core.config.featureOptIn[STR_ZIP_PAYLOAD].mode = FeatureOptInMode.none;
+                                    } else if (call === 3) {
+                                        core.config.featureOptIn[STR_ZIP_PAYLOAD_V2].mode = FeatureOptInMode.disable;
+                                    } else if (call === 4) {
+                                        core.config.featureOptIn[STR_ZIP_PAYLOAD].mode = FeatureOptInMode.enable;
+                                    }
+
+                                    setTimeout(() => {
+                                        sender.processTelemetry(this._createCompressionTelemetryItem());
+                                        sender.flush();
+                                    }, 10);
+                                }
+                            } catch (e) {
+                                reject(e);
+                            }
+                        }
+                    };
+
+                    core.initialize({
+                        instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                        featureOptIn: {
+                            [STR_ZIP_PAYLOAD]: { mode: FeatureOptInMode.none },
+                            [STR_ZIP_PAYLOAD_V2]: { mode: FeatureOptInMode.enable }
+                        },
+                        extensionConfig: {
+                            [sender.identifier]: {
+                                httpXHROverride: override,
+                                alwaysUseXhrOverride: true
+                            }
+                        }
+                    }, [sender]);
+                    sender.processTelemetry(this._createCompressionTelemetryItem());
+                    sender.flush();
+                });
+            }
+        });
+
+        this.testCase({
+            name: "zip test: compressed async headers do not leak into an unload send",
+            timeout: 10000,
+            test: () => {
+                return createPromise<void>((resolve, reject) => {
+                    let sender = new Sender();
+                    let core = new AppInsightsCore();
+                    this.onDone(() => {
+                        core.unload(false);
+                    });
+                    let call = 0;
+                    let override: IXHROverride = {
+                        sendPOST: (payload, oncomplete, sync) => {
+                            try {
+                                if (call === 0) {
+                                    QUnit.assert.equal(payload.headers["Content-Encoding"], "gzip", "Async payload is gzip encoded");
+                                    QUnit.assert.equal(false, sync, "First send is asynchronous");
+                                } else {
+                                    QUnit.assert.ok(!payload.headers["Content-Encoding"], "Unload payload has no gzip header");
+                                    QUnit.assert.equal(typeof payload.data, "string", "Unload payload remains JSON");
+                                    QUnit.assert.equal(true, sync, "Second send uses the synchronous unload transport");
+                                }
+                                oncomplete(200, {});
+                                call++;
+                                if (call === 2) {
+                                    resolve();
+                                } else {
+                                    setTimeout(() => {
+                                        sender.processTelemetry(this._createCompressionTelemetryItem());
+                                        sender.onunloadFlush();
+                                    }, 0);
+                                }
+                            } catch (e) {
+                                reject(e);
+                            }
+                        }
+                    };
+
+                    core.initialize({
+                        instrumentationKey: "000e0000-e000-0000-a000-000000000000",
+                        featureOptIn: { [STR_ZIP_PAYLOAD_V2]: { mode: FeatureOptInMode.enable } },
+                        extensionConfig: {
+                            [sender.identifier]: {
+                                httpXHROverride: override,
+                                alwaysUseXhrOverride: true
+                            }
+                        }
+                    }, [sender]);
+                    sender.processTelemetry(this._createCompressionTelemetryItem());
+                    sender.flush();
+                });
             }
         });
 
@@ -4622,6 +4945,15 @@ export class SenderTests extends AITestClass {
                 QUnit.assert.ok(isUndefined(result), "flush should return undefined when sender is paused");
             }
         });
+    }
+
+    private _createCompressionTelemetryItem(): ITelemetryItem {
+        return {
+            name: "compression regression item",
+            iKey: "iKey",
+            baseType: "some type",
+            baseData: {}
+        };
     }
 }
 
