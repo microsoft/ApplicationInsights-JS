@@ -4,7 +4,17 @@
 
 ## Unreleased Changes
 
-- Skip channel telemetry reconstruction when the notification manager confirms there are no consumers for the relevant sent, discarded, or retry notification. Custom managers without the optional `canNotify` hint and overridden built-in notification handlers retain the existing dispatch behavior. Notifications with matching listeners, including SDK Stats, retain the existing reconstruction behavior.
+### Bug Fixes
+
+- Automatic payload compression is now limited to recognized Microsoft Application Insights ingestion endpoints. Custom endpoints and
+  ingestion proxies continue to receive JSON request bodies unless `enableCompressionForCustomEndpoint` is explicitly enabled for a
+  gzip-capable endpoint.
+- Added the versioned `zipPayloadV2` feature flag for safe CDN rollout. Older SDKs ignore this key. Rollout must ship and gain adoption
+  for the patched SDK first, then publish a new CDN configuration using `zipPayloadV2` while leaving legacy `zipPayload` absent. The
+  legacy key remains supported for customer compatibility and uses the same endpoint safety checks.
+- Payload headers are isolated per request so a compressed asynchronous send cannot leak `Content-Encoding: gzip` into a later
+  uncompressed synchronous, unload, beacon, or fallback request.
+- Skip channel telemetry reconstruction when the notification manager confirms there are no consumers for the relevant sent, discarded, or retry notification. Add the optional `hasListener(name: string)` hint to the core notification manager. Custom managers without this hint and overridden built-in notification handlers retain the existing dispatch behavior. Notifications with matching listeners, including SDK Stats, retain the existing reconstruction behavior.
 
 ## 3.4.5 (October 5th, 2026)
 

@@ -25,11 +25,17 @@ interface IAsyncNotifications {
     cb: Array<{ fn: (listener: INotificationListener) => void, arg: INotificationListener }>
 }
 
-function _getTelemetryCallbacks(manager: INotificationManager): INotificationListener {
+function _getNotificationCallbacks(manager: INotificationManager): INotificationListener {
     return {
         eventsSent: manager.eventsSent,
         eventsDiscarded: manager.eventsDiscarded,
-        eventsRetry: manager.eventsRetry
+        eventsRetry: manager.eventsRetry,
+        eventsSendRequest: manager.eventsSendRequest,
+        perfEvent: manager.perfEvent,
+        offlineEventsStored: manager.offlineEventsStored,
+        offlineBatchSent: manager.offlineBatchSent,
+        offlineBatchDrop: manager.offlineBatchDrop,
+        unload: manager.unload
     };
 }
 
@@ -73,8 +79,8 @@ export class NotificationManager implements INotificationManager {
     constructor(config?: IConfiguration) {
         let perfEvtsSendAll: boolean;
         let unloadHandler: IUnloadHook;
-        let _telemetryCallbacks: INotificationListener;
-        let _telemetryProxies: INotificationListener;
+        let _notificationCallbacks: INotificationListener;
+        let _notificationProxies: INotificationListener;
         let _listeners: INotificationListener[] = [];
         let _asyncNotifications: IAsyncNotifications = {
             h: null,
@@ -169,12 +175,11 @@ export class NotificationManager implements INotificationManager {
                 });
             };
 
-            _telemetryCallbacks = _getTelemetryCallbacks(_self);
-            _self.canNotify = function (name) {
+            _self.hasListener = function (name: string) {
                 let callback = _self[name];
                 // Only this instance's built-in handlers can use the listener-only fast path.
                 // DynamicProto may expose either the prototype proxy or the instance implementation.
-                return this !== _self || (callback !== _telemetryCallbacks[name] && callback !== _telemetryProxies[name]) ||
+                return this !== _self || (callback !== _notificationCallbacks[name] && callback !== _notificationProxies[name]) ||
                     arrSome(_listeners, (listener) => !!(listener && listener[name]));
             };
 
@@ -239,17 +244,19 @@ export class NotificationManager implements INotificationManager {
                     _finishUnload();
                 }
             };
+
+            _notificationCallbacks = _getNotificationCallbacks(_self);
         });
 
-        _telemetryProxies = _getTelemetryCallbacks(NotificationManager.prototype);
+        _notificationProxies = _getNotificationCallbacks(NotificationManager.prototype);
     }
     
     /**
      * Indicates whether the named notification has a matching listener or an overridden handler.
-     * @param name - The telemetry notification method to query.
-     * @returns False only for an unmodified built-in handler with no matching listeners.
+     * @param name - The notification method to query.
+     * @returns True for a matching listener or custom handler; false when the notification has no consumers.
      */
-    canNotify(name: "eventsSent" | "eventsDiscarded" | "eventsRetry"): boolean {
+    hasListener?(name: string): boolean {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }

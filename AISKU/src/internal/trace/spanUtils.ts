@@ -7,17 +7,17 @@ import {
     ATTR_NETWORK_LOCAL_ADDRESS, ATTR_NETWORK_LOCAL_PORT, ATTR_NETWORK_PEER_ADDRESS, ATTR_NETWORK_PEER_PORT, ATTR_NETWORK_PROTOCOL_NAME,
     ATTR_NETWORK_PROTOCOL_VERSION, ATTR_NETWORK_TRANSPORT, ATTR_SERVER_ADDRESS, ATTR_SERVER_PORT, ATTR_URL_FULL, ATTR_URL_PATH,
     ATTR_URL_QUERY, ATTR_URL_SCHEME, ATTR_USER_AGENT_ORIGINAL, CtxTagKeys, DBSYSTEMVALUES_MONGODB, DBSYSTEMVALUES_MYSQL,
-    DBSYSTEMVALUES_POSTGRESQL, DBSYSTEMVALUES_REDIS, EXP_ATTR_ENDUSER_ID, EXP_ATTR_ENDUSER_PSEUDO_ID, EXP_ATTR_SYNTHETIC_TYPE,
+    DBSYSTEMVALUES_POSTGRESQL, DBSYSTEMVALUES_REDIS, EXP_ATTR_ENDUSER_ID, EXP_ATTR_ENDUSER_PSEUDO_ID, EXP_ATTR_SYNTHETIC_TYPE, Extensions,
     IAppInsightsCore, IAttributeContainer, IConfiguration, IContextTagKeys, IDependencyTelemetry, IReadableSpan, IRequestTelemetry,
-    ITelemetryItem, MicrosoftClientIp, OTelAttributeValue, RemoteDependencyDataType, RemoteDependencyEnvelopeType, RequestDataType,
-    RequestEnvelopeType, SEMATTRS_DB_NAME, SEMATTRS_DB_OPERATION, SEMATTRS_DB_STATEMENT, SEMATTRS_DB_SYSTEM, SEMATTRS_ENDUSER_ID,
-    SEMATTRS_EXCEPTION_MESSAGE, SEMATTRS_EXCEPTION_STACKTRACE, SEMATTRS_EXCEPTION_TYPE, SEMATTRS_HTTP_CLIENT_IP, SEMATTRS_HTTP_FLAVOR,
-    SEMATTRS_HTTP_HOST, SEMATTRS_HTTP_METHOD, SEMATTRS_HTTP_ROUTE, SEMATTRS_HTTP_SCHEME, SEMATTRS_HTTP_STATUS_CODE, SEMATTRS_HTTP_TARGET,
-    SEMATTRS_HTTP_URL, SEMATTRS_HTTP_USER_AGENT, SEMATTRS_NET_HOST_IP, SEMATTRS_NET_HOST_NAME, SEMATTRS_NET_HOST_PORT, SEMATTRS_NET_PEER_IP,
-    SEMATTRS_NET_PEER_NAME, SEMATTRS_NET_PEER_PORT, SEMATTRS_NET_TRANSPORT, SEMATTRS_PEER_SERVICE, SEMATTRS_RPC_GRPC_STATUS_CODE,
-    SEMATTRS_RPC_SYSTEM, Tags, createAttributeContainer, createTelemetryItem, eDependencyTypes, eOTelSpanKind, eOTelSpanStatusCode,
-    fieldRedaction, getDependencyTarget, getHttpMethod, getHttpStatusCode, getHttpUrl, getLocationIp, getUrl, getUserAgent,
-    hrTimeToMilliseconds, isSqlDB, isSyntheticSource, urlGetPathName
+    ITelemetryItem, ITelemetryTrace, MicrosoftClientIp, OTelAttributeValue, RemoteDependencyDataType, RemoteDependencyEnvelopeType,
+    RequestDataType, RequestEnvelopeType, SEMATTRS_DB_NAME, SEMATTRS_DB_OPERATION, SEMATTRS_DB_STATEMENT, SEMATTRS_DB_SYSTEM,
+    SEMATTRS_ENDUSER_ID, SEMATTRS_EXCEPTION_MESSAGE, SEMATTRS_EXCEPTION_STACKTRACE, SEMATTRS_EXCEPTION_TYPE, SEMATTRS_HTTP_CLIENT_IP,
+    SEMATTRS_HTTP_FLAVOR, SEMATTRS_HTTP_HOST, SEMATTRS_HTTP_METHOD, SEMATTRS_HTTP_ROUTE, SEMATTRS_HTTP_SCHEME, SEMATTRS_HTTP_STATUS_CODE,
+    SEMATTRS_HTTP_TARGET, SEMATTRS_HTTP_URL, SEMATTRS_HTTP_USER_AGENT, SEMATTRS_NET_HOST_IP, SEMATTRS_NET_HOST_NAME, SEMATTRS_NET_HOST_PORT,
+    SEMATTRS_NET_PEER_IP, SEMATTRS_NET_PEER_NAME, SEMATTRS_NET_PEER_PORT, SEMATTRS_NET_TRANSPORT, SEMATTRS_PEER_SERVICE,
+    SEMATTRS_RPC_GRPC_STATUS_CODE, SEMATTRS_RPC_SYSTEM, Tags, createAttributeContainer, createTelemetryItem, eDependencyTypes, eOTelSpanKind,
+    eOTelSpanStatusCode, fieldRedaction, getDependencyTarget, getHttpMethod, getHttpStatusCode, getHttpUrl, getLocationIp, getUrl,
+    getUserAgent, hrTimeToMilliseconds, isSqlDB, isSyntheticSource, urlGetPathName
 } from "@microsoft/applicationinsights-core-js";
 import { ILazyValue, arrIncludes, asString, getLazy, isNullOrUndefined, strLower, strStartsWith } from "@nevware21/ts-utils";
 import { STR_EMPTY, UNDEFINED_VALUE } from "../../InternalConstants";
@@ -437,6 +437,13 @@ export function createTelemetryItemFromSpan(core: IAppInsightsCore, span: IReada
         let traceFlags = span.spanContext().traceFlags;
         if (!isNullOrUndefined(traceFlags)) {
             dt.traceFlags = dt.traceFlags || traceFlags;
+        }
+
+        // The span record is tracked while the span itself is the current context, so explicitly set the parent
+        // (empty for root spans) to prevent the properties plugin from using this span's own spanId as its parent.
+        let extTrace: ITelemetryTrace = ext[Extensions.TraceExt] = ext[Extensions.TraceExt] || {};
+        if (isNullOrUndefined(extTrace.parentID)) {
+            extTrace.parentID = (span.parentSpanContext || {} as any).spanId || STR_EMPTY;
         }
 
         _populateTagsFromSpan(telemetryItem, span, contextKeys, core.config);

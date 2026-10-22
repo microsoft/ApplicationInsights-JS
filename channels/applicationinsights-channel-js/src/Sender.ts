@@ -18,6 +18,8 @@ import {
     ITimerHandler, getInst, isFunction, isNumber, isPromiseLike, isString, isTruthy, mathFloor, mathMax, mathMin, objDeepFreeze, objDefine,
     scheduleTimeout
 } from "@nevware21/ts-utils";
+import { STR_ZIP_PAYLOAD, STR_ZIP_PAYLOAD_V2 } from "./Constants";
+import { isCompressionEndpoint } from "./EndpointUtils";
 import {
     DependencyEnvelopeCreator, EnvelopeCreator, EventEnvelopeCreator, ExceptionEnvelopeCreator, MetricEnvelopeCreator,
     PageViewEnvelopeCreator, PageViewPerformanceEnvelopeCreator, RequestEnvelopeCreator, TraceEnvelopeCreator
@@ -80,7 +82,8 @@ const defaultAppInsightsChannelConfig: IConfigDefaults<ISenderConfig> = objDeepF
     transports: UNDEFINED_VALUE,
     retryCodes: UNDEFINED_VALUE,
     corsPolicy: UNDEFINED_VALUE,
-    maxRetryCnt: {isVal: isNumber, v:10}
+    maxRetryCnt: {isVal: isNumber, v:10},
+    enableCompressionForCustomEndpoint: cfgDfBoolean()
 });
 
 const CrossOriginResourcePolicyHeader: string = "X-Set-Cross-Origin-Resource-Policy";
@@ -189,6 +192,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         let _sendPostMgr: SenderPostManager;
         let _retryCodes: number[];
         let _zipPayload: boolean;
+        let _enableCompressionForCustomEndpoint: boolean;
 
         dynamicProto(Sender, this, (_self, _base) => {
 
@@ -305,7 +309,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     }
                     const csStream = getInst("CompressionStream");
                     // Determine whether to enable payload compression (zipping).
-                    _zipPayload = isFeatureEnabled("zipPayload", config, false);
+                    let legacyZipPayload = isFeatureEnabled(STR_ZIP_PAYLOAD, config);
+                    _zipPayload = legacyZipPayload !== false &&
+                        (legacyZipPayload === true || isFeatureEnabled(STR_ZIP_PAYLOAD_V2, config, false));
                     if (!isFunction(csStream)) {
                         _zipPayload = false;
                     }
@@ -363,6 +369,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                     _alwaysUseCustomSend = senderConfig.alwaysUseXhrOverride;
                     _disableXhr = !!senderConfig.disableXhr;
                     _retryCodes = senderConfig.retryCodes;
+                    _enableCompressionForCustomEndpoint = !!senderConfig.enableCompressionForCustomEndpoint;
                     
                     let bufferOverride = senderConfig.bufferOverride;
                     let canUseSessionStorage = !!senderConfig.enableSessionStorageBuffer &&
@@ -829,7 +836,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 // Only the manager can determine whether its notification has consumers.
                 let mgr = _getNotifyMgr();
                 if (mgr && mgr.listeners && mgr.listeners.length &&
-                    (!mgr.canNotify || mgr.canNotify("eventsDiscarded") !== false)) {
+                    (!mgr.hasListener || mgr.hasListener("eventsDiscarded") !== false)) {
                     let items = _extractTelemetryItems(payload);
                     if (items) {
                         mgr.eventsDiscarded(items, 1 /* NonRetryableStatus */, statusCode);
@@ -884,7 +891,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 // Only the manager can determine whether its notification has consumers.
                 let mgr = _getNotifyMgr();
                 if (mgr && mgr.listeners && mgr.listeners.length &&
-                    (!mgr.canNotify || mgr.canNotify("eventsSent") !== false)) {
+                    (!mgr.hasListener || mgr.hasListener("eventsSent") !== false)) {
                     let items = _extractTelemetryItems(payload);
                     if (items) {
                         mgr.eventsSent(items);
@@ -1073,7 +1080,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                         if (resolveFn) {
                             doAwait(result as any, resolveFn, rejectFn);
                         }
-                    }, _zipPayload, payloadData, !isAsync);
+                    }, _zipPayload && (isCompressionEndpoint(_endpointUrl) || _enableCompressionForCustomEndpoint),
+                    payloadData, !isAsync);
                     
                     if (callbackExecuted) {
                         return result;
@@ -1108,7 +1116,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
 
             function _getHeaders() {
                 try {
-                    let headers = _headers || {};
+                    let headers = objExtend({}, _headers || {});
                     if (isInternalApplicationInsightsEndpoint(_endpointUrl)) {
                         headers[RequestHeaders[eRequestHeaders.sdkContextHeader]] = RequestHeaders[eRequestHeaders.sdkContextHeaderAppIdRequest];
                     }
@@ -1455,7 +1463,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             function _notifyRetry(payload: IInternalStorageItem[], statusCode: number) {
                 let mgr = _getNotifyMgr();
                 if (mgr && mgr.eventsRetry && mgr.listeners && mgr.listeners.length &&
-                    (!mgr.canNotify || mgr.canNotify("eventsRetry") !== false)) {
+                    (!mgr.hasListener || mgr.hasListener("eventsRetry") !== false)) {
                     let items = _extractTelemetryItems(payload);
                     if (items) {
                         mgr.eventsRetry(items, statusCode);
@@ -1515,6 +1523,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
                 _xhrSend = null;
                 _fallbackSend = null;
                 _sendPostMgr = null;
+                _zipPayload = false;
+                _enableCompressionForCustomEndpoint = false;
 
                 objDefine(_self, "_senderConfig", {
                     g: function() {
