@@ -48,6 +48,9 @@
         "url": "https://github.com/microsoft/ApplicationInsights-JS/issues"
     },
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
+    "engines": {
+        "node": ">=22.23.4 <23 || >=24.22.1 <25 || >=26.12.1 <27"
+    },
     "devDependencies": {
         "@microsoft/rush": "5.178.1",
         "@nevware21/grunt-eslint-ts": "^0.5.2",
