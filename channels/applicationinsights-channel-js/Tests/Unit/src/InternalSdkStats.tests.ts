@@ -1,9 +1,9 @@
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import {
-    AppInsightsCore, createStatsMgr, FeatureOptInMode, IAppInsightsCore, IConfiguration, IInternalSdkStatsState,
+    AppInsightsCore, createSdkStatsNotifCbk, createStatsMgr, FeatureOptInMode, IAppInsightsCore, IConfiguration, IInternalSdkStatsState,
     isBeaconsSupported, IStatsMgr, ITelemetryItem, TransportType
 } from "@microsoft/applicationinsights-core-js";
-import { objDefine } from "@nevware21/ts-utils";
+import { arrForEach, objDefine } from "@nevware21/ts-utils";
 import { SinonSpy } from "sinon";
 import { Sender } from "../../../src/Sender";
 import { ISenderConfig } from "../../../types/applicationinsights-channel-js";
@@ -278,6 +278,39 @@ export class InternalSdkStatsTests extends AITestClass {
                 Assert.equal(2, successSpy.callCount, "Both late responses should complete without throwing");
                 Assert.equal(0, getStatsSpy.callCount, "Late responses should not access the unloaded stats manager");
                 Assert.equal(0, this.internalSdkStatsCountSpy.callCount, "Late responses should not record SDK Stats");
+            }
+        });
+
+        this.testCase({
+            name: "SDK Stats counts network responses independently of notification listeners",
+            useFakeTimers: true,
+            useFakeServer: true,
+            fakeServerAutoRespond: false,
+            test: () => {
+                const config = this.createSenderConfig(TransportType.Xhr);
+                const { core, sender } = this.initializeCoreAndSender(config, "000e0000-e000-0000-a000-000000000000");
+                const checkResponses = () => {
+                    arrForEach([200, 400, 503], (status) => {
+                        sender._buffer.clear();
+                        this.internalSdkStatsCountSpy.resetHistory();
+                        this.processTelemetryAndFlush(sender, {
+                            name: "customer event", baseType: "EventData", baseData: { name: "customer event" }
+                        });
+                        this.sendJsonResponse(this._getXhrRequests().slice(-1)[0], {}, status);
+                        this.clock.tick(1);
+                        this.assertInternalSdkStatsCall(status);
+                    });
+                };
+
+                QUnit.assert.equal(core.getNotifyMgr().listeners.length, 0, "Start without notification listeners");
+                checkResponses();
+                core.addNotificationListener({ perfEvent: () => {} });
+                checkResponses();
+
+                core.config.extensionConfig[sender.identifier].enableSessionStorageBuffer = false;
+                this.clock.tick(1);
+                core.addNotificationListener(createSdkStatsNotifCbk(core, "test"));
+                checkResponses();
             }
         });
 
