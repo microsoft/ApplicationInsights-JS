@@ -833,9 +833,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
         
                 _self._buffer && _self._buffer.clearSent(payload);
 
-                // Notify listeners of discarded events (skip extraction entirely when no listeners are registered)
+                // Only the manager can determine whether its notification has consumers.
                 let mgr = _getNotifyMgr();
-                if (mgr && mgr.listeners && mgr.listeners.length) {
+                if (mgr && mgr.listeners && mgr.listeners.length &&
+                    (!mgr.hasListener || mgr.hasListener("eventsDiscarded") !== false)) {
                     let items = _extractTelemetryItems(payload);
                     if (items) {
                         mgr.eventsDiscarded(items, 1 /* NonRetryableStatus */, statusCode);
@@ -887,9 +888,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
             function _onSuccess(payload: IInternalStorageItem[], countOfItemsInPayload: number) {
                 _self._buffer && _self._buffer.clearSent(payload);
 
-                // Notify listeners of successful send (skip extraction entirely when no listeners are registered)
+                // Only the manager can determine whether its notification has consumers.
                 let mgr = _getNotifyMgr();
-                if (mgr && mgr.listeners && mgr.listeners.length) {
+                if (mgr && mgr.listeners && mgr.listeners.length &&
+                    (!mgr.hasListener || mgr.hasListener("eventsSent") !== false)) {
                     let items = _extractTelemetryItems(payload);
                     if (items) {
                         mgr.eventsSent(items);
@@ -1460,7 +1462,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControls {
              */
             function _notifyRetry(payload: IInternalStorageItem[], statusCode: number) {
                 let mgr = _getNotifyMgr();
-                if (mgr && mgr.eventsRetry && mgr.listeners && mgr.listeners.length) {
+                if (mgr && mgr.eventsRetry && mgr.listeners && mgr.listeners.length &&
+                    (!mgr.hasListener || mgr.hasListener("eventsRetry") !== false)) {
                     let items = _extractTelemetryItems(payload);
                     if (items) {
                         mgr.eventsRetry(items, statusCode);
