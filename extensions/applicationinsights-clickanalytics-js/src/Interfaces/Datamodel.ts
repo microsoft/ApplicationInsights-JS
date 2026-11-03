@@ -56,6 +56,18 @@ export interface IClickAnalyticsConfiguration {
      * If set, it will combine with the default element types.
     */
     trackElementTypes?: string;
+
+    /**
+     * A comma separated list of `<input>` element `type` values that are automatically captured when `INPUT` is included in
+     * `trackElementTypes`. Clicks on `<input>` elements with any other type (including `text`, `email`, `number`, `search`
+     * and inputs without a `type` attribute, which default to `text`) are not automatically captured.
+     * Default is "BUTTON,CHECKBOX,RADIO,RESET,SUBMIT".
+     *
+     * To avoid collecting user entered data, the `value` of inputs other than `button`, `checkbox`, `radio`, `reset` and `submit`
+     * is never used as the default content name.
+     * @example "BUTTON,CHECKBOX,RADIO,RESET,SUBMIT,TEXT,SEARCH"
+     */
+    trackInputTypes?: string;
 }
 
 /**

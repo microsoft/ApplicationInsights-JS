@@ -79,6 +79,7 @@ export class ClickEventTest extends AITestClass {
                 Assert.deepEqual(extConfig.dataTags, dataTagsDefault, "udataTags should be set by default");
                 Assert.deepEqual(extConfig.coreData, coreDataDefault, "udataTags should be set by default");
                 Assert.deepEqual(extConfig.trackElementTypes, defaultElementTypes, "trackElementTypes should be set by default");
+                Assert.equal(extConfig.trackInputTypes, "BUTTON,CHECKBOX,RADIO,RESET,SUBMIT", "trackInputTypes should be set by default");
 
                 Assert.ok(extConfig.callback, "callback should be set by default");
                 let callbacks = extConfig.callback;
@@ -268,6 +269,148 @@ export class ClickEventTest extends AITestClass {
                 // Clean up
                 document.body.removeChild(element);
                 document.body.removeChild(elementNotToTrack);
+            }
+        });
+
+        this.testCase({
+            name: "autoCapture: input types are filtered by trackInputTypes and support dynamic changes",
+            useFakeTimers: true,
+            test: () => {
+                const config = {
+                    coreData: {},
+                    autoCapture: true,
+                    dataTags: {
+                        useDefaultContentNameOrId: true
+                    }
+                } as IClickAnalyticsConfiguration;
+                let clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                let core = new AppInsightsCore();
+                let channel = new ChannelPlugin();
+                core.initialize({
+                    instrumentationKey: "testIkey",
+                    extensionConfig: {
+                        [clickAnalyticsPlugin.identifier]: config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+
+                let textInput = document.createElement("input");
+                textInput.setAttribute("type", "text");
+                textInput.setAttribute("id", "testTextInput");
+                textInput.value = "user entered secret";
+                document.body.appendChild(textInput);
+
+                let noTypeInput = document.createElement("input");
+                noTypeInput.setAttribute("name", "testNoTypeInput");
+                noTypeInput.value = "another secret";
+                document.body.appendChild(noTypeInput);
+
+                let checkbox = document.createElement("input");
+                checkbox.setAttribute("type", "checkbox");
+                checkbox.setAttribute("id", "testCheckbox");
+                document.body.appendChild(checkbox);
+
+                this.onDone(() => {
+                    core.unload(false);
+                    document.body.removeChild(textInput);
+                    document.body.removeChild(noTypeInput);
+                    document.body.removeChild(checkbox);
+                });
+
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, "track");
+                let click = (element: HTMLElement) => {
+                    element.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+                    this.clock.tick(500);
+                };
+
+                // Defaults: text and untyped inputs are ignored, checkbox is captured
+                click(textInput);
+                click(noTypeInput);
+                Assert.equal(0, spy.callCount, "text inputs should not be captured by default");
+                click(checkbox);
+                Assert.equal(1, spy.callCount, "checkbox input should be captured by default");
+
+                // Dynamically opt in to text inputs (case and whitespace insensitive)
+                core.config.extensionConfig[clickAnalyticsPlugin.identifier].trackInputTypes = " checkbox , Text ";
+                this.clock.tick(1);
+                spy.resetHistory();
+
+                click(textInput);
+                Assert.equal(1, spy.callCount, "text input should be captured once configured");
+                let calledEvent: ITelemetryItem = spy.getCall(0).args[0];
+                Assert.equal("testTextInput", calledEvent.baseData["name"], "text input value must not be used as the content name");
+                Assert.ok(!strContains(JSON.stringify(calledEvent), "secret"), "text input value must not be captured");
+
+                click(noTypeInput);
+                Assert.equal(2, spy.callCount, "input without a type attribute defaults to text and should be captured");
+                calledEvent = spy.getCall(1).args[0];
+                Assert.equal("testNoTypeInput", calledEvent.baseData["name"], "input name should be used as the content name");
+                Assert.ok(!strContains(JSON.stringify(calledEvent), "secret"), "untyped input value must not be captured");
+
+                // Empty list disables all input capture
+                core.config.extensionConfig[clickAnalyticsPlugin.identifier].trackInputTypes = "";
+                this.clock.tick(1);
+                spy.resetHistory();
+                click(checkbox);
+                click(textInput);
+                Assert.equal(0, spy.callCount, "no inputs should be captured with an empty trackInputTypes");
+            }
+        });
+
+        this.testCase({
+            name: "PageAction: XHTML (lowercase tagName) inputs do not expose user entered values",
+            useFakeTimers: true,
+            test: () => {
+                const config = {
+                    dataTags: {
+                        useDefaultContentNameOrId: true
+                    }
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                core.initialize({
+                    instrumentationKey: "testIkey",
+                    extensionConfig: {
+                        [clickAnalyticsPlugin.identifier]: config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                let extConfig = core.config["extensionConfig"][clickAnalyticsPlugin.identifier];
+                const contentHandler = new DomContentHandler(extConfig, traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, extConfig, contentHandler, null, {}, traceLogger);
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, "track");
+
+                const xhtmlNs = "http://www.w3.org/1999/xhtml";
+                const xhtmlDoc = document.implementation.createDocument(xhtmlNs, "html", null);
+
+                let textInput = xhtmlDoc.createElementNS(xhtmlNs, "input") as HTMLInputElement;
+                textInput.setAttribute("type", "text");
+                textInput.setAttribute("id", "testXhtmlInput");
+                textInput.value = "xhtml secret";
+                Assert.equal("input", textInput.tagName, "XHTML elements keep a lowercase tagName");
+
+                pageAction.capturePageAction(textInput);
+                this.clock.tick(500);
+                Assert.equal(1, spy.callCount, "XHTML text input should be captured");
+                let calledEvent: ITelemetryItem = spy.getCall(0).args[0];
+                Assert.equal("testXhtmlInput", calledEvent.baseData["name"], "XHTML text input value must not be used as the content name");
+                Assert.ok(!strContains(JSON.stringify(calledEvent), "secret"), "XHTML text input value must not be captured");
+
+                let buttonInput = xhtmlDoc.createElementNS(xhtmlNs, "input") as HTMLInputElement;
+                buttonInput.setAttribute("type", "button");
+                buttonInput.setAttribute("id", "testXhtmlButton");
+                buttonInput.value = "Save";
+
+                pageAction.capturePageAction(buttonInput);
+                this.clock.tick(500);
+                Assert.equal(2, spy.callCount, "XHTML button input should be captured");
+                calledEvent = spy.getCall(1).args[0];
+                Assert.ok(strContains(calledEvent.data["content"], "\"contentName\":\"Save\""),
+                    "XHTML button input label should still be used as the content name");
             }
         });
 
@@ -530,7 +673,8 @@ export class ClickEventTest extends AITestClass {
                     dropInvalidEvents : false,
                     urlCollectHash: false,
                     urlCollectQuery: false,
-                    trackElementTypes: "A,BUTTON,AREA,INPUT"
+                    trackElementTypes: "A,BUTTON,AREA,INPUT",
+                    trackInputTypes: "BUTTON,CHECKBOX,RADIO,RESET,SUBMIT"
                 }, core.config.extensionConfig[clickAnalyticsPlugin.identifier]);
 
             }
