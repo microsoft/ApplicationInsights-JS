@@ -115,15 +115,13 @@ Write-Log "---------------------------------------------------------------------
 # Publish the full versioned files to all release folders
 if ($version.type -eq "release") {
     # Normal publishing deployment
-    PublishFiles $releaseFiles "beta/tools" $cacheControl1Year $contentType $overwrite
     PublishFiles $releaseFiles "next/tools" $cacheControl1Year $contentType $overwrite
     PublishFiles $releaseFiles "release/tools" $cacheControl1Year $contentType $overwrite
 }
-elseif ($version.type -eq "rc") {
-    PublishFiles $releaseFiles "beta/tools" $cacheControl1Year $contentType $overwrite
+elseif ($version.type -eq "rc" -or $version.type -eq "beta") {
     PublishFiles $releaseFiles "next/tools" $cacheControl1Year $contentType $overwrite
 }
-elseif ($version.type -eq "dev" -or $version.type -eq "beta") {
+elseif ($version.type -eq "dev") {
     # Publish to release type folder folder
     PublishFiles $releaseFiles "$($version.type)/tools" $cacheControl1Year $contentType $overwrite
 }

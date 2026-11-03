@@ -73,16 +73,16 @@ Function Validate-Params
     # Publish the full versioned files to all release folders
     if ($version.type -eq "release") {
         # Normal publishing deployment
-        if ("beta","next","public" -NotContains $container) {
+        if ("next","public" -NotContains $container) {
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
     }
-    elseif ($version.type -eq "rc") {
-        if ("beta","next" -NotContains $container) {
+    elseif ($version.type -eq "rc" -or $version.type -eq "beta") {
+        if ($container -ne "next") {
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
     }
-    elseif ($version.type -eq "dev" -or $version.type -eq "beta") {
+    elseif ($version.type -eq "dev") {
         if ($version.type -ne $container) {
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
@@ -138,7 +138,7 @@ $files = New-Object 'system.collections.generic.dictionary[string, system.collec
 $storePath = "$container"
 if ($container -eq "public") {
     $storePath = "scripts/b"
-} elseif ($container -ne "beta" -and $container -ne "next" -and $container -ne "dev" -and $container -ne "nightly") {
+} elseif ($container -ne "next" -and $container -ne "dev" -and $container -ne "nightly") {
     $global:connectDetails.testOnly = $true
     $global:connectDetails.storeContainer = "tst"
 }
