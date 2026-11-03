@@ -191,6 +191,18 @@ export interface ISenderConfig {
      * @since 3.3.7
      */
     corsPolicy?: string;
+
+    /**
+     * [Optional] Allow payload compression when sending to a custom endpoint.
+     *
+     * Automatic payload compression is limited to recognized Microsoft Application Insights
+     * ingestion endpoints. Set this to true only when the configured custom endpoint or proxy
+     * explicitly supports gzip request bodies.
+     *
+     * Default: false
+     * @since 3.4.6
+     */
+    enableCompressionForCustomEndpoint?: boolean;
 }
 
 export interface IBackendResponse {
