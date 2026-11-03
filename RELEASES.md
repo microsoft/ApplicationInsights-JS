@@ -14,6 +14,7 @@
   legacy key remains supported for customer compatibility and uses the same endpoint safety checks.
 - Payload headers are isolated per request so a compressed asynchronous send cannot leak `Content-Encoding: gzip` into a later
   uncompressed synchronous, unload, beacon, or fallback request.
+- Skip channel telemetry reconstruction when the notification manager confirms there are no consumers for the relevant sent, discarded, or retry notification. Add the optional `hasListener(name: string)` hint to the core notification manager. Custom managers without this hint and overridden built-in notification handlers retain the existing dispatch behavior. Notifications with matching listeners, including SDK Stats, retain the existing reconstruction behavior.
 
 ## 3.4.5 (October 5th, 2026)
 

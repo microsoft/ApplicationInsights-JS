@@ -32,6 +32,7 @@ import { ThrottleMgrTest } from "./ai/ThrottleMgr.tests";
 import { UtilTests } from "./ai/Util.tests";
 import { W3CTraceStateModesTests } from "./trace/W3CTraceStateModes.tests";
 import { SdkStatsNotificationCbkTests } from "./ai/SdkStatsNotificationCbk.Tests";
+import { NotificationManagerTests } from "./ai/NotificationManager.Tests";
 
 // 1ds core tests
 import { CoreTest } from './ext/CoreTest';
@@ -68,6 +69,7 @@ export function runTests() {
     new InternalSdkStatsTests(true).registerTests();
     new SendPostManagerTests().registerTests();
     new SdkStatsNotificationCbkTests().registerTests();
+    new NotificationManagerTests().registerTests();
 
     // Application Insights Common tests (merged from AppInsightsCommon)
     new ApplicationInsightsTests().registerTests();
