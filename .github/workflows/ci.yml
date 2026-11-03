@@ -8,11 +8,11 @@ permissions:
 
 on:
   push:
-    branches: [ main, master, Release2.7, release-3.0 ]
+    branches: [ main, master, beta, Release2.7, release-3.0 ]
   pull_request:
-    branches: [ main, master, Release2.7, release-3.0 ]
+    branches: [ main, master, beta, Release2.7, release-3.0 ]
   merge_group:
-    branches: [ "main", "master", "Release*", "release*", "*-legacy", "legacy-v1" ]
+    branches: [ "main", "master", "beta", "Release*", "release*", "*-legacy", "legacy-v1" ]
 
 jobs:
   build:
