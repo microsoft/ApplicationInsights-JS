@@ -1,6 +1,5 @@
 const fs = require("fs");
 const child_process = require("child_process");
-const { validateReleaseVersion } = require("./releaseTypes");
 
 const packageGroupDef = "./tools/release-tools/package_groups.json";
 let packageGroup;
@@ -72,7 +71,6 @@ function getNpmPackageName(packageJsonFile) {
     let packageJson = JSON.parse(packageText);
     let packageName = packageJson.name;
     let packageVersion = packageJson.version;
-    validateReleaseVersion(packageVersion);
 
     let theNpmPackageName = packageName + "-" + packageVersion;
 

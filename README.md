@@ -878,7 +878,7 @@ When a new release is deployed the following occurs as part of the release
 | Next | https://js.monitor.azure.com/next/ai.3.gbl.min.js | Initial promotion after the NPM release.
 | Public | https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js | Promoted after next validation according to the release deployment plan; the production URL is unchanged.
 
-Beta releases and the beta CDN channel are no longer supported by release tooling. Existing CDN files remain available for legacy consumers.
+The beta CDN channel is no longer supported by CDN publishing, activation or listing tools. Existing CDN files remain available for legacy consumers; npm prerelease tags and version-generation tooling are unchanged.
 
 The milestones for each release should include both the deployment plan (as it's about to be released) or the final release times as with [v2.7.2](https://github.com/microsoft/ApplicationInsights-JS/milestone/58)
 

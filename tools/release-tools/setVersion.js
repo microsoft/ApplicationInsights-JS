@@ -1,6 +1,5 @@
 const fs = require("fs");
 const globby = require("globby");
-const { isSupportedReleaseType, validateReleaseVersion } = require("./releaseTypes");
 
 let newVer = null;
 let autoInc = null;
@@ -26,7 +25,7 @@ function showHelp() {
     }
 
     console.log("");
-    console.log(scriptName + " [<newVersion>|-patch|-minor|-major|-next] [-dev|-alpha|-release] [-bld ######] [-test]");
+    console.log(scriptName + " [<newVersion>|-patch|-minor|-major|-next] [-dev|-alpha|-beta|-release] [-bld ######] [-test]");
     console.log("--------------------------");
     console.log(" <newVersion> - Identifies the version to set for all packages, must start with x.y.z");
     console.log(" -patch       - Increment the current version to the next patch number (x.y.z => x.y.[z+1]");
@@ -35,9 +34,10 @@ function showHelp() {
     console.log(" -next        - Increment the current version to the next value (patch, minor or major) based on the 'next' value in version.json");
     console.log(" -dev         - Add the 'dev' pre-release to the number (x.y.z => x.y.z-dev)");
     console.log(" -alpha       - Add the 'alpha' pre-release to the number (x.y.z => x.y.z-alpha)");
+    console.log(" -beta        - Add the 'beta' pre-release to the number (x.y.z => x.y.z-beta)");
     console.log(" -release     - Remove any existing pre-release tags (x.y.z-prerel => x.y.z)");
     console.log(" -bld ######  - Append the provided build number to the version (x.y.z => x.y.z-[prerel].######) [prerel] defaults to dev if not defined");
-    console.log(" -pre type    - Set a supported pre-release type (rc, dev, nightly or alpha)");
+    console.log(" -pre ######  - Set the pre-release to the provided value (x.y.z => x.y.z-[prerel])");
     console.log(" -1ds         - Update only the oneDs packages");
     console.log(" -test        - Scan all of the package.json files and log the changes, but DON'T update the files");
 }
@@ -45,11 +45,6 @@ function showHelp() {
 function setPreRelVer(name) {
     if (name && name.indexOf("-") !== -1) {
         console.error("Invalid pre-release value -- [" + name + "] -- the name cannot contain a '-'");
-        return false;
-    }
-
-    if (name && !isSupportedReleaseType(getVersionDetails("0.0.0-" + name).type)) {
-        console.error("Unsupported pre-release value -- [" + name + "]");
         return false;
     }
 
@@ -103,6 +98,13 @@ function parseArgs() {
             if (!autoInc && !newVer) {
                 autoInc = "next";
             } else if (!setPreRelVer("alpha")) {
+                return false;
+            }
+        } else if (!isRelease && !preRel && theArg === "-beta") {
+            preRel = "beta";
+            if (!autoInc && !newVer) {
+                autoInc = "next";
+            } else if (!setPreRelVer("beta")) {
                 return false;
             }
         } else if (!isRelease && !preRel && theArg === "-release") {
@@ -276,10 +278,7 @@ function calculateVersion(rootVersion, pkgAutoInc) {
         }
     }
 
-    let result = newVersion + (postfix || "") + (buildNum || "");
-    validateReleaseVersion(result);
-
-    return result;
+    return newVersion + (postfix || "") + (buildNum || "");
 }
 
 function getVersionDetails(theVersion) {
@@ -407,7 +406,7 @@ function updatePublishConfig(package, newVersion) {
         }
 
         // Set the publishing tag
-        if (details.type === "nightly" || details.type === "dev" || details.type === "alpha") {
+        if (details.type === "nightly" || details.type === "nightlybeta" || details.type === "dev" || details.type === "beta" || details.type === "alpha") {
             console.log(`   Type - [${details.type}] - ${majorVersion}`);
             package.publishConfig.tag = details.type + (majorVersion !== "0" ? majorVersion : "");
         } else {
@@ -553,5 +552,4 @@ if (parseArgs()) {
     }
 } else {
     showHelp();
-    process.exitCode = 1;
 }

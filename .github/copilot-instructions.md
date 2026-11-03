@@ -425,9 +425,9 @@ npm run setVersion -- 3.4.0           # Set an explicit version
 
 # Pre-release variants:
 npm run setVersion -- -next -dev      # Increment + dev pre-release tag (x.y.z-dev)
-npm run setVersion -- -next -pre rc   # Increment + release candidate tag (x.y.z-rc)
+npm run setVersion -- -next -beta     # Increment + beta pre-release tag (x.y.z-beta)
 npm run setVersion -- -next -alpha    # Increment + alpha pre-release tag (x.y.z-alpha)
-npm run setVersion -- -release        # Strip pre-release tag from current version (x.y.z-rc => x.y.z)
+npm run setVersion -- -release        # Strip pre-release tag from current version (x.y.z-beta => x.y.z)
 
 # Dry run (logs changes without modifying files):
 npm run setVersion -- -next -test
