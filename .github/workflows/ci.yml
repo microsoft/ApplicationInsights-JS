@@ -8,11 +8,11 @@ permissions:
 
 on:
   push:
-    branches: [ main, master, beta, Release2.7, release-3.0 ]
+    branches: [ main, master, Release2.7, release-3.0 ]
   pull_request:
-    branches: [ main, master, beta, Release2.7, release-3.0 ]
+    branches: [ main, master, Release2.7, release-3.0 ]
   merge_group:
-    branches: [ "main", "master", "beta", "Release*", "release*", "*-legacy", "legacy-v1" ]
+    branches: [ "main", "master", "Release*", "release*", "*-legacy", "legacy-v1" ]
 
 jobs:
   build:
@@ -41,6 +41,8 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         check-latest: true
+    - name: Test release type validation
+      run: node tools/release-tools/ReleaseTypes.tests.js
     - name: Update rush shrinkwrap dependencies (for different node versions)
       run: node common/scripts/install-run-rush.js update --full --recheck
     - run: npm install rollup -g

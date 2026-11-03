@@ -1,5 +1,6 @@
 const fs = require("fs");
 const child_process = require("child_process");
+const { validateReleaseVersion } = require("./releaseTypes");
 
 const packageGroupDef = "./tools/release-tools/package_groups.json";
 let packageGroup;
@@ -90,6 +91,7 @@ if (parseArgs()) {
         }
 
         let packageJson = getPackageJson(packageJsonFile);
+        validateReleaseVersion(packageJson.version);
 
         console.log("\n\n##################################################################");
         console.log("Setting latest tag - " + packageJson.name);

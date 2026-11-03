@@ -54,8 +54,8 @@ Function Validate-Params
 
     $version = Get-VersionDetails $activeVersion
 
-    if ([string]::IsNullOrWhiteSpace($version.type) -eq $true) {
-        Write-LogFailure "Unknown release type"
+    if ("release","rc","dev","nightly","alpha" -NotContains $version.type) {
+        Write-LogFailure "Version type [$($version.type)] is not supported"
     }
 
     $versionParts = $version.ver.Split(".")
@@ -77,7 +77,7 @@ Function Validate-Params
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
     }
-    elseif ($version.type -eq "rc" -or $version.type -eq "beta") {
+    elseif ($version.type -eq "rc") {
         if ($container -ne "next") {
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
@@ -87,7 +87,7 @@ Function Validate-Params
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
     }
-    elseif ($version.type -like "nightly*") {
+    elseif ($version.type -eq "nightly") {
         if ("nightly" -ne $container) {
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
@@ -148,7 +148,7 @@ if ($container -eq "public") {
 Get-VersionFiles $files $storePath "ai.config." $activeVersion
 Get-VersionFiles $testFiles $storePath "ai_test.config." $activeVersion
 
-if ($container -eq "dev" -or $container -eq "nightly" -or $version.type -eq "beta") {
+if ($container -eq "dev" -or $container -eq "nightly") {
     if ($testFiles.ContainsKey($activeVersion) -ne $true) {
         Write-LogFailure "Test Version [$activeVersion] does not appear to be deployed to [$container]"
     }
@@ -163,7 +163,7 @@ if (Get-HasErrors -eq $true) {
     exit 2
 }
 
-if ($container -eq "dev" -or $container -eq "nightly" -or $version.type -eq "beta") {
+if ($container -eq "dev" -or $container -eq "nightly") {
     SetActiveVersion $testFiles[$activeVersion] $storePath $minorOnly
 } else {
     SetActiveVersion $files[$activeVersion] $storePath $minorOnly

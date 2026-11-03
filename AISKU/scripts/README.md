@@ -31,9 +31,9 @@ The Scripts and examples are included below, but as a summary they are
 
 ### ./publishAzReleaseToCdn.ps1
 
-This script has been created to automate the deployment of the CDN resources at the same time as publishing of the NPM packages. This script will publish the full release version (v2.#.#) to next and public. Release candidates and beta prerelease versions are published only to next, retaining their version names and NPM tags. It does NOT change the major (ai.2.min.js) or minor (ai.2.#.min.js) release versions.
+This script has been created to automate the deployment of the CDN resources at the same time as publishing of the NPM packages. This script will publish the full release version (v2.#.#) to next and public. Release candidates are published only to next. Dev and nightly builds retain their own folders, while alpha builds remain isolated in test storage. It does NOT change the major (ai.2.min.js) or minor (ai.2.#.min.js) release versions.
 
-The beta CDN channel is read-only legacy history: existing files and version listing remain available, but publishing and activation no longer write to beta. The dated example output below is retained as historical output.
+Supported version types are `release`, `rc`, `dev`, `nightly` and `alpha`. Unsupported versions fail validation before connecting to Azure. Beta release/channel options are no longer supported by publishing, activation or listing tools; existing CDN files are not deleted. The dated example output below is retained as historical output.
 
 Offline publishing and activation regression tests can be run from the repository root with
 `pwsh -NoProfile -File common\publish\Tests\CdnPublishing.tests.ps1`; they do not connect to Azure.
@@ -115,7 +115,7 @@ PS D:\git\ApplicationInsights-JS\AISKU\scripts> .\publishAzReleaseToCdn.ps1 -cdn
 
 ### ./setAzActiveCdnVersion.ps1
 
-This script will set the active release for the specified release folder (next, public) to the requested full version (2.x.x) number. Release candidates and beta prerelease versions can only be activated in next; dev and nightly versions retain their corresponding folders. By default it will set both the major (ai.2.min.js) and minor (ai.2.x.min.js) versions to the requested full version, you can optionally only update the minor version.
+This script will set the active release for the specified release folder (next, public) to the requested full version (2.x.x) number. Release candidates can only be activated in next; dev and nightly versions retain their corresponding folders. By default it will set both the major (ai.2.min.js) and minor (ai.2.x.min.js) versions to the requested full version, you can optionally only update the minor version.
 
 > :bulb: **Note**
 >
@@ -125,7 +125,7 @@ __Command line arguments__
 
 | Name | Type | Description
 |------|------|----------------
-| container | string | __[Required]__ Identifies the target container to update (next, public). Beta is no longer a writable CDN channel.
+| container | string | __[Required]__ Identifies the target container to update (next, public, dev, nightly).
 | activeVersion | string | __[Required]__ Identifies the source full version number to copy and make the active released version fro the specified container. This MUST be the full version number in the form "a.b.c". The new active versions will be created (or overwritten) as the major version (ai.[a].min.js) and minor version (ai.[a].[b].min.js).
 | cdnStorePath | string | [Optional] Identifies the target Azure Storage account (by name) where the files will be uploaded to. As you may have access to multiple subscriptions, resource groups, and storage accounts (which can slow the automatic validation / identification process) you can optionally include the a partial subscription id and resource group name with the storage account name. So you can specify the target using any of the following 3 forms :-<br> - &lt;Full storage account name&gt; <br> - &lt;partial or full subscription id&gt;::&lt;Full storage account name&gt; <br> - &lt;partial or full subscription id&gt;::&lt;Full resource group name&gt;::&lt;Full storage account name&gt;<br>The subscription id is used to match against the collection of subscription id's that the user/runner has access to, it uses the PowerShell -like matching by wrapping the value in '*'<br>When a resource group name is supplied it will further limit the collection of storage accounts that are scanned / checked for the storage account name.<br>Example: `"65b2f83e::tstcdnstore"`
 | sasToken | string | [Optional] For automated deployments, it is recommended that you pass in a pre-generated Shared Access Signature (SAS) Token to avoid the script attempting to login the user which could cause a blocking UI to be displayed. When supplied the script bypasses the automated scan / checks and will just used the identified storage account name from the `cdnStorePath` argument. If this value is not specified the script will ensure that the user is logged into azure (displaying a login UI), enumerate all of the subscription Id's for the user to find full location of the storage account identified by the `cdnStorePath` argument, once identified it will then Generate a new SAS token for the script (as long as the user has permissions) for the target subscription.
@@ -204,12 +204,12 @@ __Command line arguments__
 
 | Name | Type | Description
 |------|------|----------------
-| container | string | __[Optional]__ Identifies the single target container to list the available versions for (beta, next, public). If not specified all containers will be enumerated.
+| container | string | __[Optional]__ Identifies the single target container to list the available versions for (next, public, dev, nightly). If not specified all supported containers will be enumerated.
 | cdnStorePath | string | [Optional] Identifies the target Azure Storage account (by name) where the files will be uploaded to. As you may have access to multiple subscriptions, resource groups, and storage accounts (which can slow the automatic validation / identification process) you can optionally include the a partial subscription id and resource group name with the storage account name. So you can specify the target using any of the following 3 forms :-<br> - &lt;Full storage account name&gt; <br> - &lt;partial or full subscription id&gt;::&lt;Full storage account name&gt; <br> - &lt;partial or full subscription id&gt;::&lt;Full resource group name&gt;::&lt;Full storage account name&gt;<br>The subscription id is used to match against the collection of subscription id's that the user/runner has access to, it uses the PowerShell -like matching by wrapping the value in '*'<br>When a resource group name is supplied it will further limit the collection of storage accounts that are scanned / checked for the storage account name.<br>Example: `"65b2f83e::tstcdnstore"`
 | sasToken | string | [Optional] For automated deployments, it is recommended that you pass in a pre-generated Shared Access Signature (SAS) Token to avoid the script attempting to login the user which could cause a blocking UI to be displayed. When supplied the script bypasses the automated scan / checks and will just used the identified storage account name from the `cdnStorePath` argument. If this value is not specified the script will ensure that the user is logged into azure (displaying a login UI), enumerate all of the subscription Id's for the user to find full location of the storage account identified by the `cdnStorePath` argument, once identified it will then Generate a new SAS token for the script (as long as the user has permissions) for the target subscription.
 | logPath | string | [Optional] Identifies the location where the automatic log file will be written. Defaults to <systemDrive>:\Logs
 | showFiles | switch | [Optional] Identifies whether the details of each located blob should be listed, this includes the CacheControl and metadata for each file
-| testOnly | switch | [Optional] By default the script will update the production containers (beta, next and scripts), for testing this switch will effectively only update the "tst" container versions with and the normal container names will instead be prepended (simulating folders) to the name. ([tst] scripts/b/ai.2.min.js)
+| testOnly | switch | [Optional] Lists the versions in the "tst" container instead of the normal next and scripts containers, using the normal container names as prefixes.
 | useConnectedAccount | switch | [Optional] By default the script will use the current logged in user to authenticate with Azure using SAS tokens, if you have disabled SAS token support for the storage account then you will need to use this switch and grant the user "Storage Blob Data Contributor" role.
 
  #### Example Usages and output

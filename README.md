@@ -870,7 +870,7 @@ As with the normal release process the nightly builds also include major, minor,
 When a new release is deployed the following occurs as part of the release
 
 - NPM packages are created and published to [NpmJs](https://www.npmjs.com/package/@microsoft/applicationinsights-web)
-- The new explicit versioned release files (eg. `ai.2.7.2.js`; `ai.2.7.2.min.js`; `ai.2.7.2.gbl.min.js`; `ai.2.7.2.min.js.map`; etc) are uploaded to the public and next CDN endpoints (details below). Release candidates and beta prerelease versions are uploaded only to next; their version names and NPM tags are unchanged.
+- The new explicit versioned release files (eg. `ai.2.7.2.js`; `ai.2.7.2.min.js`; `ai.2.7.2.gbl.min.js`; `ai.2.7.2.min.js.map`; etc) are uploaded to the public and next CDN endpoints (details below). Release candidates are uploaded only to next.
 - We then go through a deployment process of "promoting" the new version to the "Major" (`ai.3.gbl.min.js`) and "Minor" (`ai.3.x.gbl.min.js`) release URL's to upgrade everyone to the newly released version based on the schedule listed below
 
 | Endpoint | Url | Schedule
@@ -878,7 +878,7 @@ When a new release is deployed the following occurs as part of the release
 | Next | https://js.monitor.azure.com/next/ai.3.gbl.min.js | Initial promotion after the NPM release.
 | Public | https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js | Promoted after next validation according to the release deployment plan; the production URL is unchanged.
 
-The beta CDN channel is no longer published or activated. Existing beta files remain available for legacy consumers and version listing.
+Beta releases and the beta CDN channel are no longer supported by release tooling. Existing CDN files remain available for legacy consumers.
 
 The milestones for each release should include both the deployment plan (as it's about to be released) or the final release times as with [v2.7.2](https://github.com/microsoft/ApplicationInsights-JS/milestone/58)
 

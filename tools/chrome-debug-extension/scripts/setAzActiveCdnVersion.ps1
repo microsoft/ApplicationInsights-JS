@@ -54,8 +54,8 @@ Function Validate-Params
 
     $version = Get-VersionDetails $activeVersion
 
-    if ([string]::IsNullOrWhiteSpace($version.type) -eq $true) {
-        Write-LogFailure "Unknown release type"
+    if ("release","rc","dev","nightly","alpha" -NotContains $version.type) {
+        Write-LogFailure "Version type [$($version.type)] is not supported"
     }
 
     $versionParts = $version.ver.Split(".")
@@ -77,7 +77,7 @@ Function Validate-Params
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
     }
-    elseif ($version.type -eq "rc" -or $version.type -eq "beta") {
+    elseif ($version.type -eq "rc") {
         if ($container -ne "next") {
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
@@ -87,7 +87,7 @@ Function Validate-Params
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
     }
-    elseif ($version.type -like "nightly*") {
+    elseif ($version.type -eq "nightly") {
         if ("nightly" -ne $container) {
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }

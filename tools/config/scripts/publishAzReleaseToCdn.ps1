@@ -113,6 +113,12 @@ $cacheControl30Min = "public, max-age=1800, immutable, no-transform";
 
 Write-LogParams
 
+$version = GetPackageVersion $jsSdkDir
+if ("release","rc","dev","nightly","alpha" -NotContains $version.type) {
+    Write-LogFailure "Version type [$($version.type)] is not supported"
+    exit 2
+}
+
 # You will need to at least have the Az modules installed
 InstallRequiredModules
 $global:connectDetails = ParseCdnStorePath $global:connectDetails
@@ -125,8 +131,6 @@ if ([string]::IsNullOrWhiteSpace($global:connectDetails.sasToken) -eq $true) {
 }
 
 Write-Log "======================================================================"
-
-$version = GetPackageVersion $jsSdkDir
 
 $releaseFiles = GetReleaseFiles $version      # Get the versioned files only
 $testFiles = GetTestFiles $version      # Get the versioned files only
@@ -146,15 +150,12 @@ if ($version.type -eq "release") {
 elseif ($version.type -eq "rc") {
     PublishFiles $releaseFiles "next" $cacheControl1Year $contentType $overwrite
 }
-elseif ($version.type -eq "beta") {
-    PublishFiles $testFiles "next" $cacheControl1Year $contentType $overwrite
-}
 elseif ($version.type -eq "dev") {
     # Publish to release type folder folder
     # PublishFiles $releaseFiles "$($version.type)" $cacheControl1Year $contentType $overwrite
     PublishFiles $testFiles "$($version.type)" $cacheControl1Year $contentType $overwrite
 }
-elseif ($version.type -like "nightly*") {
+elseif ($version.type -eq "nightly") {
     # Publish to release nightly folder folder
     # PublishFiles $releaseFiles "nightly" $cacheControl1Year $contentType $overwrite
     PublishFiles $testFiles "nightly" $cacheControl1Year $contentType $overwrite

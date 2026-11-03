@@ -12,10 +12,9 @@ V1
 
 https://js.monitor.azure.com/next/ai.config.1.cfg.json
 
-New releases and release candidates are published to `next`; beta prerelease versions retain their
-`-beta` filenames and use `next/ai_test.config.<version>.cfg.json`. Activating a beta prerelease in
-`next` updates the test configuration aliases, not the release configuration aliases.
-Existing `beta` files remain available for legacy consumers and version listing, but are no longer published or activated.
+New releases and release candidates are published to `next`. Dev and nightly builds retain the
+`ai_test.config.*` prefix and their corresponding folders. Unsupported release types fail validation;
+beta release/channel options are no longer supported. Existing CDN files remain untouched.
 
 ### Public
 

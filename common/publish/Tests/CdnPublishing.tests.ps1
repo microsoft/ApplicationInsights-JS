@@ -33,7 +33,7 @@ $versionFunction = $helper.Find({
 }, $false)
 . ([scriptblock]::Create($versionFunction.Extent.Text))
 
-function Test-Publishing($package, [string] $versionString, [string[]] $expectedPaths) {
+function Test-Publishing($package, [string] $versionString, [string[]] $expectedPaths, [bool] $valid = $true) {
     $path = Join-Path $repoRoot "$($package.path)\scripts\publishAzReleaseToCdn.ps1"
     $ast = Read-Script $path
     $version = Get-VersionDetails $versionString
@@ -51,8 +51,33 @@ function Test-Publishing($package, [string] $versionString, [string[]] $expected
         Assert-Equal $contentType $type "Content type changed"
         Assert-Equal $overwrite $replace "Overwrite flag changed"
     }
+    function Write-LogFailure($message) { throw $message }
 
-    # Execute only the real routing block, never Azure setup or authentication.
+    # Execute validation and routing only, never Azure setup or authentication.
+    $guard = $ast.EndBlock.Statements | Where-Object {
+        $_ -is [System.Management.Automation.Language.IfStatementAst] -and
+        $_.Clauses[0].Item1.Extent.Text -like '*-NotContains $version.type'
+    }
+    Assert-Equal 1 @($guard).Count "Expected one release type guard in $path"
+    $setup = $ast.EndBlock.Statements | Where-Object { $_.Extent.Text -eq "InstallRequiredModules" }
+    Assert-Equal $true ($guard.Extent.StartOffset -lt $setup.Extent.StartOffset) "Unsupported versions must fail before Azure setup"
+    $validationError = $null
+    try {
+        . ([scriptblock]::Create($guard.Extent.Text))
+    } catch {
+        $validationError = $_
+    }
+    if (!$valid) {
+        if ($null -eq $validationError) {
+            throw "$path accepted unsupported publishing version $versionString"
+        }
+        Assert-Equal 0 $calls.Count "Unsupported publishing must not write files"
+        return
+    }
+    if ($null -ne $validationError) {
+        throw $validationError
+    }
+
     $routing = $ast.EndBlock.Statements | Where-Object {
         $_ -is [System.Management.Automation.Language.IfStatementAst] -and
         $_.Clauses[0].Item1.Extent.Text -eq '$version.type -eq "release"'
@@ -62,7 +87,7 @@ function Test-Publishing($package, [string] $versionString, [string[]] $expected
 
     Assert-Equal ($expectedPaths -join ",") (($calls | ForEach-Object { $_.path }) -join ",") "$path $versionString destinations"
     $usesTestConfig = $package.path -eq "tools\config" -and
-        ($version.type -eq "beta" -or $version.type -eq "dev" -or $version.type -like "nightly*")
+        ($version.type -eq "dev" -or $version.type -eq "nightly")
     foreach ($call in $calls) {
         $expectedFiles = $releaseFiles
         if ($usesTestConfig) {
@@ -107,7 +132,7 @@ function Test-Activation($package, [string] $versionString, [string] $container,
     }
 
     $usesTestConfig = $package.path -eq "tools\config" -and
-        ($container -eq "dev" -or $container -eq "nightly" -or $version.type -eq "beta")
+        ($container -eq "dev" -or $container -eq "nightly")
     $selectedFiles = [System.Collections.Generic.List[hashtable]]::new()
     for ($idx = 0; $idx -lt $package.count; $idx++) {
         $selectedFiles.Add(@{ name = "file$idx" })
@@ -144,22 +169,59 @@ function Test-Activation($package, [string] $versionString, [string] $container,
     Assert-Equal $expectedPath $calls[0].path "$path activation destination"
 }
 
+function Test-Listing($package, [string] $container, [bool] $valid) {
+    $path = Join-Path $repoRoot "$($package.path)\scripts\listAzCdnVersions.ps1"
+    $ast = Read-Script $path
+    $calls = [System.Collections.Generic.List[string]]::new()
+    function Write-Log($message) {}
+    function Write-LogFailure($message) { throw $message }
+    function Get-AllVersionFiles($files, $storePath) { $calls.Add($storePath) }
+    function Get-AllTestVersionFiles($files, $storePath) { $calls.Add($storePath) }
+    function ListVersions($files, $activeOnly, $showFiles) {}
+    $validation = $ast.Find({
+        param($node)
+        $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq "Validate-Params"
+    }, $false)
+    . ([scriptblock]::Create($validation.Extent.Text))
+    $validationError = $null
+    try {
+        Validate-Params
+    } catch {
+        $validationError = $_
+    }
+    if (!$valid) {
+        if ($null -eq $validationError) {
+            throw "$path accepted unsupported listing container $container"
+        }
+        return
+    }
+    if ($null -ne $validationError) {
+        throw $validationError
+    }
+    $source = $ast.Extent.Text
+    . ([scriptblock]::Create($source.Substring($source.IndexOf('$files = New-Object'))))
+    Assert-Equal $true ($calls.Count -gt 0) "Supported listing must read files"
+    Assert-Equal 0 @($calls | Where-Object { $_ -like "beta*" }).Count "Listing must not enumerate the obsolete channel"
+}
+
 foreach ($package in $packages) {
     $suffix = $package.suffix
     Test-Publishing $package "3.4.5" @("next$suffix", $package.publicPath)
     Test-Publishing $package "3.4.5-rc.1" @("next$suffix")
-    Test-Publishing $package "3.4.5-beta.1" @("next$suffix")
-    Test-Publishing $package "3.4.5-beta.2+build7" @("next$suffix")
+    Test-Publishing $package "3.4.5-beta.1" @() $false
+    Test-Publishing $package "3.4.5-beta.2+build7" @() $false
     Test-Publishing $package "3.4.5-dev" @("dev$suffix")
     Test-Publishing $package "3.4.5-nightly.1" @("nightly$suffix")
-    Test-Publishing $package "3.4.5-nightlybeta.1" @("nightly$suffix")
+    Test-Publishing $package "3.4.5-nightlybeta.1" @() $false
+    Test-Publishing $package "3.4.5-custom.1" @() $false
     Test-Publishing $package "3.4.5-alpha.1" @("alpha$suffix")
 
     Test-Activation $package "3.4.5" "next" $true
     Test-Activation $package "3.4.5" "public" $true
     Test-Activation $package "3.4.5-rc.1" "next" $true
-    Test-Activation $package "3.4.5-beta.1" "next" $true
-    Test-Activation $package "3.4.5-beta.2+build7" "next" $true $true
+    Test-Activation $package "3.4.5-rc.2+build7" "next" $true $true
+    Test-Activation $package "3.4.5-beta.1" "next" $false
+    Test-Activation $package "3.4.5-beta.2+build7" "next" $false
     Test-Activation $package "3.4.5-dev" "dev" $true
     Test-Activation $package "3.4.5-nightly.1" "nightly" $true
     Test-Activation $package "3.4.5" "beta" $false
@@ -167,10 +229,14 @@ foreach ($package in $packages) {
     Test-Activation $package "3.4.5-beta.1" "beta" $false
     Test-Activation $package "3.4.5-beta.1" "public" $false
     Test-Activation $package "3.4.5-beta.1" "dev" $false
+    Test-Activation $package "3.4.5-nightlybeta.1" "nightly" $false
+    Test-Activation $package "3.4.5-custom.1" "custom" $false
 
-    $listing = Read-Script (Join-Path $repoRoot "$($package.path)\scripts\listAzCdnVersions.ps1")
-    Assert-Equal $true ($listing.Extent.Text.Contains('Get-AllVersionFiles $files "beta')) "$($package.path) must retain legacy beta listing"
-    Write-Output "PASS: $($package.path) publishing, activation and legacy listing"
+    foreach ($container in @("", "next", "public", "dev", "nightly")) {
+        Test-Listing $package $container $true
+    }
+    Test-Listing $package "beta" $false
+    Write-Output "PASS: $($package.path) supported publishing, activation and listing"
 }
 
 $e2e = Get-Content (Join-Path $repoRoot "AISKU\Tests\Unit\src\applicationinsights.e2e.tests.ts") -Raw

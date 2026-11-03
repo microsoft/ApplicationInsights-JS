@@ -49,8 +49,8 @@ Function Write-LogParams
 Function Validate-Params
 {
     # Validate parameters
-    if ([string]::IsNullOrWhiteSpace($container) -ne $true -and "beta","next","public", "dev", "nightly" -NotContains $container) {
-        Write-LogFailure "[$($container)] is not a valid value, must be beta, next or public"
+    if ([string]::IsNullOrWhiteSpace($container) -ne $true -and "next","public", "dev", "nightly" -NotContains $container) {
+        Write-LogFailure "[$($container)] is not a valid value, must be next, public, dev or nightly"
     }
 }
 
@@ -94,7 +94,6 @@ $files = New-Object 'system.collections.generic.dictionary[string, system.collec
 # Get the public files (scripts/b)
 if ([string]::IsNullOrWhiteSpace($container) -eq $true) {
     Get-AllVersionFiles $files "release/tools"
-    Get-AllVersionFiles $files "beta/tools"
     Get-AllVersionFiles $files "next/tools"
     Get-AllVersionFiles $files "dev/tools"
     Get-AllVersionFiles $files "nightly/tools"
@@ -103,7 +102,7 @@ if ([string]::IsNullOrWhiteSpace($container) -eq $true) {
 if ([string]::IsNullOrWhiteSpace($container) -ne $true) {
     if ($container -eq "public") {
         Get-AllVersionFiles $files "release/tools"
-    } elseif ($container -eq "beta" -or $container -eq "next" -or $container -eq "dev" -or $container -eq "nightly") {
+    } elseif ($container -eq "next" -or $container -eq "dev" -or $container -eq "nightly") {
         Get-AllVersionFiles $files "$container/tools"
     } else {
         $global:connectDetails.testOnly = $true
