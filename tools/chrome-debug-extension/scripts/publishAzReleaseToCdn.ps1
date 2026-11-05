@@ -89,6 +89,12 @@ $contentType = "application/zip";
 
 Write-LogParams
 
+$version = GetPackageVersion $jsSdkDir
+if ("release","rc","dev","nightly","alpha" -NotContains $version.type) {
+    Write-LogFailure "Version type [$($version.type)] is not supported"
+    exit 2
+}
+
 # You will need to at least have the Az modules installed
 InstallRequiredModules
 $global:connectDetails = ParseCdnStorePath $global:connectDetails
@@ -102,8 +108,6 @@ if ([string]::IsNullOrWhiteSpace($global:connectDetails.sasToken) -eq $true) {
 
 Write-Log "======================================================================"
 
-$version = GetPackageVersion $jsSdkDir
-
 $releaseFiles = GetReleaseFiles $version      # Get the versioned files only
 if ($null -eq $releaseFiles -or $releaseFiles.Count -eq 0) {
     Write-LogFailure "Unable to find any release files"
@@ -115,19 +119,17 @@ Write-Log "---------------------------------------------------------------------
 # Publish the full versioned files to all release folders
 if ($version.type -eq "release") {
     # Normal publishing deployment
-    PublishFiles $releaseFiles "beta/tools" $cacheControl1Year $contentType $overwrite
     PublishFiles $releaseFiles "next/tools" $cacheControl1Year $contentType $overwrite
     PublishFiles $releaseFiles "release/tools" $cacheControl1Year $contentType $overwrite
 }
 elseif ($version.type -eq "rc") {
-    PublishFiles $releaseFiles "beta/tools" $cacheControl1Year $contentType $overwrite
     PublishFiles $releaseFiles "next/tools" $cacheControl1Year $contentType $overwrite
 }
-elseif ($version.type -eq "dev" -or $version.type -eq "beta") {
+elseif ($version.type -eq "dev") {
     # Publish to release type folder folder
     PublishFiles $releaseFiles "$($version.type)/tools" $cacheControl1Year $contentType $overwrite
 }
-elseif ($version.type -like "nightly*") {
+elseif ($version.type -eq "nightly") {
     # Publish to release nightly folder folder
     PublishFiles $releaseFiles "nightly/tools" $cacheControl1Year $contentType $overwrite
 }

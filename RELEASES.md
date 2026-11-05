@@ -4,6 +4,14 @@
 
 ## Unreleased Changes
 
+### Significant Changes
+
+- CDN preview deployment now uses `next` instead of `beta` across the SDK, extensions, tools, and configuration.
+  Stable release artifacts publish to `next` and their existing production destinations; release candidates publish only to `next`.
+  Beta CDN publishing, activation, and listing options are removed, while existing CDN artifacts and production URLs remain unchanged.
+  Dev/nightly folders, alpha test-storage isolation, npm prerelease tags, and version-generation tooling are unchanged.
+  The SDK CDN monitor now checks `next`.
+
 ### Bug Fixes
 
 - Automatic payload compression is now limited to recognized Microsoft Application Insights ingestion endpoints. Custom endpoints and

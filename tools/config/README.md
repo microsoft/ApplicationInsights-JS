@@ -8,13 +8,13 @@ V1
 
 ## Endpoints
 
-### Beta
-
-https://js.monitor.azure.com/beta/ai.config.1.cfg.json
-
 ### Next
 
 https://js.monitor.azure.com/next/ai.config.1.cfg.json
+
+New releases and release candidates are published to `next`. Dev and nightly builds retain the
+`ai_test.config.*` prefix and their corresponding folders. Unsupported release types fail validation;
+beta release/channel options are no longer supported. Existing CDN files remain untouched.
 
 ### Public
 

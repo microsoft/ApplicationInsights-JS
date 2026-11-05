@@ -870,18 +870,19 @@ As with the normal release process the nightly builds also include major, minor,
 When a new release is deployed the following occurs as part of the release
 
 - NPM packages are created and published to [NpmJs](https://www.npmjs.com/package/@microsoft/applicationinsights-web)
-- The new explicit versioned files (eg. `ai.2.7.2.js`; `ai.2.7.2.min.js`; `ai.2.7.2.gbl.min.js`; `ai.2.7.2.min.js.map`; etc) are uploaded to all cdn endpoints URL's (public, next and beta - details below)
+- The new explicit versioned release files (eg. `ai.2.7.2.js`; `ai.2.7.2.min.js`; `ai.2.7.2.gbl.min.js`; `ai.2.7.2.min.js.map`; etc) are uploaded to the public and next CDN endpoints (details below). Release candidates are uploaded only to next.
 - We then go through a deployment process of "promoting" the new version to the "Major" (`ai.3.gbl.min.js`) and "Minor" (`ai.3.x.gbl.min.js`) release URL's to upgrade everyone to the newly released version based on the schedule listed below
 
 | Endpoint | Url | Schedule
 |----------|-------------|--------
-| Beta | https://js.monitor.azure.com/beta/ai.3.gbl.min.js | Same day as the NPM release
-| Next | https://js.monitor.azure.com/next/ai.3.gbl.min.js | One additional work day after the `beta` URL promotion.
-| Public | https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js | Another One additional work day after the `next` URL promotion, (so 2 work days after initial release) unless this falls on the last work day of the week (eg. Friday) in which case it will be delayed until the first work day of the next work week.
+| Next | https://js.monitor.azure.com/next/ai.3.gbl.min.js | Initial promotion after the NPM release.
+| Public | https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js | Promoted after next validation according to the release deployment plan; the production URL is unchanged.
+
+The beta CDN channel is no longer supported by CDN publishing, activation or listing tools. Existing CDN files remain available for legacy consumers; npm prerelease tags and version-generation tooling are unchanged.
 
 The milestones for each release should include both the deployment plan (as it's about to be released) or the final release times as with [v2.7.2](https://github.com/microsoft/ApplicationInsights-JS/milestone/58)
 
-It is expected that most users will be using the `Public` URL, however, it is also recommended that if you have a test or canary environment that you should use either the `beta` or `next` URL's so that you would be alerted first before any production users are impacted. If any issues are detected with the `beta` or `next` URL's as a new release is being deployed please raise a new [Issue](https://github.com/microsoft/ApplicationInsights-JS/issues) as soon as this is confirmed.
+It is expected that most users will be using the `Public` URL, however, it is also recommended that if you have a test or canary environment that you should use the `next` URL so that you would be alerted first before any production users are impacted. If any issues are detected with the `next` URL as a new release is being deployed please raise a new [Issue](https://github.com/microsoft/ApplicationInsights-JS/issues) as soon as this is confirmed.
 
 ## Release Notes
 
