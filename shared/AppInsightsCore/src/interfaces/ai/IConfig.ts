@@ -126,14 +126,17 @@ export interface IConfig {
     disableDataLossAnalysis?: boolean;
 
     /**
-     * If false, the SDK will add two headers ('Request-Id' and 'Request-Context') to all dependency requests to correlate them with corresponding requests on the server side. Default is false.
+     * If true, disable correlation headers on dependency requests. If false, requests must still be allowed by
+     * enableCorsCorrelation, correlationHeaderDomains, correlationHeaderExcludedDomains and correlationHeaderExcludePatterns.
+     * distributedTracingMode controls the trace header format. Request-Context is added only when an appId is available.
      * @defaultValue false
      */
     disableCorrelationHeaders?: boolean;
 
     /**
-     * Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests.
-     * AI_AND_W3C is provided for back-compatibility with any legacy Application Insights instrumented services
+     * Selects the trace header format for eligible dependency requests. AI adds Request-Id, W3C adds traceparent,
+     * and AI_AND_W3C adds both for backward compatibility with legacy Application Insights services.
+     * The correlation header enablement settings and filters still apply.
      * @defaultValue AI_AND_W3C
      */
     distributedTracingMode?: DistributedTracingModes;
@@ -246,7 +249,9 @@ export interface IConfig {
     appId?: string;
 
     /**
-     * If true, the SDK will add two headers ('Request-Id' and 'Request-Context') to all CORS requests to correlate outgoing AJAX dependencies with corresponding requests on the server side. Default is false
+     * If true, allow correlation headers on requests to other hosts. If false, headers are allowed only when
+     * the request host matches the page host. disableCorrelationHeaders: true and the domain and URL exclusion
+     * settings still take precedence.
      * @defaultValue false
      */
     enableCorsCorrelation?: boolean;
