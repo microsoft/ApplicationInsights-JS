@@ -2,7 +2,7 @@
 
 ## Overview
 
-Application Insights Web SDK tracks several page lifecycle events to ensure that telemetry data is sent before a page is unloaded, helping to prevent data loss during page navigation or browser closure. The SDK hooks into different unload and visibility change events depending on the browser environment.
+Application Insights Web SDK uses page lifecycle events to flush buffered telemetry during page navigation, browser closure, and visibility changes. This is best effort: browsers can terminate a page before its handlers run or its requests complete.
 
 ## Unload Events
 
@@ -17,11 +17,11 @@ The SDK listens to the following events to detect when a page is being unloaded:
 
 Modern browsers and frameworks are deprecating or changing how some page unload events work:
 
-- **Chrome** is deprecating the `unload` event and no longer runs `unload` handlers by default; adding one logs a "Permissions policy violation: unload is not allowed in this document" console error and prevents the page from using the back/forward cache. See [Deprecating the unload event](https://developer.chrome.com/docs/web-platform/deprecating-unload).
+- **Chrome on desktop and Android** no longer runs `unload` handlers by default unless a site explicitly opts out of the deprecation. Registering a listener does not establish that it will run. See [Deprecating the unload event](https://developer.chrome.com/docs/web-platform/deprecating-unload).
 - **jQuery 3.7.1+** has deprecated the use of the `unload` event, showing warning messages when it's used.
 - Some modern browsers are changing the behavior of `beforeunload` event for better performance and reduced tracking potential.
 - The `pagehide` event and `visibilitychange` events are becoming the recommended alternatives.
-- The SDK is designed to handle cases where certain events are unavailable or behave differently across browsers, gracefully adapting to the environment to ensure telemetry is sent.
+- The SDK retries listener registration when its preferred events cannot be registered.
 - **By default the SDK no longer hooks the `unload` event**, it is only used as a fallback when neither `beforeunload` nor `pagehide` could be hooked.
 
 ## Configuration Options
@@ -47,8 +47,8 @@ const appInsights = new ApplicationInsights({
 
 **Important notes**:
 
-- The SDK requires at least one functioning page unload event to ensure telemetry is sent when the page is closed.
-- If all events are listed in `disablePageUnloadEvents` or if the only working events in the current browser environment are the ones you've disabled, the SDK will still use one of them to ensure functionality.
+- The SDK tries to register at least one unload-related listener for page-exit flushing.
+- If the exclusions prevent all listener registrations, the SDK retries without those exclusions. Registration can still fail if the environment cannot attach any listeners.
 - This option is especially useful for avoiding jQuery 3.7.1+ deprecation warnings by excluding the "unload" event.
 
 ### disablePageShowEvents
@@ -73,13 +73,14 @@ const appInsights = new ApplicationInsights({
 
 ## Fallback Mechanism
 
-The SDK implements a robust fallback mechanism to ensure that telemetry can be sent before the page unloads:
+The fallback mechanism responds to listener registration failures:
 
-1. The SDK first tries to use all available unload events except those listed in `disablePageUnloadEvents`.
-2. If no events can be registered (either because all are disabled or not supported), the SDK will ignore the `disablePageUnloadEvents` setting and force registration of at least one event.
-3. Even when the SDK attempts to hook events that may be missing in certain browsers, it's designed to gracefully handle these cases without errors.
-4. The SDK includes internal logic to detect when hooked events aren't firing as expected and will utilize alternative approaches to send telemetry.
-5. This ensures that critical telemetry data is always sent, even in constrained environments or when browser implementations change.
+1. The SDK first tries `beforeunload` and `pagehide`, respecting `disablePageUnloadEvents`.
+2. If neither listener can be registered, it tries `unload`, still respecting the exclusions.
+3. If registration still fails and exclusions were provided, it retries without them, preferring `beforeunload` and `pagehide` before `unload`.
+4. For hidden-page flushing, the SDK separately tries `pagehide` and `visibilitychange` with the `hidden` state. These listeners also retry without exclusions if neither can be registered.
+
+Successful registration does not guarantee that an event will fire or that telemetry will reach the server. A browser can accept a listener for an event it does not dispatch, or discard the page without running a final handler. See the [Page Lifecycle API guidance](https://developer.chrome.com/docs/web-platform/page-lifecycle-api).
 
 ## Use Cases
 
@@ -111,13 +112,13 @@ import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 const appInsights = new ApplicationInsights({
   config: {
     connectionString: 'YOUR_CONNECTION_STRING_GOES_HERE',
-    // Use only modern events
+    // Prefer modern events
     disablePageUnloadEvents: ["unload", "beforeunload"],
   }
 });
 ```
 
-Note that the SDK will still use an older event if none of the modern events are supported in the browser environment.
+If no preferred listener can be registered, the fallback may retry without the exclusions. Successful registration does not confirm that the browser will dispatch the event.
 
 ### Using Both Configuration Options Together
 
