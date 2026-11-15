@@ -114,6 +114,31 @@ export class UtilTests extends AITestClass {
                 Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("https://wwW2.p.r.e.f.i.x.bing.com:443/", true));
                 Assert.equal("p.r.e.f.i.x.bing.com:443", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com:443/", true));
                 Assert.equal("p.r.e.f.i.x.bing.com:80", urlParseHost("https://wwW2.p.r.e.f.i.x.bing.com:80/", true));
+
+                // IPv6 literals
+                Assert.equal("[::1]", urlParseHost("http://[::1]"));
+                Assert.equal("[::1]", urlParseHost("http://[::1]/some/endpoint"));
+                Assert.equal("[::1]", urlParseHost("http://[::1]:8080/some/endpoint"));
+                Assert.equal("[::1]", urlParseHost("http://[::1]:8080/some/endpoint", false));
+                Assert.equal("[::1]:8080", urlParseHost("http://[::1]:8080/some/endpoint", true));
+                Assert.equal("[::1]", urlParseHost("http://[::1]:80/some/endpoint", true));
+                Assert.equal("[::1]", urlParseHost("https://[::1]:443/some/endpoint", true));
+                Assert.equal("[::1]:80", urlParseHost("https://[::1]:80/some/endpoint", true));
+                Assert.equal("[::1]:443", urlParseHost("http://[::1]:443/some/endpoint", true));
+                Assert.equal("[2001:db8::1]", urlParseHost("https://[2001:db8::1]/path"));
+                Assert.equal("[2001:db8::1]:9999", urlParseHost("https://[2001:db8::1]:9999/path", true));
+
+                // URLs with userinfo
+                Assert.equal("api.example.com", urlParseHost("https://user:pw@api.example.com:8080/api"));
+                Assert.equal("api.example.com", urlParseHost("https://user:pw@api.example.com:8080/api", false));
+                Assert.equal("api.example.com:8080", urlParseHost("https://user:pw@api.example.com:8080/api", true));
+                Assert.equal("api.example.com", urlParseHost("https://user@api.example.com/api"));
+                Assert.equal("api.example.com", urlParseHost("https://user@api.example.com:8080/api", false));
+                Assert.equal("api.example.com:8080", urlParseHost("https://user@api.example.com:8080/api", true));
+                Assert.equal("[::1]:8080", urlParseHost("http://user:pw@[::1]:8080/api", true));
+                Assert.equal("[::1]", urlParseHost("http://user:pw@[::1]:8080/api", false));
+                Assert.equal("bing.com", urlParseHost("https://user:pw@www.bing.com:8080/api"));
+                Assert.equal("bing.com:8080", urlParseHost("https://user:pw@www.bing.com:8080/api", true));
             }
         });
 
@@ -164,6 +189,59 @@ export class UtilTests extends AITestClass {
                 Assert.equal("wwW2.p.r.e.f.i.x.bing.com", urlParseFullHost("https://wwW2.p.r.e.f.i.x.bing.com:443/", true));
                 Assert.equal("wwW2.p.r.e.f.i.x.bing.com:443", urlParseFullHost("http://wwW2.p.r.e.f.i.x.bing.com:443/", true));
                 Assert.equal("wwW2.p.r.e.f.i.x.bing.com:80", urlParseFullHost("https://wwW2.p.r.e.f.i.x.bing.com:80/", true));
+
+                // IPv6 literals
+                Assert.equal("[::1]", urlParseFullHost("http://[::1]"));
+                Assert.equal("[::1]", urlParseFullHost("http://[::1]/some/endpoint"));
+                Assert.equal("[::1]", urlParseFullHost("http://[::1]:8080/some/endpoint"));
+                Assert.equal("[::1]", urlParseFullHost("http://[::1]:8080/some/endpoint", false));
+                Assert.equal("[::1]:8080", urlParseFullHost("http://[::1]:8080/some/endpoint", true));
+                Assert.equal("[::1]", urlParseFullHost("http://[::1]:80/some/endpoint", true));
+                Assert.equal("[::1]", urlParseFullHost("https://[::1]:443/some/endpoint", true));
+                Assert.equal("[::1]:80", urlParseFullHost("https://[::1]:80/some/endpoint", true));
+                Assert.equal("[::1]:443", urlParseFullHost("http://[::1]:443/some/endpoint", true));
+                Assert.equal("[2001:db8::1]", urlParseFullHost("https://[2001:db8::1]/path"));
+                Assert.equal("[2001:db8::1]:9999", urlParseFullHost("https://[2001:db8::1]:9999/path", true));
+
+                // URLs with userinfo
+                Assert.equal("api.example.com", urlParseFullHost("https://user:pw@api.example.com:8080/api"));
+                Assert.equal("api.example.com", urlParseFullHost("https://user:pw@api.example.com:8080/api", false));
+                Assert.equal("api.example.com:8080", urlParseFullHost("https://user:pw@api.example.com:8080/api", true));
+                Assert.equal("api.example.com", urlParseFullHost("https://user@api.example.com/api"));
+                Assert.equal("api.example.com", urlParseFullHost("https://user@api.example.com:8080/api", false));
+                Assert.equal("api.example.com:8080", urlParseFullHost("https://user@api.example.com:8080/api", true));
+                Assert.equal("[::1]:8080", urlParseFullHost("http://user:pw@[::1]:8080/api", true));
+                Assert.equal("[::1]", urlParseFullHost("http://user:pw@[::1]:8080/api", false));
+                Assert.equal("www.bing.com", urlParseFullHost("https://user:pw@www.bing.com:8080/api"));
+                Assert.equal("www.bing.com:8080", urlParseFullHost("https://user:pw@www.bing.com:8080/api", true));
+            }
+        });
+
+        this.testCase({
+            name: "CorrelationidHelper: canIncludeCorrelationHeader check with IPv6 literals and userinfo",
+            test: () => {
+                const emptyConfig = {} as ICorrelationConfig;
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "http://[::1]:8080/api", "[::1]:8080"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "http://[::1]:80/api", "[::1]"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "https://[::1]:443/api", "[::1]"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "http://[::1]:8000/api", "[::1]:8000"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "https://[::1]:4433/api", "[::1]:4433"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(emptyConfig, "http://[::1]:8080/api", "[::1]:9000"));
+
+                // Userinfo
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "https://user:pw@api.example.com:8080/api", "api.example.com:8080"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "https://user@api.example.com/api", "api.example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "http://user:pw@[::1]:8080/api", "[::1]:8080"));
+
+                // With correlationHeaderDomains
+                const config = {
+                    enableCorsCorrelation: true,
+                    correlationHeaderDomains: ["::1", "api.example.com"]
+                } as ICorrelationConfig;
+
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "http://[::1]:8080/api", "otherhost.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://user:pw@api.example.com:8080/api", "otherhost.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://[::2]:8080/api", "otherhost.com"));
             }
         });
 
