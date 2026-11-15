@@ -80,7 +80,7 @@ export function urlParseHost(url: string, inclPort?: boolean) {
 export function urlParseFullHost(url: string, inclPort?: boolean) {
     let result = null;
     if (url) {
-        const match = url.match(/(\w{1,150}):\/\/(?:[^@\/\?#]+@)?(\[[^\]\/\?#]{1,256}\]|[^\[\]\/\?:#@]{1,256})(:\d{1,20})?/i);
+        const match = url.match(/(\w{1,150}):\/\/(?:[^\/\\\?#]*@)?(\[[^\]\/\\\?#]{1,256}\]|[^\[\]\/\\\?:#@]{1,256})(:\d{1,20})?/i);
         if (match != null && match.length > 2 && isString(match[2]) && match[2].length > 0) {
             result = match[2] || STR_EMPTY;
             if (inclPort && match.length > 2) {
