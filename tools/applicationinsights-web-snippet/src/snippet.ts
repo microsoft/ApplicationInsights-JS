@@ -413,6 +413,10 @@ declare var cfg:ISnippetConfig;
             // eslint-disable-next-line no-empty
         }
     
+        let strStart = "start";
+        let strStop = "stop";
+        let strTrackPage = "TrackPage";
+        let strTrackEvent = "TrackEvent";
         function _createMethods(methods:any[]) {
             while (methods.length) {
                 (function (name) {
@@ -421,10 +425,38 @@ declare var cfg:ISnippetConfig;
                         // Capture the original arguments passed to the method
                         let originalArguments = arguments;
                         if (!loadFailed) { // If we have detected that the main script failed to load then stop queuing events that will never be processed
+                            let callTime = +new Date;
+                            let args: any = originalArguments;
+                            if (name === strStart + strTrackPage || name === strStart + strTrackEvent) {
+                                if (originalArguments.length === 0) {
+                                    args = [undefined, callTime];
+                                } else if (originalArguments.length === 1 || originalArguments[1] === undefined) {
+                                    args = [originalArguments[0], originalArguments[1] || callTime];
+                                }
+                            } else if (name === strStop + strTrackPage) {
+                                if (originalArguments.length <= 4 || originalArguments[4] === undefined) {
+                                    args = [
+                                        originalArguments[0],
+                                        originalArguments[1],
+                                        originalArguments[2],
+                                        originalArguments[3],
+                                        originalArguments[4] || callTime
+                                    ];
+                                }
+                            } else if (name === strStop + strTrackEvent) {
+                                if (originalArguments.length <= 3 || originalArguments[3] === undefined) {
+                                    args = [
+                                        originalArguments[0],
+                                        originalArguments[1],
+                                        originalArguments[2],
+                                        originalArguments[3] || callTime
+                                    ];
+                                }
+                            }
                             // Queue-up a call to the real method
                             appInsights.queue.push(function () {
                                 // Invoke the real method with the captured original arguments
-                                appInsights[name].apply(appInsights, originalArguments);
+                                appInsights[name].apply(appInsights, args);
                             });
                         }
                     };

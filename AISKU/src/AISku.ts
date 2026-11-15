@@ -887,7 +887,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
      * and send the event.
      * @param name - A string that idenfities this item, unique within this HTML document. Defaults to the document title.
      */
-    public startTrackPage(name?: string): void {
+    public startTrackPage(name?: string, timestamp?: number): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -899,11 +899,11 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
      * @param   properties - additional data used to filter pages and metrics in the portal. Defaults to empty.
      * @param   measurements - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
-    public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) {
+    public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }, timestamp?: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public startTrackEvent(name?: string): void {
+    public startTrackEvent(name?: string, timestamp?: number): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -913,7 +913,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
      * @param   properties - map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
      * @param   measurements -  map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
-    public stopTrackEvent(name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) {
+    public stopTrackEvent(name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }, timestamp?: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

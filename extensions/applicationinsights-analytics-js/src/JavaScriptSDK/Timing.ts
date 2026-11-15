@@ -10,9 +10,9 @@ import {
  * @internal
  */
 export interface ITiming {
-    action: (name?: string, url?: string, duration?: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => void;
-    start: (name: string) => void;
-    stop: (name: string, url: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => void;
+    action: (name?: string, url?: string, duration?: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }, startTime?: number) => void;
+    start: (name: string, timestamp?: number) => void;
+    stop: (name: string, url: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }, timestamp?: number) => void;
 }
 
 /**
@@ -27,25 +27,25 @@ export function createTiming(logger: IDiagnosticLogger, name: string): ITiming {
 
     const timing: ITiming = {
         action: null, // Will be set by the caller
-        start: (name: string) => {
+        start: (name: string, timestamp?: number) => {
             if (typeof _events[name] !== "undefined") {
                 _throwInternal(logger,
                     eLoggingSeverity.WARNING, _eInternalMessageId.StartCalledMoreThanOnce, "start was called more than once for this event without calling stop.",
                     { name, key: name }, true);
             }
     
-            _events[name] = +new Date;
+            _events[name] = typeof timestamp === "number" && !isNaN(timestamp) ? timestamp : +new Date;
         },
-        stop: (name: string, url: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => {
+        stop: (name: string, url: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }, timestamp?: number) => {
             const start = _events[name];
             if (isNaN(start)) {
                 _throwInternal(logger,
                     eLoggingSeverity.WARNING, _eInternalMessageId.StopCalledWithoutStart, "stop was called without a corresponding start.",
                     { name, key: name }, true);
             } else {
-                const end = +new Date;
+                const end = typeof timestamp === "number" && !isNaN(timestamp) ? timestamp : +new Date;
                 const duration = dateTimeUtilsDuration(start, end);
-                timing.action(name, url, duration, properties, measurements);
+                timing.action(name, url, duration, properties, measurements, start);
             }
     
             delete _events[name];

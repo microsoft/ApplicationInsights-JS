@@ -1,4 +1,4 @@
-﻿(function (win, doc, snipConfig) {
+(function (win, doc, snipConfig) {
     var locn = win.location;
     var helpLink = "https://go.microsoft.com/fwlink/?linkid=2128109";
     var scriptText = "script";
@@ -223,6 +223,10 @@
             appInsights.cookie = doc.cookie;
         } catch (e) { }
     
+        var track = "track";
+        var trackPage = "TrackPage";
+        var trackEvent = "TrackEvent";
+
         function _createMethods(methods) {
             while (methods.length) {
                 (function (name) {
@@ -231,10 +235,38 @@
                         // Capture the original arguments passed to the method
                         var originalArguments = arguments;
                         if (!loadFailed) { // If we have detected that the main script failed to load then stop queuing events that will never be processed
+                            var callTime = +new Date;
+                            var args = originalArguments;
+                            if (name === "start" + trackPage || name === "start" + trackEvent) {
+                                if (originalArguments.length === 0) {
+                                    args = [undefined, callTime];
+                                } else if (originalArguments.length === 1 || originalArguments[1] === undefined) {
+                                    args = [originalArguments[0], originalArguments[1] || callTime];
+                                }
+                            } else if (name === "stop" + trackPage) {
+                                if (originalArguments.length <= 4 || originalArguments[4] === undefined) {
+                                    args = [
+                                        originalArguments[0],
+                                        originalArguments[1],
+                                        originalArguments[2],
+                                        originalArguments[3],
+                                        originalArguments[4] || callTime
+                                    ];
+                                }
+                            } else if (name === "stop" + trackEvent) {
+                                if (originalArguments.length <= 3 || originalArguments[3] === undefined) {
+                                    args = [
+                                        originalArguments[0],
+                                        originalArguments[1],
+                                        originalArguments[2],
+                                        originalArguments[3] || callTime
+                                    ];
+                                }
+                            }
                             // Queue-up a call to the real method
                             appInsights.queue.push(function () {
                                 // Invoke the real method with the captured original arguments
-                                appInsights[name].apply(appInsights, originalArguments);
+                                appInsights[name].apply(appInsights, args);
                             });
                         }
                     };
@@ -242,9 +274,6 @@
             }
         }
 
-        var track = "track";
-        var trackPage = "TrackPage";
-        var trackEvent = "TrackEvent";
         _createMethods([track + "Event", 
             track + "PageView", 
             track + "Exception", 

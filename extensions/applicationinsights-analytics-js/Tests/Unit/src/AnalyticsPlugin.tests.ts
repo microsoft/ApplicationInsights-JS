@@ -1466,6 +1466,75 @@ export class AnalyticsPluginTests extends AITestClass {
                 Assert.equal(testValues.measurements.measurement, actualMeasurements.measurement);
             }
         });
+
+        this.testCase({
+            name: "Timing Tests: Start/StopPageView with custom timestamps calculates duration and sets startTime",
+            test: () => {
+                // setup
+                const plugin = new ChannelPlugin();
+                const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                core.initialize(
+                    { instrumentationKey: "key" },
+                    [plugin]
+                );
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
+                const spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
+
+                // act
+                const startTs = 1000;
+                const stopTs = 3500;
+                appInsights.startTrackPage("CustomPage", startTs);
+                appInsights.stopTrackPage("CustomPage", "http://custom-url", null, null, stopTs);
+
+                // verify
+                Assert.ok(spy.calledOnce, "stop track page view sent data");
+                const actual = spy.args[0][0];
+                Assert.equal("CustomPage", actual.name);
+                Assert.equal("http://custom-url", actual.uri);
+                Assert.equal("2500", actual.properties.duration, "duration calculated from custom timestamps");
+                Assert.equal(startTs, actual.startTime.getTime(), "startTime reflects startTrackPage timestamp");
+            }
+        });
+
+        this.testCase({
+            name: "Timing Tests: Start/StopTrackEvent with custom timestamps calculates duration",
+            test: () => {
+                // setup
+                const plugin = new ChannelPlugin();
+                const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                core.initialize(
+                    { instrumentationKey: "key" },
+                    [plugin]
+                );
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
+                const trackStub = this.sandbox.stub(core, "track");
+
+                // act
+                const startTs = 2000;
+                const stopTs = 4200;
+                appInsights.startTrackEvent("CustomEvent", startTs);
+                appInsights.stopTrackEvent("CustomEvent", null, null, stopTs);
+
+                // verify
+                Assert.ok(trackStub.calledOnce, "track event sent data");
+                const telemetry: ITelemetryItem = trackStub.args[0][0];
+                Assert.equal("CustomEvent", telemetry.baseData.name);
+                Assert.equal("2200", telemetry.baseData.properties.duration, "duration calculated from custom timestamps");
+            }
+        });
+
         this.testCase({
             name: "Timing Tests: Start/StopPageView tracks single page view with no parameters",
             useFakeTimers: true,
