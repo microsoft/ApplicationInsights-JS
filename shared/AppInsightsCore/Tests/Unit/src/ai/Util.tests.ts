@@ -61,6 +61,34 @@ export class UtilTests extends AITestClass {
         });
 
         this.testCase({
+            name: "UrlHelper: parseUrl and correlationIdCanIncludeCorrelationHeader treat backslash as authority boundary without DOM",
+            test: () => {
+                const origCreateElement = document.createElement;
+                document.createElement = null;
+
+                let parsedHost: string;
+                let canIncludeTrusted: boolean;
+
+                try {
+                    const testUrl = "https://external.example:8080\\@trusted.example/api";
+                    parsedHost = urlParseUrl(testUrl).host;
+
+                    const config = {
+                        enableCorsCorrelation: true,
+                        correlationHeaderDomains: ["trusted.example"]
+                    } as ICorrelationConfig;
+
+                    canIncludeTrusted = correlationIdCanIncludeCorrelationHeader(config, testUrl, "current.example");
+                } finally {
+                    document.createElement = origCreateElement;
+                }
+
+                Assert.equal("external.example:8080", parsedHost);
+                Assert.equal(false, canIncludeTrusted, "Should not include correlation header because target host is external.example, not trusted.example");
+            }
+        });
+
+        this.testCase({
             name: "UrlHelper: parseHost should return correct host name",
             test: () => {
                 Assert.equal("portal.azure.com", urlParseHost("https://portal.azure.com/some/endpoint"));
@@ -139,6 +167,11 @@ export class UtilTests extends AITestClass {
                 Assert.equal("[::1]", urlParseHost("http://user:pw@[::1]:8080/api", false));
                 Assert.equal("bing.com", urlParseHost("https://user:pw@www.bing.com:8080/api"));
                 Assert.equal("bing.com:8080", urlParseHost("https://user:pw@www.bing.com:8080/api", true));
+
+                // Backslash authority boundaries
+                Assert.equal("external.example:8080", urlParseHost("https://external.example:8080\\@trusted.example/api", true));
+                Assert.equal("external.example", urlParseHost("https://external.example:8080\\@trusted.example/api", false));
+                Assert.equal("external.example", urlParseHost("https://external.example\\@trusted.example/api"));
             }
         });
 
@@ -214,6 +247,11 @@ export class UtilTests extends AITestClass {
                 Assert.equal("[::1]", urlParseFullHost("http://user:pw@[::1]:8080/api", false));
                 Assert.equal("www.bing.com", urlParseFullHost("https://user:pw@www.bing.com:8080/api"));
                 Assert.equal("www.bing.com:8080", urlParseFullHost("https://user:pw@www.bing.com:8080/api", true));
+
+                // Backslash authority boundaries
+                Assert.equal("external.example:8080", urlParseFullHost("https://external.example:8080\\@trusted.example/api", true));
+                Assert.equal("external.example", urlParseFullHost("https://external.example:8080\\@trusted.example/api", false));
+                Assert.equal("external.example", urlParseFullHost("https://external.example\\@trusted.example/api"));
             }
         });
 
