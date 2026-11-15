@@ -67,11 +67,15 @@ export class UtilTests extends AITestClass {
                 document.createElement = null;
 
                 let parsedHost: string;
+                let parsedEmptyUserinfoHost: string;
+                let parsedMultipleAtHost: string;
                 let canIncludeTrusted: boolean;
 
                 try {
                     const testUrl = "https://external.example:8080\\@trusted.example/api";
                     parsedHost = urlParseUrl(testUrl).host;
+                    parsedEmptyUserinfoHost = urlParseUrl("https://@api.example.com:8080/api").host;
+                    parsedMultipleAtHost = urlParseUrl("https://user:p@ss@api.example.com:8080/api").host;
 
                     const config = {
                         enableCorsCorrelation: true,
@@ -84,6 +88,8 @@ export class UtilTests extends AITestClass {
                 }
 
                 Assert.equal("external.example:8080", parsedHost);
+                Assert.equal("api.example.com:8080", parsedEmptyUserinfoHost);
+                Assert.equal("api.example.com:8080", parsedMultipleAtHost);
                 Assert.equal(false, canIncludeTrusted, "Should not include correlation header because target host is external.example, not trusted.example");
             }
         });
@@ -172,6 +178,12 @@ export class UtilTests extends AITestClass {
                 Assert.equal("external.example:8080", urlParseHost("https://external.example:8080\\@trusted.example/api", true));
                 Assert.equal("external.example", urlParseHost("https://external.example:8080\\@trusted.example/api", false));
                 Assert.equal("external.example", urlParseHost("https://external.example\\@trusted.example/api"));
+
+                // Empty userinfo and multiple @ in userinfo
+                Assert.equal("api.example.com:8080", urlParseHost("https://@api.example.com:8080/api", true));
+                Assert.equal("api.example.com", urlParseHost("https://@api.example.com:8080/api", false));
+                Assert.equal("api.example.com:8080", urlParseHost("https://user:p@ss@api.example.com:8080/api", true));
+                Assert.equal("api.example.com", urlParseHost("https://user:p@ss@api.example.com:8080/api", false));
             }
         });
 
@@ -252,6 +264,12 @@ export class UtilTests extends AITestClass {
                 Assert.equal("external.example:8080", urlParseFullHost("https://external.example:8080\\@trusted.example/api", true));
                 Assert.equal("external.example", urlParseFullHost("https://external.example:8080\\@trusted.example/api", false));
                 Assert.equal("external.example", urlParseFullHost("https://external.example\\@trusted.example/api"));
+
+                // Empty userinfo and multiple @ in userinfo
+                Assert.equal("api.example.com:8080", urlParseFullHost("https://@api.example.com:8080/api", true));
+                Assert.equal("api.example.com", urlParseFullHost("https://@api.example.com:8080/api", false));
+                Assert.equal("api.example.com:8080", urlParseFullHost("https://user:p@ss@api.example.com:8080/api", true));
+                Assert.equal("api.example.com", urlParseFullHost("https://user:p@ss@api.example.com:8080/api", false));
             }
         });
 
