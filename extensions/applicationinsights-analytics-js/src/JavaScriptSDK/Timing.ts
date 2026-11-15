@@ -44,7 +44,7 @@ export function createTiming(logger: IDiagnosticLogger, name: string): ITiming {
                     { name, key: name }, true);
             } else {
                 const end = typeof timestamp === "number" && !isNaN(timestamp) ? timestamp : +new Date;
-                const duration = dateTimeUtilsDuration(start, end);
+                const duration = start === 0 || end === 0 ? end - start : dateTimeUtilsDuration(start, end);
                 timing.action(name, url, duration, properties, measurements, start);
             }
     
