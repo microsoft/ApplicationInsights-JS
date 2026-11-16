@@ -191,7 +191,7 @@ var coreConfig: IExtendedConfiguration = {
 
 ## Contributing
 
-Read our [contributing guide](./CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Application Insights.
+Read our [contributing guide](https://github.com/microsoft/ApplicationInsights-JS/blob/main/shared/1ds-core-js/CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Application Insights.
 
 ## Data Collection
 

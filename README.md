@@ -81,7 +81,7 @@ ES3 support has been removed from the latest version (v3.x), if required [see fo
 
 
 > :bulb: **Note**
-> When multiple instances of Application Insights with different major version are active within a single session, errors may arise. For further details, please refer to the [version conflict doc](./versionConflict.md).
+> When multiple instances of Application Insights with different major version are active within a single session, errors may arise. For further details, please refer to the [version conflict doc](https://github.com/microsoft/ApplicationInsights-JS/blob/main/versionConflict.md).
 
 ## Getting Started
 
@@ -592,7 +592,7 @@ const appInsights = new ApplicationInsights({
 
 | Name | Type | Default | Extenstion | Description |
 |------|------|---------|---------|-------------|
-| [ignoreHeaders](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IDependenciesPluginConfig.html#ignoreHeaders) | string[] | ["Authorization", "X-API-Key", "WWW-Authenticate"] | DependenciesPlugin | AJAX & Fetch request and response headers to be ignored in log data. To override or discard the default, add an array with all headers to be excluded or an empty array to the configuration. Need to be defined in depenedency plugin extension config, see more [here](./extensions/applicationinsights-dependencies-js/README.md)
+| [ignoreHeaders](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IDependenciesPluginConfig.html#ignoreHeaders) | string[] | ["Authorization", "X-API-Key", "WWW-Authenticate"] | DependenciesPlugin | AJAX & Fetch request and response headers to be ignored in log data. To override or discard the default, add an array with all headers to be excluded or an empty array to the configuration. Need to be defined in depenedency plugin extension config, see more [here](https://github.com/microsoft/ApplicationInsights-JS/blob/main/extensions/applicationinsights-dependencies-js/README.md)
 
 ### [ICookieMgrConfig](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html)
 
@@ -651,7 +651,7 @@ So you will need to only call or access the manager from within the onInit() cal
 
 As part of changes being introduced in version 2.6.0 we are deprecating and removing the *internal* usages of the static helper classes `CoreUtils`, `EventHelper`, `Util`, `UrlHelper`, `DateTimeUtils` and `ConnectionStringParser` to provide better support for tree-shaking algorithms so that unused code can be safely dropped when using NPM packages.
 
-[See Tree-Shaking Recommendations](TreeShakingRecommendations.md)
+[See Tree-Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/main/TreeShakingRecommendations.md)
 
 ## Service Notification
 
@@ -887,7 +887,7 @@ It is expected that most users will be using the `Public` URL, however, it is al
 ## Release Notes
 
 - [Releases](https://github.com/microsoft/ApplicationInsights-JS/releases)
-- [Changelist Notes](./RELEASES.md)
+- [Changelist Notes](https://github.com/microsoft/ApplicationInsights-JS/blob/main/RELEASES.md)
 
 ## Browser Support
 
@@ -912,7 +912,7 @@ git push
 
 ## Contributing
 
-Read our [contributing guide](./CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Application Insights.
+Read our [contributing guide](https://github.com/microsoft/ApplicationInsights-JS/blob/main/CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Application Insights.
 
 ## Data Collection
 

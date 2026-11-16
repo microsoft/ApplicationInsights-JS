@@ -27,8 +27,8 @@ We recommend building a configuration file to represent the schema of the teleme
 
 ## Using the tool
 
-1. To launch the tool, click the ![Telemetry-Viewer-icon](images/icon-19.png) icon next to the address bar
-    - If it isn't there, click the `small puzzle piece` icon and then the `Telemetry Viewer`![Telemetry-Viewer-icon](images/icon-19.png)
+1. To launch the tool, click the ![Telemetry-Viewer-icon](https://raw.githubusercontent.com/microsoft/ApplicationInsights-JS/main/tools/chrome-debug-extension/images/icon-19.png) icon next to the address bar
+    - If it isn't there, click the `small puzzle piece` icon and then the `Telemetry Viewer`![Telemetry-Viewer-icon](https://raw.githubusercontent.com/microsoft/ApplicationInsights-JS/main/tools/chrome-debug-extension/images/icon-19.png)
 1. The first time you run the tool, it will start in the `Configuration Selection` page, which you can always return to by clicking the gear icon later
     - If your team has a preset configuration in the drop down list, select it
     - Otherwise, use you can start with the Default configuration
