@@ -1503,6 +1503,38 @@ export class AnalyticsPluginTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Timing Tests: Start/StopPageView with zero timestamp calculates duration and sets startTime",
+            test: () => {
+                // setup
+                const plugin = new ChannelPlugin();
+                const core = new AppInsightsCore();
+
+                this.onDone(() => {
+                    core.unload(false);
+                });
+
+                core.initialize(
+                    { instrumentationKey: "key" },
+                    [plugin]
+                );
+                const appInsights = new AnalyticsPlugin();
+                core.addPlugin(appInsights);
+                const spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
+
+                // act: start with 0 timestamp
+                appInsights.startTrackPage("ZeroPage", 0);
+                appInsights.stopTrackPage("ZeroPage", "http://custom-url", null, null, 1500);
+
+                // verify
+                Assert.ok(spy.calledOnce, "stop track page view sent data");
+                const actual = spy.args[0][0];
+                Assert.equal("ZeroPage", actual.name);
+                Assert.equal("1500", actual.properties.duration, "duration calculated from zero start timestamp");
+                Assert.equal(0, actual.startTime.getTime(), "startTime reflects 0 timestamp");
+            }
+        });
+
+        this.testCase({
             name: "Timing Tests: Start/StopTrackEvent with custom timestamps calculates duration",
             test: () => {
                 // setup
