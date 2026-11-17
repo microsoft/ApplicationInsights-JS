@@ -6,6 +6,7 @@ import { SinonSpy } from "sinon";
 import { AITestClass, Assert, PollingAssert } from "@microsoft/ai-test-framework";
 import { createSnippetV5 } from "./testSnippetV5";
 import { createSnippetV6 } from "./testSnippetV6";
+import { createSnippetV10 } from "./testSnippetV10";
 import { BaseTelemetryPlugin, IProcessTelemetryContext, isNotNullOrUndefined, ITelemetryItem, newId, objForEachKey } from "@microsoft/applicationinsights-core-js";
 import {
     BreezeChannelIdentifier, ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders,
@@ -420,6 +421,84 @@ export class SnippetInitializationTests extends AITestClass {
             this.addAsyncTests(snippetName, snippetCreator);
             this.addDependencyPluginTests(snippetName, snippetCreator);
             this.addPropertiesPluginTests(snippetName, snippetCreator);
+        });
+
+        this.testCase({
+            name: "Stubbed startTrackPage and stopTrackPage report correct duration and timestamp after initialization",
+            useFakeTimers: true,
+            test: () => {
+                let snippet: any = createSnippetV10(getSnippetConfig(this.sessionPrefix));
+
+                // Act: user calls startTrackPage and stopTrackPage before SDK loads
+                this.clock.tick(100);
+                snippet.startTrackPage("QueuedPage");
+                this.clock.tick(1500);
+                snippet.stopTrackPage("QueuedPage");
+                this.clock.tick(2000); // More time elapses before SDK downloads
+
+                // SDK loads and drains queue
+                let theSku = new AppInsightsSku(snippet);
+                theSku.updateSnippetDefinitions(snippet);
+                let trackSpy = this.sandbox.spy(theSku.core, "track");
+                this.onDone(() => {
+                    theSku.unload(false);
+                });
+                theSku.loadAppInsights(false);
+
+                Assert.ok(trackSpy.called, "telemetry item was tracked");
+                let pageViewItems = [];
+                for (let i = 0; i < trackSpy.args.length; i++) {
+                    let item = trackSpy.args[i][0];
+                    if (item && item.baseType === "PageviewData" && item.baseData.name === "QueuedPage") {
+                        pageViewItems.push(item);
+                    }
+                }
+                Assert.equal(1, pageViewItems.length, "One queued page view tracked");
+                let pv = pageViewItems[0];
+                Assert.equal("1500", pv.baseData.properties.duration, "Duration reflects time between startTrackPage and stopTrackPage");
+                Assert.equal(100, pv.baseData.startTime.getTime(), "startTime reflects when startTrackPage was invoked");
+                Assert.equal(new Date(100).toISOString(), pv.time, "envelope time reflects when startTrackPage was invoked");
+            }
+        });
+
+        this.testCase({
+            name: "Stubbed startTrackPage before SDK load and stopTrackPage after SDK load calculates correct duration",
+            useFakeTimers: true,
+            test: () => {
+                let snippet: any = createSnippetV10(getSnippetConfig(this.sessionPrefix));
+
+                // Act: user calls startTrackPage before SDK loads
+                this.clock.tick(100);
+                snippet.startTrackPage("QueuedPage2");
+                this.clock.tick(2000); // Time elapses before SDK downloads
+
+                // SDK loads and drains queue
+                let theSku = new AppInsightsSku(snippet);
+                theSku.updateSnippetDefinitions(snippet);
+                let trackSpy = this.sandbox.spy(theSku.core, "track");
+                this.onDone(() => {
+                    theSku.unload(false);
+                });
+                theSku.loadAppInsights(false);
+
+                // User calls stopTrackPage after SDK is loaded
+                this.clock.tick(1400); // Total duration 2000 + 1400 = 3400
+                snippet.stopTrackPage("QueuedPage2");
+
+                Assert.ok(trackSpy.called, "telemetry item was tracked");
+                let pageViewItems = [];
+                for (let i = 0; i < trackSpy.args.length; i++) {
+                    let item = trackSpy.args[i][0];
+                    if (item && item.baseType === "PageviewData" && item.baseData.name === "QueuedPage2") {
+                        pageViewItems.push(item);
+                    }
+                }
+                Assert.equal(1, pageViewItems.length, "One page view tracked");
+                let pv = pageViewItems[0];
+                Assert.equal("3400", pv.baseData.properties.duration, "Duration reflects time from queued startTrackPage to post-load stopTrackPage");
+                Assert.equal(100, pv.baseData.startTime.getTime(), "startTime reflects when startTrackPage was invoked");
+                Assert.equal(new Date(100).toISOString(), pv.time, "envelope time reflects when startTrackPage was invoked");
+            }
         });
     }
 
