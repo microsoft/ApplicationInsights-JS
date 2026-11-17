@@ -46,7 +46,7 @@ let config = {connectionString: "InstrumentationKey=xxx", sri: true};
 More details on web snippet, see [Web Snippet](https://github.com/microsoft/ApplicationInsights-JS#snippet-setup-ignore-if-using-npm-setup).
 
 ### Trusted Types Support (available since v1.2.2)
-For restrictions like require-trusted-types-for 'script', check [url policy check](./trustedTypeSupport.md)
+For restrictions like require-trusted-types-for 'script', check [url policy check](https://github.com/microsoft/ApplicationInsights-JS/blob/main/tools/applicationinsights-web-snippet/trustedTypeSupport.md)
 For restrictions like script-src 'self' ..., check [add nounce when inject script]()
 
 ## Build

@@ -17,7 +17,7 @@ As of version 3.4.0, the functionality from `@microsoft/applicationinsights-comm
 - The `applicationinsights-common` package continues to work as a compatibility layer (re-exports from Core)
 - No breaking changes to existing APIs
 
-See the [Migration Guide](../../docs/upgrade/MergeCommonToCore.md) for details on updating your imports.
+See the [Migration Guide](https://microsoft.github.io/ApplicationInsights-JS/upgrade/MergeCommonToCore.html) for details on updating your imports.
 
 ## V3.x Release Breaking changes
 

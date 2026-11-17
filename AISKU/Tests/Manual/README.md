@@ -46,7 +46,7 @@ The easiest way to test is using the interactive HTML page:
 
 To run the automated test suite with real telemetry:
 
-1. Open [`SpanE2E.Tests.ts`](../Unit/src/SpanE2E.Tests.ts)
+1. Open [`SpanE2E.Tests.ts`](https://github.com/microsoft/ApplicationInsights-JS/blob/main/AISKU/Tests/Unit/src/SpanE2E.Tests.ts)
 
 2. Update the configuration:
    ```typescript
@@ -250,7 +250,7 @@ To add a new E2E test scenario:
 - [Application Insights Overview](https://docs.microsoft.com/azure/azure-monitor/app/app-insights-overview)
 - [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/otel/trace/api/)
 - [Azure Portal](https://portal.azure.com)
-- [Application Insights SDK Documentation](../../../README.md)
+- [Application Insights SDK Documentation](https://github.com/microsoft/ApplicationInsights-JS/blob/main/README.md)
 
 ## 🤝 Contributing
 
