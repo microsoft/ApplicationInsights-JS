@@ -30,7 +30,7 @@
 3.  In `SampleWebApp\Startup.cs` configure ikey
 4.  In `SampleWebApp\WebApplication1.csproj` Refer the package `Microsoft.ApplicationInsights.AspNetCore` you just built from the build output folder: `\your visual studio workspace\bin\Debug\NuGet`.
 
-## How to inject Javascript with Sharepoint Framework Extensions through [Snippet Setup](https://github.com/microsoft/ApplicationInsights-JS/tree/master/SPO#snippet-setup-ignore-if-using-npm-setup)
+## How to inject Javascript with Sharepoint Framework Extensions through [Snippet Setup](https://github.com/microsoft/ApplicationInsights-JS/blob/main/README.md#snippet-setup-ignore-if-using-npm-setup)
 
 Due to security concerns, you can't directly add the script that's described in [this](https://docs.microsoft.com/en-us/azure/azure-monitor/app/sharepoint) article to your webpages in the SharePoint modern UX. As an alternative, you can use [SharePoint Framework (SPFx)](https://learn.microsoft.com/sharepoint/dev/spfx/extensions/overview-extensions) to build a custom extension that you can use to install Application Insights on your SharePoint sites. There are two ways to add Application Insights to your extension solution, either install via NPM setup or drop a script tag on the extension head. If you choose the second option, [view the sample](https://github.com/pnp/sp-dev-fx-extensions/tree/master/samples/js-application-appinsights).
 
