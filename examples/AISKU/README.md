@@ -2,7 +2,7 @@
 
 ## AISKU Sample
 
-This Sample shows how to track [`pageview`](../../API-reference.md#trackpageview), [`event`](../../API-reference.md#trackevent), [`trace`](../../API-reference.md#tracktrace), [`metric`](../../API-reference.md#trackmetric), [`exception`](../../API-reference.md#trackexception), get cookies details by using `cookieMgr` and record event duration manually by using `startTrackEvent` and `stopTrackEvent`.
+This Sample shows how to track [`pageview`](https://github.com/microsoft/ApplicationInsights-JS/tree/master/API-reference.md#trackpageview), [`event`](https://github.com/microsoft/ApplicationInsights-JS/tree/master/API-reference.md#trackevent), [`trace`](https://github.com/microsoft/ApplicationInsights-JS/tree/master/API-reference.md#tracktrace), [`metric`](https://github.com/microsoft/ApplicationInsights-JS/tree/master/API-reference.md#trackmetric), [`exception`](https://github.com/microsoft/ApplicationInsights-JS/tree/master/API-reference.md#trackexception), get cookies details by using `cookieMgr` and record event duration manually by using `startTrackEvent` and `stopTrackEvent`.
 
 ## Sample Build
 

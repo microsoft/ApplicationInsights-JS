@@ -5,11 +5,11 @@ but may not be executed as part of any automated test pass -- this may change/va
 
 ## Examples
 
-[Shared Worker](./shared-worker/README.md)
+[Shared Worker](https://github.com/microsoft/ApplicationInsights-JS/tree/master/examples/shared-worker/README.md)
 
-[AISKU](./AISKU/README.md)
+[AISKU](https://github.com/microsoft/ApplicationInsights-JS/tree/master/examples/AISKU/README.md)
 
-[Dependency](./dependency/README.md)
+[Dependency](https://github.com/microsoft/ApplicationInsights-JS/tree/master/examples/dependency/README.md)
 
 ## Contributing
 

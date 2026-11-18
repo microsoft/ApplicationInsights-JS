@@ -99,7 +99,7 @@ doPerf(perfManager, () => "code", (perfEvent) => {
 </script>
 ```
 
-Also see the [Example Html Usage](./example/cdn-usage.html)
+Also see the [Example Html Usage](https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-perfmarkmeasure-js/example/cdn-usage.html)
 
 ## Configuration Options
 

@@ -101,7 +101,7 @@ This version of the snippet detects and reports an exception when loading the SD
 - Missing telemetry on how your end users are using your site;
 - Missing JavaScript errors that could potentially be blocking your end users from successfully using your site.
 
-For details on this exception see [SDK Load Failure](docs/SdkLoadFailure.md) page.
+For details on this exception see [SDK Load Failure](https://github.com/microsoft/ApplicationInsights-JS/tree/master/docs/SdkLoadFailure.md) page.
 
 Reporting of this failure as an exception to the portal does not use the configuration option ```disableExceptionTracking``` from the application insights configuration and therefore if this failure occurs it will always be reported by the snippet, even when the window.onerror support is disabled.
 
@@ -251,7 +251,7 @@ All autocollection is ON by default. The full version of the Application Insight
 
 Telemetry initializers are used to modify the contents of collected telemetry before being sent from the user's browser. They can also be used to prevent certain telemetry from being sent, by returning `false`. Multiple telemetry initializers can be added to your Application Insights instance, and they are executed in order of adding them.
 
-The input argument to `addTelemetryInitializer` is a callback that takes a [`ITelemetryItem`](./API-reference.md#addTelemetryInitializer) as an argument and returns a `boolean` or `void`. If returning `false`, the telemetry item is not sent, else it proceeds to the next telemetry initializer, if any, or is sent to the telemetry collection endpoint.
+The input argument to `addTelemetryInitializer` is a callback that takes a [`ITelemetryItem`](https://github.com/microsoft/ApplicationInsights-JS/tree/master/API-reference.md#addTelemetryInitializer) as an argument and returns a `boolean` or `void`. If returning `false`, the telemetry item is not sent, else it proceeds to the next telemetry initializer, if any, or is sent to the telemetry collection endpoint.
 
 #### Example: [Setting Cloud Role Name](https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-map#set-cloud-role-name)
 
@@ -278,7 +278,7 @@ appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
 
 ### Dependency Listeners
 
-A [dependency listener is a callback function](./API-reference.md#addDependencyListener) that allows you to perform additional manipulation of the request details before the request is performed.
+A [dependency listener is a callback function](https://github.com/microsoft/ApplicationInsights-JS/tree/master/API-reference.md#addDependencyListener) that allows you to perform additional manipulation of the request details before the request is performed.
 
 This includes :-
 
@@ -288,7 +288,7 @@ This includes :-
 
 ### Dependency Initializers
 
-A [Dependency Initializer is very similar](./API-reference.md#addDependencyInitializer) to a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) in that it allows you modify the contents of collected telemetry before being sent from the user's browser. And you can also returning `false` to cause the event to not be emitted.
+A [Dependency Initializer is very similar](https://github.com/microsoft/ApplicationInsights-JS/tree/master/API-reference.md#addDependencyInitializer) to a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) in that it allows you modify the contents of collected telemetry before being sent from the user's browser. And you can also returning `false` to cause the event to not be emitted.
 
 The differences between a telemetry initializer and a dependency initializer are :-
 - A Dependency Initializer is called "before" the event is processed by the pipeline, as such it will NOT (yet) contain the automatically populated properties that are applied later;
@@ -358,7 +358,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | distributedTracingMode | numeric or `DistributedTracingModes` | `DistributedTracingModes.AI_AND_W3C` | Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests. AI_AND_W3C is provided for back-compatibility with any legacy Application Insights instrumented services.
 | enableUnhandledPromiseRejectionTracking | boolean | false | If true, unhandled promise rejections will be autocollected and reported as a javascript error. When disableExceptionTracking is true (dont track exceptions) the config value will be ignored and unhandled promise rejections will not be reported.
 | disableInstrumentationKeyValidation | boolean | false | If true, instrumentation key validation check is bypassed. Default value is false.
-| enablePerfMgr | boolean | false | [Optional] When enabled (true) this will create local perfEvents for code that has been instrumented to emit perfEvents (via the doPerf() helper). This can be used to identify performance issues within the SDK based on your usage or optionally within your own instrumented code. [More details are available by the basic documentation](./docs/PerformanceMonitoring.md). Since v2.5.7
+| enablePerfMgr | boolean | false | [Optional] When enabled (true) this will create local perfEvents for code that has been instrumented to emit perfEvents (via the doPerf() helper). This can be used to identify performance issues within the SDK based on your usage or optionally within your own instrumented code. [More details are available by the basic documentation](https://github.com/microsoft/ApplicationInsights-JS/tree/master/docs/PerformanceMonitoring.md). Since v2.5.7
 | perfEvtsSendAll | boolean | false | [Optional] When _enablePerfMgr_ is enabled and the [IPerfManager](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IPerfManager.ts) fires a [INotificationManager](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/INotificationManager.ts).perfEvent() this flag determines whether an event is fired (and sent to all listeners) for all events (true) or only for 'parent' events (false &lt;default&gt;).<br />A parent [IPerfEvent](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IPerfEvent.ts) is an event where no other IPerfEvent is still running at the point of this event being created and it's _parent_ property is not null or undefined. Since v2.5.7
 | createPerfMgr | (core: IAppInsightsCore, notificationManager: INotificationManager) => IPerfManager | undefined | Callback function that will be called to create a the IPerfManager instance when required and ```enablePerfMgr``` is enabled, this enables you to override the default creation of a PerfManager() without needing to ```setPerfMgr()``` after initialization.
 | idLength | numeric | 22 | [Optional] Identifies the default length used to generate new random session and user id's. Defaults to 22, previous default value was 5 (v2.5.8 or less), if you need to keep the previous maximum length you should set this value to 5.
@@ -427,7 +427,7 @@ So you will need to only call or access the manager from within the onInit() cal
 
 As part of changes being introduced in version 2.6.0 we are deprecating and removing the *internal* usages of the static helper classes `CoreUtils`, `EventHelper`, `Util`, `UrlHelper`, `DateTimeUtils` and `ConnectionStringParser` to provide better support for tree-shaking algorithms so that unused code can be safely dropped when using NPM packages.
 
-[See Tree-Shaking Recommendations](TreeShakingRecommendations.md)
+[See Tree-Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/tree/master/TreeShakingRecommendations.md)
 
 ## Single Page Applications
 
@@ -672,7 +672,7 @@ It is expected that most users will be using the `Public` URL, however, it is al
 ## Release Notes
 
 - [Releases](https://github.com/microsoft/ApplicationInsights-JS/releases)
-- [Changelist Notes](./RELEASES.md)
+- [Changelist Notes](https://github.com/microsoft/ApplicationInsights-JS/tree/master/RELEASES.md)
 
 ## Browser Support
 
@@ -811,7 +811,7 @@ This table does not attempt to include ALL of the ES3 unsupported features, just
 
 ## Contributing
 
-Read our [contributing guide](./CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Application Insights.
+Read our [contributing guide](https://github.com/microsoft/ApplicationInsights-JS/tree/master/CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Application Insights.
 
 ## Data Collection
 

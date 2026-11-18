@@ -5,7 +5,7 @@
 You WILL NEED to have compiled the repository before running this example as it loads the compiled scripts, and you will also NEED to start the
 local web server via `npm run serve` from the root of repository.
 
-You can load the example via the [CfgSync.html](CfgSync.html).
+View the [CfgSync example source](https://github.com/microsoft/ApplicationInsights-JS/tree/master/examples/cfgSync/CfgSync.html). After starting the local server, open `http://localhost:9001/examples/cfgSync/CfgSync.html` to run the example.
 
 ## Contributing
 

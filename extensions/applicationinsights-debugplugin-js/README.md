@@ -47,11 +47,11 @@ This plugin dynamically injects dynamic components into the webpage to provice a
 experience for Application Insights JS. Upon initialization, there will be a blue
 box with a number in the bottom-right corner of the screen:
 
-![closed box](./readme-res/bubble_closed.png)
+![closed box](https://raw.githubusercontent.com/microsoft/ApplicationInsights-JS/master/extensions/applicationinsights-debugplugin-js/readme-res/bubble_closed.png)
 
 Upon hover, it will prepend "AppInsights" to the number:
 
-![box on hover](readme-res/bubble_hover.png)
+![box on hover](https://raw.githubusercontent.com/microsoft/ApplicationInsights-JS/master/extensions/applicationinsights-debugplugin-js/readme-res/bubble_hover.png)
 
 This number is here to indicate the total number of calls to tracked functions, such as
 `trackEvent` or `trackPageView`. By default, every useful function is tracked.
@@ -59,12 +59,12 @@ This number is here to indicate the total number of calls to tracked functions, 
 When there's an error (`trackException`), a `(!)` will be appended to the number within the
 box like so:
 
-![box on exception](readme-res/bubble_error.png)
+![box on exception](https://raw.githubusercontent.com/microsoft/ApplicationInsights-JS/master/extensions/applicationinsights-debugplugin-js/readme-res/bubble_error.png)
 
 When this bbox is clicked, it will expand to a more detailed view, showing the frequency
 of each tracked function call. It will also get rid of the error indicator:
 
-![expanded box](readme-res/bubble_expanded.png)
+![expanded box](https://raw.githubusercontent.com/microsoft/ApplicationInsights-JS/master/extensions/applicationinsights-debugplugin-js/readme-res/bubble_expanded.png)
 
 This box can be clicked once more to minimize it.
 
@@ -74,7 +74,7 @@ When the box is open, clicking the "toggle detailed view" button will bring down
 that shows a list of event objects. By clicking on one of these objects, you can open it up
 in tree-view fasion:
 
-![tree view](readme-res/tree_view.png)
+![tree view](https://raw.githubusercontent.com/microsoft/ApplicationInsights-JS/master/extensions/applicationinsights-debugplugin-js/readme-res/tree_view.png)
 
 This is modeled after the developer tools of Chrome/Edge to keep things familiar.
 
@@ -97,12 +97,12 @@ It's possible to traverse this tree view using a keyboard:
 there are also two ways of filtering the data. This is useful if there are a lot of nodes on the screen
 when only one is important.
 
-![filter nodes](readme-res/filter_nodes.png)
+![filter nodes](https://raw.githubusercontent.com/microsoft/ApplicationInsights-JS/master/extensions/applicationinsights-debugplugin-js/readme-res/filter_nodes.png)
 
 The "filter nodes" box will filter the individual node types based on their
 telemetry call.
 
-![filter text](readme-res/text_filter.png)
+![filter text](https://raw.githubusercontent.com/microsoft/ApplicationInsights-JS/master/extensions/applicationinsights-debugplugin-js/readme-res/text_filter.png)
 
 The other, "filter text," enables the user to search and display only the nodes that have
 whatever was typed in the box somewhere within their tree.

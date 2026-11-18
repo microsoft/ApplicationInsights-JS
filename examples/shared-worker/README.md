@@ -7,17 +7,17 @@ Example to instrument a Shared-Worker
 ## Simple Instrumented Shared Worker Example
 
 This is a simple example that uses 2 Shared Workers as defined by
-- [worker.ts](./src/worker.ts)
-- [worker2.ts](./src/worker2.ts)
+- [worker.ts](https://github.com/microsoft/ApplicationInsights-JS/tree/master/examples/shared-worker/src/worker.ts)
+- [worker2.ts](https://github.com/microsoft/ApplicationInsights-JS/tree/master/examples/shared-worker/src/worker2.ts)
 
 You WILL NEED to have compiled the repository before running this example as it loads the compiled scripts, and you will also NEED to start the
 local web server via `npm run serve` from the root of repository.
 
-You can load the Shared Worker example via the [SharedWorker.html](SharedWorker.html).
+View the [Shared Worker example source](https://github.com/microsoft/ApplicationInsights-JS/tree/master/examples/shared-worker/SharedWorker.html). After starting the local server, open `http://localhost:9001/examples/shared-worker/SharedWorker.html` to run the example.
 
 This implements a VERY simple Shared Worker example that passes messages between the
-current page and the workers using the type in the [IExampleMessage](./src/interfaces/IExampleMessage.ts),
-And the support functions for the Web page are located in [example-shared-worker.ts](./src/example-shared-worker.ts)
+current page and the workers using the type in the [IExampleMessage](https://github.com/microsoft/ApplicationInsights-JS/tree/master/examples/shared-worker/src/interfaces/IExampleMessage.ts),
+And the support functions for the Web page are located in [example-shared-worker.ts](https://github.com/microsoft/ApplicationInsights-JS/tree/master/examples/shared-worker/src/example-shared-worker.ts)
 
 ## Contributing
 
