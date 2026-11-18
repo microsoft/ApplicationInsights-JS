@@ -43,6 +43,39 @@ export class SerializerTest extends AITestClass {
         });
 
         this.testCase({
+            name: "getEventBlob serializes frozen class fields and respects custom JSON",
+            test: () => {
+                class State {
+                    public id = "home";
+                    public tag = { value: 42, kind: 13 };
+                }
+                class Label {
+                    public id = "label";
+                    public toJSON(key: string) {
+                        return this.id + ":" + key;
+                    }
+                }
+
+                let state = objDeepFreeze(new State());
+                let event = {
+                    name: "frozen",
+                    ext: {},
+                    data: { state, nested: { state }, label: objDeepFreeze(new Label()), time: new Date(0) }
+                };
+                let blob = new Serializer().getEventBlob(event);
+
+                QUnit.assert.ok(blob, "The frozen instance did not cause the event to be dropped");
+                let parsed = JSON.parse(blob);
+                QUnit.assert.deepEqual(parsed.data.state, { id: "home", tag: "42" });
+                QUnit.assert.deepEqual(parsed.data.nested.state, parsed.data.state);
+                QUnit.assert.deepEqual(parsed.ext.metadata.f.state.f.tag, { t: 417 });
+                QUnit.assert.strictEqual(state.tag.value, 42, "Sanitization did not change the input");
+                QUnit.assert.strictEqual(parsed.data.label, "label:label");
+                QUnit.assert.strictEqual(parsed.data.time, "1970-01-01T00:00:00.000Z");
+            }
+        });
+
+        this.testCase({
             name: "appendPayload reports serialization errors and drops only the failed event",
             test: () => {
                 let logger = new DiagnosticLogger({ enableDebug: true });

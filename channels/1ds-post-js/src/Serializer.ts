@@ -14,7 +14,7 @@ import {
 import { IChannelConfiguration, IPostTransmissionTelemetryItem, IRequestSizeLimit } from "./DataModels";
 import { EventBatch } from "./EventBatch";
 import { STR_EMPTY } from "./InternalConstants";
-import { isPlainObject, mathMin, objDeepCopy, safe, strSubstr } from "@nevware21/ts-utils";
+import { isFunction, mathMin, objDeepCopy, objToString, safe, strSubstr } from "@nevware21/ts-utils";
 
 /**
  * Note: This is an optimization for V8-based browsers. When V8 concatenates a string,
@@ -38,6 +38,23 @@ const MaxBeaconRecordSize = mathMin(MaxRecordSize, BeaconRequestSizeLimitBytes);
 const metadata = "metadata";
 const f = "f";
 const rCheckDot = /\./;
+
+// Dates and values with a custom toJSON must keep their native JSON representation.
+function _isEventRecord(value: any): boolean {
+    return value && typeof value === "object" && !isFunction(value.toJSON) && objToString(value) === "[object Object]";
+}
+
+function _copyEventValue(value: any) {
+    return objDeepCopy(value, (details) => {
+        // objDeepCopy already copies plain records, but leaves class instances by reference.
+        if (!details.isPlain && _isEventRecord(details.value)) {
+            details.result = {};
+            details.copyTo(details.result, details.value);
+            return true;
+        }
+        return false;
+    });
+}
 
 /**
  * @ignore
@@ -400,9 +417,8 @@ export class Serializer {
 
                         // Sanitizers and compound keys can update nested fields in place. Copy the branch once,
                         // before either can write to a caller-owned (possibly frozen) record.
-                        if (copyValues && srcValue && typeof srcValue === "object" &&
-                            (isPlainObject(srcValue) || (_checkForCompoundkey && isArray(srcValue)))) {
-                            srcValue = objDeepCopy(srcValue);
+                        if (copyValues && (_isEventRecord(srcValue) || (_checkForCompoundkey && isArray(srcValue)))) {
+                            srcValue = _copyEventValue(srcValue);
                         }
 
                         let isReserved = checkReserved && _isReservedField(path, name);
@@ -421,14 +437,16 @@ export class Serializer {
                                 metadataCallback(theMetaPathKeys, name, prop);
                             }
 
-                            if (typeof newValue === "object" && !isArray(newValue)) {
+                            if (_isEventRecord(newValue)) {
                                 let newPath = theMetaPathKeys;
                                 if (newPath) {
                                     newPath = newPath.slice();
                                     newPath.push(name);
                                 }
 
-                                _processPathKeys(srcValue, newValue, path + "." + name, checkReserved, newPath, metadataCallback, false);
+                                // A custom sanitizer may return its own read-only record instead of the input copy.
+                                let output = newValue === srcValue ? newValue : (destObj[name] = _copyEventValue(newValue));
+                                _processPathKeys(srcValue, output, path + "." + name, checkReserved, newPath, metadataCallback, false);
                             }
                         }
                     }
