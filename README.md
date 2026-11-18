@@ -41,7 +41,7 @@
   - [Application Insights Web Basic](#application-insights-web-basic)
   - [Available Extensions for the SDK](#available-extensions-for-the-sdk)
   - [Build a New Extension for the SDK](#build-a-new-extension-for-the-sdk)
-  - [Build & Test This Repo](#build-and-test-this-repo)
+  - [Build & Test This Repo](#build--test-this-repo)
   - [Performance](#performance)
   - [Module Formats](#module-formats)
   - [Nightly Builds](#nightly-builds)
@@ -56,7 +56,7 @@
 
 > # URGENT ACTION: Stop using az416426.vo.msecnd.net
 >
-> To avoid any global OUTAGE you MUST change ALL of your CDN usage from “https://az416426.vo.msecnd.net/scripts/..” to our primary CDN endpoint https://js.monitor.azure.com/scripts/...
+> To avoid any global OUTAGE you MUST change ALL of your CDN usage from `https://az416426.vo.msecnd.net/scripts/...` to our primary CDN endpoint `https://js.monitor.azure.com/scripts/...`.
 >
 > See/follow [Issue #2457](https://github.com/microsoft/ApplicationInsights-JS/issues/2457) for updated details
 >
@@ -219,7 +219,7 @@ cfg: { // Application Insights Configuration
 
 > ## URGENT ACTION: Stop using az416426.vo.msecnd.net
 >
-> To avoid any global OUTAGE you MUST change ALL of your CDN usage from “https://az416426.vo.msecnd.net/scripts/..” to our primary CDN endpoint https://js.monitor.azure.com/scripts/...
+> To avoid any global OUTAGE you MUST change ALL of your CDN usage from `https://az416426.vo.msecnd.net/scripts/...` to our primary CDN endpoint `https://js.monitor.azure.com/scripts/...`.
 >
 > See/follow [Issue #2457](https://github.com/microsoft/ApplicationInsights-JS/issues/2457) for updated details
 >
@@ -370,7 +370,7 @@ All autocollection is ON by default. The full version of the Application Insight
 
 Telemetry initializers are used to modify the contents of collected telemetry before being sent from the user's browser. They can also be used to prevent certain telemetry from being sent, by returning `false`. Multiple telemetry initializers can be added to your Application Insights instance, and they are executed in order of adding them.
 
-The input argument to `addTelemetryInitializer` is a callback that takes a [`ITelemetryItem`](https://microsoft.github.io/ApplicationInsights-JS/API-reference#addTelemetryInitializer) as an argument and returns a `boolean` or `void`. If returning `false`, the telemetry item is not sent, else it proceeds to the next telemetry initializer, if any, or is sent to the telemetry collection endpoint.
+The input argument to `addTelemetryInitializer` is a callback that takes a [`ITelemetryItem`](https://microsoft.github.io/ApplicationInsights-JS/API-reference#addtelemetryinitializer) as an argument and returns a `boolean` or `void`. If returning `false`, the telemetry item is not sent, else it proceeds to the next telemetry initializer, if any, or is sent to the telemetry collection endpoint.
 
 #### Example: [Setting Cloud Role Name](https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-map#set-cloud-role-name)
 
@@ -397,7 +397,7 @@ appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
 
 ### Dependency Listeners
 
-A [dependency listener is a callback function](https://microsoft.github.io/ApplicationInsights-JS/API-reference#addDependencyListener) that allows you to perform additional manipulation of the request details before the request is performed.
+A [dependency listener is a callback function](https://microsoft.github.io/ApplicationInsights-JS/API-reference#adddependencylistener) that allows you to perform additional manipulation of the request details before the request is performed.
 
 This includes :-
 
@@ -407,7 +407,7 @@ This includes :-
 
 ### Dependency Initializers
 
-A [Dependency Initializer is very similar](https://microsoft.github.io/ApplicationInsights-JS/API-reference#addDependencyInitializer) to a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) in that it allows you modify the contents of collected telemetry before being sent from the user's browser. And you can also returning `false` to cause the event to not be emitted.
+A [Dependency Initializer is very similar](https://microsoft.github.io/ApplicationInsights-JS/API-reference#adddependencyinitializer) to a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) in that it allows you modify the contents of collected telemetry before being sent from the user's browser. And you can also returning `false` to cause the event to not be emitted.
 
 The differences between a telemetry initializer and a dependency initializer are :-
 - A Dependency Initializer is called "before" the event is processed by the pipeline, as such it will NOT (yet) contain the automatically populated properties that are applied later;
@@ -592,22 +592,22 @@ const appInsights = new ApplicationInsights({
 
 | Name | Type | Default | Extenstion | Description |
 |------|------|---------|---------|-------------|
-| [ignoreHeaders](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IDependenciesPluginConfig.html#ignoreHeaders) | string[] | ["Authorization", "X-API-Key", "WWW-Authenticate"] | DependenciesPlugin | AJAX & Fetch request and response headers to be ignored in log data. To override or discard the default, add an array with all headers to be excluded or an empty array to the configuration. Need to be defined in depenedency plugin extension config, see more [here](https://github.com/microsoft/ApplicationInsights-JS/blob/main/extensions/applicationinsights-dependencies-js/README.md)
+| [ignoreHeaders](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICorrelationConfig.html#ignoreHeaders) | string[] | ["Authorization", "X-API-Key", "WWW-Authenticate"] | DependenciesPlugin | AJAX & Fetch request and response headers to be ignored in log data. To override or discard the default, add an array with all headers to be excluded or an empty array to the configuration. Need to be defined in depenedency plugin extension config, see more [here](https://github.com/microsoft/ApplicationInsights-JS/blob/main/extensions/applicationinsights-dependencies-js/README.md)
 
-### [ICookieMgrConfig](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html)
+### [ICookieMgrConfig](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html)
 
 Cookie Configuration for instance based cookie management added in version 2.6.0.
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| [enabled](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#enabled) | boolean | true | A boolean that indicates whether the use of cookies by  the SDK is enabled by the current instance. If false, the instance of the SDK initialized by this configuration will not store or read any data from cookies |
-| [domain](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#domain) | string | null | Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. If not provided uses the value from root `cookieDomain` value. |
-| [path](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#path) | string | / | Specifies the path to use for the cookie, if not provided it will use any value from the root `cookiePath` value. |
-| [ignoreCookies](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#ignoreCookies) | string[] | undefined | Specify the cookie name(s) to be ignored, this will cause any matching cookie name to never be read or written. They may still be explicitly purged or deleted. You do not need to repeat the name in the `blockedCookies` configuration.(Since v2.8.8)
-| [blockedCookies](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#blockedCookies) | string[] | undefined | Specify the cookie name(s) to never be written, this will cause any cookie name to never be created or updated, they will still be read unless also included in the ignoreCookies and may still be explicitly purged or deleted. If not provided defaults to the same list provided in ignoreCookies. (Since v2.8.8)
-| [getCookie](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#getCookie) | `(name: string) => string` | null | Function to fetch the named cookie value, if not provided it will use the internal cookie parsing / caching. |
-| [setCookie](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#setCookie) | `(name: string, value: string) => void` | null | Function to set the named cookie with the specified value, only called when adding or updating a cookie. |
-| [delCookie](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#delCookie) | `(name: string, value: string) => void` | null | Function to delete the named cookie with the specified value, separated from setCookie to avoid the need to parse the value to determine whether the cookie is being added or removed.if not provided it will use the internal cookie parsing / caching. |
+| [enabled](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#enabled) | boolean | true | A boolean that indicates whether the use of cookies by  the SDK is enabled by the current instance. If false, the instance of the SDK initialized by this configuration will not store or read any data from cookies |
+| [domain](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#domain) | string | null | Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. If not provided uses the value from root `cookieDomain` value. |
+| [path](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#path) | string | / | Specifies the path to use for the cookie, if not provided it will use any value from the root `cookiePath` value. |
+| [ignoreCookies](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#ignoreCookies) | string[] | undefined | Specify the cookie name(s) to be ignored, this will cause any matching cookie name to never be read or written. They may still be explicitly purged or deleted. You do not need to repeat the name in the `blockedCookies` configuration.(Since v2.8.8)
+| [blockedCookies](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#blockedCookies) | string[] | undefined | Specify the cookie name(s) to never be written, this will cause any cookie name to never be created or updated, they will still be read unless also included in the ignoreCookies and may still be explicitly purged or deleted. If not provided defaults to the same list provided in ignoreCookies. (Since v2.8.8)
+| [getCookie](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#getCookie) | `(name: string) => string` | null | Function to fetch the named cookie value, if not provided it will use the internal cookie parsing / caching. |
+| [setCookie](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#setCookie) | `(name: string, value: string) => void` | null | Function to set the named cookie with the specified value, only called when adding or updating a cookie. |
+| [delCookie](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#delCookie) | `(name: string, value: string) => void` | null | Function to delete the named cookie with the specified value, separated from setCookie to avoid the need to parse the value to determine whether the cookie is being added or removed.if not provided it will use the internal cookie parsing / caching. |
 
 ## Cookie Handling
 

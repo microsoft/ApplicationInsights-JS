@@ -12,7 +12,7 @@ You are __STRONGLY__ encouraged to upgrade to the current latest version of the 
 
 Breaking changes in the SDK V2 version:
 - To allow for better API signatures, some of the apis such as trackPageView, trackException have been updated.
-- ES3 (IE8) compatibility, while running in IE8 or lower versions of the browser is not an officially supported scenario we are working to maintain ES3 level compatibility to ensure that the SDK will not cause any unexpected failures due to Javascript parsing error. See [ES3/IE8 Compatibility](https://github.com/microsoft/ApplicationInsights-JS#es3ie8-compatibility) below for further information.
+- ES3 (IE8) compatibility, while running in IE8 or lower versions of the browser is not an officially supported scenario we are working to maintain ES3 level compatibility to ensure that the SDK will not cause any unexpected failures due to Javascript parsing error. See [ES3/IE8 Compatibility](https://microsoft.github.io/ApplicationInsights-JS/es3_Support.html) for further information.
 - Telemetry envelope has field name and structure changes due to data schema updates.
 - Moved `context.operation` to `context.telemetryTrace`. Some fields were also changed (`operation.id` --> `telemetryTrace.traceID`)
   - If you want to maunally refresh the current pageview id (e.g. in SPA apps) this can be done with `appInsights.context.telemetryTrace.traceID = Util.newId()`

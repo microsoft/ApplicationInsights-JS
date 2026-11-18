@@ -128,7 +128,7 @@ const appInsights = new ApplicationInsights({
 appInsights.loadAppInsights();
 ```
 
-The CDN endpoint should return a JSON object following the [`ICfgSyncCdnConfig`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-cfgsync-js/interfaces/ICfgSyncCdnConfig.html) interface.
+The CDN endpoint should return a JSON object following the [`ICfgSyncCdnConfig`](https://github.com/microsoft/ApplicationInsights-JS/blob/main/extensions/applicationinsights-cfgsync-js/src/Interfaces/ICfgSyncCdnConfig.ts) interface.
 
 ### Plugin API
 
