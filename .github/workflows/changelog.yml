@@ -1,0 +1,42 @@
+name: Changelog
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: changelog-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changelog:
+    name: Changelog updated
+    runs-on: ubuntu-latest
+    # Each PR is checked before entering the merge queue; the queue has no PR labels.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      !contains(github.event.pull_request.labels.*.name, 'skip-changelog')
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+    - name: Verify RELEASES.md was updated
+      shell: bash
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      run: |
+        if git diff --name-only --diff-filter=AM "$BASE_SHA...$HEAD_SHA" -- RELEASES.md | grep -Fx 'RELEASES.md' > /dev/null; then
+          echo "RELEASES.md was updated."
+        else
+          echo "::error::RELEASES.md was not updated in this PR."
+          echo "Add an entry to RELEASES.md, or apply the 'skip-changelog' label if this change does not warrant one."
+          exit 1
+        fi
