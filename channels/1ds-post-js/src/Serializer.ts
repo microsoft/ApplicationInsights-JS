@@ -7,14 +7,14 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    EventSendType, FieldValueSanitizerFunc, FieldValueSanitizerType, IEventProperty, IPerfManagerProvider, IValueSanitizer,
-    SendRequestReason, arrIndexOf, doPerf, getCommonSchemaMetaData, getTenantId, isArray, isValueAssigned, objForEachKey, sanitizeProperty,
-    strStartsWith
+    EventSendType, FieldValueSanitizerFunc, FieldValueSanitizerType, IDiagnosticLogger, IEventProperty, IPerfManagerProvider, IValueSanitizer,
+    SendRequestReason, _eInternalMessageId, _throwInternal, arrIndexOf, doPerf, dumpObj, eLoggingSeverity, getCommonSchemaMetaData, getTenantId,
+    isArray, isValueAssigned, objForEachKey, sanitizeProperty, strStartsWith
 } from "@microsoft/applicationinsights-core-js";
 import { IChannelConfiguration, IPostTransmissionTelemetryItem, IRequestSizeLimit } from "./DataModels";
 import { EventBatch } from "./EventBatch";
 import { STR_EMPTY } from "./InternalConstants";
-import { mathMin, strSubstr } from "@nevware21/ts-utils";
+import { isFunction, mathMin, objDeepCopy, objToString, safe, strSubstr } from "@nevware21/ts-utils";
 
 /**
  * Note: This is an optimization for V8-based browsers. When V8 concatenates a string,
@@ -38,6 +38,23 @@ const MaxBeaconRecordSize = mathMin(MaxRecordSize, BeaconRequestSizeLimitBytes);
 const metadata = "metadata";
 const f = "f";
 const rCheckDot = /\./;
+
+// Dates and values with a custom toJSON must keep their native JSON representation.
+function _isEventRecord(value: any): boolean {
+    return value && typeof value === "object" && !isFunction(value.toJSON) && objToString(value) === "[object Object]";
+}
+
+function _copyEventValue(value: any) {
+    return objDeepCopy(value, (details) => {
+        // objDeepCopy already copies plain records, but leaves class instances by reference.
+        if (!details.isPlain && _isEventRecord(details.value)) {
+            details.result = {};
+            details.copyTo(details.result, details.value);
+            return true;
+        }
+        return false;
+    });
+}
 
 /**
  * @ignore
@@ -150,14 +167,15 @@ export class Serializer {
      * @param getEncodedTypeOverride - The callback to get the encoded type for a property defaults to ({@link getCommonSchemaMetaData }(...))
      * @param excludeCsMetaData - (!DANGER!) Should metadata be populated when encoding the event blob (defaults to false) - PII data will NOT be tagged as PII for backend processing
      * @param cfg channel cfg for setting request and record size limit
+     * @param logger - The channel diagnostic logger for serialization failures
      */
-    constructor(perfManager?: IPerfManagerProvider, valueSanitizer?: IValueSanitizer, stringifyObjects?: boolean, enableCompoundKey?: boolean, getEncodedTypeOverride?: SerializerGetEncodedType, excludeCsMetaData?: boolean, cfg?: IChannelConfiguration) {
+    constructor(perfManager?: IPerfManagerProvider, valueSanitizer?: IValueSanitizer, stringifyObjects?: boolean, enableCompoundKey?: boolean,
+        getEncodedTypeOverride?: SerializerGetEncodedType, excludeCsMetaData?: boolean, cfg?: IChannelConfiguration, logger?: IDiagnosticLogger) {
         const strData = "data";
         const strBaseData = "baseData";
         const strExt = "ext";
 
         let _checkForCompoundkey = !!enableCompoundKey;
-        let _processSubKeys = true;
         let _theSanitizer: IValueSanitizer = valueSanitizer;
         let _isReservedCache = {};
         let _excludeCsMetaData: boolean = !!excludeCsMetaData;
@@ -313,7 +331,7 @@ export class Serializer {
                                 let data = serializedExt[key] = {};
 
                                 // Don't include a metadata callback as we don't currently set metadata Part A fields
-                                _processPathKeys(value, data, "ext." + key, true, null, null, true);
+                                _processPathKeys(value, data, "ext." + key, true, null, null);
                             });
                         }
 
@@ -323,14 +341,19 @@ export class Serializer {
                         let serializedBaseData = serializedData[strBaseData] = {};
 
                         // Part B
-                        _processPathKeys(eventData.baseData, serializedBaseData, strBaseData, false, [strBaseData], _addMetadataCallback, _processSubKeys);
+                        _processPathKeys(eventData.baseData, serializedBaseData, strBaseData, false, [strBaseData], _addMetadataCallback);
 
                         // Part C
-                        _processPathKeys(eventData.data, serializedData, strData, false, [], _addMetadataCallback, _processSubKeys);
+                        _processPathKeys(eventData.data, serializedData, strData, false, [], _addMetadataCallback);
 
                         return JSON.stringify(serializedEvent);
                     }, () => ({ item: eventData }));
                 } catch (e) {
+                    if (logger) {
+                        // Debug loggers can throw. The failed event must not interrupt the rest of the batch.
+                        safe(() => _throwInternal(logger, eLoggingSeverity.WARNING, _eInternalMessageId.CannotSerializeObject,
+                            "Failed to serialize event: " + dumpObj(e)));
+                    }
                     return null;
                 }
             };
@@ -357,7 +380,7 @@ export class Serializer {
                 checkReserved: boolean,
                 metadataPathKeys: string[],
                 metadataCallback: EventMetaDataCallback,
-                processSubKeys: boolean) {
+                copyValues = true) {
 
                 objForEachKey(srcObj, (key, srcValue) => {
                     let prop: IEventProperty = null;
@@ -392,6 +415,12 @@ export class Serializer {
                             }
                         }
 
+                        // Sanitizers and compound keys can update nested fields in place. Copy the branch once,
+                        // before either can write to a caller-owned (possibly frozen) record.
+                        if (copyValues && (_isEventRecord(srcValue) || (_checkForCompoundkey && isArray(srcValue)))) {
+                            srcValue = _copyEventValue(srcValue);
+                        }
+
                         let isReserved = checkReserved && _isReservedField(path, name);
                         if (!isReserved && _theSanitizer && _theSanitizer.handleField(path, name)) {
                             prop = _theSanitizer.value(path, name, srcValue, stringifyObjects);
@@ -408,15 +437,16 @@ export class Serializer {
                                 metadataCallback(theMetaPathKeys, name, prop);
                             }
 
-                            if (processSubKeys && typeof newValue === "object" && !isArray(newValue)) {
+                            if (_isEventRecord(newValue)) {
                                 let newPath = theMetaPathKeys;
                                 if (newPath) {
                                     newPath = newPath.slice();
                                     newPath.push(name);
                                 }
 
-                                // Make sure we process sub objects as well (for value sanitization and metadata)
-                                _processPathKeys(srcValue, newValue, path + "." + name, checkReserved, newPath, metadataCallback, processSubKeys);
+                                // A custom sanitizer may return its own read-only record instead of the input copy.
+                                let output = newValue === srcValue ? newValue : (destObj[name] = _copyEventValue(newValue));
+                                _processPathKeys(srcValue, output, path + "." + name, checkReserved, newPath, metadataCallback, false);
                             }
                         }
                     }
@@ -454,7 +484,7 @@ export class Serializer {
     /**
      * Bond serialize the event.
      * @param eventData - The event that needs to be serialized.
-     * @returns The serialized json event.
+     * @returns The serialized JSON event, or null if the event could not be serialized.
      */
     public getEventBlob(eventData: IPostTransmissionTelemetryItem): string {
         // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
