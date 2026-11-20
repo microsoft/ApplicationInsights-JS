@@ -24,6 +24,7 @@ import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
     IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js";
+import { OsPlugin } from "@microsoft/applicationinsights-osplugin-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { IPromise, createPromise, createSyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
@@ -65,6 +66,7 @@ const IKEY_USAGE = "iKeyUsage";
 const CDN_USAGE = "CdnUsage";
 const SDK_LOADER_VER = "SdkLoaderVer";
 const SDK_STATS = "SdkStats";
+const OS_PLUGIN = "OsPlugin";
 var _sdkVersion = "#version#";
 
 const default_limit = {
@@ -123,6 +125,7 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
         }
     ),
     extensionConfig: cfgDfMerge<{[key: string]: any}>({
+        [OS_PLUGIN]: cfgDfMerge({ enabled: UNDEFINED_VALUE }),
         ["AppInsightsCfgSyncPlugin"]: cfgDfMerge<ICfgSyncConfig>({
             cfgUrl: CONFIG_ENDPOINT_URL,
             syncMode: ICfgSyncMode.Receive
@@ -206,6 +209,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
         let _snippetVersion: string;
         let _evtNamespace: string;
         let _houseKeepingNamespace: string | string[];
+        let _refreshHousekeeping: () => void;
         let _core: IAppInsightsCore<IConfiguration & IConfig>;
         let _config: IConfiguration & IConfig;
         let _analyticsPlugin: AnalyticsPlugin;
@@ -408,7 +412,40 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
 
                 doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
                     // initialize core
-                    _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin], logger, notificationManager);
+                    let plugins: IPlugin[] = [ _sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin];
+                    let osPlugin: OsPlugin;
+                    let osConfig = (_config.extensionConfig || {})[OS_PLUGIN];
+                    if (osConfig && osConfig.enabled === true) {
+                        let suppliedOsPlugin = false;
+                        arrForEach(_config.extensions, (plugin) => {
+                            suppliedOsPlugin = suppliedOsPlugin || plugin.identifier === OS_PLUGIN;
+                        });
+                        if (!suppliedOsPlugin) {
+                            osPlugin = new OsPlugin();
+                            plugins.push(osPlugin);
+                        }
+                    }
+
+                    // Watch before plugin initialization so revoking automatic opt-in cannot restart a lookup.
+                    _addUnloadHook(onConfigChange(cfgHandler, () => {
+                        let osConfig = (_config.extensionConfig || {})[OS_PLUGIN];
+                        let enabled = osConfig && osConfig.enabled === true;
+                        if (_core.isInitialized()) {
+                            let loaded = _core.getPlugin(OS_PLUGIN);
+                            if (enabled) {
+                                if (!loaded) {
+                                    osPlugin = new OsPlugin();
+                                    _core.addPlugin(osPlugin, false, false);
+                                    // Release OS-queued telemetry before the page-exit channel flush.
+                                    _refreshHousekeeping && _refreshHousekeeping();
+                                }
+                            } else if (loaded && loaded.plugin === osPlugin) {
+                                osPlugin = null;
+                                loaded.remove(false);
+                            }
+                        }
+                    }));
+                    _core.initialize(_config, plugins, logger, notificationManager);
 
                     if (!_throttleMgr){
                         _throttleMgr = new ThrottleMgr(_core);
@@ -575,9 +612,8 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                         _houseKeepingNamespace = mergeEvtNamespace(_evtNamespace, _core.evtNamespace && _core.evtNamespace());
                     }
 
-                    // Will be recalled if any referenced config properties change
-                    _addUnloadHook(onConfigChange(_config, (details) => {
-                        let coreConfig = details.cfg;
+                    _refreshHousekeeping = () => {
+                        let coreConfig = _config;
                         let analyticsPlugin = appInsightsInstance.appInsights;
                         let ctx = createProcessTelemetryContext(null, coreConfig, analyticsPlugin.core);
                         let extConfig = ctx.getExtCfg<IConfig>(analyticsPlugin.identifier || AnalyticsPluginIdentifier);
@@ -612,6 +648,13 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                             // If we didn't add the normal set then attempt to add the pagehide and visibilitychange only
                             addPageHideEventListener(performHousekeeping, excludePageUnloadEvents, _houseKeepingNamespace);
                         }
+                    };
+
+                    // Also rebind after OS collection changes so its queue is released before flushing channels.
+                    _addUnloadHook(onConfigChange(_config, () => {
+                        let osConfig = (_config.extensionConfig || {})[OS_PLUGIN];
+                        osConfig && osConfig.enabled;
+                        _refreshHousekeeping();
                     }));
                 }
             };
@@ -777,6 +820,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
             function _initDefaults() {
                 _evtNamespace = createUniqueNamespace("AISKU");
                 _houseKeepingNamespace = null;
+                _refreshHousekeeping = null;
                 dependencies = null;
                 properties = null;
                 _sender = null;

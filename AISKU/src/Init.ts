@@ -90,6 +90,7 @@ export {
 } from "@microsoft/applicationinsights-core-js";
 
 export { ISenderConfig } from "@microsoft/applicationinsights-channel-js";
+export { IOSPluginConfiguration } from "@microsoft/applicationinsights-osplugin-js";
 
 export { IAppInsightsInternal } from "@microsoft/applicationinsights-analytics-js";
 

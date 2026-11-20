@@ -6,6 +6,9 @@
 
 ### Significant Changes
 
+- The full web SDK now bundles optional OS detection. Opt in with `extensionConfig.OsPlugin.enabled: true`; no separate package or
+  manual registration is required. Collection remains off by default, existing manually registered instances retain their behavior,
+  and the lightweight SDK is unchanged. Explicitly setting `enabled: false` stops OS collection and ignores pending lookup results.
 - CDN preview deployment now uses `next` instead of `beta` across the SDK, extensions, tools, and configuration.
   Stable release artifacts publish to `next` and their existing production destinations; release candidates publish only to `next`.
   Beta CDN publishing, activation, and listing options are removed, while existing CDN artifacts and production URLs remain unchanged.
@@ -14,6 +17,7 @@
 
 ### Bug Fixes
 
+- OS detection now recognizes the Application Insights Sender's channel identifier when selecting its default merged OS version format.
 - Automatic payload compression is now limited to recognized Microsoft Application Insights ingestion endpoints. Custom endpoints and
   ingestion proxies continue to receive JSON request bodies unless `enableCompressionForCustomEndpoint` is explicitly enabled for a
   gzip-capable endpoint.

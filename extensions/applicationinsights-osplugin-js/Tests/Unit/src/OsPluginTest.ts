@@ -5,7 +5,7 @@
 import { Assert, AITestClass } from '@microsoft/ai-test-framework';
 import { IOSPluginConfiguration, OsPlugin } from '../../../src/applicationinsights-osplugin-js';
 import { createAsyncPromise, ResolvePromiseHandler, RejectPromiseHandler } from "@nevware21/ts-async";
-import {getWindow, AppInsightsCore, IChannelControls, ITelemetryPlugin,
+import {getWindow, AppInsightsCore, BreezeChannelIdentifier, IChannelControls, ITelemetryPlugin,
     IConfiguration, ITelemetryItem, __getRegisteredEvents} from "@microsoft/applicationinsights-core-js";
 
 const defaultmaxTimeout = 5000;
@@ -157,6 +157,55 @@ export class OsPluginTest extends AITestClass {
     }
 
     public registerTests() {
+        this.testCase({
+            name: "OsPlugin: explicit disable prevents lookup, cache access and listeners until enabled",
+            useFakeTimers: true,
+            test: () => {
+                let cached = JSON.stringify({ platform: "Android", platformVersion: 14 });
+                sessionStorage.setItem("ai_osplugin", cached);
+                let read = this.sandbox.spy(Storage.prototype, "getItem");
+                let lookup = this.sandbox.spy();
+                this.setNavigator({ userAgentData: { getHighEntropyValues: lookup } }, true);
+                this._config.extensionConfig = { OsPlugin: { enabled: false } };
+                this._core.initialize(this._config, [this._plugin, this._testChannelPlugin]);
+                Assert.equal(0, lookup.callCount, "Disabled collection does not request Client Hints");
+                Assert.equal(false, read.calledWith("ai_osplugin"), "Disabled collection does not read cache");
+                Assert.equal(false, this._getRegisteredUnloadState().pageHidePresent, "Disabled collection has no exit listener");
+                this._core.track(this._createTestEvent());
+                Assert.equal(1, this._channelSpy.callCount, "Disabled telemetry is not delayed");
+
+                this._core.config.extensionConfig.OsPlugin.enabled = true;
+                this.clock.tick(1);
+                this._core.track(this._createTestEvent());
+                Assert.equal("Android14", this._channelSpy.lastCall.args[0].ext.os.osVer, "Enable uses the existing cache");
+                this._core.config.extensionConfig.OsPlugin.enabled = false;
+                this.clock.tick(1);
+                this._core.config.extensionConfig.OsPlugin.enabled = undefined;
+                this.clock.tick(1);
+                this._core.track(this._createTestEvent());
+                Assert.equal("Android14", this._channelSpy.lastCall.args[0].ext.os.osVer, "Unset preserves manual opt-in");
+                Assert.equal(cached, sessionStorage.getItem("ai_osplugin"), "Disable does not delete cache");
+            }
+        });
+
+        this.testCase({
+            name: "OsPlugin: real Sender identifier defaults to merged output and supports explicit split mode",
+            useFakeTimers: true,
+            test: () => {
+                this._testChannelPlugin.identifier = BreezeChannelIdentifier;
+                this._core.initialize(this._config, [this._plugin, this._testChannelPlugin]);
+                this._resolveHighEntropy(_platformVersion);
+                this.clock.tick(1);
+                this._core.track(this._createTestEvent());
+                Assert.equal("Windows11", this._channelSpy.lastCall.args[0].ext.os.osVer, "Real Sender gets merged OS version");
+                this._core.config.extensionConfig.OsPlugin.mergeOsNameVersion = false;
+                this.clock.tick(1);
+                this._core.track(this._createTestEvent());
+                Assert.equal("Windows", this._channelSpy.lastCall.args[0].ext.os.name, "Explicit split setting is retained");
+                Assert.equal("11", this._channelSpy.lastCall.args[0].ext.os.ver, "Split version uses Common Schema");
+            }
+        });
+
         this.testCase({
             name: "OsPlugin: Dynamic and Default Configuration Tests",
             useFakeTimers: true,
