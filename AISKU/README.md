@@ -27,6 +27,8 @@ Refer to [our GitHub page](https://github.com/microsoft/applicationinsights-js) 
 The full web SDK includes the [OS plugin](../extensions/applicationinsights-osplugin-js/README.md), but does not register it or collect
 OS information by default. To opt in, set `extensionConfig.OsPlugin.enabled` to `true` in the npm or SDK loader configuration:
 
+### NPM configuration
+
 ```js
 const appInsights = new ApplicationInsights({
 	config: {
@@ -38,6 +40,29 @@ const appInsights = new ApplicationInsights({
 });
 appInsights.loadAppInsights();
 ```
+
+### CDN loader configuration
+
+Keep the [SDK loader script](../README.md#snippet-setup-ignore-if-using-npm-setup) unchanged and pass the following options object as its
+configuration argument. This example defines loader options, not a standalone loader script:
+
+```js
+var snippetConfig = {
+	src: "https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js",
+	crossOrigin: "anonymous",
+	cfg: {
+		connectionString: "YOUR_CONNECTION_STRING",
+		extensionConfig: {
+			OsPlugin: { enabled: true }
+		}
+	}
+};
+```
+
+Use a full SDK CDN release that includes bundled OS detection. Older CDN builds do not support this automatic registration setting.
+Place `extensionConfig` inside the loader's `cfg`, not beside `src`. No additional plugin script or global `OsPlugin` constructor is needed.
+After initialization, for example in the loader's `onInit` callback, `sdk.getPlugin("OsPlugin")` returns the registered plugin wrapper;
+registration does not mean the asynchronous OS lookup has finished. Loading the CDN bundle alone does not enable collection.
 
 No separate OS plugin installation or entry in `extensions` is needed. A customer-supplied `OsPlugin` instance is retained instead of
 adding another instance, and existing manual registration continues to collect when `enabled` is unset.
