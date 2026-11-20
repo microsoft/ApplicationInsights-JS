@@ -54,10 +54,11 @@ function _checkSize(checkType: string, maxSize: number, size: number, isNightly:
 }
 
 export class AISKUSizeCheck extends AITestClass {
-    private readonly MAX_RAW_SIZE = 183;
-    private readonly MAX_BUNDLE_SIZE = 184;
-    private readonly MAX_RAW_DEFLATE_SIZE = 74;
-    private readonly MAX_BUNDLE_DEFLATE_SIZE = 74;
+    // Bundling the opt-in OS plugin adds approximately 3 KB minified and 1 KB compressed to the full SDK.
+    private readonly MAX_RAW_SIZE = 186;
+    private readonly MAX_BUNDLE_SIZE = 187;
+    private readonly MAX_RAW_DEFLATE_SIZE = 75;
+    private readonly MAX_BUNDLE_DEFLATE_SIZE = 75;
     private readonly rawFilePath = "../dist/es5/applicationinsights-web.min.js";
     // Automatically updated by version scripts
     private readonly currentVer = "3.4.6";
