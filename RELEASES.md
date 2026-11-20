@@ -23,6 +23,7 @@
 - Payload headers are isolated per request so a compressed asynchronous send cannot leak `Content-Encoding: gzip` into a later
   uncompressed synchronous, unload, beacon, or fallback request.
 - Skip channel telemetry reconstruction when the notification manager confirms there are no consumers for the relevant sent, discarded, or retry notification. Add the optional `hasListener(name: string)` hint to the core notification manager. Custom managers without this hint and overridden built-in notification handlers retain the existing dispatch behavior. Notifications with matching listeners, including SDK Stats, retain the existing reconstruction behavior.
+- Fix URL host parsing in no-DOM environments for bracketed IPv6 literals and URLs with user credentials, and prevent embedded URLs in paths or queries from supplying the request host or allowing correlation headers ([#2800](https://github.com/microsoft/ApplicationInsights-JS/pull/2800)).
 
 ## 3.4.6 (November 5th, 2026)
 This is a maintenance release for the 3.4.x version line that improves page unload event handling. The SDK now uses the deprecated unload event only as a fallback when the preferred page lifecycle events are unavailable. The @microsoft/1ds-post-js channel is numbered 4.4.6 and requires v3.4.6.
