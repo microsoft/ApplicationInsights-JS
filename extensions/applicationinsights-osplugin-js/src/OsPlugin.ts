@@ -13,7 +13,7 @@ import {
     utlGetSessionStorage, utlSetSessionStorage
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, doAwaitResponse } from "@nevware21/ts-async";
-import { ITimerHandler, asString, fnCall, getNavigator, isString, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, asString, fnCall, getNavigator, isString, objAssign, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
 import { IOSPluginConfiguration } from "./DataModels";
 
 const defaultMaxTimeout = 200;
@@ -161,6 +161,10 @@ export class OsPlugin extends BaseTelemetryPlugin {
                 _initDefaults();
             };
 
+            _self.onunloadFlush = () => {
+                _releaseEventQueue();
+            };
+
             function _isCollectionEnabled() {
                 return _enabled && _ocConfig && _ocConfig.enabled !== false;
             }
@@ -204,7 +208,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
 
             function _addUnloadHandlers(excludePageUnloadEvents?: string[]) {
                 function _unloading() {
-                    _releaseEventQueue();
+                    _self.onunloadFlush();
                     _removeUnloadHandlers();
                 }
 
@@ -290,7 +294,9 @@ export class OsPlugin extends BaseTelemetryPlugin {
 
             function _updateTeleItemWithOs(event: ITelemetryItem) {
                 if (_isCollectionEnabled() && _fetchedFullVersion && (_os || _osVer)) {
-                    let extOS: any = getSetValue(getSetValue(event, strExt) as any, Extensions.OSExt);
+                    let ext = getSetValue(event, strExt) as any;
+                    // PropertiesPlugin may attach shared customer context; only enrich this event's copy.
+                    let extOS = ext[Extensions.OSExt] = objAssign({}, ext[Extensions.OSExt]);
                     if (_mergeOsNameVersion){
                         let mergedOS = (_os || "") + (_osVer ? asString(_osVer) : "");
                         setValue(extOS, "osVer", mergedOS, isString);
@@ -347,6 +353,13 @@ export class OsPlugin extends BaseTelemetryPlugin {
         });
     }
     public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Release pending telemetry before flushing channels on page exit. The OS lookup remains active until completion or timeout.
+     */
+    public onunloadFlush(): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

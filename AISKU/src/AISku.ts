@@ -209,7 +209,6 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
         let _snippetVersion: string;
         let _evtNamespace: string;
         let _houseKeepingNamespace: string | string[];
-        let _refreshHousekeeping: () => void;
         let _core: IAppInsightsCore<IConfiguration & IConfig>;
         let _config: IConfiguration & IConfig;
         let _analyticsPlugin: AnalyticsPlugin;
@@ -372,6 +371,11 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
             };
 
             _self.onunloadFlush = (isAsync: boolean = true) => {
+                let osPlugin = _core.getPlugin<OsPlugin>(OS_PLUGIN);
+                if (osPlugin && isFunction(osPlugin.plugin.onunloadFlush)) {
+                    // Drain queued telemetry before channels flush, regardless of page-exit listener order.
+                    osPlugin.plugin.onunloadFlush();
+                }
                 arrForEach(_core.getChannels(), (channel: IChannelControls & Sender) => {
                     if (channel.onunloadFlush) {
                         channel.onunloadFlush();
@@ -436,8 +440,6 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                                 if (!loaded) {
                                     osPlugin = new OsPlugin();
                                     _core.addPlugin(osPlugin, false, false);
-                                    // Release OS-queued telemetry before the page-exit channel flush.
-                                    _refreshHousekeeping && _refreshHousekeeping();
                                 }
                             } else if (loaded && loaded.plugin === osPlugin) {
                                 osPlugin = null;
@@ -612,8 +614,9 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                         _houseKeepingNamespace = mergeEvtNamespace(_evtNamespace, _core.evtNamespace && _core.evtNamespace());
                     }
 
-                    _refreshHousekeeping = () => {
-                        let coreConfig = _config;
+                    // Will be recalled if any referenced config properties change
+                    _addUnloadHook(onConfigChange(_config, (details) => {
+                        let coreConfig = details.cfg;
                         let analyticsPlugin = appInsightsInstance.appInsights;
                         let ctx = createProcessTelemetryContext(null, coreConfig, analyticsPlugin.core);
                         let extConfig = ctx.getExtCfg<IConfig>(analyticsPlugin.identifier || AnalyticsPluginIdentifier);
@@ -648,13 +651,6 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                             // If we didn't add the normal set then attempt to add the pagehide and visibilitychange only
                             addPageHideEventListener(performHousekeeping, excludePageUnloadEvents, _houseKeepingNamespace);
                         }
-                    };
-
-                    // Also rebind after OS collection changes so its queue is released before flushing channels.
-                    _addUnloadHook(onConfigChange(_config, () => {
-                        let osConfig = (_config.extensionConfig || {})[OS_PLUGIN];
-                        osConfig && osConfig.enabled;
-                        _refreshHousekeeping();
                     }));
                 }
             };
@@ -820,7 +816,6 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
             function _initDefaults() {
                 _evtNamespace = createUniqueNamespace("AISKU");
                 _houseKeepingNamespace = null;
-                _refreshHousekeeping = null;
                 dependencies = null;
                 properties = null;
                 _sender = null;

@@ -17,6 +17,8 @@
 
 ### Bug Fixes
 
+- OS enrichment now copies customer OS context before adding detected fields, so disabling collection does not retain detected values
+  in later events. The full SDK drains OS-queued telemetry before exit channel flushes, independent of page-exit listener order.
 - OS detection now recognizes the Application Insights Sender's channel identifier when selecting its default merged OS version format.
 - Automatic payload compression is now limited to recognized Microsoft Application Insights ingestion endpoints. Custom endpoints and
   ingestion proxies continue to receive JSON request bodies unless `enableCompressionForCustomEndpoint` is explicitly enabled for a

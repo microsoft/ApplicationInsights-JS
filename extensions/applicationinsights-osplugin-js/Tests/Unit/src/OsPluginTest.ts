@@ -158,6 +158,28 @@ export class OsPluginTest extends AITestClass {
 
     public registerTests() {
         this.testCase({
+            name: "OsPlugin: exit flush releases queue without cancelling the pending lookup",
+            useFakeTimers: true,
+            test: () => {
+                this._config.extensionConfig = { OsPlugin: this._osConfig };
+                this._core.initialize(this._config, [this._plugin, this._testChannelPlugin]);
+                this._core.track(this._createTestEvent());
+                Assert.equal(0, this._channelSpy.callCount, "Pending lookup queues telemetry");
+                this._plugin.onunloadFlush();
+                Assert.equal(1, this._channelSpy.callCount, "Exit flush releases queued telemetry");
+                Assert.equal(undefined, this._channelSpy.lastCall.args[0].ext, "Pending OS is not invented");
+                Assert.equal(true, this._getDbgTargets().hasPendingTimeout, "Exit flush keeps the lookup timeout active");
+                this._plugin.onunloadFlush();
+                Assert.equal(1, this._channelSpy.callCount, "Repeated exit flush does not duplicate events");
+                this._resolveHighEntropy(_platformVersion);
+                this.clock.tick(1);
+                this._core.track(this._createTestEvent());
+                Assert.equal(2, this._channelSpy.callCount, "Later events still reach the channel");
+                Assert.equal("Windows", this._channelSpy.lastCall.args[0].ext.os.name, "Enabled lookup can still enrich later events");
+            }
+        });
+
+        this.testCase({
             name: "OsPlugin: explicit disable prevents lookup, cache access and listeners until enabled",
             useFakeTimers: true,
             test: () => {

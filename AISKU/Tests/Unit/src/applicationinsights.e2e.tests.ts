@@ -294,6 +294,44 @@ export class ApplicationInsightsTests extends AITestClass {
             }
         });
 
+        [false, true].forEach((manual) => {
+            [false, true].forEach((split) => {
+                this.testCase({
+                    name: "OsPlugin SKU: review regression preserves shared context with manual " + manual + " split " + split,
+                    useFakeTimers: true,
+                    test: () => {
+                        let state = this._initializeOsPluginTest({ enabled: true, mergeOsNameVersion: !split },
+                            manual ? new OsPlugin() : undefined);
+                        let customerOs = { name: "CustomerOS", osVer: "CustomerVersion", ver: "CustomerSplitVersion", custom: "retained" };
+                        (this._ai.context as any).os = customerOs;
+                        this._ai.trackEvent({ name: "detected OS" });
+                        state.requests[0].resolve(state.windows);
+                        let detected = state.processed.lastCall.args[0].ext.os;
+                        Assert.notEqual(customerOs, detected, "Enrichment uses an event-specific OS extension");
+                        Assert.equal("CustomerOS", customerOs.name, "Detection does not replace the customer OS name");
+                        Assert.equal("CustomerVersion", customerOs.osVer, "Detection does not replace the customer OS version");
+                        Assert.equal("CustomerSplitVersion", customerOs.ver, "Detection does not replace the customer split version");
+                        Assert.equal("retained", detected.custom, "Other customer fields are retained on the event");
+                        Assert.equal(split ? "Windows" : "CustomerOS", detected.name, "Detected field precedence is unchanged");
+                        Assert.equal(split ? "11" : "CustomerSplitVersion", detected.ver, "Split mode enriches only the event");
+                        Assert.equal(split ? "CustomerVersion" : "Windows11", detected.osVer, "Merged mode enriches only the event");
+
+                        this._ai.config.extensionConfig.OsPlugin.enabled = false;
+                        this.clock.tick(1);
+                        this._ai.trackEvent({ name: "disabled detected OS" });
+                        let disabled = state.processed.lastCall.args[0].ext.os;
+                        Assert.equal(2, state.processed.callCount, "Disabled telemetry is not delayed");
+                        Assert.equal(customerOs, disabled, "Disabled collection uses the original customer context");
+                        Assert.equal("CustomerOS", disabled.name, "Later events do not retain the detected OS name");
+                        Assert.equal("CustomerVersion", disabled.osVer, "Later events do not retain the detected OS version");
+                        Assert.equal("CustomerSplitVersion", disabled.ver, "Later events do not retain the detected split version");
+                        let envelope = this.envelopeConstructorSpy.lastCall.returnValue;
+                        Assert.equal("CustomerVersion", envelope.tags[this.tagKeys.deviceOSVersion], "Sender sees only customer OS version");
+                    }
+                });
+            });
+        });
+
         [undefined, true, false].forEach((enabled) => {
             this.testCase({
                 name: "OsPlugin SKU: manual registration with enabled " + enabled,
@@ -417,7 +455,7 @@ export class ApplicationInsightsTests extends AITestClass {
                     this._ai.config.extensionConfig.OsPlugin.enabled = true;
                     this.clock.tick(1);
                     let flushed = 0;
-                    this.sandbox.stub(this._ai, "onunloadFlush").callsFake(() => {
+                    this.sandbox.stub(this._ai.getSender(), "onunloadFlush").callsFake(() => {
                         flushed++;
                         Assert.equal(1, state.processed.callCount, "Pending event reaches Sender before the exit flush");
                     });
@@ -428,6 +466,64 @@ export class ApplicationInsightsTests extends AITestClass {
                     Assert.equal(undefined, state.processed.lastCall.args[0].ext.os, "Pending detection does not block page exit");
                 }
             });
+        });
+
+        this.testCase({
+            name: "OsPlugin SKU: exit flush supports customer plugins without the queue-drain method",
+            useFakeTimers: true,
+            test: () => {
+                let plugin = new OsPlugin();
+                (plugin as any).onunloadFlush = undefined;
+                let state = this._initializeOsPluginTest({ enabled: false }, plugin);
+                this._ai.trackEvent({ name: "legacy plugin exit" });
+                let flushed = this.sandbox.stub(this._ai.getSender(), "onunloadFlush");
+                this._ai.onunloadFlush(false);
+                Assert.equal(1, flushed.callCount, "Channel flush runs without a plugin queue-drain method");
+                Assert.equal(1, state.processed.callCount, "Disabled customer plugin passes telemetry through");
+                Assert.equal(0, state.lookup.callCount, "Exit flush does not enable collection");
+            }
+        });
+
+        this.testCase({
+            name: "OsPlugin SKU: review regression releases queue before direct unload flush",
+            useFakeTimers: true,
+            test: () => {
+                let state = this._initializeOsPluginTest({ enabled: true });
+                this._ai.trackEvent({ name: "direct exit OS" });
+                let flushed = 0;
+                this.sandbox.stub(this._ai.getSender(), "onunloadFlush").callsFake(() => {
+                    flushed++;
+                    Assert.equal(1, state.processed.callCount, "Queued event reaches Sender before direct exit flush");
+                });
+                this._ai.onunloadFlush(false);
+                Assert.equal(1, flushed, "Direct exit flush ran once");
+                Assert.equal(1, state.processed.callCount, "Direct exit releases the queue without waiting for detection");
+            }
+        });
+
+        this.testCase({
+            name: "OsPlugin SKU: review regression releases queue before flush after unload settings change",
+            useFakeTimers: true,
+            test: () => {
+                let state = this._initializeOsPluginTest();
+                this._ai.config.extensionConfig.OsPlugin.enabled = true;
+                this.clock.tick(1);
+                this._ai.trackEvent({ name: "pending exit OS" });
+                Assert.equal(0, state.processed.callCount, "Event waits for the pending lookup");
+                this._ai.config.disablePageUnloadEvents = ["unload"];
+                this.clock.tick(1);
+                this._ai.config.disablePageUnloadEvents = ["unload", "beforeunload"];
+                this.clock.tick(1);
+                let flushed = 0;
+                this.sandbox.stub(this._ai.getSender(), "onunloadFlush").callsFake(() => {
+                    flushed++;
+                    Assert.equal(1, state.processed.callCount, "Queued event reaches Sender before its exit flush");
+                });
+                window.dispatchEvent(new Event("pagehide"));
+                Assert.ok(flushed > 0, "Page exit flush ran");
+                Assert.equal(1, state.processed.callCount, "Queued event is released once");
+                Assert.equal(undefined, state.processed.lastCall.args[0].ext.os, "Exit does not wait for detection");
+            }
         });
 
         this.testCase({
