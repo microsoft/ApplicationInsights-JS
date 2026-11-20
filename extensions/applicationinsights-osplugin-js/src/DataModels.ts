@@ -12,6 +12,12 @@
  */
 export interface IOSPluginConfiguration {
     /**
+     * Set to true to register the bundled OS plugin in the full web SDK. Unset leaves automatic registration disabled.
+     * Manually registered plugins collect by default for backward compatibility. Set to false to stop collection,
+     * release queued telemetry without enrichment, and ignore pending lookup results. Existing cached data is not deleted.
+     */
+    enabled?: boolean;
+    /**
      * Maximum time to wait for the OS plugin to return the OS information
      * Default: 200
      */

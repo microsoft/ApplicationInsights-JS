@@ -5,14 +5,15 @@
 */
 import dynamicProto from "@microsoft/dynamicproto-js";
 import {
-    BaseTelemetryPlugin, Extensions, IAppInsightsCore, IConfig, IConfigDefaults, IConfiguration, IPlugin, IProcessTelemetryContext,
-    IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryUnloadState, _eInternalMessageId, _throwInternal, addPageHideEventListener,
-    addPageUnloadEventListener, arrForEach, createProcessTelemetryContext, createUniqueNamespace, eLoggingSeverity, getSetValue,
+    BaseTelemetryPlugin, BreezeChannelIdentifier, Extensions, IAppInsightsCore, IConfig, IConfigDefaults, IConfiguration, IPlugin,
+    IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryItem, ITelemetryUnloadState, _eInternalMessageId, _throwInternal,
+    addPageHideEventListener, addPageUnloadEventListener, arrForEach, createProcessTelemetryContext, createUniqueNamespace,
+    eLoggingSeverity, getSetValue,
     mergeEvtNamespace, onConfigChange, removePageHideEventListener, removePageUnloadEventListener, safeGetLogger, setValue,
     utlGetSessionStorage, utlSetSessionStorage
 } from "@microsoft/applicationinsights-core-js";
 import { IPromise, doAwaitResponse } from "@nevware21/ts-async";
-import { ITimerHandler, asString, fnCall, getNavigator, isString, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, asString, fnCall, getNavigator, isString, objAssign, objDeepFreeze, scheduleTimeout } from "@nevware21/ts-utils";
 import { IOSPluginConfiguration } from "./DataModels";
 
 const defaultMaxTimeout = 200;
@@ -34,6 +35,7 @@ interface ModernNavigator extends Navigator {
 }
 
 const defaultOSConfig: IConfigDefaults<IOSPluginConfiguration> = objDeepFreeze({
+    enabled: undefined,
     maxTimeout: defaultMaxTimeout,
     mergeOsNameVersion: undefined
 });
@@ -53,6 +55,8 @@ export class OsPlugin extends BaseTelemetryPlugin {
         let _core: IAppInsightsCore;
         let _ocConfig: IOSPluginConfiguration;
         let _getOSTimeout: ITimerHandler | null;
+        let _enabled: boolean;
+        let _osRequest: object;
 
         let _fetchedFullVersion: boolean;
         let _mergeOsNameVersion: boolean;
@@ -77,7 +81,6 @@ export class OsPlugin extends BaseTelemetryPlugin {
                 let identifier = _self.identifier;
 
                 _evtNamespace = mergeEvtNamespace(createUniqueNamespace(identifier), core.evtNamespace && core.evtNamespace());
-                _fetchedFullVersion = _fetchCachedOSVersion(coreConfig);
 
                 _self._addHook(onConfigChange(coreConfig, (details)=> {
                     let coreConfig = details.cfg;
@@ -87,10 +90,28 @@ export class OsPlugin extends BaseTelemetryPlugin {
 
                     if (_ocConfig.mergeOsNameVersion !== undefined) {
                         _mergeOsNameVersion = _ocConfig.mergeOsNameVersion;
-                    } else if (core.getPlugin("Sender").plugin){
+                    } else if (core.getPlugin(BreezeChannelIdentifier) || core.getPlugin("Sender")){
                         _mergeOsNameVersion = true;
                     } else {
                         _mergeOsNameVersion = false;
+                    }
+
+                    let enabled = _ocConfig.enabled !== false;
+                    if (_enabled !== enabled) {
+                        _enabled = enabled;
+                        if (enabled) {
+                            _fetchedFullVersion = _fetchCachedOSVersion(coreConfig);
+                            if (!_fetchedFullVersion) {
+                                _startRetrieveOsVersion(_ocConfig.maxTimeout as number);
+                            }
+                        } else {
+                            // Invalidate pending responses before releasing telemetry without OS enrichment.
+                            _osRequest = null;
+                            _os = null;
+                            _osVer = null;
+                            _fetchedFullVersion = false;
+                            _completeOsRetrieve();
+                        }
                     }
 
                     let excludePageUnloadEvents = coreConfig.disablePageUnloadEvents || [];
@@ -101,30 +122,24 @@ export class OsPlugin extends BaseTelemetryPlugin {
                         removeEvents = true;
                     }
 
-                    if (removeEvents && _addedUnloadEvents) {
+                    if (removeEvents || !_enabled || !_getOSTimeout) {
                         _removeUnloadHandlers();
                         _excludePageUnloadEvents = null;
                     }
                 
-                    if (!_excludePageUnloadEvents && !disableFlushOnUnload) {
+                    if (_enabled && _getOSTimeout && !disableFlushOnUnload) {
                         _addUnloadHandlers(excludePageUnloadEvents);
                     }
 
                     _excludePageUnloadEvents = excludePageUnloadEvents;
                     _disableFlushOnUnload = disableFlushOnUnload;
                 }));
-
-                // Automatically start retrieving OS version without waiting for the first telemetry event
-                if (!_fetchedFullVersion) {
-                    // Start Requesting OS version process
-                    _startRetrieveOsVersion(_ocConfig.maxTimeout as number);
-                }
             };
         
             _self.processTelemetry = (event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 itemCtx = _self._getTelCtx(itemCtx);
 
-                if (_getOSTimeout) {
+                if (_isCollectionEnabled() && _getOSTimeout) {
                     // We have a timer waiting for the OS version to be retrieved, queue the event
                     _eventQueue.push({
                         ctx: itemCtx,
@@ -137,12 +152,22 @@ export class OsPlugin extends BaseTelemetryPlugin {
             };
 
             _self._doTeardown = (unloadCtx?: IProcessTelemetryUnloadContext, unloadState?: ITelemetryUnloadState) => {
+                _enabled = false;
+                _osRequest = null;
                 _completeOsRetrieve();
                 _removeUnloadHandlers();
 
                 // Just register to remove all events associated with this namespace
                 _initDefaults();
             };
+
+            _self.onunloadFlush = () => {
+                _releaseEventQueue();
+            };
+
+            function _isCollectionEnabled() {
+                return _enabled && _ocConfig && _ocConfig.enabled !== false;
+            }
 
             function _fetchCachedOSVersion(coreConfig: IConfiguration & IConfig) {
                 let fetched = false;
@@ -183,7 +208,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
 
             function _addUnloadHandlers(excludePageUnloadEvents?: string[]) {
                 function _unloading() {
-                    _releaseEventQueue();
+                    _self.onunloadFlush();
                     _removeUnloadHandlers();
                 }
 
@@ -214,50 +239,64 @@ export class OsPlugin extends BaseTelemetryPlugin {
                     if (userAgentData) {
                         const getHighEntropyValues = userAgentData.getHighEntropyValues;
                         if (getHighEntropyValues) {
+                            let request = _osRequest = {};
                             // Timeout request if it takes more than 200 milliseconds (by default)
                             _getOSTimeout = scheduleTimeout(() => {
                                 _completeOsRetrieve();
                             }, maxTimeout);
 
-                            doAwaitResponse(fnCall(getHighEntropyValues, userAgentData, ["platformVersion"]), (response: any) => {
-                                // Always mark as fetched regardless of success or failure
-                                _fetchedFullVersion = true;
-                                try {
-                                    if (!response.rejected) {
-                                        let platformVersionResponse = response.value;
-                                        if (platformVersionResponse.platformVersion && platformVersionResponse.platform) {
-                                            _os = platformVersionResponse.platform;
-                                            _osVer = parseInt(platformVersionResponse.platformVersion);
-                                            if (_os === "Windows" && !isNaN(_osVer)) {
-                                                if (_osVer == 0){
-                                                    _osVer = 8;
-                                                } else if (_osVer < 13){
-                                                    _osVer = 10;
-                                                } else{
-                                                    _osVer = 11;
-                                                }
-                                            }
-
-                                            _storeCachedOSVersion((_core || {}).config as IConfig);
-                                        }
-                                    } else {
-                                        _throwInternal(safeGetLogger(_core),
-                                            eLoggingSeverity.CRITICAL,
-                                            _eInternalMessageId.PluginException,
-                                            "Could not retrieve operating system: " + response.reason);
+                            try {
+                                doAwaitResponse(fnCall(getHighEntropyValues, userAgentData, ["platformVersion"]), (response: any) => {
+                                    // A disabled, unloaded, or superseded lookup must not update state or session storage.
+                                    if (!_isCollectionEnabled() || _osRequest !== request) {
+                                        return;
                                     }
-                                } finally {
-                                    _completeOsRetrieve();
-                                }
-                            });
+                                    // Always mark as fetched regardless of success or failure
+                                    _fetchedFullVersion = true;
+                                    try {
+                                        if (!response.rejected) {
+                                            let platformVersionResponse = response.value || {};
+                                            if (platformVersionResponse.platformVersion && platformVersionResponse.platform) {
+                                                _os = platformVersionResponse.platform;
+                                                _osVer = parseInt(platformVersionResponse.platformVersion);
+                                                if (_os === "Windows" && !isNaN(_osVer)) {
+                                                    if (_osVer == 0){
+                                                        _osVer = 8;
+                                                    } else if (_osVer < 13){
+                                                        _osVer = 10;
+                                                    } else{
+                                                        _osVer = 11;
+                                                    }
+                                                }
+
+                                                _storeCachedOSVersion(_core.config as IConfig);
+                                            }
+                                        } else {
+                                            _throwInternal(safeGetLogger(_core),
+                                                eLoggingSeverity.CRITICAL,
+                                                _eInternalMessageId.PluginException,
+                                                "Could not retrieve operating system: " + response.reason);
+                                        }
+                                    } finally {
+                                        _completeOsRetrieve();
+                                    }
+                                });
+                            } catch (error) {
+                                _fetchedFullVersion = true;
+                                _completeOsRetrieve();
+                                _throwInternal(safeGetLogger(_core), eLoggingSeverity.CRITICAL,
+                                    _eInternalMessageId.PluginException, "Could not retrieve operating system: " + error);
+                            }
                         }
                     }
                 }
             }
 
             function _updateTeleItemWithOs(event: ITelemetryItem) {
-                if (_fetchedFullVersion && (_os || _osVer)) {
-                    let extOS: any = getSetValue(getSetValue(event, strExt) as any, Extensions.OSExt);
+                if (_isCollectionEnabled() && _fetchedFullVersion && (_os || _osVer)) {
+                    let ext = getSetValue(event, strExt) as any;
+                    // PropertiesPlugin may attach shared customer context; only enrich this event's copy.
+                    let extOS = ext[Extensions.OSExt] = objAssign({}, ext[Extensions.OSExt]);
                     if (_mergeOsNameVersion){
                         let mergedOS = (_os || "") + (_osVer ? asString(_osVer) : "");
                         setValue(extOS, "osVer", mergedOS, isString);
@@ -285,17 +324,20 @@ export class OsPlugin extends BaseTelemetryPlugin {
             * Release internal event queue
             */
             function _releaseEventQueue() {
-                arrForEach(_eventQueue, (evt) => {
+                let events = _eventQueue;
+                _eventQueue = [];
+                arrForEach(events, (evt) => {
                     _updateTeleItemWithOs(evt.item);
                     _self.processNext(evt.item, evt.ctx);
                 });
-                _eventQueue = [];
             }
 
             function _initDefaults() {
                 _core = null;
                 _ocConfig = null;
                 _getOSTimeout = null;
+                _enabled = false;
+                _osRequest = null;
                 _eventQueue = [];
                 _os = null;
                 _osVer = null;
@@ -311,6 +353,13 @@ export class OsPlugin extends BaseTelemetryPlugin {
         });
     }
     public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Release pending telemetry before flushing channels on page exit. The OS lookup remains active until completion or timeout.
+     */
+    public onunloadFlush(): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
