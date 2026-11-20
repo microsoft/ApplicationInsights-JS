@@ -3,9 +3,11 @@ import { setBypassLazyCache, strStartsWith } from "@nevware21/ts-utils";
 import { ICorrelationConfig } from "../../../../src/interfaces/ai/ICorrelationConfig";
 import { getIEVersion } from "../../../../src/utils/EnvUtils";
 import { uaDisallowsSameSiteNone } from "../../../../src/core/CookieMgr";
-import { correlationIdCanIncludeCorrelationHeader } from "../../../../src/utils/Util";
+import { correlationIdCanIncludeCorrelationHeader, AjaxHelperParseDependencyPath } from "../../../../src/utils/Util";
 import { createDomEvent } from "../../../../src/utils/DomHelperFuncs";
 import { urlParseFullHost, urlParseHost, urlParseUrl } from "../../../../src/utils/UrlHelperFuncs";
+import { DiagnosticLogger } from "../../../../src/diagnostics/DiagnosticLogger";
+import { RemoteDependencyData } from "../../../../src/telemetry/ai/RemoteDependencyData";
 
 export class UtilTests extends AITestClass {
     private testRegexLists = (config: ICorrelationConfig, exp: boolean, host: string) => {
@@ -57,6 +59,140 @@ export class UtilTests extends AITestClass {
                 document.createElement = origCreateElement;
                 Assert.ok(passed);
                 Assert.ok(match, "host should be portal.azure.com");
+            }
+        });
+
+        this.testCase({
+            name: "UrlHelper: parseUrl and correlationIdCanIncludeCorrelationHeader treat backslash as authority boundary without DOM",
+            test: () => {
+                const origCreateElement = document.createElement;
+                document.createElement = null;
+
+                let parsedHost: string;
+                let parsedEmptyUserinfoHost: string;
+                let parsedMultipleAtHost: string;
+                let canIncludeTrusted: boolean;
+
+                try {
+                    const testUrl = "https://external.example:8080\\@trusted.example/api";
+                    parsedHost = urlParseUrl(testUrl).host;
+                    parsedEmptyUserinfoHost = urlParseUrl("https://@api.example.com:8080/api").host;
+                    parsedMultipleAtHost = urlParseUrl("https://user:p@ss@api.example.com:8080/api").host;
+
+                    const config = {
+                        enableCorsCorrelation: true,
+                        correlationHeaderDomains: ["trusted.example"]
+                    } as ICorrelationConfig;
+
+                    canIncludeTrusted = correlationIdCanIncludeCorrelationHeader(config, testUrl, "current.example");
+                } finally {
+                    document.createElement = origCreateElement;
+                }
+
+                Assert.equal("external.example:8080", parsedHost);
+                Assert.equal("api.example.com:8080", parsedEmptyUserinfoHost);
+                Assert.equal("api.example.com:8080", parsedMultipleAtHost);
+                Assert.equal(false, canIncludeTrusted, "Should not include correlation header because target host is external.example, not trusted.example");
+            }
+        });
+
+        this.testCase({
+            name: "UrlHelper: URLs embedded in path or query never supply request host without DOM",
+            test: () => {
+                const origCreateElement = document.createElement;
+                document.createElement = null;
+
+                let relativeQueryHost: string;
+                let relativePathHost: string;
+                let relativeFullHost: string;
+                let relativeParsedHost: string;
+                let outerWithEmbeddedHost: string;
+                let outerWithEmbeddedFullHost: string;
+                let emptyAuthHost: string;
+                let emptyAuthFullHost: string;
+
+                try {
+                    relativeQueryHost = urlParseUrl("/path/to/proxy?target=https://embedded.example.com:8080/endpoint").host;
+                    relativePathHost = urlParseUrl("/proxy/https://embedded.example.com:8080/endpoint").host;
+                    relativeFullHost = urlParseFullHost("/path/to/proxy?target=https://embedded.example.com:8080/endpoint");
+                    relativeParsedHost = urlParseHost("/path/to/proxy?target=https://embedded.example.com:8080/endpoint");
+
+                    outerWithEmbeddedHost = urlParseUrl("https://outer.example.com/proxy?target=https://embedded.example.com:8080/endpoint").host;
+                    outerWithEmbeddedFullHost = urlParseFullHost("https://outer.example.com/proxy?target=https://embedded.example.com:8080/endpoint");
+
+                    emptyAuthHost = urlParseUrl("https:///path?target=https://embedded.example.com:8080/endpoint").host;
+                    emptyAuthFullHost = urlParseFullHost("https:///path?target=https://embedded.example.com:8080/endpoint");
+                } finally {
+                    document.createElement = origCreateElement;
+                }
+
+                Assert.equal("", relativeQueryHost);
+                Assert.equal("", relativePathHost);
+                Assert.equal(null, relativeFullHost);
+                Assert.equal("", relativeParsedHost);
+                Assert.equal("outer.example.com", outerWithEmbeddedHost);
+                Assert.equal("outer.example.com", outerWithEmbeddedFullHost);
+                Assert.equal("", emptyAuthHost);
+                Assert.equal(null, emptyAuthFullHost);
+            }
+        });
+
+        this.testCase({
+            name: "CorrelationidHelper: canIncludeCorrelationHeader returns false when destination cannot be determined without DOM",
+            test: () => {
+                const origCreateElement = document.createElement;
+                document.createElement = null;
+
+                let relResultWithCurrent: boolean;
+                let relResultNoCurrent: boolean;
+                let relCorsResult: boolean;
+                let embeddedQueryResult: boolean;
+                let emptyAuthResult: boolean;
+
+                try {
+                    const emptyConfig = {} as ICorrelationConfig;
+                    const corsConfig = { enableCorsCorrelation: true } as ICorrelationConfig;
+
+                    relResultWithCurrent = correlationIdCanIncludeCorrelationHeader(emptyConfig, "/path/to/resource", "current.example");
+                    relResultNoCurrent = correlationIdCanIncludeCorrelationHeader(emptyConfig, "/path/to/resource");
+                    relCorsResult = correlationIdCanIncludeCorrelationHeader(corsConfig, "/path/to/resource", "current.example");
+
+                    embeddedQueryResult = correlationIdCanIncludeCorrelationHeader(emptyConfig, "/proxy?target=https://embedded.example.com", "current.example");
+                    emptyAuthResult = correlationIdCanIncludeCorrelationHeader(emptyConfig, "https:///path?target=https://embedded.example.com", "current.example");
+                } finally {
+                    document.createElement = origCreateElement;
+                }
+
+                Assert.equal(false, relResultWithCurrent);
+                Assert.equal(false, relResultNoCurrent);
+                Assert.equal(false, relCorsResult);
+                Assert.equal(false, embeddedQueryResult);
+                Assert.equal(false, emptyAuthResult);
+            }
+        });
+
+        this.testCase({
+            name: "RemoteDependencyData: dependency telemetry target is expected host and non-default port without DOM",
+            test: () => {
+                const origCreateElement = document.createElement;
+                document.createElement = null;
+
+                let depTarget: string;
+                let depFieldsTarget: string;
+
+                try {
+                    const testUrl = "https://fakeuser:fakepassword@service.example.com:8443/api/v1/resource?param=value#section";
+                    const dependency = new RemoteDependencyData(new DiagnosticLogger(), "dep-test-id", testUrl, "GET /api/v1/resource", 123, true, 200, "GET");
+                    depTarget = dependency.target;
+
+                    const depFields = AjaxHelperParseDependencyPath(new DiagnosticLogger(), testUrl, "GET", "");
+                    depFieldsTarget = depFields.target;
+                } finally {
+                    document.createElement = origCreateElement;
+                }
+
+                Assert.equal("service.example.com:8443", depTarget);
+                Assert.equal("service.example.com:8443", depFieldsTarget);
             }
         });
 
@@ -114,6 +250,47 @@ export class UtilTests extends AITestClass {
                 Assert.equal("p.r.e.f.i.x.bing.com", urlParseHost("https://wwW2.p.r.e.f.i.x.bing.com:443/", true));
                 Assert.equal("p.r.e.f.i.x.bing.com:443", urlParseHost("http://wwW2.p.r.e.f.i.x.bing.com:443/", true));
                 Assert.equal("p.r.e.f.i.x.bing.com:80", urlParseHost("https://wwW2.p.r.e.f.i.x.bing.com:80/", true));
+
+                // IPv6 literals
+                Assert.equal("[::1]", urlParseHost("http://[::1]"));
+                Assert.equal("[::1]", urlParseHost("http://[::1]/some/endpoint"));
+                Assert.equal("[::1]", urlParseHost("http://[::1]:8080/some/endpoint"));
+                Assert.equal("[::1]", urlParseHost("http://[::1]:8080/some/endpoint", false));
+                Assert.equal("[::1]:8080", urlParseHost("http://[::1]:8080/some/endpoint", true));
+                Assert.equal("[::1]", urlParseHost("http://[::1]:80/some/endpoint", true));
+                Assert.equal("[::1]", urlParseHost("https://[::1]:443/some/endpoint", true));
+                Assert.equal("[::1]:80", urlParseHost("https://[::1]:80/some/endpoint", true));
+                Assert.equal("[::1]:443", urlParseHost("http://[::1]:443/some/endpoint", true));
+                Assert.equal("[2001:db8::1]", urlParseHost("https://[2001:db8::1]/path"));
+                Assert.equal("[2001:db8::1]:9999", urlParseHost("https://[2001:db8::1]:9999/path", true));
+
+                // URLs with userinfo
+                Assert.equal("api.example.com", urlParseHost("https://user:pw@api.example.com:8080/api"));
+                Assert.equal("api.example.com", urlParseHost("https://user:pw@api.example.com:8080/api", false));
+                Assert.equal("api.example.com:8080", urlParseHost("https://user:pw@api.example.com:8080/api", true));
+                Assert.equal("api.example.com", urlParseHost("https://user@api.example.com/api"));
+                Assert.equal("api.example.com", urlParseHost("https://user@api.example.com:8080/api", false));
+                Assert.equal("api.example.com:8080", urlParseHost("https://user@api.example.com:8080/api", true));
+                Assert.equal("[::1]:8080", urlParseHost("http://user:pw@[::1]:8080/api", true));
+                Assert.equal("[::1]", urlParseHost("http://user:pw@[::1]:8080/api", false));
+                Assert.equal("bing.com", urlParseHost("https://user:pw@www.bing.com:8080/api"));
+                Assert.equal("bing.com:8080", urlParseHost("https://user:pw@www.bing.com:8080/api", true));
+
+                // Backslash authority boundaries
+                Assert.equal("external.example:8080", urlParseHost("https://external.example:8080\\@trusted.example/api", true));
+                Assert.equal("external.example", urlParseHost("https://external.example:8080\\@trusted.example/api", false));
+                Assert.equal("external.example", urlParseHost("https://external.example\\@trusted.example/api"));
+
+                // Empty userinfo and multiple @ in userinfo
+                Assert.equal("api.example.com:8080", urlParseHost("https://@api.example.com:8080/api", true));
+                Assert.equal("api.example.com", urlParseHost("https://@api.example.com:8080/api", false));
+                Assert.equal("api.example.com:8080", urlParseHost("https://user:p@ss@api.example.com:8080/api", true));
+                Assert.equal("api.example.com", urlParseHost("https://user:p@ss@api.example.com:8080/api", false));
+
+                // URLs with embedded URLs in query or path
+                Assert.equal("outer.example.com", urlParseHost("https://outer.example.com/proxy?target=https://embedded.example.com:8080/endpoint"));
+                Assert.equal("outer.example.com:4433", urlParseHost("https://outer.example.com:4433/proxy?target=https://embedded.example.com:8080/endpoint", true));
+                Assert.equal("", urlParseHost("/path/to/proxy?target=https://embedded.example.com:8080/endpoint"));
             }
         });
 
@@ -164,6 +341,76 @@ export class UtilTests extends AITestClass {
                 Assert.equal("wwW2.p.r.e.f.i.x.bing.com", urlParseFullHost("https://wwW2.p.r.e.f.i.x.bing.com:443/", true));
                 Assert.equal("wwW2.p.r.e.f.i.x.bing.com:443", urlParseFullHost("http://wwW2.p.r.e.f.i.x.bing.com:443/", true));
                 Assert.equal("wwW2.p.r.e.f.i.x.bing.com:80", urlParseFullHost("https://wwW2.p.r.e.f.i.x.bing.com:80/", true));
+
+                // IPv6 literals
+                Assert.equal("[::1]", urlParseFullHost("http://[::1]"));
+                Assert.equal("[::1]", urlParseFullHost("http://[::1]/some/endpoint"));
+                Assert.equal("[::1]", urlParseFullHost("http://[::1]:8080/some/endpoint"));
+                Assert.equal("[::1]", urlParseFullHost("http://[::1]:8080/some/endpoint", false));
+                Assert.equal("[::1]:8080", urlParseFullHost("http://[::1]:8080/some/endpoint", true));
+                Assert.equal("[::1]", urlParseFullHost("http://[::1]:80/some/endpoint", true));
+                Assert.equal("[::1]", urlParseFullHost("https://[::1]:443/some/endpoint", true));
+                Assert.equal("[::1]:80", urlParseFullHost("https://[::1]:80/some/endpoint", true));
+                Assert.equal("[::1]:443", urlParseFullHost("http://[::1]:443/some/endpoint", true));
+                Assert.equal("[2001:db8::1]", urlParseFullHost("https://[2001:db8::1]/path"));
+                Assert.equal("[2001:db8::1]:9999", urlParseFullHost("https://[2001:db8::1]:9999/path", true));
+
+                // URLs with userinfo
+                Assert.equal("api.example.com", urlParseFullHost("https://user:pw@api.example.com:8080/api"));
+                Assert.equal("api.example.com", urlParseFullHost("https://user:pw@api.example.com:8080/api", false));
+                Assert.equal("api.example.com:8080", urlParseFullHost("https://user:pw@api.example.com:8080/api", true));
+                Assert.equal("api.example.com", urlParseFullHost("https://user@api.example.com/api"));
+                Assert.equal("api.example.com", urlParseFullHost("https://user@api.example.com:8080/api", false));
+                Assert.equal("api.example.com:8080", urlParseFullHost("https://user@api.example.com:8080/api", true));
+                Assert.equal("[::1]:8080", urlParseFullHost("http://user:pw@[::1]:8080/api", true));
+                Assert.equal("[::1]", urlParseFullHost("http://user:pw@[::1]:8080/api", false));
+                Assert.equal("www.bing.com", urlParseFullHost("https://user:pw@www.bing.com:8080/api"));
+                Assert.equal("www.bing.com:8080", urlParseFullHost("https://user:pw@www.bing.com:8080/api", true));
+
+                // Backslash authority boundaries
+                Assert.equal("external.example:8080", urlParseFullHost("https://external.example:8080\\@trusted.example/api", true));
+                Assert.equal("external.example", urlParseFullHost("https://external.example:8080\\@trusted.example/api", false));
+                Assert.equal("external.example", urlParseFullHost("https://external.example\\@trusted.example/api"));
+
+                // Empty userinfo and multiple @ in userinfo
+                Assert.equal("api.example.com:8080", urlParseFullHost("https://@api.example.com:8080/api", true));
+                Assert.equal("api.example.com", urlParseFullHost("https://@api.example.com:8080/api", false));
+                Assert.equal("api.example.com:8080", urlParseFullHost("https://user:p@ss@api.example.com:8080/api", true));
+                Assert.equal("api.example.com", urlParseFullHost("https://user:p@ss@api.example.com:8080/api", false));
+
+                // URLs with embedded URLs in query or path
+                Assert.equal("outer.example.com", urlParseFullHost("https://outer.example.com/proxy?target=https://embedded.example.com:8080/endpoint"));
+                Assert.equal("outer.example.com:4433", urlParseFullHost("https://outer.example.com:4433/proxy?target=https://embedded.example.com:8080/endpoint", true));
+                Assert.equal(null, urlParseFullHost("/path/to/proxy?target=https://embedded.example.com:8080/endpoint"));
+                Assert.equal(null, urlParseFullHost("https:///path?target=https://embedded.example.com:8080/endpoint"));
+            }
+        });
+
+        this.testCase({
+            name: "CorrelationidHelper: canIncludeCorrelationHeader check with IPv6 literals and userinfo",
+            test: () => {
+                const emptyConfig = {} as ICorrelationConfig;
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "http://[::1]:8080/api", "[::1]:8080"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "http://[::1]:80/api", "[::1]"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "https://[::1]:443/api", "[::1]"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "http://[::1]:8000/api", "[::1]:8000"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "https://[::1]:4433/api", "[::1]:4433"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(emptyConfig, "http://[::1]:8080/api", "[::1]:9000"));
+
+                // Userinfo
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "https://user:pw@api.example.com:8080/api", "api.example.com:8080"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "https://user@api.example.com/api", "api.example.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(emptyConfig, "http://user:pw@[::1]:8080/api", "[::1]:8080"));
+
+                // With correlationHeaderDomains
+                const config = {
+                    enableCorsCorrelation: true,
+                    correlationHeaderDomains: ["::1", "api.example.com"]
+                } as ICorrelationConfig;
+
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "http://[::1]:8080/api", "otherhost.com"));
+                Assert.equal(true, correlationIdCanIncludeCorrelationHeader(config, "https://user:pw@api.example.com:8080/api", "otherhost.com"));
+                Assert.equal(false, correlationIdCanIncludeCorrelationHeader(config, "http://[::2]:8080/api", "otherhost.com"));
             }
         });
 
