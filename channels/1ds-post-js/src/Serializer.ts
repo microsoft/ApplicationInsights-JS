@@ -46,6 +46,11 @@ function _isEventRecord(value: any): boolean {
 
 function _copyEventValue(value: any) {
     return objDeepCopy(value, (details) => {
+        // Let JSON.stringify call toJSON on the original value with its property key.
+        if (!details.isPrim && isFunction(details.value.toJSON)) {
+            return true;
+        }
+
         // objDeepCopy already copies plain records, but leaves class instances by reference.
         if (!details.isPlain && _isEventRecord(details.value)) {
             details.result = {};

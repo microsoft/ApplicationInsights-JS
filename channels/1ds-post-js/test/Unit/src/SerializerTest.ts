@@ -76,6 +76,23 @@ export class SerializerTest extends AITestClass {
         });
 
         this.testCase({
+            name: "getEventBlob preserves non-enumerable toJSON on nested records",
+            test: () => {
+                let label = { id: "home" };
+                Object.defineProperty(label, "toJSON", {
+                    value: function (key: string) { return this.id + ":" + key; }
+                });
+                let event = objDeepFreeze({
+                    name: "nested",
+                    data: { state: { label, labels: [label] } }
+                });
+
+                let parsed = JSON.parse(new Serializer().getEventBlob(event));
+                QUnit.assert.deepEqual(parsed.data.state, { label: "home:label", labels: ["home:0"] });
+            }
+        });
+
+        this.testCase({
             name: "appendPayload reports serialization errors and drops only the failed event",
             test: () => {
                 let logger = new DiagnosticLogger({ enableDebug: true });
