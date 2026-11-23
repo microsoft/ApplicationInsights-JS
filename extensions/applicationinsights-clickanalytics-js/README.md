@@ -130,6 +130,14 @@ appInsights.loadAppInsights();
 | [behaviorValidator](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-clickanalytics-js/interfaces/IClickAnalyticsConfiguration.html#behaviorValidator)     | Function                           | null  | Callback function to use for the `data-*-bhvr` value validation. For more information, go to [behaviorValidator section](#behaviorvalidator).|
 | [defaultRightClickBhvr](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-clickanalytics-js/interfaces/IClickAnalyticsConfiguration.html#defaultRightClickBhvr) | string (or) number                 | ''      | Default Behavior value when Right Click event has occurred. This value will be overridden if the element has the `data-*-bhvr` attribute. |
 | [dropInvalidEvents](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-clickanalytics-js/interfaces/IClickAnalyticsConfiguration.html#dropInvalidEvents)     | boolean                            | false   | Flag to drop events that do not have useful click data.                                                                                   |
+| [trackElementTypes](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-clickanalytics-js/interfaces/IClickAnalyticsConfiguration.html#trackElementTypes)     | string                             | "A,BUTTON,AREA,INPUT" | Comma separated list of element tag names that are automatically captured.                                                  |
+| [trackInputTypes](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-clickanalytics-js/interfaces/IClickAnalyticsConfiguration.html#trackInputTypes)     | string                             | "BUTTON,CHECKBOX,RADIO,RESET,SUBMIT" | Comma separated list of `<input>` `type` values that are automatically captured when `INPUT` is included in `trackElementTypes`. See [Input element capture](#input-element-capture). |
+
+### Input element capture
+
+Including `INPUT` in `trackElementTypes` does not capture clicks on every `<input>` element. Only inputs whose `type` is listed in `trackInputTypes` are automatically captured, by default `button`, `checkbox`, `radio`, `reset` and `submit`. Clicks on other input types such as `text`, `email`, `number` or `search` (and inputs without a `type` attribute, which default to `text`) are ignored.
+
+You can add other input types, for example `trackInputTypes: "BUTTON,CHECKBOX,RADIO,RESET,SUBMIT,TEXT,SEARCH"`. To avoid collecting user entered data, the plugin never uses the `value` of these additional input types as the default content name; it falls back to the `name`, `alt` or `id` attribute instead. Review the data your application tags with `data-*` attributes before enabling additional input types.
 
 ### [IValueCallback](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-clickanalytics-js/interfaces/IValueCallback.html)
 

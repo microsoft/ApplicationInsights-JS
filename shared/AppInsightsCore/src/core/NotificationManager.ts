@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { IPromise, createAllPromise, createPromise, doAwaitResponse } from "@nevware21/ts-async";
-import { ITimerHandler, arrForEach, arrIndexOf, objDefine, safe, scheduleTimeout } from "@nevware21/ts-utils";
+import { ITimerHandler, arrForEach, arrIndexOf, arrSome, objDefine, safe, scheduleTimeout } from "@nevware21/ts-utils";
 import { createDynamicConfig } from "../config/DynamicConfig";
 import {
     STR_EVENTS_DISCARDED, STR_EVENTS_RETRY, STR_EVENTS_SEND_REQUEST, STR_EVENTS_SENT, STR_OFFLINE_DROP, STR_OFFLINE_SENT, STR_OFFLINE_STORE,
@@ -23,6 +23,20 @@ const defaultValues = {
 interface IAsyncNotifications {
     h: ITimerHandler;
     cb: Array<{ fn: (listener: INotificationListener) => void, arg: INotificationListener }>
+}
+
+function _getNotificationCallbacks(manager: INotificationManager): INotificationListener {
+    return {
+        eventsSent: manager.eventsSent,
+        eventsDiscarded: manager.eventsDiscarded,
+        eventsRetry: manager.eventsRetry,
+        eventsSendRequest: manager.eventsSendRequest,
+        perfEvent: manager.perfEvent,
+        offlineEventsStored: manager.offlineEventsStored,
+        offlineBatchSent: manager.offlineBatchSent,
+        offlineBatchDrop: manager.offlineBatchDrop,
+        unload: manager.unload
+    };
 }
 
 function _runScheduledListeners(asyncNotifications: IAsyncNotifications) {
@@ -65,6 +79,8 @@ export class NotificationManager implements INotificationManager {
     constructor(config?: IConfiguration) {
         let perfEvtsSendAll: boolean;
         let unloadHandler: IUnloadHook;
+        let _notificationCallbacks: INotificationListener;
+        let _notificationProxies: INotificationListener;
         let _listeners: INotificationListener[] = [];
         let _asyncNotifications: IAsyncNotifications = {
             h: null,
@@ -159,6 +175,14 @@ export class NotificationManager implements INotificationManager {
                 });
             };
 
+            _self.hasListener = function (name: string) {
+                let callback = _self[name];
+                // Only this instance's built-in handlers can use the listener-only fast path.
+                // DynamicProto may expose either the prototype proxy or the instance implementation.
+                return this !== _self || (callback !== _notificationCallbacks[name] && callback !== _notificationProxies[name]) ||
+                    arrSome(_listeners, (listener) => !!(listener && listener[name]));
+            };
+
             _self.offlineEventsStored = (events: ITelemetryItem[]): void => {
                 if (events && events.length) {
                     _runListeners(_listeners, STR_OFFLINE_STORE, _asyncNotifications, (listener) => {
@@ -220,9 +244,23 @@ export class NotificationManager implements INotificationManager {
                     _finishUnload();
                 }
             };
+
+            _notificationCallbacks = _getNotificationCallbacks(_self);
         });
+
+        _notificationProxies = _getNotificationCallbacks(NotificationManager.prototype);
     }
     
+    /**
+     * Indicates whether the named notification has a matching listener or an overridden handler.
+     * @param name - The notification method to query.
+     * @returns True for a matching listener or custom handler; false when the notification has no consumers.
+     */
+    hasListener?(name: string): boolean {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
     /**
      * Adds a notification listener.
      * @param listener - The notification listener to be added.

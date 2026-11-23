@@ -2,7 +2,37 @@
 
 > Note: ES3/IE8 compatibility will be removed in the future v3.x.x releases (scheduled for mid-late 2022), so if you need to retain ES3 compatibility you will need to remain on the 2.x.x versions of the SDK or your runtime will need install polyfill's to your ES3 environment before loading / initializing the SDK.
 
-<!-- ## Unreleased Changes -->
+## Unreleased Changes
+
+### Significant Changes
+
+- CDN preview deployment now uses `next` instead of `beta` across the SDK, extensions, tools, and configuration.
+  Stable release artifacts publish to `next` and their existing production destinations; release candidates publish only to `next`.
+  Beta CDN publishing, activation, and listing options are removed, while existing CDN artifacts and production URLs remain unchanged.
+  Dev/nightly folders, alpha test-storage isolation, npm prerelease tags, and version-generation tooling are unchanged.
+  The SDK CDN monitor now checks `next`.
+
+### Bug Fixes
+
+- The 1DS post channel no longer drops events when it encounters frozen event data. It leaves the original data unchanged and preserves custom `toJSON` methods on nested values.
+- Automatic payload compression is now limited to recognized Microsoft Application Insights ingestion endpoints. Custom endpoints and
+  ingestion proxies continue to receive JSON request bodies unless `enableCompressionForCustomEndpoint` is explicitly enabled for a
+  gzip-capable endpoint.
+- Added the versioned `zipPayloadV2` feature flag for safe CDN rollout. Older SDKs ignore this key. Rollout must ship and gain adoption
+  for the patched SDK first, then publish a new CDN configuration using `zipPayloadV2` while leaving legacy `zipPayload` absent. The
+  legacy key remains supported for customer compatibility and uses the same endpoint safety checks.
+- Payload headers are isolated per request so a compressed asynchronous send cannot leak `Content-Encoding: gzip` into a later
+  uncompressed synchronous, unload, beacon, or fallback request.
+- Skip channel telemetry reconstruction when the notification manager confirms there are no consumers for the relevant sent, discarded, or retry notification. Add the optional `hasListener(name: string)` hint to the core notification manager. Custom managers without this hint and overridden built-in notification handlers retain the existing dispatch behavior. Notifications with matching listeners, including SDK Stats, retain the existing reconstruction behavior.
+
+## 3.4.6 (November 5th, 2026)
+This is a maintenance release for the 3.4.x version line that improves page unload event handling. The SDK now uses the deprecated unload event only as a fallback when the preferred page lifecycle events are unavailable. The @microsoft/1ds-post-js channel is numbered 4.4.6 and requires v3.4.6.
+
+### Changelog
+
+- [#2778](https://github.com/) Only hook the deprecated unload event as a fallback
+
+**Full Changelog**: https://github.com/microsoft/ApplicationInsights-JS/compare/3.4.5...3.4.6
 
 ## 3.4.5 (October 5th, 2026)
 

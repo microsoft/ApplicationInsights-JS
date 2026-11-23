@@ -11,9 +11,9 @@ The plugin provides all the rest of the functionality.
 
 ## Setup and Running
 
-1. build the plugin. [See the main README for instructions](../../../README.md).
+1. build the plugin. [See the main README for instructions](https://github.com/microsoft/ApplicationInsights-JS/blob/main/README.md).
 2. open up `./public/index.html` in your browser of choice.
-   1. [See 'Supported Browsers' in the parent README](../README.md)
+   1. [See 'Supported Browsers' in the parent README](https://github.com/microsoft/ApplicationInsights-JS/blob/main/extensions/applicationinsights-debugplugin-js/README.md)
 
 ## Contributing
 

@@ -53,7 +53,8 @@ const defaultValues: IConfigDefaults<IClickAnalyticsConfiguration> = objDeepFree
     dropInvalidEvents : false,
     urlCollectHash: false,
     urlCollectQuery: false,
-    trackElementTypes: cfgDfString("A,BUTTON,AREA,INPUT")
+    trackElementTypes: cfgDfString("A,BUTTON,AREA,INPUT"),
+    trackInputTypes: cfgDfString("BUTTON,CHECKBOX,RADIO,RESET,SUBMIT")
 });
 
 function _dataPrefixChk(val: any) {
@@ -72,7 +73,6 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
         let _pageAction: PageAction;
         let _autoCaptureHandler: IAutoCaptureHandler;
         let _contentHandler: IContentHandler;
-        let _autoCapture: boolean;
 
         dynamicProto(ClickAnalyticsPlugin, this, (_self, _base) => {
             let _identifier = _self.identifier;
@@ -154,11 +154,10 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                         _autoCaptureHandler._doUnload();
                     }
                     _autoCaptureHandler = new AutoCaptureHandler(_self, _config, _pageAction, logger);
-                    let autoCapture = !!_config.autoCapture;
-                    if (!_autoCapture && autoCapture) {
+                    // The previous handler (and its listeners) was unloaded above, so always re-attach when enabled
+                    if (_config.autoCapture) {
                         _autoCaptureHandler.click();
                     }
-                    _autoCapture = autoCapture;
                 }));
             }
 
@@ -167,7 +166,6 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
                 _pageAction = null;
                 _autoCaptureHandler = null;
                 _contentHandler = null;
-                _autoCapture = false;
             }
         });
     }

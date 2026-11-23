@@ -12,6 +12,9 @@ import { isValueAssigned, removeInvalidElements, walkUpDomChainWithElementValida
 
 const MAX_CONTENTNAME_LENGTH = 200;
 
+// Input types whose value is a developer defined label/value rather than user entered data
+const valueSafeInputTypes: { [type: string]: boolean } = { BUTTON: true, CHECKBOX: true, RADIO: true, RESET: true, SUBMIT: true };
+
 export class DomContentHandler implements IContentHandler {
 
     /**
@@ -259,13 +262,18 @@ export class DomContentHandler implements IContentHandler {
 
                 var doc = getDocument() || ({} as Document);
                 var contentName;
-                switch (element.tagName) {
+                // tagName is lowercase for XHTML documents
+                switch (element.tagName.toUpperCase()) {
                 case "A":
                     contentName = doc.all ? element.innerText || element.innerHTML : element.text || element.innerHTML;
                     break;
                 case "IMG":
                 case "AREA":
                     contentName = element.alt;
+                    break;
+                case "INPUT":
+                    contentName = (valueSafeInputTypes[(element.type || "").toUpperCase()] ? element.value : "") ||
+                        element.name || element.alt || element.id;
                     break;
                 default:
                     contentName = element.value || element.name || element.alt || element.innerText || element.id;

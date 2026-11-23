@@ -54,8 +54,8 @@ Function Validate-Params
 
     $version = Get-VersionDetails $activeVersion
 
-    if ([string]::IsNullOrWhiteSpace($version.type) -eq $true) {
-        Write-LogFailure "Unknown release type"
+    if ("release","rc","dev","nightly","alpha" -NotContains $version.type) {
+        Write-LogFailure "Version type [$($version.type)] is not supported"
     }
 
     $versionParts = $version.ver.Split(".")
@@ -73,21 +73,21 @@ Function Validate-Params
     # Publish the full versioned files to all release folders
     if ($version.type -eq "release") {
         # Normal publishing deployment
-        if ("beta","next","public" -NotContains $container) {
+        if ("next","public" -NotContains $container) {
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
     }
     elseif ($version.type -eq "rc") {
-        if ("beta","next" -NotContains $container) {
+        if ($container -ne "next") {
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
     }
-    elseif ($version.type -eq "dev" -or $version.type -eq "beta") {
+    elseif ($version.type -eq "dev") {
         if ($version.type -ne $container) {
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
     }
-    elseif ($version.type -like "nightly*") {
+    elseif ($version.type -eq "nightly") {
         if ("nightly" -ne $container) {
             Write-LogFailure "Container [$container] is not valid for version type [$($version.type)]"
         }
@@ -139,7 +139,7 @@ $files = New-Object 'system.collections.generic.dictionary[string, system.collec
 $storePath = "$container/ext"
 if ($container -eq "public") {
     $storePath = "scripts/b/ext"
-} elseif ($container -ne "beta" -and $container -ne "next" -and $container -ne "dev" -and $container -ne "nightly") {
+} elseif ($container -ne "next" -and $container -ne "dev" -and $container -ne "nightly") {
     $global:connectDetails.testOnly = $true
     $global:connectDetails.storeContainer = "tst/ext"
 }

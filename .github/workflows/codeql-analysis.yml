@@ -40,7 +40,7 @@ jobs:
           - language: actions
           - language: javascript
           - language: javascript-typescript
-            node-version: '18'
+            node-version: '>=24.22.1 <25'
         # CodeQL supports the following values keywords for 'language': 'actions', 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
         # Use 'java-kotlin' to analyze code written in Java, Kotlin or both
@@ -58,9 +58,10 @@ jobs:
     - name: Setup Node.js ${{ matrix.node-version }}
       # Only run the build for Typescript/JavaScript language match
       if: matrix.language == 'javascript-typescript' 
-      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: ${{ matrix.node-version }}
+        check-latest: true
         
     # Install dependencies for JavaScript projects
     - name: Install dependencies
@@ -75,7 +76,7 @@ jobs:
         
     # Initializes the CodeQL tools for scanning
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+      uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
       with:
         languages: ${{ matrix.language }}
         config-file: ./.github/codeql/codeql-config.yml
@@ -88,7 +89,7 @@ jobs:
 
     # Perform the CodeQL Analysis
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+      uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
       with:
         category: "/language:${{matrix.language}}"
         upload-database: false

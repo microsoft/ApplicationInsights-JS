@@ -133,6 +133,40 @@ Parameter | Type | Description
 [`target?`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IDependencyTelemetry.html#target) | string | **Optional**<br>Target site of a dependency call.
 [`properties?`](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IDependencyTelemetry.html#properties) | dictionary | **Optional**<br>Map of string to any: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
+When manually tracking a dependency with W3C tracing, set `id` to
+`|<traceId>.<spanId>`, using the 32-character trace ID and 16-character span ID
+from the outgoing request. A span ID alone is not the full dependency telemetry
+ID expected by Azure Monitor.
+
+For example, use the IDs from the `traceparent` header you send with the request.
+In `<version>-<trace-id>-<parent-id>-<flags>`, `trace-id` is the trace ID and
+`parent-id` is the outgoing request's span ID.
+
+The SDK appends a trailing period to `id` if it does not already end with one
+only when `distributedTracingMode` is exactly `W3C` or `AI_AND_W3C`.
+This is the format sent to the backend, it does not change the outgoing
+request's `traceparent` header.
+In `AI`, `W3C_TRACE` and `AI_AND_W3C_TRACE` modes, `trackDependencyData` leaves
+the supplied ID unchanged.
+
+```js
+appInsights.trackDependencyData({
+    id: '|4bf92f3577b34da6a3ce929d0e0e4736.00f067aa0ba902b7',
+    name: 'GET /api/user',
+    responseCode: 200,
+    duration: 100,
+    success: true,
+    type: 'HTTP',
+    target: 'api.example.com'
+});
+```
+
+In `W3C` and `AI_AND_W3C` modes, this example is sent with the ID
+`|4bf92f3577b34da6a3ce929d0e0e4736.00f067aa0ba902b7.`.
+`trackDependencyData` records telemetry for a call you made, it does not send
+the request or inject correlation headers. Use the trace and span IDs from
+that request when building the dependency ID.
+
 ### trackEvent
 
 ```ts

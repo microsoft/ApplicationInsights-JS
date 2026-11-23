@@ -296,7 +296,7 @@ export class OsPluginTest extends AITestClass {
 
                 let registeredEvents = this._getRegisteredUnloadState();
 
-                Assert.ok(registeredEvents.unloadPresent, "unload listener should be registered while OS lookup is pending");
+                Assert.ok(!registeredEvents.unloadPresent, "deprecated unload listener should not be registered while OS lookup is pending");
                 Assert.ok(registeredEvents.pageHidePresent, "pagehide listener should be registered while OS lookup is pending");
                 Assert.ok(registeredEvents.visibilityChangePresent, "visibilitychange listener should be registered while OS lookup is pending");
 
@@ -324,7 +324,7 @@ export class OsPluginTest extends AITestClass {
                 this._core.initialize(config, [this._plugin, this._testChannelPlugin]);
 
                 let registeredEvents = this._getRegisteredUnloadState();
-                Assert.ok(registeredEvents.unloadPresent, "unload listener should be registered before OS lookup completes");
+                Assert.ok(!registeredEvents.unloadPresent, "deprecated unload listener should not be registered before OS lookup completes");
                 Assert.ok(registeredEvents.pageHidePresent, "pagehide listener should be registered before OS lookup completes");
                 Assert.ok(registeredEvents.visibilityChangePresent, "visibilitychange listener should be registered before OS lookup completes");
 

@@ -1,5 +1,5 @@
 import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { AppInsightsCore, createDynamicConfig } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, createDistributedTraceContext, createDynamicConfig } from "@microsoft/applicationinsights-core-js";
 import { _SessionManager } from "../../../src/Context/Session";
 import { TelemetryContext } from "../../../src/TelemetryContext";
 import { IConfiguration } from "@microsoft/applicationinsights-core-js";
@@ -54,6 +54,40 @@ export class TelemetryContextTests extends AITestClass {
                 Assert.equal(context.telemetryTrace.traceID, theEvent.ext.trace.traceID, "Validate traceId");
                 Assert.equal(coreTraceId, theEvent.ext.trace.traceID, "Validate traceId");
                 Assert.equal(coreParentId, theEvent.ext.trace.parentID, "ParentID matches the core spanId");
+            }
+        });
+
+        this.testCase({
+            name: 'TelemetryContext: applyOperationContext - uses the current context spanId when it differs from its parent',
+            test: () => {
+                let parentCtx = this.core.getTraceCtx();
+                let parentSpanId = parentCtx.spanId;
+                let childCtx = createDistributedTraceContext(parentCtx);
+                childCtx.spanId = "0123456789abcdef";
+                Assert.equal(parentSpanId, parentCtx.spanId, "Parent spanId should not be changed");
+                this.core.setTraceCtx(childCtx);
+
+                let context = new TelemetryContext(this.core, this._config.extensionConfig!.AppInsightsPropertiesPlugin);
+                let theEvent = {} as any;
+                context.applyOperationContext(theEvent);
+
+                Assert.equal("0123456789abcdef", theEvent.ext.trace.parentID, "ParentID should be the current context spanId");
+                Assert.equal(parentCtx.traceId, theEvent.ext.trace.traceID, "Validate traceId");
+            }
+        });
+
+        this.testCase({
+            name: 'TelemetryContext: applyOperationContext - child context sharing its parent spanId',
+            test: () => {
+                let parentCtx = this.core.getTraceCtx();
+                let childCtx = createDistributedTraceContext(parentCtx);
+                this.core.setTraceCtx(childCtx);
+
+                let context = new TelemetryContext(this.core, this._config.extensionConfig!.AppInsightsPropertiesPlugin);
+                let theEvent = {} as any;
+                context.applyOperationContext(theEvent);
+
+                Assert.equal(parentCtx.spanId, theEvent.ext.trace.parentID, "ParentID should be the shared spanId");
             }
         });
 

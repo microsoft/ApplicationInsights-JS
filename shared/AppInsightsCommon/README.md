@@ -13,7 +13,7 @@
 > import { IConfig, ContextTagKeys } from "@microsoft/applicationinsights-core-js";
 > ```
 >
-> See the [Migration Guide](../../docs/upgrade/MergeCommonToCore.md) for more details.
+> See the [Migration Guide](https://microsoft.github.io/ApplicationInsights-JS/upgrade/MergeCommonToCore.html) for more details.
 
 ---
 

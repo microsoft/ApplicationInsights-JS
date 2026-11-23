@@ -18,8 +18,8 @@
 [![GitHub Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/microsoft/ApplicationInsights-JS/ci.yml?branch=main)](https://github.com/microsoft/ApplicationInsights-JS/tree/main)
 [![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status%2FAppInsights%20-%20DevTools%2F1DS%20JavaScript%20SDK%20web%20SKU%20(main%3B%20master)?branchName=main)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=main)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web)
-[![minified size size](https://js.monitor.azure.com/scripts/b/ai.3.min.js.svg)](https://js.monitor.azure.com/scripts/b/ai.3.min.js)
-[![gzip size](https://js.monitor.azure.com/scripts/b/ai.3.min.js.gzip.svg)](https://js.monitor.azure.com/scripts/b/ai.3.min.js)
+[![minified size size](https://js.monitor.azure.com/scripts/b/ai.3.4.5.min.js.svg)](https://js.monitor.azure.com/scripts/b/ai.3.4.5.min.js)
+[![gzip size](https://js.monitor.azure.com/scripts/b/ai.3.4.5.min.js.gzip.svg)](https://js.monitor.azure.com/scripts/b/ai.3.4.5.min.js)
 
 # Menu
 - [Before Getting Started](#before-getting-started)
@@ -41,7 +41,7 @@
   - [Application Insights Web Basic](#application-insights-web-basic)
   - [Available Extensions for the SDK](#available-extensions-for-the-sdk)
   - [Build a New Extension for the SDK](#build-a-new-extension-for-the-sdk)
-  - [Build & Test This Repo](#build-and-test-this-repo)
+  - [Build & Test This Repo](#build--test-this-repo)
   - [Performance](#performance)
   - [Module Formats](#module-formats)
   - [Nightly Builds](#nightly-builds)
@@ -56,7 +56,7 @@
 
 > # URGENT ACTION: Stop using az416426.vo.msecnd.net
 >
-> To avoid any global OUTAGE you MUST change ALL of your CDN usage from “https://az416426.vo.msecnd.net/scripts/..” to our primary CDN endpoint https://js.monitor.azure.com/scripts/...
+> To avoid any global OUTAGE you MUST change ALL of your CDN usage from `https://az416426.vo.msecnd.net/scripts/...` to our primary CDN endpoint `https://js.monitor.azure.com/scripts/...`.
 >
 > See/follow [Issue #2457](https://github.com/microsoft/ApplicationInsights-JS/issues/2457) for updated details
 >
@@ -81,7 +81,7 @@ ES3 support has been removed from the latest version (v3.x), if required [see fo
 
 
 > :bulb: **Note**
-> When multiple instances of Application Insights with different major version are active within a single session, errors may arise. For further details, please refer to the [version conflict doc](./versionConflict.md).
+> When multiple instances of Application Insights with different major version are active within a single session, errors may arise. For further details, please refer to the [version conflict doc](https://github.com/microsoft/ApplicationInsights-JS/blob/main/versionConflict.md).
 
 ## Getting Started
 
@@ -219,7 +219,7 @@ cfg: { // Application Insights Configuration
 
 > ## URGENT ACTION: Stop using az416426.vo.msecnd.net
 >
-> To avoid any global OUTAGE you MUST change ALL of your CDN usage from “https://az416426.vo.msecnd.net/scripts/..” to our primary CDN endpoint https://js.monitor.azure.com/scripts/...
+> To avoid any global OUTAGE you MUST change ALL of your CDN usage from `https://az416426.vo.msecnd.net/scripts/...` to our primary CDN endpoint `https://js.monitor.azure.com/scripts/...`.
 >
 > See/follow [Issue #2457](https://github.com/microsoft/ApplicationInsights-JS/issues/2457) for updated details
 >
@@ -285,13 +285,15 @@ appInsights.trackPageViewPerformance({name : 'some page', url: 'some url'});
 appInsights.trackException({exception: new Error('some error')});
 appInsights.trackTrace({message: 'some trace'});
 appInsights.trackMetric({name: 'some metric', average: 42});
-appInsights.trackDependencyData({absoluteUrl: 'some url', responseCode: 200, method: 'GET', id: 'some id'});
+appInsights.trackDependencyData({absoluteUrl: 'some url', responseCode: 200, method: 'GET', id: '|4bf92f3577b34da6a3ce929d0e0e4736.00f067aa0ba902b7'});
 appInsights.startTrackPage("pageName");
 appInsights.stopTrackPage("pageName", null, {customePropertiesName: "some value"}, {customerMeasurementsName: 144});
 appInsights.startTrackEvent("event");
 appInsights.stopTrackEvent("event", null, {customePropertiesName: "some value"}, {customerMeasurementsName: 150});
 appInsights.flush();
 ```
+
+For manually tracked dependencies, see the [dependency ID format and W3C correlation notes](https://microsoft.github.io/ApplicationInsights-JS/API-reference#trackdependencydata).
 
 Custom properties can be included in your telemetry through the `properties` named argument. This can be done with *any* of the Track APIs except stopTrackPage and stopTrackEvent.
 
@@ -368,7 +370,7 @@ All autocollection is ON by default. The full version of the Application Insight
 
 Telemetry initializers are used to modify the contents of collected telemetry before being sent from the user's browser. They can also be used to prevent certain telemetry from being sent, by returning `false`. Multiple telemetry initializers can be added to your Application Insights instance, and they are executed in order of adding them.
 
-The input argument to `addTelemetryInitializer` is a callback that takes a [`ITelemetryItem`](https://microsoft.github.io/ApplicationInsights-JS/API-reference#addTelemetryInitializer) as an argument and returns a `boolean` or `void`. If returning `false`, the telemetry item is not sent, else it proceeds to the next telemetry initializer, if any, or is sent to the telemetry collection endpoint.
+The input argument to `addTelemetryInitializer` is a callback that takes a [`ITelemetryItem`](https://microsoft.github.io/ApplicationInsights-JS/API-reference#addtelemetryinitializer) as an argument and returns a `boolean` or `void`. If returning `false`, the telemetry item is not sent, else it proceeds to the next telemetry initializer, if any, or is sent to the telemetry collection endpoint.
 
 #### Example: [Setting Cloud Role Name](https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-map#set-cloud-role-name)
 
@@ -395,7 +397,7 @@ appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
 
 ### Dependency Listeners
 
-A [dependency listener is a callback function](https://microsoft.github.io/ApplicationInsights-JS/API-reference#addDependencyListener) that allows you to perform additional manipulation of the request details before the request is performed.
+A [dependency listener is a callback function](https://microsoft.github.io/ApplicationInsights-JS/API-reference#adddependencylistener) that allows you to perform additional manipulation of the request details before the request is performed.
 
 This includes :-
 
@@ -405,7 +407,7 @@ This includes :-
 
 ### Dependency Initializers
 
-A [Dependency Initializer is very similar](https://microsoft.github.io/ApplicationInsights-JS/API-reference#addDependencyInitializer) to a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) in that it allows you modify the contents of collected telemetry before being sent from the user's browser. And you can also returning `false` to cause the event to not be emitted.
+A [Dependency Initializer is very similar](https://microsoft.github.io/ApplicationInsights-JS/API-reference#adddependencyinitializer) to a [Telemetry Initializer](https://github.com/Microsoft/ApplicationInsights-JS#telemetry-initializers) in that it allows you modify the contents of collected telemetry before being sent from the user's browser. And you can also returning `false` to cause the event to not be emitted.
 
 The differences between a telemetry initializer and a dependency initializer are :-
 - A Dependency Initializer is called "before" the event is processed by the pipeline, as such it will NOT (yet) contain the automatically populated properties that are applied later;
@@ -535,6 +537,7 @@ You can use the `featureOptIn` configuration to enable or customize specific SDK
 | Name        | Default | Description                                  | Note |
 |-------------|---------|----------------------------------------------|------------|
 | `zipPayload` | `none`*(version 3.3.7)  | Enables compression using the Compression API to zip telemetry payloads. |If this feature is turned on and the CompressionStream API is available, the payload will be compressed using the CompressionStream API. Compression will only occur if the event is asynchronous. For events like unloads, compression will not be applied. Note: if user set payloadPreprocessor, this zip compression will not be applied.|
+| `zipPayloadV2` | `none` | Enables endpoint-safe compression for versioned CDN rollout. |Recognized Microsoft Application Insights ingestion endpoints may be compressed automatically. Custom endpoints remain JSON unless the Application Insights channel sets `enableCompressionForCustomEndpoint: true`. Older SDKs ignore this key.|
 
 * A default value of none means the SDK may automatically enable this feature in the future. To explicitly prevent this, set the feature to disable using FeatureOptInMode.disable.
 
@@ -558,6 +561,15 @@ const appInsights = new ApplicationInsights({
 ```
 See [feature opt-in status](https://microsoft.github.io/ApplicationInsights-JS/WebConfig) for more details.
 
+The legacy `zipPayload` key remains supported for backward compatibility and uses the same endpoint safety checks in current SDKs.
+For CDN rollout, first ship and gain adoption of an SDK that supports `zipPayloadV2`, then publish a new CDN configuration using only
+`zipPayloadV2`. Keep `zipPayload` absent so older SDKs do not enable compression for custom endpoints.
+
+Legacy configuration retains precedence at runtime: `zipPayload: disable` turns compression off regardless of `zipPayloadV2`, while
+`zipPayload: enable` turns endpoint-safe compression on regardless of `zipPayloadV2`. When legacy `zipPayload` is `none` or undefined,
+the SDK delegates to `zipPayloadV2`. Changing either feature dynamically re-evaluates this precedence without copying or modifying the
+other feature's value.
+
 
 ### ExtensionConfig
 
@@ -580,22 +592,22 @@ const appInsights = new ApplicationInsights({
 
 | Name | Type | Default | Extenstion | Description |
 |------|------|---------|---------|-------------|
-| [ignoreHeaders](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/IDependenciesPluginConfig.html#ignoreHeaders) | string[] | ["Authorization", "X-API-Key", "WWW-Authenticate"] | DependenciesPlugin | AJAX & Fetch request and response headers to be ignored in log data. To override or discard the default, add an array with all headers to be excluded or an empty array to the configuration. Need to be defined in depenedency plugin extension config, see more [here](./extensions/applicationinsights-dependencies-js/README.md)
+| [ignoreHeaders](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICorrelationConfig.html#ignoreHeaders) | string[] | ["Authorization", "X-API-Key", "WWW-Authenticate"] | DependenciesPlugin | AJAX & Fetch request and response headers to be ignored in log data. To override or discard the default, add an array with all headers to be excluded or an empty array to the configuration. Need to be defined in depenedency plugin extension config, see more [here](https://github.com/microsoft/ApplicationInsights-JS/blob/main/extensions/applicationinsights-dependencies-js/README.md)
 
-### [ICookieMgrConfig](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html)
+### [ICookieMgrConfig](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html)
 
 Cookie Configuration for instance based cookie management added in version 2.6.0.
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| [enabled](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#enabled) | boolean | true | A boolean that indicates whether the use of cookies by  the SDK is enabled by the current instance. If false, the instance of the SDK initialized by this configuration will not store or read any data from cookies |
-| [domain](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#domain) | string | null | Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. If not provided uses the value from root `cookieDomain` value. |
-| [path](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#path) | string | / | Specifies the path to use for the cookie, if not provided it will use any value from the root `cookiePath` value. |
-| [ignoreCookies](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#ignoreCookies) | string[] | undefined | Specify the cookie name(s) to be ignored, this will cause any matching cookie name to never be read or written. They may still be explicitly purged or deleted. You do not need to repeat the name in the `blockedCookies` configuration.(Since v2.8.8)
-| [blockedCookies](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#blockedCookies) | string[] | undefined | Specify the cookie name(s) to never be written, this will cause any cookie name to never be created or updated, they will still be read unless also included in the ignoreCookies and may still be explicitly purged or deleted. If not provided defaults to the same list provided in ignoreCookies. (Since v2.8.8)
-| [getCookie](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#getCookie) | `(name: string) => string` | null | Function to fetch the named cookie value, if not provided it will use the internal cookie parsing / caching. |
-| [setCookie](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#setCookie) | `(name: string, value: string) => void` | null | Function to set the named cookie with the specified value, only called when adding or updating a cookie. |
-| [delCookie](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-web/interfaces/ICookieMgrConfig.html#delCookie) | `(name: string, value: string) => void` | null | Function to delete the named cookie with the specified value, separated from setCookie to avoid the need to parse the value to determine whether the cookie is being added or removed.if not provided it will use the internal cookie parsing / caching. |
+| [enabled](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#enabled) | boolean | true | A boolean that indicates whether the use of cookies by  the SDK is enabled by the current instance. If false, the instance of the SDK initialized by this configuration will not store or read any data from cookies |
+| [domain](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#domain) | string | null | Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. If not provided uses the value from root `cookieDomain` value. |
+| [path](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#path) | string | / | Specifies the path to use for the cookie, if not provided it will use any value from the root `cookiePath` value. |
+| [ignoreCookies](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#ignoreCookies) | string[] | undefined | Specify the cookie name(s) to be ignored, this will cause any matching cookie name to never be read or written. They may still be explicitly purged or deleted. You do not need to repeat the name in the `blockedCookies` configuration.(Since v2.8.8)
+| [blockedCookies](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#blockedCookies) | string[] | undefined | Specify the cookie name(s) to never be written, this will cause any cookie name to never be created or updated, they will still be read unless also included in the ignoreCookies and may still be explicitly purged or deleted. If not provided defaults to the same list provided in ignoreCookies. (Since v2.8.8)
+| [getCookie](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#getCookie) | `(name: string) => string` | null | Function to fetch the named cookie value, if not provided it will use the internal cookie parsing / caching. |
+| [setCookie](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#setCookie) | `(name: string, value: string) => void` | null | Function to set the named cookie with the specified value, only called when adding or updating a cookie. |
+| [delCookie](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-core-js/interfaces/ICookieMgrConfig.html#delCookie) | `(name: string, value: string) => void` | null | Function to delete the named cookie with the specified value, separated from setCookie to avoid the need to parse the value to determine whether the cookie is being added or removed.if not provided it will use the internal cookie parsing / caching. |
 
 ## Cookie Handling
 
@@ -639,7 +651,7 @@ So you will need to only call or access the manager from within the onInit() cal
 
 As part of changes being introduced in version 2.6.0 we are deprecating and removing the *internal* usages of the static helper classes `CoreUtils`, `EventHelper`, `Util`, `UrlHelper`, `DateTimeUtils` and `ConnectionStringParser` to provide better support for tree-shaking algorithms so that unused code can be safely dropped when using NPM packages.
 
-[See Tree-Shaking Recommendations](TreeShakingRecommendations.md)
+[See Tree-Shaking Recommendations](https://github.com/microsoft/ApplicationInsights-JS/blob/main/TreeShakingRecommendations.md)
 
 ## Service Notification
 
@@ -766,7 +778,7 @@ While the script downloads from the CDN, all tracking of your page is queued. On
 > Summary:
 >
 > - ![current npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)
-> - ![gzip compressed size](https://js.monitor.azure.com/scripts/b/ai.3.min.js.gzip.svg)
+> - ![gzip compressed size](https://js.monitor.azure.com/scripts/b/ai.3.4.5.min.js.gzip.svg)
 > - **~15 ms** overall initialization time
 > - **Zero** tracking missed during life cycle of page
 
@@ -858,23 +870,24 @@ As with the normal release process the nightly builds also include major, minor,
 When a new release is deployed the following occurs as part of the release
 
 - NPM packages are created and published to [NpmJs](https://www.npmjs.com/package/@microsoft/applicationinsights-web)
-- The new explicit versioned files (eg. `ai.2.7.2.js`; `ai.2.7.2.min.js`; `ai.2.7.2.gbl.min.js`; `ai.2.7.2.min.js.map`; etc) are uploaded to all cdn endpoints URL's (public, next and beta - details below)
+- The new explicit versioned release files (eg. `ai.2.7.2.js`; `ai.2.7.2.min.js`; `ai.2.7.2.gbl.min.js`; `ai.2.7.2.min.js.map`; etc) are uploaded to the public and next CDN endpoints (details below). Release candidates are uploaded only to next.
 - We then go through a deployment process of "promoting" the new version to the "Major" (`ai.3.gbl.min.js`) and "Minor" (`ai.3.x.gbl.min.js`) release URL's to upgrade everyone to the newly released version based on the schedule listed below
 
 | Endpoint | Url | Schedule
 |----------|-------------|--------
-| Beta | https://js.monitor.azure.com/beta/ai.3.gbl.min.js | Same day as the NPM release
-| Next | https://js.monitor.azure.com/next/ai.3.gbl.min.js | One additional work day after the `beta` URL promotion.
-| Public | https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js | Another One additional work day after the `next` URL promotion, (so 2 work days after initial release) unless this falls on the last work day of the week (eg. Friday) in which case it will be delayed until the first work day of the next work week.
+| Next | https://js.monitor.azure.com/next/ai.3.gbl.min.js | Initial promotion after the NPM release.
+| Public | https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js | Promoted after next validation according to the release deployment plan; the production URL is unchanged.
+
+The beta CDN channel is no longer supported by CDN publishing, activation or listing tools. Existing CDN files remain available for legacy consumers; npm prerelease tags and version-generation tooling are unchanged.
 
 The milestones for each release should include both the deployment plan (as it's about to be released) or the final release times as with [v2.7.2](https://github.com/microsoft/ApplicationInsights-JS/milestone/58)
 
-It is expected that most users will be using the `Public` URL, however, it is also recommended that if you have a test or canary environment that you should use either the `beta` or `next` URL's so that you would be alerted first before any production users are impacted. If any issues are detected with the `beta` or `next` URL's as a new release is being deployed please raise a new [Issue](https://github.com/microsoft/ApplicationInsights-JS/issues) as soon as this is confirmed.
+It is expected that most users will be using the `Public` URL, however, it is also recommended that if you have a test or canary environment that you should use the `next` URL so that you would be alerted first before any production users are impacted. If any issues are detected with the `next` URL as a new release is being deployed please raise a new [Issue](https://github.com/microsoft/ApplicationInsights-JS/issues) as soon as this is confirmed.
 
 ## Release Notes
 
 - [Releases](https://github.com/microsoft/ApplicationInsights-JS/releases)
-- [Changelist Notes](./RELEASES.md)
+- [Changelist Notes](https://github.com/microsoft/ApplicationInsights-JS/blob/main/RELEASES.md)
 
 ## Browser Support
 
@@ -899,7 +912,7 @@ git push
 
 ## Contributing
 
-Read our [contributing guide](./CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Application Insights.
+Read our [contributing guide](https://github.com/microsoft/ApplicationInsights-JS/blob/main/CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Application Insights.
 
 ## Data Collection
 

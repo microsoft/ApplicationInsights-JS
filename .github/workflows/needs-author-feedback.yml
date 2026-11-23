@@ -1,0 +1,158 @@
+name: needs-author-feedback
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+
+jobs:
+  notify-on-label:
+    if: github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'needs-author-feedback'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify issue author
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const issue = context.payload.issue;
+            if (issue.pull_request) return;
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue_number = issue.number;
+            const author = issue.user.login;
+            const today = new Date().toISOString().slice(0, 10);
+
+            const body = [
+              `@${author} we need more information before we can continue working on this issue.`,
+              "",
+              "Please reply within 14 days. If we do not hear back, this issue may be closed automatically.",
+              "",
+              "<!-- needs-author-feedback:applied -->",
+              `Marked as needs-author-feedback on ${today}.`
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body
+            });
+
+  remove-label-on-author-reply:
+    if: github.event_name == 'issue_comment' && github.event.action == 'created'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove label when issue author replies
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const comment = context.payload.comment;
+
+            if (issue.pull_request) return;
+            if (issue.user?.type === "Bot") return;
+            if (comment.user.login !== issue.user.login) return;
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue_number = issue.number;
+
+            // Use the current state rather than the event snapshot: the job may run
+            // after the follow-up workflow closed the issue or the label was reapplied.
+            const { data: current } = await github.rest.issues.get({ owner, repo, issue_number });
+            const events = await github.paginate(github.rest.issues.listEvents, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100
+            });
+
+            const latest = (type, match) =>
+              events.filter(e => e.event === type && match(e)).sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+            const labeled = latest("labeled", e => e.label?.name === "needs-author-feedback");
+            if (!labeled) return;
+
+            const labeledAt = new Date(labeled.created_at);
+            // The reply answers an earlier feedback round; leave the newer request alone.
+            if (new Date(comment.created_at) < labeledAt) return;
+
+            if (current.state === "closed") {
+              // Reopen only when the current closure is the automatic feedback closure
+              // for this round, not a manual decision by a maintainer.
+              const closed = latest("closed", () => true);
+              if (!closed || closed.actor?.type !== "Bot" || current.state_reason !== "not_planned") return;
+              if (new Date(closed.created_at) < labeledAt) return;
+
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number,
+                since: labeledAt.toISOString(),
+                per_page: 100
+              });
+              // The feedback-close marker must belong to the current open/close cycle,
+              // so a later stale.yml closure after a manual reopen is not reversed.
+              const reopened = latest("reopened", () => true);
+              const cycleStart = reopened && new Date(reopened.created_at) > labeledAt ? new Date(reopened.created_at) : labeledAt;
+              const autoClosed = comments.some(c =>
+                c.user?.type === "Bot" &&
+                c.body?.includes("<!-- needs-author-feedback:closed -->") &&
+                new Date(c.created_at) >= cycleStart &&
+                new Date(c.created_at) <= new Date(closed.created_at) &&
+                // The follow-up closes right after posting the marker; a marker from a failed
+                // attempt must not vouch for an unrelated later closure.
+                new Date(closed.created_at) - new Date(c.created_at) <= 5 * 60 * 1000
+              );
+              if (!autoClosed) return;
+
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number,
+                state: "open"
+              });
+
+              try {
+                await github.rest.issues.removeLabel({
+                  owner,
+                  repo,
+                  issue_number,
+                  name: "needs-author-feedback"
+                });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body: "Thanks for the response. Reopening this issue."
+              });
+              return;
+            }
+
+            if (!current.labels.some(label => label.name === "needs-author-feedback")) return;
+
+            try {
+              await github.rest.issues.removeLabel({
+                owner,
+                repo,
+                issue_number,
+                name: "needs-author-feedback"
+              });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body: "Thanks for the response. Removing `needs-author-feedback`."
+            });

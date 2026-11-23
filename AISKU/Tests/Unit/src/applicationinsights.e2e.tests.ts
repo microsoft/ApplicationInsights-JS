@@ -123,7 +123,7 @@ export class ApplicationInsightsTests extends AITestClass {
             });
 
             Assert.ok(!beforeUnloadPresent, "The beforeunload event should not be present");
-            Assert.ok(unloadPresent, "The unload event should be present");
+            Assert.ok(!unloadPresent, "The deprecated unload event should not be present when pagehide is hooked");
             Assert.ok(visibilityChangePresent, "The visibilitychange event should be present");
 
             // Setup Sinon stuff
@@ -735,11 +735,11 @@ export class ApplicationInsightsTests extends AITestClass {
             useFakeFetch: false,
             fakeFetchAutoRespond: false,
             steps: [() => {
-                // Use beta endpoint to pre-test any changes before public V3 cdn
+                // Use next endpoint to pre-test any changes before public V3 cdn
                 let random = utcNow();
                 // Under Cors Mode, Options request will be auto-triggered
                 try {
-                    fetch(`https://js.monitor.azure.com/beta/ai.3.gbl.min.js?${random}`, {
+                    fetch(`https://js.monitor.azure.com/next/ai.3.gbl.min.js?${random}`, {
                         method: "GET"
                     }).then((res) => {
                         this._ctx.res = res;

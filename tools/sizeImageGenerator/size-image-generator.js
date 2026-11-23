@@ -126,7 +126,7 @@ async function main() {
             });
             const gzipSizeKb = (gzipSize / 1024).toFixed(1);
             console.log(`\nGzip size: ${version}.min.js = ${gzipSizeKb}kb (compressed)`);
-            await generateSizeBadge(version + ".gzip.min.js", gzipSizeKb, true);
+            await generateSizeBadge(version + ".min.js.gzip", gzipSizeKb, true);
         } catch (err) {
             console.error("Error:", err);
         }
