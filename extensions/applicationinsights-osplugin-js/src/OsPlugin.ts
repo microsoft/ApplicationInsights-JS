@@ -50,7 +50,11 @@ export class OsPlugin extends BaseTelemetryPlugin {
     public priority = 195;              // Note: we want this to run after the AnalyticsPlugin so that it correctly sets whether we are allowed to use session storage
     public version = "#version#";
 
-    constructor() {
+    /**
+     * @param enableByDefault - Whether an unset enabled option permits collection. Defaults to true for manual registration.
+     * AISKU passes false for automatic instances, which require an explicit opt-in even before config notifications run.
+     */
+    constructor(enableByDefault: boolean = true) {
         super();
         let _core: IAppInsightsCore;
         let _ocConfig: IOSPluginConfiguration;
@@ -96,7 +100,7 @@ export class OsPlugin extends BaseTelemetryPlugin {
                         _mergeOsNameVersion = false;
                     }
 
-                    let enabled = _ocConfig.enabled !== false;
+                    let enabled = _isConfigEnabled();
                     if (_enabled !== enabled) {
                         _enabled = enabled;
                         if (enabled) {
@@ -165,8 +169,12 @@ export class OsPlugin extends BaseTelemetryPlugin {
                 _releaseEventQueue();
             };
 
+            function _isConfigEnabled() {
+                return _ocConfig && (enableByDefault ? _ocConfig.enabled !== false : _ocConfig.enabled === true);
+            }
+
             function _isCollectionEnabled() {
-                return _enabled && _ocConfig && _ocConfig.enabled !== false;
+                return _enabled && _isConfigEnabled();
             }
 
             function _fetchCachedOSVersion(coreConfig: IConfiguration & IConfig) {

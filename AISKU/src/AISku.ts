@@ -425,7 +425,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                             suppliedOsPlugin = suppliedOsPlugin || plugin.identifier === OS_PLUGIN;
                         });
                         if (!suppliedOsPlugin) {
-                            osPlugin = new OsPlugin();
+                            osPlugin = new OsPlugin(false);
                             plugins.push(osPlugin);
                         }
                     }
@@ -438,7 +438,7 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
                             let loaded = _core.getPlugin(OS_PLUGIN);
                             if (enabled) {
                                 if (!loaded) {
-                                    osPlugin = new OsPlugin();
+                                    osPlugin = new OsPlugin(false);
                                     _core.addPlugin(osPlugin, false, false);
                                 }
                             } else if (loaded && loaded.plugin === osPlugin) {

@@ -252,10 +252,12 @@ export class ApplicationInsightsTests extends AITestClass {
                 let state = this._initializeOsPluginTest({ enabled: true });
                 this._ai.trackEvent({ name: "reset OS" });
                 this._ai.config.extensionConfig.OsPlugin.enabled = undefined;
+                state.requests[0].resolve(state.windows);
+                Assert.equal(null, sessionStorage.getItem("ai_osplugin"), "Cleared opt-in ignores results before config notification");
                 this.clock.tick(1);
                 Assert.equal(null, this._ai.getPlugin("OsPlugin"), "Reset removes the automatically registered instance");
                 Assert.equal(1, state.processed.callCount, "Reset releases pending telemetry");
-                state.requests[0].resolve(state.windows);
+                Assert.equal(undefined, state.processed.firstCall.args[0].ext.os, "Reset queue is released without OS enrichment");
                 Assert.equal(null, sessionStorage.getItem("ai_osplugin"), "Reset ignores pending results");
                 this._ai.config.extensionConfig.OsPlugin.enabled = true;
                 this.clock.tick(1);
@@ -267,6 +269,40 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(2, state.lookup.callCount, "Resetting disabled collection does not start a lookup");
                 Assert.equal(reads, state.storageRead.callCount, "Reset does not read cache");
             }
+        });
+
+        [false, true].forEach((manual) => {
+            ["enabled", "plugin config", "extension config"].forEach((reset) => {
+                this.testCase({
+                    name: "OsPlugin SKU: pending lookup respects immediate " + reset + " reset with manual " + manual,
+                    useFakeTimers: true,
+                    test: () => {
+                        let state = this._initializeOsPluginTest({ enabled: true }, manual ? new OsPlugin() : undefined);
+                        this._ai.trackEvent({ name: "before reset" });
+                        if (reset === "enabled") {
+                            this._ai.config.extensionConfig.OsPlugin.enabled = undefined;
+                        } else if (reset === "plugin config") {
+                            this._ai.config.extensionConfig.OsPlugin = {};
+                        } else {
+                            this._ai.config.extensionConfig = {};
+                        }
+                        state.requests[0].resolve(state.windows);
+                        Assert.equal(manual, sessionStorage.getItem("ai_osplugin") !== null, "Only manual opt-in permits a cache write");
+                        this._ai.trackEvent({ name: "after reset" });
+                        Assert.equal(manual ? 2 : 1, state.processed.callCount, "Cleared automatic opt-in does not delay new telemetry");
+                        let event = state.processed.lastCall.args[0];
+                        Assert.equal(manual ? "Windows11" : undefined, event.ext.os && event.ext.os.osVer,
+                            "Unset permits enrichment only for manual registration before config notification");
+                        this.clock.tick(1);
+                        Assert.equal(2, state.processed.callCount, "Both events reach Sender after notification");
+                        Assert.equal(manual, !!this._ai.getPlugin("OsPlugin"), "Only customer-supplied instances remain registered");
+                        if (!manual) {
+                            Assert.equal(undefined, state.processed.lastCall.args[0].ext.os, "Pending event remains unenriched");
+                            Assert.equal(null, sessionStorage.getItem("ai_osplugin"), "Automatic result stays uncached");
+                        }
+                    }
+                });
+            });
         });
 
         this.testCase({
