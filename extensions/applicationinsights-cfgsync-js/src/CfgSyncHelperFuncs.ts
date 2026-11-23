@@ -25,7 +25,7 @@ export function replaceByNonOverrideCfg<T=IConfiguration & IConfig, T1=NonOverri
                 let nonOverrideVal = nonOverrideConfigs[key];
                 if (!!nonOverrideVal) {
                     if (isObject(curCfg[key]) && isObject(nonOverrideVal)) {
-                        curCfg[key] = replaceByNonOverrideCfg(curCfg[key], nonOverrideVal, ++curLevel, maxLevel);
+                        curCfg[key] = replaceByNonOverrideCfg(curCfg[key], nonOverrideVal, curLevel + 1, maxLevel);
                     } else {
                         delete curCfg[key];
                     }

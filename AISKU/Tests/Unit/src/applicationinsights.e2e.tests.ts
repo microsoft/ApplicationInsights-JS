@@ -1,6 +1,8 @@
 import { AITestClass, Assert, PollingAssert, EventValidator, TraceValidator, ExceptionValidator, MetricValidator, PageViewValidator, PageViewPerformanceValidator, RemoteDepdencyValidator } from '@microsoft/ai-test-framework';
 import { SinonSpy } from 'sinon';
-import { ApplicationInsights, IOSPluginConfiguration } from "../../../src/applicationinsights-web"
+import {
+    AppInsightsCore, ApplicationInsights, CfgSyncPlugin, ICfgSyncConfig, IOSPluginConfiguration
+} from "../../../src/applicationinsights-web"
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Exception, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig, EventPersistence, EventDataType, PageViewDataType, TraceDataType, ExceptionDataType, MetricDataType, PageViewPerformanceDataType, RemoteDependencyDataType } from '@microsoft/applicationinsights-core-js';
 import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus, FeatureOptInMode } from "@microsoft/applicationinsights-core-js";
@@ -175,7 +177,7 @@ export class ApplicationInsightsTests extends AITestClass {
     }
 
     private _initializeOsPluginTest(osConfig?: IOSPluginConfiguration, manual?: OsPlugin, cached?: string,
-        storageDisabled?: boolean, lookupMode?: string) {
+        storageDisabled?: boolean, lookupMode?: string, syncConfig?: ICfgSyncConfig) {
         this._ai.unload(false);
         this._ctx.osCache = sessionStorage.getItem("ai_osplugin");
         this._ctx.osCacheSaved = true;
@@ -204,7 +206,7 @@ export class ApplicationInsightsTests extends AITestClass {
             disableExceptionTracking: true,
             enableSessionStorageBuffer: false,
             isStorageUseDisabled: storageDisabled,
-            extensionConfig: { AppInsightsCfgSyncPlugin: { cfgUrl: "" } },
+            extensionConfig: { AppInsightsCfgSyncPlugin: syncConfig || { cfgUrl: "" } },
             extensions: manual ? [manual] : []
         };
         if (osConfig) {
@@ -220,6 +222,133 @@ export class ApplicationInsightsTests extends AITestClass {
     }
 
     public addOsPluginTests(): void {
+        [false, true].forEach((manual) => {
+            [undefined, false, true].forEach((enabled) => {
+                this.testCase({
+                    name: "OsPlugin SKU: config sync preserves local enabled " + enabled + " with manual " + manual,
+                    useFakeTimers: true,
+                    test: () => {
+                        let state = this._initializeOsPluginTest(enabled === undefined ? undefined : { enabled: enabled },
+                            manual ? new OsPlugin() : undefined);
+                        let lookups = state.lookup.callCount;
+                        let broadcaster = new AppInsightsCore<IConfiguration & IConfig>();
+                        try {
+                            broadcaster.initialize({
+                                instrumentationKey: "broadcast-key",
+                                connectionString: "InstrumentationKey=broadcast-key",
+                                endpointUrl: "https://broadcast.invalid/v2/track",
+                                samplingPercentage: 42,
+                                extensionConfig: {
+                                    OsPlugin: { enabled: enabled !== true, maxTimeout: 321 },
+                                    AppInsightsCfgSyncPlugin: { cfgUrl: "" }
+                                }
+                            }, [new CfgSyncPlugin(), new Sender()]);
+                            this.clock.tick(1);
+                            Assert.equal(enabled, this._ai.config.extensionConfig.OsPlugin.enabled,
+                                "Remote config cannot change local OS choice");
+                            Assert.equal(lookups, state.lookup.callCount, "Remote config does not start another OS lookup");
+                            Assert.equal(321, this._ai.config.extensionConfig.OsPlugin.maxTimeout, "Other OS settings still synchronize");
+                            Assert.equal(42, this._ai.config.samplingPercentage, "Unrelated config still synchronizes");
+                            Assert.equal(ApplicationInsightsTests._instrumentationKey, this._ai.config.instrumentationKey,
+                                "Instrumentation key remains protected");
+                            Assert.equal(ApplicationInsightsTests._connectionString, this._ai.config.connectionString,
+                                "Connection string remains protected");
+                            Assert.equal("https://dc.services.visualstudio.com/v2/track", this._ai.config.endpointUrl,
+                                "Endpoint remains protected");
+                            Assert.equal(enabled !== true, broadcaster.config.extensionConfig.OsPlugin.enabled,
+                                "Receiving filtered config does not mutate the broadcaster");
+
+                            // A later local opt-out must also survive the next broadcast.
+                            this._ai.config.extensionConfig.OsPlugin.enabled = false;
+                            this.clock.tick(1);
+                            lookups = state.lookup.callCount;
+                            broadcaster.config.extensionConfig.OsPlugin.enabled = true;
+                            broadcaster.getPlugin<CfgSyncPlugin>("AppInsightsCfgSyncPlugin").plugin.sync();
+                            this.clock.tick(1);
+                            Assert.equal(false, this._ai.config.extensionConfig.OsPlugin.enabled,
+                                "Runtime local opt-out survives broadcast");
+                            Assert.equal(lookups, state.lookup.callCount, "Runtime opt-out does not restart collection");
+                            this._ai.config.extensionConfig.OsPlugin.enabled = true;
+                            this.clock.tick(1);
+                            Assert.equal(lookups + 1, state.lookup.callCount, "Explicit local opt-in remains supported");
+                        } finally {
+                            if (broadcaster.isInitialized()) {
+                                broadcaster.unload(false);
+                            }
+                        }
+                    }
+                });
+            });
+        });
+
+        this.testCase({
+            name: "OsPlugin SKU: CDN config preserves opt-out and merged customer non-override settings",
+            useFakeTimers: true,
+            test: () => {
+                let complete: (status: number, response?: string) => void;
+                let state = this._initializeOsPluginTest({ enabled: false }, undefined, undefined, false, undefined, {
+                    overrideFetchFn: (url, oncomplete) => {
+                        Assert.equal(CONFIG_ENDPOINT_URL, url, "Default CDN endpoint is fetched");
+                        complete = oncomplete;
+                    },
+                    scheduleFetchTimeout: 0,
+                    nonOverrideConfigs: {
+                        maxMessageLimit: true,
+                        extensionConfig: {
+                            OsPlugin: { mergeOsNameVersion: true },
+                            OtherPlugin: { keep: true },
+                            SecondPlugin: { keep: true },
+                            ThirdPlugin: { keep: true },
+                            FourthPlugin: { keep: true }
+                        }
+                    }
+                });
+                let filters = this._ai.config.extensionConfig.AppInsightsCfgSyncPlugin.nonOverrideConfigs;
+                Assert.equal(true, filters.instrumentationKey, "Default instrumentation key protection is retained");
+                Assert.equal(true, filters.connectionString, "Default connection string protection is retained");
+                Assert.equal(true, filters.endpointUrl, "Default endpoint protection is retained");
+                Assert.equal(true, filters.extensionConfig.OsPlugin.enabled, "OS choice protection is merged into custom filters");
+                Assert.equal(true, filters.extensionConfig.OtherPlugin.keep, "Other extension filters are retained");
+                let sendConfig = () => complete(200, JSON.stringify({
+                    enabled: true,
+                    config: {
+                        samplingPercentage: 43,
+                        maxMessageLimit: 999,
+                        extensionConfig: {
+                            OtherPlugin: { keep: true, update: 1 },
+                            SecondPlugin: { keep: true, update: 2 },
+                            ThirdPlugin: { keep: true, update: 3 },
+                            FourthPlugin: { keep: true, update: 4 },
+                            OsPlugin: { enabled: true, maxTimeout: 432, mergeOsNameVersion: false }
+                        }
+                    }
+                }));
+                Assert.ok(complete, "CDN completion callback is available");
+                sendConfig();
+                this.clock.tick(1);
+                Assert.equal(false, this._ai.config.extensionConfig.OsPlugin.enabled, "CDN cannot replace local opt-out");
+                Assert.equal(null, this._ai.getPlugin("OsPlugin"), "CDN cannot register OS collection");
+                Assert.equal(0, state.lookup.callCount, "CDN does not trigger a Client Hints lookup");
+                Assert.equal(432, this._ai.config.extensionConfig.OsPlugin.maxTimeout, "Other OS config still synchronizes");
+                Assert.equal(undefined, this._ai.config.extensionConfig.OsPlugin.mergeOsNameVersion, "Custom nested filter is retained");
+                Assert.equal(43, this._ai.config.samplingPercentage, "Unrelated CDN settings still apply");
+                Assert.notEqual(999, this._ai.config.maxMessageLimit, "Custom root filter is retained");
+                this._ai.config.extensionConfig.OsPlugin.enabled = true;
+                this.clock.tick(1);
+                Assert.equal(1, state.lookup.callCount, "Local opt-in remains available after CDN config");
+                sendConfig();
+                this.clock.tick(1);
+                Assert.equal(true, this._ai.config.extensionConfig.OsPlugin.enabled, "CDN preserves local opt-in with sibling filters");
+                Assert.ok(this._ai.getPlugin("OsPlugin"), "Custom sibling filters do not remove the locally enabled plugin");
+                this._ai.config.extensionConfig.OsPlugin.enabled = false;
+                this.clock.tick(1);
+                sendConfig();
+                this.clock.tick(1);
+                Assert.equal(false, this._ai.config.extensionConfig.OsPlugin.enabled, "Runtime opt-out also survives CDN config");
+                Assert.equal(1, state.lookup.callCount, "CDN cannot restart a locally disabled lookup");
+            }
+        });
+
         [undefined, false, "empty"].forEach((enabled) => {
             this.testCase({
                 name: "OsPlugin SKU: no collection when enabled is " + enabled,

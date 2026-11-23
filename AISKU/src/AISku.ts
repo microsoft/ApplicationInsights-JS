@@ -4,7 +4,7 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
-import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode } from "@microsoft/applicationinsights-cfgsync-js";
+import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode, NonOverrideCfg } from "@microsoft/applicationinsights-cfgsync-js";
 import { STR_ZIP_PAYLOAD, STR_ZIP_PAYLOAD_V2, Sender } from "@microsoft/applicationinsights-channel-js";
 import {
     AnalyticsPluginIdentifier, AppInsightsCore, ConnectionString, DEFAULT_BREEZE_PATH, FeatureOptInMode, IAppInsightsCore,
@@ -128,7 +128,16 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
         [OS_PLUGIN]: cfgDfMerge({ enabled: UNDEFINED_VALUE }),
         ["AppInsightsCfgSyncPlugin"]: cfgDfMerge<ICfgSyncConfig>({
             cfgUrl: CONFIG_ENDPOINT_URL,
-            syncMode: ICfgSyncMode.Receive
+            syncMode: ICfgSyncMode.Receive,
+            nonOverrideConfigs: cfgDfMerge<NonOverrideCfg, ICfgSyncConfig>({
+                instrumentationKey: true,
+                connectionString: true,
+                endpointUrl: true,
+                extensionConfig: cfgDfMerge<{[key: string]: any}, NonOverrideCfg, ICfgSyncConfig>({
+                    // OS collection consent is local to each instance, not a synchronized setting.
+                    [OS_PLUGIN]: cfgDfMerge({ enabled: true })
+                })
+            })
         })
     })
 };
