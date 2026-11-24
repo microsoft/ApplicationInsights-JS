@@ -22,6 +22,61 @@
 Application Insights SDK is a package that combines commonly used packages for Web scenarios.
 Refer to [our GitHub page](https://github.com/microsoft/applicationinsights-js) for more details on getting started.
 
+## Optional OS detection
+
+The full web SDK includes the [OS plugin](../extensions/applicationinsights-osplugin-js/README.md), but does not register it or collect
+OS information by default. To opt in, set `extensionConfig.OsPlugin.enabled` to `true` in the npm or SDK loader configuration:
+
+### NPM configuration
+
+```js
+const appInsights = new ApplicationInsights({
+	config: {
+		connectionString: "YOUR_CONNECTION_STRING",
+		extensionConfig: {
+			OsPlugin: { enabled: true }
+		}
+	}
+});
+appInsights.loadAppInsights();
+```
+
+### CDN loader configuration
+
+Keep the [SDK loader script](../README.md#snippet-setup-ignore-if-using-npm-setup) unchanged and pass the following options object as its
+configuration argument. This example defines loader options, not a standalone loader script:
+
+```js
+var snippetConfig = {
+	src: "https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js",
+	crossOrigin: "anonymous",
+	cfg: {
+		connectionString: "YOUR_CONNECTION_STRING",
+		extensionConfig: {
+			OsPlugin: { enabled: true }
+		}
+	}
+};
+```
+
+Use a full SDK CDN release that includes bundled OS detection. Older CDN builds do not support this automatic registration setting.
+Place `extensionConfig` inside the loader's `cfg`, not beside `src`. No additional plugin script or global `OsPlugin` constructor is needed.
+After initialization, for example in the loader's `onInit` callback, `sdk.getPlugin("OsPlugin")` returns the registered plugin wrapper;
+registration does not mean the asynchronous OS lookup has finished. Loading the CDN bundle alone does not enable collection.
+
+No separate OS plugin installation or entry in `extensions` is needed. A customer-supplied `OsPlugin` instance is retained instead of
+adding another instance, and existing manual registration continues to collect when `enabled` is unset.
+
+Set `appInsights.config.extensionConfig.OsPlugin.enabled = false` to stop collection dynamically. Pending telemetry is released without
+detected OS enrichment, and pending lookup results are ignored. Existing cache entries and telemetry already processed are not deleted.
+Setting the value back to `true` resumes collection. Resetting it to `undefined` removes an automatically registered plugin; for a manually
+registered plugin, an unset value preserves the existing collection behavior.
+
+Detection uses User-Agent Client Hints where available; unsupported or restricted browsers continue without enrichment. The plugin
+defaults to a 200 ms maximum wait for initial telemetry, caches results in session storage, and preserves its existing output format and
+customer-context precedence. `isStorageUseDisabled` disables caching, not collection. Explicitly set `enabled: false` to disable collection.
+The plugin code increases the full SDK bundle size even when collection is off. The lightweight web SDK is unchanged.
+
 ## V3.x Release Breaking changes
 
 - Removed ES3 / IE8 Support

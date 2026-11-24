@@ -141,6 +141,9 @@ The current version of the snippet is version 8, the version is identified by th
 </script>
 ```
 
+For optional OS detection with a supporting full SDK CDN release, see the [CDN loader example](AISKU/README.md#cdn-loader-configuration).
+OS detection is not enabled by default.
+
 > :bulb: **Note**
 >
 > 1. For readability and to reduce possible JavaScript errors, all of the possible configuration options are listed on a new line in snippet code above, if you don't want to change the value of a commented line it can be removed.

@@ -21,6 +21,38 @@ export class CfgSyncHelperTests extends AITestClass {
 
     public registerTests() {
         this.testCase({
+            name: "CfgSyncPluginHelper: sibling filters do not increase nested path depth",
+            test: () => {
+                let config = {
+                    extensionConfig: {
+                        FirstPlugin: { keep: true, update: 1 },
+                        SecondPlugin: { keep: true, update: 2 },
+                        ThirdPlugin: { keep: true, update: 3 },
+                        FourthPlugin: { keep: true, update: 4 },
+                        OsPlugin: { enabled: true, maxTimeout: 321 }
+                    }
+                };
+                let filters = {
+                    extensionConfig: {
+                        FirstPlugin: { keep: true },
+                        SecondPlugin: { keep: true },
+                        ThirdPlugin: { keep: true },
+                        FourthPlugin: { keep: true },
+                        OsPlugin: { enabled: true }
+                    }
+                };
+                let result = replaceByNonOverrideCfg(config, filters, 0, 5);
+                Assert.ok(result.extensionConfig.OsPlugin, "Sibling filters do not exceed the maximum path depth");
+                let osConfig = result.extensionConfig.OsPlugin || {} as any;
+                Assert.equal(undefined, osConfig.enabled, "Only the protected OS choice is omitted");
+                Assert.equal(321, osConfig.maxTimeout, "Unprotected OS settings are retained");
+                Assert.equal(4, result.extensionConfig.FourthPlugin.update, "Unprotected sibling settings are retained");
+                Assert.equal(undefined, result.extensionConfig.FourthPlugin.keep, "Sibling protection still applies");
+                Assert.equal(true, config.extensionConfig.OsPlugin.enabled, "Filtering does not mutate the source config");
+            }
+        });
+
+        this.testCase({
             name: "CfgSyncPluginHelper: replaceByNonOverrideCfg should work with flat-level config",
             useFakeTimers: true,
             test: () => {

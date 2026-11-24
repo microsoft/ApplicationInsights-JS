@@ -1,15 +1,18 @@
 import { AITestClass, Assert, PollingAssert, EventValidator, TraceValidator, ExceptionValidator, MetricValidator, PageViewValidator, PageViewPerformanceValidator, RemoteDepdencyValidator } from '@microsoft/ai-test-framework';
 import { SinonSpy } from 'sinon';
-import { ApplicationInsights } from '../../../src/applicationinsights-web'
+import {
+    AppInsightsCore, ApplicationInsights, CfgSyncPlugin, ICfgSyncConfig, IOSPluginConfiguration
+} from "../../../src/applicationinsights-web"
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Exception, DistributedTracingModes, RequestHeaders, IAutoExceptionTelemetry, BreezeChannelIdentifier, IConfig, EventPersistence, EventDataType, PageViewDataType, TraceDataType, ExceptionDataType, MetricDataType, PageViewPerformanceDataType, RemoteDependencyDataType } from '@microsoft/applicationinsights-core-js';
 import { ITelemetryItem, getGlobal, newId, dumpObj, BaseTelemetryPlugin, IProcessTelemetryContext, __getRegisteredEvents, arrForEach, IConfiguration, ActiveStatus, FeatureOptInMode } from "@microsoft/applicationinsights-core-js";
 import { IPropTelemetryContext } from '@microsoft/applicationinsights-properties-js';
-import { createAsyncResolvedPromise } from '@nevware21/ts-async';
+import { createAsyncResolvedPromise, createSyncPromise } from "@nevware21/ts-async";
 import { CONFIG_ENDPOINT_URL } from '../../../src/InternalConstants';
 import { OfflineChannel } from '@microsoft/applicationinsights-offlinechannel-js';
 import { IStackFrame } from '@microsoft/applicationinsights-core-js';
 import { utcNow } from '@nevware21/ts-utils';
+import { OsPlugin } from "@microsoft/applicationinsights-osplugin-js";
 
 function _checkExpectedFrame(expectedFrame: IStackFrame, actualFrame: IStackFrame, index: number) {
     Assert.equal(expectedFrame.assembly, actualFrame.assembly, index + ") Assembly is not as expected");
@@ -141,13 +144,21 @@ export class ApplicationInsightsTests extends AITestClass {
     }
 
     public testFinishedCleanup(): void {
-        if (this._ai && this._ai.unload) {
+        if (this._ai && this._ai.core.isInitialized()) {
             // force unload
             this._ai.unload(false);
         }
 
         if (this._ai && this._ai["dependencies"]) {
             this._ai["dependencies"].teardown();
+        }
+
+        if (this._ctx && this._ctx.osCacheSaved) {
+            if (this._ctx.osCache === null) {
+                sessionStorage.removeItem("ai_osplugin");
+            } else {
+                sessionStorage.setItem("ai_osplugin", this._ctx.osCache);
+            }
         }
 
         console.log("* testCleanup(" + (AITestClass.currentTestInfo ? AITestClass.currentTestInfo.name : "<null>") + ")");
@@ -162,6 +173,576 @@ export class ApplicationInsightsTests extends AITestClass {
         this.addPropertiesPluginTests();
         this.addCDNOverrideTests();
         this.addCdnMonitorTests();
+        this.addOsPluginTests();
+    }
+
+    private _initializeOsPluginTest(osConfig?: IOSPluginConfiguration, manual?: OsPlugin, cached?: string,
+        storageDisabled?: boolean, lookupMode?: string, syncConfig?: ICfgSyncConfig) {
+        this._ai.unload(false);
+        this._ctx.osCache = sessionStorage.getItem("ai_osplugin");
+        this._ctx.osCacheSaved = true;
+        sessionStorage.removeItem("ai_osplugin");
+        if (cached) {
+            sessionStorage.setItem("ai_osplugin", cached);
+        }
+
+        let requests: Array<{ resolve: (value: any) => void; reject: (reason: any) => void }> = [];
+        let lookup = this.sandbox.spy(() => {
+            if (lookupMode === "throw") {
+                throw new Error("Client Hints unavailable");
+            }
+            return createSyncPromise((resolve, reject) => {
+                requests.push({ resolve: resolve, reject: reject });
+            });
+        });
+        this.setNavigator(lookupMode === "missing" ? { userAgentData: undefined } : {
+            userAgentData: { getHighEntropyValues: lookup }
+        }, true);
+        let storageRead = this.sandbox.spy(Storage.prototype, "getItem");
+        let config: IConfiguration & IConfig = {
+            connectionString: ApplicationInsightsTests._connectionString,
+            disableAjaxTracking: true,
+            disableFetchTracking: true,
+            disableExceptionTracking: true,
+            enableSessionStorageBuffer: false,
+            isStorageUseDisabled: storageDisabled,
+            extensionConfig: { AppInsightsCfgSyncPlugin: syncConfig || { cfgUrl: "" } },
+            extensions: manual ? [manual] : []
+        };
+        if (osConfig) {
+            config.extensionConfig.OsPlugin = osConfig;
+        }
+        this._ai = new ApplicationInsights({ config: config });
+        this._ai.loadAppInsights();
+        let sender = this._ai.getSender();
+        let processed = this.sandbox.spy(sender, "processTelemetry");
+        let windows = { platform: "Windows", platformVersion: "15.0.0" };
+        this.envelopeConstructorSpy.resetHistory();
+        return { lookup: lookup, requests: requests, processed: processed, windows: windows, storageRead: storageRead };
+    }
+
+    public addOsPluginTests(): void {
+        [false, true].forEach((manual) => {
+            [undefined, false, true].forEach((enabled) => {
+                this.testCase({
+                    name: "OsPlugin SKU: config sync preserves local enabled " + enabled + " with manual " + manual,
+                    useFakeTimers: true,
+                    test: () => {
+                        let state = this._initializeOsPluginTest(enabled === undefined ? undefined : { enabled: enabled },
+                            manual ? new OsPlugin() : undefined);
+                        let lookups = state.lookup.callCount;
+                        let broadcaster = new AppInsightsCore<IConfiguration & IConfig>();
+                        try {
+                            broadcaster.initialize({
+                                instrumentationKey: "broadcast-key",
+                                connectionString: "InstrumentationKey=broadcast-key",
+                                endpointUrl: "https://broadcast.invalid/v2/track",
+                                samplingPercentage: 42,
+                                extensionConfig: {
+                                    OsPlugin: { enabled: enabled !== true, maxTimeout: 321 },
+                                    AppInsightsCfgSyncPlugin: { cfgUrl: "" }
+                                }
+                            }, [new CfgSyncPlugin(), new Sender()]);
+                            this.clock.tick(1);
+                            Assert.equal(enabled, this._ai.config.extensionConfig.OsPlugin.enabled,
+                                "Remote config cannot change local OS choice");
+                            Assert.equal(lookups, state.lookup.callCount, "Remote config does not start another OS lookup");
+                            Assert.equal(321, this._ai.config.extensionConfig.OsPlugin.maxTimeout, "Other OS settings still synchronize");
+                            Assert.equal(42, this._ai.config.samplingPercentage, "Unrelated config still synchronizes");
+                            Assert.equal(ApplicationInsightsTests._instrumentationKey, this._ai.config.instrumentationKey,
+                                "Instrumentation key remains protected");
+                            Assert.equal(ApplicationInsightsTests._connectionString, this._ai.config.connectionString,
+                                "Connection string remains protected");
+                            Assert.equal("https://dc.services.visualstudio.com/v2/track", this._ai.config.endpointUrl,
+                                "Endpoint remains protected");
+                            Assert.equal(enabled !== true, broadcaster.config.extensionConfig.OsPlugin.enabled,
+                                "Receiving filtered config does not mutate the broadcaster");
+
+                            // A later local opt-out must also survive the next broadcast.
+                            this._ai.config.extensionConfig.OsPlugin.enabled = false;
+                            this.clock.tick(1);
+                            lookups = state.lookup.callCount;
+                            broadcaster.config.extensionConfig.OsPlugin.enabled = true;
+                            broadcaster.getPlugin<CfgSyncPlugin>("AppInsightsCfgSyncPlugin").plugin.sync();
+                            this.clock.tick(1);
+                            Assert.equal(false, this._ai.config.extensionConfig.OsPlugin.enabled,
+                                "Runtime local opt-out survives broadcast");
+                            Assert.equal(lookups, state.lookup.callCount, "Runtime opt-out does not restart collection");
+                            this._ai.config.extensionConfig.OsPlugin.enabled = true;
+                            this.clock.tick(1);
+                            Assert.equal(lookups + 1, state.lookup.callCount, "Explicit local opt-in remains supported");
+                        } finally {
+                            if (broadcaster.isInitialized()) {
+                                broadcaster.unload(false);
+                            }
+                        }
+                    }
+                });
+            });
+        });
+
+        this.testCase({
+            name: "OsPlugin SKU: CDN config preserves opt-out and merged customer non-override settings",
+            useFakeTimers: true,
+            test: () => {
+                let complete: (status: number, response?: string) => void;
+                let state = this._initializeOsPluginTest({ enabled: false }, undefined, undefined, false, undefined, {
+                    overrideFetchFn: (url, oncomplete) => {
+                        Assert.equal(CONFIG_ENDPOINT_URL, url, "Default CDN endpoint is fetched");
+                        complete = oncomplete;
+                    },
+                    scheduleFetchTimeout: 0,
+                    nonOverrideConfigs: {
+                        maxMessageLimit: true,
+                        extensionConfig: {
+                            OsPlugin: { mergeOsNameVersion: true },
+                            OtherPlugin: { keep: true },
+                            SecondPlugin: { keep: true },
+                            ThirdPlugin: { keep: true },
+                            FourthPlugin: { keep: true }
+                        }
+                    }
+                });
+                let filters = this._ai.config.extensionConfig.AppInsightsCfgSyncPlugin.nonOverrideConfigs;
+                Assert.equal(true, filters.instrumentationKey, "Default instrumentation key protection is retained");
+                Assert.equal(true, filters.connectionString, "Default connection string protection is retained");
+                Assert.equal(true, filters.endpointUrl, "Default endpoint protection is retained");
+                Assert.equal(true, filters.extensionConfig.OsPlugin.enabled, "OS choice protection is merged into custom filters");
+                Assert.equal(true, filters.extensionConfig.OtherPlugin.keep, "Other extension filters are retained");
+                let sendConfig = () => complete(200, JSON.stringify({
+                    enabled: true,
+                    config: {
+                        samplingPercentage: 43,
+                        maxMessageLimit: 999,
+                        extensionConfig: {
+                            OtherPlugin: { keep: true, update: 1 },
+                            SecondPlugin: { keep: true, update: 2 },
+                            ThirdPlugin: { keep: true, update: 3 },
+                            FourthPlugin: { keep: true, update: 4 },
+                            OsPlugin: { enabled: true, maxTimeout: 432, mergeOsNameVersion: false }
+                        }
+                    }
+                }));
+                Assert.ok(complete, "CDN completion callback is available");
+                sendConfig();
+                this.clock.tick(1);
+                Assert.equal(false, this._ai.config.extensionConfig.OsPlugin.enabled, "CDN cannot replace local opt-out");
+                Assert.equal(null, this._ai.getPlugin("OsPlugin"), "CDN cannot register OS collection");
+                Assert.equal(0, state.lookup.callCount, "CDN does not trigger a Client Hints lookup");
+                Assert.equal(432, this._ai.config.extensionConfig.OsPlugin.maxTimeout, "Other OS config still synchronizes");
+                Assert.equal(undefined, this._ai.config.extensionConfig.OsPlugin.mergeOsNameVersion, "Custom nested filter is retained");
+                Assert.equal(43, this._ai.config.samplingPercentage, "Unrelated CDN settings still apply");
+                Assert.notEqual(999, this._ai.config.maxMessageLimit, "Custom root filter is retained");
+                this._ai.config.extensionConfig.OsPlugin.enabled = true;
+                this.clock.tick(1);
+                Assert.equal(1, state.lookup.callCount, "Local opt-in remains available after CDN config");
+                sendConfig();
+                this.clock.tick(1);
+                Assert.equal(true, this._ai.config.extensionConfig.OsPlugin.enabled, "CDN preserves local opt-in with sibling filters");
+                Assert.ok(this._ai.getPlugin("OsPlugin"), "Custom sibling filters do not remove the locally enabled plugin");
+                this._ai.config.extensionConfig.OsPlugin.enabled = false;
+                this.clock.tick(1);
+                sendConfig();
+                this.clock.tick(1);
+                Assert.equal(false, this._ai.config.extensionConfig.OsPlugin.enabled, "Runtime opt-out also survives CDN config");
+                Assert.equal(1, state.lookup.callCount, "CDN cannot restart a locally disabled lookup");
+            }
+        });
+
+        [undefined, false, "empty"].forEach((enabled) => {
+            this.testCase({
+                name: "OsPlugin SKU: no collection when enabled is " + enabled,
+                useFakeTimers: true,
+                test: () => {
+                    let state = this._initializeOsPluginTest(enabled === "empty" ? {} : enabled === false ? { enabled: false } : undefined);
+                    Assert.equal(null, this._ai.getPlugin("OsPlugin"), "No plugin is registered without opt-in");
+                    Assert.equal(0, state.lookup.callCount, "No Client Hints request");
+                    Assert.equal(false, state.storageRead.calledWith("ai_osplugin"), "No plugin cache access");
+                    this._ai.trackEvent({ name: "without OS" });
+                    Assert.equal(1, state.processed.callCount, "Telemetry is not delayed");
+                    Assert.equal(undefined, state.processed.firstCall.args[0].ext.os, "No OS enrichment");
+
+                    if (enabled === "empty") {
+                        this._ai.config.extensionConfig.OsPlugin.enabled = true;
+                    } else {
+                        this._ai.config.extensionConfig.OsPlugin = { enabled: true };
+                    }
+                    this.clock.tick(1);
+                    Assert.ok(this._ai.getPlugin("OsPlugin"), "Runtime opt-in registers the plugin");
+                    Assert.equal(1, state.lookup.callCount, "Runtime opt-in starts one lookup");
+                }
+            });
+        });
+
+        this.testCase({
+            name: "OsPlugin SKU: resetting automatic opt-in stops collection without restarting lookup",
+            useFakeTimers: true,
+            test: () => {
+                let state = this._initializeOsPluginTest({ enabled: true });
+                this._ai.trackEvent({ name: "reset OS" });
+                this._ai.config.extensionConfig.OsPlugin.enabled = undefined;
+                state.requests[0].resolve(state.windows);
+                Assert.equal(null, sessionStorage.getItem("ai_osplugin"), "Cleared opt-in ignores results before config notification");
+                this.clock.tick(1);
+                Assert.equal(null, this._ai.getPlugin("OsPlugin"), "Reset removes the automatically registered instance");
+                Assert.equal(1, state.processed.callCount, "Reset releases pending telemetry");
+                Assert.equal(undefined, state.processed.firstCall.args[0].ext.os, "Reset queue is released without OS enrichment");
+                Assert.equal(null, sessionStorage.getItem("ai_osplugin"), "Reset ignores pending results");
+                this._ai.config.extensionConfig.OsPlugin.enabled = true;
+                this.clock.tick(1);
+                this._ai.config.extensionConfig.OsPlugin.enabled = false;
+                this.clock.tick(1);
+                let reads = state.storageRead.callCount;
+                this._ai.config.extensionConfig.OsPlugin = {};
+                this.clock.tick(1);
+                Assert.equal(2, state.lookup.callCount, "Resetting disabled collection does not start a lookup");
+                Assert.equal(reads, state.storageRead.callCount, "Reset does not read cache");
+            }
+        });
+
+        [false, true].forEach((manual) => {
+            ["enabled", "plugin config", "extension config"].forEach((reset) => {
+                this.testCase({
+                    name: "OsPlugin SKU: pending lookup respects immediate " + reset + " reset with manual " + manual,
+                    useFakeTimers: true,
+                    test: () => {
+                        let state = this._initializeOsPluginTest({ enabled: true }, manual ? new OsPlugin() : undefined);
+                        this._ai.trackEvent({ name: "before reset" });
+                        if (reset === "enabled") {
+                            this._ai.config.extensionConfig.OsPlugin.enabled = undefined;
+                        } else if (reset === "plugin config") {
+                            this._ai.config.extensionConfig.OsPlugin = {};
+                        } else {
+                            this._ai.config.extensionConfig = {};
+                        }
+                        state.requests[0].resolve(state.windows);
+                        Assert.equal(manual, sessionStorage.getItem("ai_osplugin") !== null, "Only manual opt-in permits a cache write");
+                        this._ai.trackEvent({ name: "after reset" });
+                        Assert.equal(manual ? 2 : 1, state.processed.callCount, "Cleared automatic opt-in does not delay new telemetry");
+                        let event = state.processed.lastCall.args[0];
+                        Assert.equal(manual ? "Windows11" : undefined, event.ext.os && event.ext.os.osVer,
+                            "Unset permits enrichment only for manual registration before config notification");
+                        this.clock.tick(1);
+                        Assert.equal(2, state.processed.callCount, "Both events reach Sender after notification");
+                        Assert.equal(manual, !!this._ai.getPlugin("OsPlugin"), "Only customer-supplied instances remain registered");
+                        if (!manual) {
+                            Assert.equal(undefined, state.processed.lastCall.args[0].ext.os, "Pending event remains unenriched");
+                            Assert.equal(null, sessionStorage.getItem("ai_osplugin"), "Automatic result stays uncached");
+                        }
+                    }
+                });
+            });
+        });
+
+        this.testCase({
+            name: "OsPlugin SKU: opt-in enriches the real Sender envelope and preserves context precedence",
+            useFakeTimers: true,
+            test: () => {
+                let state = this._initializeOsPluginTest({ enabled: true });
+                (this._ai.context as any).os = { name: "CustomerOS", osVer: "CustomerVersion" };
+                this._ai.trackEvent({ name: "with OS" });
+                Assert.equal(0, state.processed.callCount, "Telemetry waits for OS detection");
+                this._ai.flush(false, () => {});
+                state.requests[0].resolve(state.windows);
+                Assert.equal(1, state.lookup.callCount, "Only one startup lookup");
+                Assert.equal(1, state.processed.callCount, "Pending event reaches Sender after lookup");
+                let envelope = this.envelopeConstructorSpy.lastCall.returnValue;
+                Assert.equal("Windows11", envelope.tags[this.tagKeys.deviceOSVersion], "Sender receives merged OS version");
+                Assert.equal("CustomerOS", envelope.tags[this.tagKeys.deviceOS], "Existing OS name is preserved in merged mode");
+
+                this._ai.config.extensionConfig.OsPlugin.mergeOsNameVersion = false;
+                this.clock.tick(1);
+                this._ai.trackEvent({ name: "split OS" });
+                let event = state.processed.lastCall.args[0];
+                Assert.equal("Windows", event.ext.os.name, "Split mode keeps existing detected-name precedence");
+                Assert.equal("11", event.ext.os.ver, "Split mode retains the Common Schema version field");
+            }
+        });
+
+        [false, true].forEach((manual) => {
+            [false, true].forEach((split) => {
+                this.testCase({
+                    name: "OsPlugin SKU: review regression preserves shared context with manual " + manual + " split " + split,
+                    useFakeTimers: true,
+                    test: () => {
+                        let state = this._initializeOsPluginTest({ enabled: true, mergeOsNameVersion: !split },
+                            manual ? new OsPlugin() : undefined);
+                        let customerOs = { name: "CustomerOS", osVer: "CustomerVersion", ver: "CustomerSplitVersion", custom: "retained" };
+                        (this._ai.context as any).os = customerOs;
+                        this._ai.trackEvent({ name: "detected OS" });
+                        state.requests[0].resolve(state.windows);
+                        let detected = state.processed.lastCall.args[0].ext.os;
+                        Assert.notEqual(customerOs, detected, "Enrichment uses an event-specific OS extension");
+                        Assert.equal("CustomerOS", customerOs.name, "Detection does not replace the customer OS name");
+                        Assert.equal("CustomerVersion", customerOs.osVer, "Detection does not replace the customer OS version");
+                        Assert.equal("CustomerSplitVersion", customerOs.ver, "Detection does not replace the customer split version");
+                        Assert.equal("retained", detected.custom, "Other customer fields are retained on the event");
+                        Assert.equal(split ? "Windows" : "CustomerOS", detected.name, "Detected field precedence is unchanged");
+                        Assert.equal(split ? "11" : "CustomerSplitVersion", detected.ver, "Split mode enriches only the event");
+                        Assert.equal(split ? "CustomerVersion" : "Windows11", detected.osVer, "Merged mode enriches only the event");
+
+                        this._ai.config.extensionConfig.OsPlugin.enabled = false;
+                        this.clock.tick(1);
+                        this._ai.trackEvent({ name: "disabled detected OS" });
+                        let disabled = state.processed.lastCall.args[0].ext.os;
+                        Assert.equal(2, state.processed.callCount, "Disabled telemetry is not delayed");
+                        Assert.equal(customerOs, disabled, "Disabled collection uses the original customer context");
+                        Assert.equal("CustomerOS", disabled.name, "Later events do not retain the detected OS name");
+                        Assert.equal("CustomerVersion", disabled.osVer, "Later events do not retain the detected OS version");
+                        Assert.equal("CustomerSplitVersion", disabled.ver, "Later events do not retain the detected split version");
+                        let envelope = this.envelopeConstructorSpy.lastCall.returnValue;
+                        Assert.equal("CustomerVersion", envelope.tags[this.tagKeys.deviceOSVersion], "Sender sees only customer OS version");
+                    }
+                });
+            });
+        });
+
+        [undefined, true, false].forEach((enabled) => {
+            this.testCase({
+                name: "OsPlugin SKU: manual registration with enabled " + enabled,
+                useFakeTimers: true,
+                test: () => {
+                    let plugin = new OsPlugin();
+                    let state = this._initializeOsPluginTest(enabled === undefined ? undefined : { enabled: enabled }, plugin);
+                    Assert.equal(plugin, this._ai.getPlugin("OsPlugin").plugin, "The customer instance is retained");
+                    let plugins = this._ai.config.extensions.filter((item) => item.identifier === "OsPlugin");
+                    Assert.equal(1, plugins.length, "There is exactly one OS plugin");
+                    Assert.equal(enabled === false ? 0 : 1, state.lookup.callCount, "Unset preserves manual opt-in");
+                    if (enabled === false) {
+                        Assert.equal(false, state.storageRead.calledWith("ai_osplugin"), "Disabled manual plugin does not read cache");
+                        this._ai.trackEvent({ name: "disabled manual" });
+                        Assert.equal(1, state.processed.callCount, "Disabled plugin passes telemetry through");
+                    }
+                    this._ai.config.extensionConfig.OsPlugin.enabled = false;
+                    this.clock.tick(1);
+                    this._ai.config.extensionConfig.OsPlugin.enabled = undefined;
+                    this.clock.tick(1);
+                    Assert.equal(plugin, this._ai.getPlugin("OsPlugin").plugin, "Reset does not remove a customer-supplied instance");
+                    Assert.equal(enabled === false ? 1 : 2, state.lookup.callCount, "Reset resumes manually opted-in collection");
+                }
+            });
+        });
+
+        this.testCase({
+            name: "OsPlugin SKU: dynamic disable releases events and rejects old results after re-enable",
+            useFakeTimers: true,
+            test: () => {
+                let state = this._initializeOsPluginTest({ enabled: true });
+                this._ai.trackEvent({ name: "pending OS" });
+                this._ai.config.extensionConfig.OsPlugin.enabled = false;
+                this.clock.tick(1);
+                Assert.equal(1, state.processed.callCount, "Disable releases queued telemetry");
+                Assert.equal(undefined, state.processed.firstCall.args[0].ext.os, "Disabled queue is not enriched");
+                state.requests[0].resolve(state.windows);
+                Assert.equal(null, sessionStorage.getItem("ai_osplugin"), "Disabled lookup cannot write cache");
+                this._ai.trackEvent({ name: "disabled OS" });
+                Assert.equal(2, state.processed.callCount, "Disabled collection does not delay telemetry");
+
+                this._ai.config.extensionConfig.OsPlugin.enabled = true;
+                this.clock.tick(1);
+                Assert.equal(2, state.lookup.callCount, "Re-enable starts a fresh lookup");
+                this._ai.trackEvent({ name: "new lookup" });
+                this._ai.config.extensionConfig.OsPlugin.enabled = false;
+                this.clock.tick(1);
+                this._ai.config.extensionConfig.OsPlugin.enabled = true;
+                this.clock.tick(1);
+                this._ai.trackEvent({ name: "latest lookup" });
+                state.requests[1].resolve(state.windows);
+                Assert.equal(3, state.processed.callCount, "Superseded response does not release the current queue");
+                Assert.equal(null, sessionStorage.getItem("ai_osplugin"), "Superseded response does not write cache");
+                state.requests[2].resolve({ platform: "Android", platformVersion: "14.0.0" });
+                Assert.equal("Android14", state.processed.lastCall.args[0].ext.os.osVer, "Only the current response enriches telemetry");
+            }
+        });
+
+        this.testCase({
+            name: "OsPlugin SKU: default timeout releases initial telemetry without OS",
+            useFakeTimers: true,
+            test: () => {
+                let state = this._initializeOsPluginTest({ enabled: true });
+                this._ai.trackEvent({ name: "timeout OS" });
+                this.clock.tick(199);
+                Assert.equal(0, state.processed.callCount, "Event waits within the default timeout");
+                this.clock.tick(1);
+                Assert.equal(1, state.processed.callCount, "Event is released after 200 ms");
+                Assert.equal(undefined, state.processed.firstCall.args[0].ext.os, "Timed-out event is not enriched");
+                state.requests[0].resolve(state.windows);
+                this._ai.trackEvent({ name: "late OS" });
+                Assert.equal("Windows11", state.processed.lastCall.args[0].ext.os.osVer, "Late results remain usable while enabled");
+            }
+        });
+
+        ["reject", "throw", "missing"].forEach((mode) => {
+            this.testCase({
+                name: "OsPlugin SKU: Client Hints " + mode + " does not block telemetry",
+                useFakeTimers: true,
+                test: () => {
+                    let state = this._initializeOsPluginTest({ enabled: true }, null, null, false, mode);
+                    this._ai.trackEvent({ name: "unavailable OS" });
+                    if (mode === "reject") {
+                        state.requests[0].reject(new Error("Client Hints rejected"));
+                    }
+                    Assert.equal(1, state.processed.callCount, "Event reaches Sender without enrichment");
+                    Assert.equal(undefined, state.processed.lastCall.args[0].ext.os, "No OS information is invented");
+                }
+            });
+        });
+
+        [false, true].forEach((storageDisabled) => {
+            this.testCase({
+                name: "OsPlugin SKU: cached result with storage disabled " + storageDisabled,
+                useFakeTimers: true,
+                test: () => {
+                    let cached = JSON.stringify({ platform: "Android", platformVersion: 14 });
+                    let state = this._initializeOsPluginTest({ enabled: true }, null, cached, storageDisabled);
+                    this._ai.trackEvent({ name: "cached OS" });
+                    Assert.equal(storageDisabled ? 1 : 0, state.lookup.callCount, "Storage setting controls cache reuse, not collection");
+                    if (storageDisabled) {
+                        state.requests[0].resolve(state.windows);
+                    }
+                    Assert.equal(storageDisabled ? "Windows11" : "Android14", state.processed.lastCall.args[0].ext.os.osVer);
+                    Assert.equal(cached, sessionStorage.getItem("ai_osplugin"), "Existing cache is unchanged");
+                }
+            });
+        });
+
+        ["initial", "runtime", "re-enable", "manual"].forEach((mode) => {
+            this.testCase({
+                name: "OsPlugin SKU: pagehide releases events before housekeeping flush after " + mode + " opt-in",
+                useFakeTimers: true,
+                test: () => {
+                    let state = this._initializeOsPluginTest({ enabled: mode === "initial" || mode === "re-enable" },
+                        mode === "manual" ? new OsPlugin() : undefined);
+                    if (mode === "re-enable") {
+                        this._ai.config.extensionConfig.OsPlugin.enabled = false;
+                        this.clock.tick(1);
+                    }
+                    this._ai.config.extensionConfig.OsPlugin.enabled = true;
+                    this.clock.tick(1);
+                    let flushed = 0;
+                    this.sandbox.stub(this._ai.getSender(), "onunloadFlush").callsFake(() => {
+                        flushed++;
+                        Assert.equal(1, state.processed.callCount, "Pending event reaches Sender before the exit flush");
+                    });
+                    this._ai.trackEvent({ name: "pagehide OS" });
+                    window.dispatchEvent(new Event("pagehide"));
+                    Assert.ok(flushed > 0, "Page exit flush ran");
+                    Assert.equal(1, state.processed.callCount, "Page exit releases pending telemetry once");
+                    Assert.equal(undefined, state.processed.lastCall.args[0].ext.os, "Pending detection does not block page exit");
+                }
+            });
+        });
+
+        this.testCase({
+            name: "OsPlugin SKU: exit flush supports customer plugins without the queue-drain method",
+            useFakeTimers: true,
+            test: () => {
+                let plugin = new OsPlugin();
+                (plugin as any).onunloadFlush = undefined;
+                let state = this._initializeOsPluginTest({ enabled: false }, plugin);
+                this._ai.trackEvent({ name: "legacy plugin exit" });
+                let flushed = this.sandbox.stub(this._ai.getSender(), "onunloadFlush");
+                this._ai.onunloadFlush(false);
+                Assert.equal(1, flushed.callCount, "Channel flush runs without a plugin queue-drain method");
+                Assert.equal(1, state.processed.callCount, "Disabled customer plugin passes telemetry through");
+                Assert.equal(0, state.lookup.callCount, "Exit flush does not enable collection");
+            }
+        });
+
+        this.testCase({
+            name: "OsPlugin SKU: review regression releases queue before direct unload flush",
+            useFakeTimers: true,
+            test: () => {
+                let state = this._initializeOsPluginTest({ enabled: true });
+                this._ai.trackEvent({ name: "direct exit OS" });
+                let flushed = 0;
+                this.sandbox.stub(this._ai.getSender(), "onunloadFlush").callsFake(() => {
+                    flushed++;
+                    Assert.equal(1, state.processed.callCount, "Queued event reaches Sender before direct exit flush");
+                });
+                this._ai.onunloadFlush(false);
+                Assert.equal(1, flushed, "Direct exit flush ran once");
+                Assert.equal(1, state.processed.callCount, "Direct exit releases the queue without waiting for detection");
+            }
+        });
+
+        this.testCase({
+            name: "OsPlugin SKU: review regression releases queue before flush after unload settings change",
+            useFakeTimers: true,
+            test: () => {
+                let state = this._initializeOsPluginTest();
+                this._ai.config.extensionConfig.OsPlugin.enabled = true;
+                this.clock.tick(1);
+                this._ai.trackEvent({ name: "pending exit OS" });
+                Assert.equal(0, state.processed.callCount, "Event waits for the pending lookup");
+                this._ai.config.disablePageUnloadEvents = ["unload"];
+                this.clock.tick(1);
+                this._ai.config.disablePageUnloadEvents = ["unload", "beforeunload"];
+                this.clock.tick(1);
+                let flushed = 0;
+                this.sandbox.stub(this._ai.getSender(), "onunloadFlush").callsFake(() => {
+                    flushed++;
+                    Assert.equal(1, state.processed.callCount, "Queued event reaches Sender before its exit flush");
+                });
+                window.dispatchEvent(new Event("pagehide"));
+                Assert.ok(flushed > 0, "Page exit flush ran");
+                Assert.equal(1, state.processed.callCount, "Queued event is released once");
+                Assert.equal(undefined, state.processed.lastCall.args[0].ext.os, "Exit does not wait for detection");
+            }
+        });
+
+        this.testCase({
+            name: "OsPlugin SKU: instances keep collection and pending requests isolated",
+            useFakeTimers: true,
+            test: () => {
+                let state = this._initializeOsPluginTest({ enabled: true }, null, null, true);
+                let other = new ApplicationInsights({
+                    config: {
+                        connectionString: ApplicationInsightsTests._connectionString,
+                        disableAjaxTracking: true,
+                        disableFetchTracking: true,
+                        disableExceptionTracking: true,
+                        isStorageUseDisabled: true,
+                        enableSessionStorageBuffer: false,
+                        extensionConfig: { OsPlugin: { enabled: true }, AppInsightsCfgSyncPlugin: { cfgUrl: "" } }
+                    }
+                });
+                try {
+                    other.loadAppInsights();
+                    let processed = this.sandbox.spy(other.getSender(), "processTelemetry");
+                    this._ai.trackEvent({ name: "first instance" });
+                    other.trackEvent({ name: "second instance" });
+                    this._ai.config.extensionConfig.OsPlugin.enabled = false;
+                    this.clock.tick(1);
+                    state.requests[0].resolve(state.windows);
+                    Assert.equal(1, state.processed.callCount, "Disabled instance releases its event without enrichment");
+                    Assert.equal(0, processed.callCount, "Other instance keeps its pending lookup");
+                    state.requests[1].resolve({ platform: "Android", platformVersion: "14.0.0" });
+                    Assert.equal("Android14", processed.lastCall.args[0].ext.os.osVer, "Other instance uses its own response");
+                    Assert.equal(null, sessionStorage.getItem("ai_osplugin"), "Storage-disabled instances do not cache results");
+                } finally {
+                    if (other.core.isInitialized()) {
+                        other.unload(false);
+                    }
+                }
+            }
+        });
+
+        this.testCase({
+            name: "OsPlugin SKU: unload releases queued events and ignores late lookup results",
+            useFakeTimers: true,
+            test: () => {
+                let state = this._initializeOsPluginTest({ enabled: true });
+                this._ai.trackEvent({ name: "unload OS" });
+                this._ai.unload(false);
+                let processed = state.processed.callCount;
+                let events = __getRegisteredEvents(window).length;
+                state.requests[0].resolve(state.windows);
+                Assert.equal(null, sessionStorage.getItem("ai_osplugin"), "Unloaded lookup cannot write cache");
+                Assert.equal(processed, state.processed.callCount, "Unloaded lookup does not send telemetry");
+                Assert.equal(events, __getRegisteredEvents(window).length, "Unloaded lookup does not restore listeners");
+            }
+        });
     }
 
     public addGenericE2ETests(): void {
