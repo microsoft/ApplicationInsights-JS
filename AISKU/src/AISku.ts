@@ -4,7 +4,7 @@
 
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { AnalyticsPlugin, ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
-import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode } from "@microsoft/applicationinsights-cfgsync-js";
+import { CfgSyncPlugin, ICfgSyncConfig, ICfgSyncMode, NonOverrideCfg } from "@microsoft/applicationinsights-cfgsync-js";
 import { STR_ZIP_PAYLOAD, STR_ZIP_PAYLOAD_V2, Sender } from "@microsoft/applicationinsights-channel-js";
 import {
     AnalyticsPluginIdentifier, AppInsightsCore, ConnectionString, DEFAULT_BREEZE_PATH, FeatureOptInMode, IAppInsightsCore,
@@ -24,6 +24,7 @@ import {
     AjaxPlugin as DependenciesPlugin, DependencyInitializerFunction, DependencyListenerFunction, IDependencyInitializerHandler,
     IDependencyListenerHandler
 } from "@microsoft/applicationinsights-dependencies-js";
+import { OsPlugin } from "@microsoft/applicationinsights-osplugin-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { IPromise, createPromise, createSyncPromise, doAwaitResponse } from "@nevware21/ts-async";
 import {
@@ -65,6 +66,7 @@ const IKEY_USAGE = "iKeyUsage";
 const CDN_USAGE = "CdnUsage";
 const SDK_LOADER_VER = "SdkLoaderVer";
 const SDK_STATS = "SdkStats";
+const OS_PLUGIN = "OsPlugin";
 var _sdkVersion = "#version#";
 
 const default_limit = {
@@ -123,9 +125,19 @@ const defaultConfigValues: IConfigDefaults<IConfiguration & IConfig> = {
         }
     ),
     extensionConfig: cfgDfMerge<{[key: string]: any}>({
+        [OS_PLUGIN]: cfgDfMerge({ enabled: UNDEFINED_VALUE }),
         ["AppInsightsCfgSyncPlugin"]: cfgDfMerge<ICfgSyncConfig>({
             cfgUrl: CONFIG_ENDPOINT_URL,
-            syncMode: ICfgSyncMode.Receive
+            syncMode: ICfgSyncMode.Receive,
+            nonOverrideConfigs: cfgDfMerge<NonOverrideCfg, ICfgSyncConfig>({
+                instrumentationKey: true,
+                connectionString: true,
+                endpointUrl: true,
+                extensionConfig: cfgDfMerge<{[key: string]: any}, NonOverrideCfg, ICfgSyncConfig>({
+                    // OS collection consent is local to each instance, not a synchronized setting.
+                    [OS_PLUGIN]: cfgDfMerge({ enabled: true })
+                })
+            })
         })
     })
 };
@@ -368,6 +380,11 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
             };
 
             _self.onunloadFlush = (isAsync: boolean = true) => {
+                let osPlugin = _core.getPlugin<OsPlugin>(OS_PLUGIN);
+                if (osPlugin && isFunction(osPlugin.plugin.onunloadFlush)) {
+                    // Drain queued telemetry before channels flush, regardless of page-exit listener order.
+                    osPlugin.plugin.onunloadFlush();
+                }
                 arrForEach(_core.getChannels(), (channel: IChannelControls & Sender) => {
                     if (channel.onunloadFlush) {
                         channel.onunloadFlush();
@@ -408,7 +425,38 @@ export class AppInsightsSku implements IApplicationInsights<IConfiguration & ICo
 
                 doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
                     // initialize core
-                    _core.initialize(_config, [ _sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin], logger, notificationManager);
+                    let plugins: IPlugin[] = [ _sender, properties, dependencies, _analyticsPlugin, _cfgSyncPlugin];
+                    let osPlugin: OsPlugin;
+                    let osConfig = (_config.extensionConfig || {})[OS_PLUGIN];
+                    if (osConfig && osConfig.enabled === true) {
+                        let suppliedOsPlugin = false;
+                        arrForEach(_config.extensions, (plugin) => {
+                            suppliedOsPlugin = suppliedOsPlugin || plugin.identifier === OS_PLUGIN;
+                        });
+                        if (!suppliedOsPlugin) {
+                            osPlugin = new OsPlugin(false);
+                            plugins.push(osPlugin);
+                        }
+                    }
+
+                    // Watch before plugin initialization so revoking automatic opt-in cannot restart a lookup.
+                    _addUnloadHook(onConfigChange(cfgHandler, () => {
+                        let osConfig = (_config.extensionConfig || {})[OS_PLUGIN];
+                        let enabled = osConfig && osConfig.enabled === true;
+                        if (_core.isInitialized()) {
+                            let loaded = _core.getPlugin(OS_PLUGIN);
+                            if (enabled) {
+                                if (!loaded) {
+                                    osPlugin = new OsPlugin(false);
+                                    _core.addPlugin(osPlugin, false, false);
+                                }
+                            } else if (loaded && loaded.plugin === osPlugin) {
+                                osPlugin = null;
+                                loaded.remove(false);
+                            }
+                        }
+                    }));
+                    _core.initialize(_config, plugins, logger, notificationManager);
 
                     if (!_throttleMgr){
                         _throttleMgr = new ThrottleMgr(_core);

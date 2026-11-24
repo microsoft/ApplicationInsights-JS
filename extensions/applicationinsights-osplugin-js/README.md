@@ -9,6 +9,10 @@ Microsoft Application Insights OS Plugin
 ## Description
 1DS OS Plugin provides the functionality to retrieve customers system version, such as "Windows 11".
 
+The full Application Insights web SDK also bundles this plugin as an opt-in feature. Set `extensionConfig.OsPlugin.enabled: true`
+without installing or manually registering this package; see [full SDK setup](../../AISKU/README.md#optional-os-detection).
+Automatic registration remains off by default, and the lightweight SDK is unchanged. The standalone package remains available.
+
 ## NPM Setup (ignore if using Snippet Setup)
 
 Install npm package:
@@ -42,9 +46,19 @@ appInsights.trackEvent({name: "testEvent", properties: {testProperty: "testValue
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
+| enabled | boolean[Optional] | undefined | `true` opts into automatic registration in the full web SDK. Unset preserves existing manual-registration behavior. `false` stops collection, releases pending telemetry without detected OS enrichment, and ignores pending lookup results. Existing cache entries are not deleted. |
 | [maxTimeout](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-osplugin-js/interfaces/IOSPluginConfiguration.html#maxTimeout) | number[Optional]| 200 | Maximum time to wait for the OS plugin to return the OS information |
-| [mergeOsNameVersion](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-osplugin-js/interfaces/IOSPluginConfiguration.html#mergeOsNameVersion) | boolean[Optional] | false | Whether to merge the OS name and version into one field change details. |
+| [mergeOsNameVersion](https://microsoft.github.io/ApplicationInsights-JS/webSdk/applicationinsights-osplugin-js/interfaces/IOSPluginConfiguration.html#mergeOsNameVersion) | boolean[Optional] | undefined | Whether to merge OS name and version. Defaults to merged `ext.os.osVer` when the Application Insights Sender is present, otherwise separate `ext.os.name` and `ext.os.ver` fields. |
 
+Configuration changes are supported at runtime. Setting `enabled` to `false` prevents Client Hints lookups, plugin cache access, and
+detected OS enrichment. Setting it to `true` resumes collection. For manually registered instances, resetting it to `undefined` also
+resumes collection for backward compatibility. `isStorageUseDisabled` controls caching only and does not disable OS collection.
+
+Browsers without the User-Agent Client Hints API continue without OS enrichment. Initial telemetry can wait up to `maxTimeout` while
+detection is pending; timeout, failure, page exit, or disabling collection releases queued events. Results arriving after disable or
+unload are ignored. In merged mode detected information replaces `osVer` but leaves an existing OS `name` intact; in split mode detected
+values replace `name` and `ver`. Other customer-supplied fields are retained. The Application Insights Sender maps `osVer` to its OS
+version tag, so use the default merged mode for that channel.
 
 ## Run unit tests:
 ```
