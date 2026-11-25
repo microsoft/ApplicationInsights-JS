@@ -23,10 +23,10 @@ export interface IAppInsights {
     _onerror(exception: IAutoExceptionTelemetry): void;
     trackTrace(trace: ITraceTelemetry, customProperties?: {[key: string]: any}): void;
     trackMetric(metric: IMetricTelemetry, customProperties?: {[key: string]: any}): void;
-    startTrackPage(name?: string): void;
-    stopTrackPage(name?: string, url?: string, properties?: {[key: string]: string}, measurements?: {[key: string]: number}): void;
-    startTrackEvent(name: string): void;
-    stopTrackEvent(name: string, properties?: {[key: string]: string}, measurements?: {[key: string]: number}): void;
+    startTrackPage(name?: string, timestamp?: number): void;
+    stopTrackPage(name?: string, url?: string, properties?: {[key: string]: string}, measurements?: {[key: string]: number}, timestamp?: number): void;
+    startTrackEvent(name: string, timestamp?: number): void;
+    stopTrackEvent(name: string, properties?: {[key: string]: string}, measurements?: {[key: string]: number}, timestamp?: number): void;
     addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void): void;
     trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: { [key: string]: any }): void;
 }

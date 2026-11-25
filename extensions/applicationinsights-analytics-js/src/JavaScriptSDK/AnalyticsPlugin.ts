@@ -17,7 +17,7 @@ import {
     createUniqueNamespace, dataSanitizeString, dumpObj, eLoggingSeverity, eSeverityLevel, eventOff, eventOn, fieldRedaction, findAllScripts,
     generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isCrossOriginError, isFunction,
     isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strNotSpecified, strUndefined, throwError,
-    utlDisableStorage, utlEnableStorage, utlSetStoragePrefix
+    toISOString, utlDisableStorage, utlEnableStorage, utlSetStoragePrefix
 } from "@microsoft/applicationinsights-core-js";
 import { IAjaxMonitorPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
@@ -171,9 +171,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * Start timing an extended event. Call `stopTrackEvent` to log the event when it ends.
              * @param name - A string that identifies this event uniquely within the document.
              */
-            _self.startTrackEvent = (name: string) => {
+            _self.startTrackEvent = (name: string, timestamp?: number) => {
                 try {
-                    _eventTracking.start(name);
+                    _eventTracking.start(name, timestamp);
                 } catch (e) {
                     _throwInternal(eLoggingSeverity.CRITICAL,
                         _eInternalMessageId.StartTrackEventFailed,
@@ -188,9 +188,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * @param properties - map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
              * @param measurements - map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
              */
-            _self.stopTrackEvent = (name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => {
+            _self.stopTrackEvent = (name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }, timestamp?: number) => {
                 try {
-                    _eventTracking.stop(name, undefined, properties, measurements);
+                    _eventTracking.stop(name, undefined, properties, measurements, timestamp);
                 } catch (e) {
                     _throwInternal(eLoggingSeverity.CRITICAL,
                         _eInternalMessageId.StopTrackEventFailed,
@@ -303,6 +303,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     _self.diagLog(),
                     properties,
                     systemProperties);
+                if (pageView.startTime) {
+                    telemetryItem.time = toISOString(pageView.startTime);
+                }
 
                 _self.core.track(telemetryItem);
                 // reset ajaxes counter
@@ -351,14 +354,14 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * and send the event.
              * @param name - A string that idenfities this item, unique within this HTML document. Defaults to the document title.
              */
-            _self.startTrackPage = (name?: string) => {
+            _self.startTrackPage = (name?: string, timestamp?: number) => {
                 try {
                     if (typeof name !== "string") {
                         let doc = getDocument();
                         name = doc && doc.title || "";
                     }
 
-                    _pageTracking.start(name);
+                    _pageTracking.start(name, timestamp);
                 } catch (e) {
                     _throwInternal(
                         eLoggingSeverity.CRITICAL,
@@ -376,7 +379,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
              * @param properties - map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
              * @param measurements - map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
              */
-            _self.stopTrackPage = (name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: number }) => {
+            _self.stopTrackPage = (name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: number }, timestamp?: number) => {
                 try {
                     if (typeof name !== "string") {
                         let doc = getDocument();
@@ -390,7 +393,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                     if (_self.core && _self.core.config) {
                         url = fieldRedaction(url, _self.core.config);
                     }
-                    _pageTracking.stop(name, url, properties, measurement);
+                    _pageTracking.stop(name, url, properties, measurement, timestamp);
 
                     if (_autoTrackPageVisitTime) {
                         _pageVisitTimeManager.trackPreviousPageVisit(name, url);
@@ -589,7 +592,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                     // initialize page view timing
                     _pageTracking = createTiming(_self.diagLog(), "trackPageView");
-                    _pageTracking.action = (name, url, duration, properties, measurements) => {
+                    _pageTracking.action = (name, url, duration, properties, measurements, startTime) => {
 
                         // duration must be a custom property in order for the collector to extract it
                         if (isNullOrUndefined(properties)) {
@@ -603,6 +606,9 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
                             properties,
                             measurements
                         };
+                        if (typeof startTime === "number" && !isNaN(startTime)) {
+                            pageViewItem.startTime = new Date(startTime);
+                        }
     
                         _self.sendPageViewInternal(pageViewItem, properties);
                     }
@@ -965,7 +971,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
      * Start timing an extended event. Call `stopTrackEvent` to log the event when it ends.
      * @param name - A string that identifies this event uniquely within the document.
      */
-    public startTrackEvent(name: string) {
+    public startTrackEvent(name: string, timestamp?: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -975,7 +981,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
      * @param properties - map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
      * @param measurements - map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
-    public stopTrackEvent(name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) {
+    public stopTrackEvent(name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }, timestamp?: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -1046,7 +1052,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
      * and send the event.
      * @param name - A string that idenfities this item, unique within this HTML document. Defaults to the document title.
      */
-    public startTrackPage(name?: string) {
+    public startTrackPage(name?: string, timestamp?: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -1058,7 +1064,7 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
      * @param properties - map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
      * @param measurements - map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
-    public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: number }) {
+    public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: number }, timestamp?: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
