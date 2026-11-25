@@ -12,8 +12,8 @@ import {
     IPageViewTelemetryInternal, IPlugin, IProcessTelemetryContext, IProcessTelemetryUnloadContext, ITelemetryInitializerHandler,
     ITelemetryItem, ITelemetryPluginChain, ITelemetryUnloadState, ITraceTelemetry, InstrumentEvent, MetricDataType, MetricEnvelopeType,
     PageViewDataType, PageViewEnvelopeType, PageViewPerformanceDataType, PageViewPerformanceEnvelopeType, RemoteDependencyDataType,
-    TelemetryInitializerFunction, TraceDataType, TraceEnvelopeType, _eInternalMessageId, arrForEach, cfgDfBoolean, cfgDfMerge, cfgDfSet,
-    cfgDfString, cfgDfValidate, createDistributedTraceContext, createDomEvent, createProcessTelemetryContext, createTelemetryItem,
+    TelemetryInitializerFunction, TraceDataType, TraceEnvelopeType, _eInternalMessageId, arrForEach, cfgDfBoolean, cfgDfFunc, cfgDfMerge,
+    cfgDfSet, cfgDfString, cfgDfValidate, createDistributedTraceContext, createDomEvent, createProcessTelemetryContext, createTelemetryItem,
     createUniqueNamespace, dataSanitizeString, dumpObj, eLoggingSeverity, eSeverityLevel, eventOff, eventOn, fieldRedaction, findAllScripts,
     generateW3CId, getDocument, getExceptionName, getHistory, getLocation, getWindow, hasHistory, hasWindow, isCrossOriginError, isFunction,
     isNullOrUndefined, isString, isUndefined, mergeEvtNamespace, onConfigChange, safeGetCookieMgr, strNotSpecified, strUndefined, throwError,
@@ -21,7 +21,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { IAjaxMonitorPlugin } from "@microsoft/applicationinsights-dependencies-js";
 import { isArray, isError, objDeepFreeze, objDefine, scheduleTimeout, strIndexOf } from "@nevware21/ts-utils";
-import { IAnalyticsConfig, eRouteTraceStrategy } from "./Interfaces/IAnalyticsConfig";
+import { IAnalyticsConfig, IValueCallback, eRouteTraceStrategy } from "./Interfaces/IAnalyticsConfig";
 import { IAppInsightsInternal, IPageViewManager, createPageViewManager } from "./Telemetry/PageViewManager";
 import { IPageViewPerformanceManager, createPageViewPerformanceManager } from "./Telemetry/PageViewPerformanceManager";
 import { IPageVisitTimeManager, createPageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -52,6 +52,9 @@ function _getReason(error: any) {
 const MinMilliSeconds = 60000;
 
 const defaultValues: IConfigDefaults<IAnalyticsConfig> = objDeepFreeze({
+    callback: cfgDfMerge<IValueCallback>({
+        pageName: cfgDfFunc()
+    }),
     sessionRenewalMs: cfgDfSet(_chkConfigMilliseconds, 30 * 60 * 1000),
     sessionExpirationMs: cfgDfSet(_chkConfigMilliseconds, 24 * 60 * 60 * 1000),
     disableExceptionTracking: cfgDfBoolean(),
@@ -260,6 +263,19 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
             _self.trackPageView = (pageView?: IPageViewTelemetry, customProperties?: ICustomProperties) => {
                 try {
                     let inPv = pageView || {};
+                    if (!isString(inPv.name)) {
+                        let callback = _extConfig && _extConfig.callback;
+                        if (callback && isFunction(callback.pageName)) {
+                            try {
+                                let name = callback.pageName();
+                                if (isString(name) && name) {
+                                    inPv.name = name;
+                                }
+                            } catch (e) {
+                                // Use the document title if the callback fails.
+                            }
+                        }
+                    }
                     if (_self.core && _self.core.config) {
                         inPv.uri = fieldRedaction(inPv.uri, _self.core.config);
                     }
@@ -649,6 +665,11 @@ export class AnalyticsPlugin extends BaseTelemetryPlugin implements IAppInsights
 
                 _self._addHook(onConfigChange(config, () => {
                     let ctx = createProcessTelemetryContext(null, config, core);
+                    let extConfig = ctx.getExtCfg<IAnalyticsConfig>(identifier, {});
+                    if (isNullOrUndefined(extConfig.callback)) {
+                        // Do not inherit root-level callbacks already used by Click Analytics.
+                        extConfig.callback = {};
+                    }
                     _extConfig = ctx.getExtCfg(identifier, defaultValues);
                     // make sure auto exception is instrumented only once and it won't be overriden by the following config changes
                     _autoExceptionInstrumented = _autoExceptionInstrumented || (config as any).autoExceptionInstrumented || _extConfig.autoExceptionInstrumented;

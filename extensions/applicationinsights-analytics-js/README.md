@@ -6,6 +6,42 @@
 
 Web Analytics Plugin for the Application Insights Javascript SDK
 
+## Custom page names
+
+Use the `pageName` callback to provide page names for your application's page-view telemetry.
+Set `IAnalyticsConfig.callback` to an `IValueCallback` whose synchronous `pageName` function returns the current page name.
+The SDK calls this function for `trackPageView()` calls without an explicit name and for automatically tracked SPA page views.
+
+```javascript
+import { ApplicationInsights } from "@microsoft/applicationinsights-web";
+
+const appInsights = new ApplicationInsights({
+	config: {
+		connectionString: "YOUR_CONNECTION_STRING",
+		enableAutoRouteTracking: true,
+		extensionConfig: {
+			ApplicationInsightsAnalytics: {
+				callback: {
+					pageName: function () {
+						return window.location.pathname === "/checkout" ? "Checkout" : "Store";
+					}
+				}
+			}
+		}
+	}
+});
+appInsights.loadAppInsights();
+```
+
+In this example, the SDK records `/checkout` page views as `Checkout` and other page views as `Store`.
+
+- Enable `enableAutoRouteTracking` to use the callback for automatic SPA page views.
+- Provide `trackPageView({ name: "Custom page" })` to use a specific name for an individual page view.
+- Add, replace, or remove the callback at runtime through the Analytics extension configuration.
+- If the callback throws or returns an empty or non-string value, the SDK uses `document.title`.
+
+Return stable, descriptive page names without personal or sensitive data.
+
 ## Build:
 ```
 npm install -g grunt-cli

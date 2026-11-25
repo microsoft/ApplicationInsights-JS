@@ -9,6 +9,8 @@
 - The full web SDK now bundles optional OS detection. Opt in with `extensionConfig.OsPlugin.enabled: true`; no separate package or
   manual registration is required. Collection remains off by default, existing manually registered instances retain their behavior,
   and the lightweight SDK is unchanged. Explicitly setting `enabled: false` stops OS collection and ignores pending lookup results.
+- Added Analytics `IValueCallback.pageName` support through `extensionConfig.ApplicationInsightsAnalytics.callback` to derive
+  names for manual and automatic SPA page views without changing the document title. Explicit page-view names take precedence.
 - CDN preview deployment now uses `next` instead of `beta` across the SDK, extensions, tools, and configuration.
   Stable release artifacts publish to `next` and their existing production destinations; release candidates publish only to `next`.
   Beta CDN publishing, activation, and listing options are removed, while existing CDN artifacts and production URLs remain unchanged.

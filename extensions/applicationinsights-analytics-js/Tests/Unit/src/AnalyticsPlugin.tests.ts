@@ -21,6 +21,7 @@ import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsC
 import { Sender } from "@microsoft/applicationinsights-channel-js"
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { AnalyticsPlugin } from "../../../src/JavaScriptSDK/AnalyticsPlugin";
+import { IAnalyticsConfig, IValueCallback } from "../../../src/applicationinsights-analytics-js";
 
 declare class ExceptionHelper {
     capture: (appInsights:IAppInsights) => void;
@@ -551,6 +552,7 @@ export class AnalyticsPluginTests extends AITestClass {
         });
 
         this.addGenericTests();
+        this.addPageNameCallbackTests();
         this.addStartStopTrackPageTests();
         this.addStartStopTrackEventTests()
         this.addTrackExceptionTests();
@@ -558,6 +560,306 @@ export class AnalyticsPluginTests extends AITestClass {
         this.addTrackMetricTests();
         this.addTelemetryInitializerTests();
         this.addScriptInfoTests();
+    }
+
+    private addPageNameCallbackTests(): void {
+        const mockPerformance = (timing: any = null) => {
+            this.sandbox.stub(window.performance, "timing").value(timing);
+            this.sandbox.stub(window.performance, "getEntriesByType").returns([]);
+        };
+
+        this.testCase({
+            name: "PageName callback: manual page views preserve explicit string names",
+            useFakeTimers: true,
+            test: () => {
+                const core = new AppInsightsCore();
+                const appInsights = new AnalyticsPlugin();
+                const callback: IValueCallback = { pageName: this.sandbox.stub().returns("Callback page") };
+                const analyticsConfig: IAnalyticsConfig = { callback };
+                mockPerformance();
+                this.onDone(() => core.unload(false));
+                core.initialize({
+                    instrumentationKey: "ikey",
+                    extensionConfig: { [AnalyticsPluginIdentifier]: analyticsConfig }
+                }, [appInsights, new ChannelPlugin()]);
+                const trackStub = this.sandbox.stub(core, "track");
+
+                appInsights.trackPageView();
+                appInsights.trackPageView(null);
+                appInsights.trackPageView({ name: null });
+                appInsights.trackPageView({ name: 123 as any });
+                appInsights.trackPageView({ name: "Explicit page" });
+                appInsights.trackPageView({ name: "" });
+
+                Assert.equal(6, trackStub.callCount, "Every page view is collected");
+                for (let lp = 0; lp < 4; lp++) {
+                    Assert.equal("Callback page", trackStub.args[lp][0].baseData.name, "Missing or invalid name uses callback");
+                }
+                Assert.equal("Explicit page", trackStub.args[4][0].baseData.name, "Explicit name takes precedence");
+                Assert.equal("", trackStub.args[5][0].baseData.name, "Explicit empty string is preserved");
+                Assert.equal(4, (callback.pageName as SinonStub).callCount, "Callback only runs when a name is needed");
+            }
+        });
+
+        this.testCase({
+            name: "PageName callback: invalid results and absent callbacks use document title",
+            useFakeTimers: true,
+            test: () => {
+                const core = new AppInsightsCore();
+                const appInsights = new AnalyticsPlugin();
+                const callback: IValueCallback = {};
+                mockPerformance();
+                this.onDone(() => core.unload(false));
+                core.initialize({
+                    instrumentationKey: "ikey",
+                    extensionConfig: { [AnalyticsPluginIdentifier]: { callback } }
+                }, [appInsights, new ChannelPlugin()]);
+                const trackStub = this.sandbox.stub(core, "track");
+                appInsights.trackPageView();
+                Assert.equal(document.title, trackStub.lastCall.args[0].baseData.name, "No callback preserves default behavior");
+
+                const invalidValues = [undefined, null, "", 123, false, {}];
+                const config = core.config.extensionConfig[AnalyticsPluginIdentifier] as IAnalyticsConfig;
+                for (let lp = 0; lp < invalidValues.length; lp++) {
+                    config.callback.pageName = () => invalidValues[lp] as any;
+                    this.clock.tick(1);
+                    appInsights.trackPageView({ name: null });
+                    Assert.equal(document.title, trackStub.lastCall.args[0].baseData.name, "Invalid result falls back to title");
+                }
+
+                config.callback.pageName = 123 as any;
+                this.clock.tick(1);
+                appInsights.trackPageView();
+                Assert.equal(document.title, trackStub.lastCall.args[0].baseData.name, "Non-function callback is ignored");
+                Assert.equal(invalidValues.length + 2, trackStub.callCount, "Fallback never drops a page view");
+            }
+        });
+
+        this.testCase({
+            name: "PageName callback: exceptions do not drop page views",
+            useFakeTimers: true,
+            test: () => {
+                const core = new AppInsightsCore();
+                const appInsights = new AnalyticsPlugin();
+                const callback: IValueCallback = {
+                    pageName: () => {
+                        throw new Error("Callback failed");
+                    }
+                };
+                mockPerformance();
+                this.onDone(() => core.unload(false));
+                core.initialize({
+                    instrumentationKey: "ikey",
+                    extensionConfig: { [AnalyticsPluginIdentifier]: { callback } }
+                }, [appInsights, new ChannelPlugin()]);
+                const trackStub = this.sandbox.stub(core, "track");
+
+                appInsights.trackPageView();
+                Assert.equal(1, trackStub.callCount, "Page view is still collected");
+                Assert.equal(document.title, trackStub.firstCall.args[0].baseData.name, "Exception falls back to document title");
+
+                const config = core.config.extensionConfig[AnalyticsPluginIdentifier] as IAnalyticsConfig;
+                config.callback.pageName = () => "Recovered page";
+                this.clock.tick(1);
+                appInsights.trackPageView();
+                Assert.equal("Recovered page", trackStub.lastCall.args[0].baseData.name, "Updated callback recovers normally");
+            }
+        });
+
+        this.testCase({
+            name: "PageName callback: configuration can be added replaced and removed dynamically",
+            useFakeTimers: true,
+            test: () => {
+                const core = new AppInsightsCore();
+                const appInsights = new AnalyticsPlugin();
+                mockPerformance();
+                this.onDone(() => core.unload(false));
+                const rootCallback = this.sandbox.spy(() => "Click Analytics page");
+                const coreConfig = { instrumentationKey: "ikey", callback: { pageName: rootCallback } };
+                core.initialize(coreConfig, [appInsights, new ChannelPlugin()]);
+                const trackStub = this.sandbox.stub(core, "track");
+                let config = core.config.extensionConfig[AnalyticsPluginIdentifier] as IAnalyticsConfig;
+                appInsights.trackPageView();
+                Assert.equal(document.title, trackStub.lastCall.args[0].baseData.name, "Initially uses title");
+                Assert.equal(0, rootCallback.callCount, "Root-level Click Analytics callback is not used");
+
+                config.callback.pageName = () => "Added callback";
+                this.clock.tick(1);
+                appInsights.trackPageView();
+                Assert.equal("Added callback", trackStub.lastCall.args[0].baseData.name, "Callback can be added after initialization");
+
+                config.callback = { pageName: () => "Replaced callback" };
+                this.clock.tick(1);
+                appInsights.trackPageView();
+                Assert.equal("Replaced callback", trackStub.lastCall.args[0].baseData.name, "Callback object can be replaced");
+
+                core.config.extensionConfig[AnalyticsPluginIdentifier] = { callback: { pageName: () => "Replaced config" } };
+                this.clock.tick(1);
+                config = core.config.extensionConfig[AnalyticsPluginIdentifier] as IAnalyticsConfig;
+                appInsights.trackPageView();
+                Assert.equal("Replaced config", trackStub.lastCall.args[0].baseData.name, "Current extension config is used");
+
+                config.callback.pageName = undefined;
+                this.clock.tick(1);
+                appInsights.trackPageView();
+                Assert.equal(document.title, trackStub.lastCall.args[0].baseData.name, "Removing callback restores title");
+
+                config.callback = null;
+                this.clock.tick(1);
+                appInsights.trackPageView();
+                Assert.equal(document.title, trackStub.lastCall.args[0].baseData.name, "Removing callback object restores title");
+                Assert.equal(6, trackStub.callCount, "Every configuration produces a page view");
+                Assert.equal(0, rootCallback.callCount, "Removing Analytics callback does not inherit root callback");
+            }
+        });
+
+        this.testCase({
+            name: "PageName callback: exceptions fall back silently with debug logging enabled",
+            useFakeTimers: true,
+            test: () => {
+                const core = new AppInsightsCore();
+                const appInsights = new AnalyticsPlugin();
+                mockPerformance({
+                    navigationStart: 1000, domainLookupStart: 1000, connectEnd: 1010, requestStart: 1010,
+                    responseStart: 1020, responseEnd: 1030, domLoading: 1030, loadEventEnd: 1040
+                });
+                this.onDone(() => core.unload(false));
+                core.initialize({
+                    instrumentationKey: "ikey",
+                    enableDebug: true,
+                    extensionConfig: {
+                        [AnalyticsPluginIdentifier]: {
+                            callback: {
+                                pageName: () => {
+                                    throw new Error("Callback failed");
+                                }
+                            }
+                        }
+                    }
+                }, [appInsights, new ChannelPlugin()]);
+                const trackStub = this.sandbox.stub(core, "track");
+                const logSpy = this.sandbox.spy(core.logger, "throwInternal");
+
+                appInsights.trackPageView({ properties: { duration: 0 } });
+                Assert.equal(1, trackStub.callCount, "Page view is collected even with debug logging enabled");
+                Assert.equal(document.title, trackStub.firstCall.args[0].baseData.name, "Exception falls back to document title");
+                Assert.ok(logSpy.notCalled, "Callback failures do not log a diagnostic");
+            }
+        });
+
+        this.testCase({
+            name: "PageName callback: automatic SPA page views use current route names",
+            useFakeTimers: true,
+            test: () => {
+                const core = new AppInsightsCore();
+                const appInsights = new AnalyticsPlugin();
+                let pageName = "Initial route";
+                const callback = this.sandbox.spy(() => pageName);
+                const title = document.title;
+                setEnableEnvMocks(true);
+                this.setLocationHref("https://example.com/initial");
+                mockPerformance();
+                this.onDone(() => core.unload(false));
+                core.initialize({
+                    instrumentationKey: "ikey",
+                    extensionConfig: {
+                        [AnalyticsPluginIdentifier]: { enableAutoRouteTracking: true, callback: { pageName: callback } }
+                    }
+                }, [appInsights, new ChannelPlugin()]);
+                const trackStub = this.sandbox.stub(core, "track");
+
+                this.setLocationHref("https://example.com/checkout");
+                window.dispatchEvent(createDomEvent("locationchange"));
+                pageName = "Checkout";
+                Assert.equal(0, callback.callCount, "Callback waits for the scheduled page view");
+                this.clock.tick(appInsights.autoRoutePVDelay);
+                Assert.equal("Checkout", trackStub.lastCall.args[0].baseData.name, "Route name is resolved at tracking time");
+
+                this.setLocationHref("https://example.com/confirmation");
+                pageName = "Confirmation";
+                window.dispatchEvent(createDomEvent("popstate"));
+                this.clock.tick(appInsights.autoRoutePVDelay);
+                Assert.equal("Confirmation", trackStub.lastCall.args[0].baseData.name, "Next route gets its own name");
+                Assert.equal(2, trackStub.callCount, "Both automatic page views are emitted");
+                Assert.equal(2, callback.callCount, "Callback runs once per automatic page view");
+                Assert.equal(title, document.title, "Document title need not change");
+
+                const config = core.config.extensionConfig[AnalyticsPluginIdentifier] as IAnalyticsConfig;
+                config.callback.pageName = () => "Updated route callback";
+                this.clock.tick(1);
+                window.dispatchEvent(createDomEvent("locationchange"));
+                this.clock.tick(appInsights.autoRoutePVDelay);
+                Assert.equal("Updated route callback", trackStub.lastCall.args[0].baseData.name, "Routes honor runtime updates");
+            }
+        });
+
+        this.testCase({
+            name: "PageName callback: generated performance telemetry keeps the resolved page name",
+            useFakeTimers: true,
+            test: () => {
+                const core = new AppInsightsCore();
+                const appInsights = new AnalyticsPlugin();
+                let pageName = "First page";
+                const callback = this.sandbox.spy(() => pageName);
+                mockPerformance({
+                    navigationStart: 1000, domainLookupStart: 1000, connectEnd: 1010, requestStart: 1010,
+                    responseStart: 1020, responseEnd: 1030, domLoading: 1030, loadEventEnd: 1040
+                });
+                this.onDone(() => core.unload(false));
+                core.initialize({
+                    instrumentationKey: "ikey",
+                    extensionConfig: { [AnalyticsPluginIdentifier]: { callback: { pageName: callback } } }
+                }, [appInsights, new ChannelPlugin()]);
+                const trackStub = this.sandbox.stub(core, "track");
+
+                appInsights.trackPageView({ properties: { duration: 0 } });
+                pageName = "Later route";
+                this.clock.tick(100);
+
+                Assert.equal(2, trackStub.callCount, "Page view and performance are both emitted");
+                Assert.equal(PageViewDataType, trackStub.args[0][0].baseType, "First item is page view");
+                Assert.equal(PageViewPerformanceDataType, trackStub.args[1][0].baseType, "Second item is performance");
+                Assert.equal("First page", trackStub.args[0][0].baseData.name, "Page view uses resolved name");
+                Assert.equal("First page", trackStub.args[1][0].baseData.name, "Delayed performance retains the same name");
+                Assert.equal(1, callback.callCount, "Performance processing does not call the callback again");
+            }
+        });
+
+        this.testCase({
+            name: "PageName callback: page visit time uses the resolved page name",
+            useFakeTimers: true,
+            test: () => {
+                const core = new AppInsightsCore();
+                const appInsights = new AnalyticsPlugin();
+                let pageName = "First page";
+                const previousVisit = window.sessionStorage.getItem("prevPageVisitData");
+                window.sessionStorage.removeItem("prevPageVisitData");
+                mockPerformance();
+                this.onDone(() => {
+                    core.unload(false);
+                    window.sessionStorage.removeItem("prevPageVisitData");
+                    if (previousVisit !== null) {
+                        window.sessionStorage.setItem("prevPageVisitData", previousVisit);
+                    }
+                });
+                core.initialize({
+                    instrumentationKey: "ikey",
+                    extensionConfig: {
+                        [AnalyticsPluginIdentifier]: { autoTrackPageVisitTime: true, callback: { pageName: () => pageName } }
+                    }
+                }, [appInsights, new ChannelPlugin()]);
+                const metricSpy = this.sandbox.spy(appInsights, "trackMetric");
+                this.sandbox.stub(core, "track");
+
+                appInsights.trackPageView();
+                this.clock.tick(200);
+                pageName = "Second page";
+                appInsights.trackPageView();
+                Assert.equal(1, metricSpy.callCount, "Previous page visit is reported once");
+                Assert.equal("First page", metricSpy.firstCall.args[1].PageName, "Visit metric uses resolved name");
+                Assert.equal(200, metricSpy.firstCall.args[0].average, "Visit duration is preserved");
+            }
+        });
     }
 
     private addScriptInfoTests(): void {
