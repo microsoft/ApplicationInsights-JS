@@ -63,7 +63,9 @@ export {
     EventPersistence
 } from "@microsoft/applicationinsights-core-js";
 export { Sender, ISenderConfig } from "@microsoft/applicationinsights-channel-js";
-export { ApplicationInsights as ApplicationAnalytics, IAppInsightsInternal, IAnalyticsConfig } from "@microsoft/applicationinsights-analytics-js";
+export {
+    ApplicationInsights as ApplicationAnalytics, IAppInsightsInternal, IAnalyticsConfig, IValueCallback
+} from "@microsoft/applicationinsights-analytics-js";
 export { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 export { IOSPluginConfiguration } from "@microsoft/applicationinsights-osplugin-js";
 export {

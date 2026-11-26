@@ -4,6 +4,18 @@
 import { IExceptionConfig } from "@microsoft/applicationinsights-core-js";
 
 /**
+ * Value callbacks configuration for Analytics.
+ */
+export interface IValueCallback {
+    /**
+     * Synchronous callback to derive the page name when trackPageView is called without a string name.
+     * Also applies to automatically tracked SPA route changes. Explicit names, including empty strings, take precedence.
+     * If the callback throws or returns anything other than a non-empty string, the document title is used instead.
+     */
+    pageName?: () => string;
+}
+
+/**
  * Enum values for configuring trace context strategy for SPA route changes.
  * Controls how trace contexts are managed when navigating between pages in a Single Page Application.
  * @since 3.4.0
@@ -31,6 +43,13 @@ export const enum eRouteTraceStrategy {
  * This interface defines only the configuration properties that the Analytics plugin uses.
  */
 export interface IAnalyticsConfig {
+    /**
+    * Extension-scoped callbacks configuration. Does not inherit root-level Click Analytics callbacks.
+    * Does not affect startTrackPage, stopTrackPage, or the operation name.
+    * @default { pageName: undefined }
+     */
+    callback?: IValueCallback;
+
     /**
      * A session is logged if the user is inactive for this amount of time in milliseconds.
      * @default 1800000 (30 minutes)
