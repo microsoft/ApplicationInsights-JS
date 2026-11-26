@@ -17,6 +17,7 @@
 
 ### Bug Fixes
 
+- The 1DS post channel no longer drops events when it encounters frozen event data. It leaves the original data unchanged and preserves custom `toJSON` methods on nested values.
 - OS enrichment now copies customer OS context before adding detected fields, so disabling collection does not retain detected values
   in later events. The full SDK drains OS-queued telemetry before exit channel flushes, independent of page-exit listener order.
 - Clearing automatic OS detection opt-in now immediately ignores pending lookup results, preventing cache writes and enrichment before

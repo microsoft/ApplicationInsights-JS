@@ -250,7 +250,8 @@ export class HttpManager {
                         }
             
                         _useBeacons = !isReactNative(); // Only use beacons if not running in React Native
-                        _serializer = new Serializer(_core, valueSanitizer, stringifyObjects, enableCompoundKey, getCommonSchemaMetaData, _excludeCsMetaData, channelConfig);
+                        _serializer = new Serializer(_core, valueSanitizer, stringifyObjects, enableCompoundKey, getCommonSchemaMetaData,
+                            _excludeCsMetaData, channelConfig, _logger);
         
                         if (!isNullOrUndefined(channelConfig.useSendBeacon)) {
                             _useBeacons = !!channelConfig.useSendBeacon;

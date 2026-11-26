@@ -1,8 +1,9 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
-import { HttpManager } from '../../../src/HttpManager';
-import { AppInsightsCore, EventLatency, EventSendType, IEventProperty, SendRequestReason, IXHROverride, IPayloadData } from '@microsoft/applicationinsights-core-js';
-import { PostChannel } from '../../../src/PostChannel';
-import { IPostTransmissionTelemetryItem, EventBatchNotificationReason, IChannelConfiguration } from '../../../src/DataModels';
+import {
+    DiagnosticLogger, EventLatency, EventSendType, IEventProperty, SendRequestReason, _eInternalMessageId
+} from '@microsoft/applicationinsights-core-js';
+import { objDeepFreeze } from "@nevware21/ts-utils";
+import { IChannelConfiguration, IPostTransmissionTelemetryItem } from '../../../src/DataModels';
 import { Serializer } from '../../../src/Serializer';
 import { EventBatch } from "../../../src/EventBatch";
 
@@ -17,6 +18,105 @@ export class SerializerTest extends AITestClass {
     }
 
     public registerTests() {
+
+        this.testCase({
+            name: "getEventBlob serializes deeply frozen data without changing it",
+            test: () => {
+                let event = objDeepFreeze({
+                    name: "frozen",
+                    ext: { app: { route: { id: "home" } } },
+                    baseData: { "navigation.route": { id: 42 } },
+                    data: { state: { tag: { value: 123, kind: 13 }, counts: [1, 2] } }
+                });
+                let serializer = new Serializer(null, null, false, true);
+                let blob = serializer.getEventBlob(event);
+
+                QUnit.assert.ok(blob, "The frozen event was not dropped");
+                let parsed = JSON.parse(blob);
+                QUnit.assert.deepEqual(parsed.ext.app, { route: { id: "home" } });
+                QUnit.assert.deepEqual(parsed.data.baseData.navigation, { route: { id: 42 } });
+                QUnit.assert.deepEqual(parsed.data.state, { tag: "123", counts: [1, 2] });
+                QUnit.assert.deepEqual(parsed.ext.metadata.f.baseData.f.navigation.f.route.f.id, { t: 6 });
+                QUnit.assert.deepEqual(parsed.ext.metadata.f.state.f.tag, { t: 417 });
+                QUnit.assert.deepEqual(event.data.state.tag, { value: 123, kind: 13 });
+            }
+        });
+
+        this.testCase({
+            name: "getEventBlob serializes frozen class fields and respects custom JSON",
+            test: () => {
+                class State {
+                    public id = "home";
+                    public tag = { value: 42, kind: 13 };
+                }
+                class Label {
+                    public id = "label";
+                    public toJSON(key: string) {
+                        return this.id + ":" + key;
+                    }
+                }
+
+                let state = objDeepFreeze(new State());
+                let event = {
+                    name: "frozen",
+                    ext: {},
+                    data: { state, nested: { state }, label: objDeepFreeze(new Label()), time: new Date(0) }
+                };
+                let blob = new Serializer().getEventBlob(event);
+
+                QUnit.assert.ok(blob, "The frozen instance did not cause the event to be dropped");
+                let parsed = JSON.parse(blob);
+                QUnit.assert.deepEqual(parsed.data.state, { id: "home", tag: "42" });
+                QUnit.assert.deepEqual(parsed.data.nested.state, parsed.data.state);
+                QUnit.assert.deepEqual(parsed.ext.metadata.f.state.f.tag, { t: 417 });
+                QUnit.assert.strictEqual(state.tag.value, 42, "Sanitization did not change the input");
+                QUnit.assert.strictEqual(parsed.data.label, "label:label");
+                QUnit.assert.strictEqual(parsed.data.time, "1970-01-01T00:00:00.000Z");
+            }
+        });
+
+        this.testCase({
+            name: "getEventBlob preserves non-enumerable toJSON on nested records",
+            test: () => {
+                let label = { id: "home" };
+                Object.defineProperty(label, "toJSON", {
+                    value: function (key: string) { return this.id + ":" + key; }
+                });
+                let event = objDeepFreeze({
+                    name: "nested",
+                    data: { state: { label, labels: [label] } }
+                });
+
+                let parsed = JSON.parse(new Serializer().getEventBlob(event));
+                QUnit.assert.deepEqual(parsed.data.state, { label: "home:label", labels: ["home:0"] });
+            }
+        });
+
+        this.testCase({
+            name: "appendPayload reports serialization errors and drops only the failed event",
+            test: () => {
+                let logger = new DiagnosticLogger({ enableDebug: true });
+                this.onDone(() => logger.unload(false));
+                let report = this.sandbox.spy(logger, "throwInternal");
+                let serializer = new Serializer(null, null, null, null, null, null, null, logger);
+                let bad = { name: "bad", data: { get broken() { throw new Error("Unreadable field"); } } };
+                let good = { name: "good" };
+                let batch = EventBatch.create("1234-5678", [bad, good]);
+                let payload = serializer.createPayload(0, false, false, false, SendRequestReason.NormalSchedule, EventSendType.Batched);
+
+                serializer.appendPayload(payload, batch, 10);
+
+                QUnit.assert.ok(report.calledOnce, "The failure was reported once");
+                QUnit.assert.strictEqual(report.firstCall.args[1], _eInternalMessageId.CannotSerializeObject);
+                QUnit.assert.ok(report.firstCall.args[2].indexOf("Unreadable field") !== -1, "The diagnostic includes the exception");
+                QUnit.assert.strictEqual(payload.numEvents, 1);
+                QUnit.assert.strictEqual(JSON.parse(payload.payloadBlob).name, "good");
+                QUnit.assert.deepEqual(batch.events(), [good]);
+                QUnit.assert.strictEqual(payload.failedEvts.length, 1);
+                QUnit.assert.strictEqual(payload.failedEvts[0].events()[0], bad);
+                QUnit.assert.strictEqual(payload.sizeExceed.length, 0);
+            }
+        });
 
         this.testCase({
             name: 'getEventBlob with compoundKey support',
