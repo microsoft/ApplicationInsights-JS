@@ -57,7 +57,7 @@
         "@nevware21/grunt-eslint-ts": "^0.5.2",
         "grunt-contrib-connect": "^5.0.0",
         "eventemitter2": "6.4.9",
-        "puppeteer": "^24.40.0",
+        "puppeteer": "^25.13.0",
         "tslib": "^2.0.0"
     },
     "repository": {
