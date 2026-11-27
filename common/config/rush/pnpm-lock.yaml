@@ -15,7 +15,7 @@ overrides:
   form-data: '>=2.5.6 <3.0.0'
   js-yaml: '>=4.3.1 <5.0.0'
   markdown-it: '>=14.2.0'
-  decode-uri-component: 0.5.0
+  decode-uri-component: 0.5.1
   '@microsoft/api-extractor': 7.58.7
   basic-ftp: '>=6.2.1'
   brace-expansion: '>=5.0.12 <6.0.0'
@@ -28,9 +28,9 @@ overrides:
 pnpmfileChecksum: sha256-E1T7OJ3DLTjpDqf4RdJzK9VDtAxgm4gDEQCLYdHD8nI=
 
 patchedDependencies:
-  decode-uri-component@0.5.0:
-    hash: 39f557ceb617b1046917a1daa0901f3ddff56ac700abf88a8824a4c14686756d
-    path: ../config/rush/patches/decode-uri-component@0.5.0.patch
+  decode-uri-component@0.5.1:
+    hash: 1e7e30c375dcd77d720b2c3429ef4536b51534612ac8938e8867019302e1ab54
+    path: ../config/rush/patches/decode-uri-component@0.5.1.patch
 
 importers:
 
@@ -1104,8 +1104,8 @@ packages:
       supports-color:
         optional: true
 
-  decode-uri-component@0.5.0:
-    resolution: {integrity: sha512-1BiQVoK8C9gUbQU6NzAtO/tkz2qOFpEObMWpcFvhx4fYnj4Oc5yzaJN/LD36ihkVUdXyh5ZekzX+yM+ty/SrPg==}
+  decode-uri-component@0.5.1:
+    resolution: {integrity: sha512-vWHQkXgg2cE3BB4rR0c+PYw9BCQzLoNIRMI7AunIkZst74tw/vpPp7VLoYtsR/cy1f55g3XDWUslfeCZjiZJyA==}
     engines: {node: '>=14.16'}
 
   deep-is@0.1.4:
@@ -4379,7 +4379,7 @@ snapshots:
     dependencies:
       ms: 2.1.3
 
-  decode-uri-component@0.5.0(patch_hash=39f557ceb617b1046917a1daa0901f3ddff56ac700abf88a8824a4c14686756d): {}
+  decode-uri-component@0.5.1(patch_hash=1e7e30c375dcd77d720b2c3429ef4536b51534612ac8938e8867019302e1ab54): {}
 
   deep-is@0.1.4: {}
 
@@ -5734,7 +5734,7 @@ snapshots:
   source-map-resolve@0.6.0:
     dependencies:
       atob: 2.1.2
-      decode-uri-component: 0.5.0(patch_hash=39f557ceb617b1046917a1daa0901f3ddff56ac700abf88a8824a4c14686756d)
+      decode-uri-component: 0.5.1(patch_hash=1e7e30c375dcd77d720b2c3429ef4536b51534612ac8938e8867019302e1ab54)
 
   source-map@0.6.1: {}
 
