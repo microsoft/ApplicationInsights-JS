@@ -54,11 +54,15 @@ export function correlationIdCanIncludeCorrelationHeader(config: ICorrelationCon
         }
     }
 
-    let requestHost = urlParseUrl(requestUrl).host.toLowerCase();
+    let requestHost = (urlParseUrl(requestUrl).host || STR_EMPTY).toLowerCase();
     if (requestHost && (strIndexOf(requestHost, ":443") !== -1 || strIndexOf(requestHost, ":80") !== -1)) {
         // [Bug #1260] IE can include the port even for http and https URLs so if present
         // try and parse it to remove if it matches the default protocol port
-        requestHost = (urlParseFullHost(requestUrl, true) || "").toLowerCase();
+        requestHost = (urlParseFullHost(requestUrl, true) || STR_EMPTY).toLowerCase();
+    }
+
+    if (!requestHost) {
+        return false;
     }
 
     if ((!config || !config.enableCorsCorrelation) && (requestHost && requestHost !== currentHost)) {
